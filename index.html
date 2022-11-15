@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="description" content="Cursus voor het vak Webservices">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
+    <link rel="stylesheet" href="styles/site.css" />
+  </head>
+
+  <body>
+    <div id="app"> Cursus wordt geladen...</div>
+    <script>
+      window.$docsify = {
+        auto2top: true,
+        name: 'Webservices',
+        coverpage: false,
+        loadSidebar: true,
+        subMaxLevel: 2,
+        alias: {
+          // Prevent unnecessary fallbacks for the sidebar
+          '/.*/_sidebar.md': '/_sidebar.md'
+        },
+        maxLevel: 2,
+        homepage: '7-authenticatie/index.md',
+        copyCode: {
+          buttonText: 'Kopieer',
+          errorText: 'Oeps, er ging iets mis...',
+          successText: 'Gekopieerd!'
+        },
+        tabs: {
+          persist: false,
+          sync: false,
+        },
+        formatUpdated: '{DD}/{MM}/{YYYY} {HH}:{mm}'
+      };
+    </script>
+    <!-- Docsify v4 -->
+    <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
+  </body>
+
+</html>
