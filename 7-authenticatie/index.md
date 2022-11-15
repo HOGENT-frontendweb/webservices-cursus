@@ -177,11 +177,11 @@ Als we de `ctx.state.user` loggen krijgen we zijn volledig token
 
 Belangrijkste voor ons zijn de `permissions` en de `sub`, onze Auth0 Id, maar merk op dat we geen gebruikersnaam of email of iets dergelijks hebben. Auth0 kan je deze informatie bezorgen via de userinfo-route, maar voor elke request naar onze API een request naar Auth0 uitvoeren is niet ideaal.
 
-Dus we gaan ons volgt te werk
-	- user tabel aanpassen om ook een Auth0 Id op te slaan
-	- als we de user nodig hebben, kijken of we via de Auth0 Id hem terug vinden in onze databank
-  	- zo ja: alles ok
-  	- zo nee: Auth0 userinfo request uitvoeren en onze databank aanvullen
+Dus we gaan als volgt te werk  
+	- user tabel aanpassen om ook een Auth0 Id op te slaan  
+	- als we de user nodig hebben, kijken of we via de Auth0 Id hem terug vinden in onze databank  
+  	- zo ja: alles ok  
+  	- zo nee: Auth0 userinfo request uitvoeren en onze databank aanvullen  
 
 ### extra info opvragen
 
