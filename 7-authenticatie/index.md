@@ -16,16 +16,17 @@ Daarom wordt er meer en meer gegrepen naar een third party service die deze take
 
 Het zou natuurlijk bijzonder onhandig zijn als je voor elke request opnieuw zou moeten inloggen, zeker bij moderne webapplicaties die vele requests gebruiken om één pagina op te bouwen. We moeten dus ergens kunnen 'onthouden' dat iemand ingelogd is, op een veilige manier.
 
-Hiervoor kan je (o.a.) een JSON Web Token (JWT) gebruiken, dat is in se een (BASE64) string die bij elke request meegestuurd wordt in de Authorization headers. Een JWT bestaat uit drie delen (zie een voorbeeld op https://jwt.io)
+Hiervoor kan je (o.a.) een JSON Web Token (JWT) gebruiken, dat is in se een (BASE64) string die bij elke request meegestuurd wordt in de `Authorization` header. Een JWT bestaat uit drie delen (zie een voorbeeld op <https://jwt.io>)
 
-1) een deel met meta informatie over het token (hash algoritme)
-2) een deel met de echte data, de payload (wie ingelogd is, wat de rechten zijn, wanneer de token vervalt, etc)
-3) een hash signature waarmee kan gecontroleerd worden dat het een echte token is.
+1. een deel met meta informatie over het token (hash algoritme)
+2. een deel met de echte data, de payload (wie ingelogd is, wat de rechten zijn, wanneer de token vervalt, etc)
+3. een hash signature waarmee kan gecontroleerd worden dat het een echte token is.
 
-Het concept is als volgt: de server kan een signature genereren voor een payload, op basis van iets dat alleen hij kent (dus als iemand anders probeert een token te faken, gaat de server dit altijd kunnen zien), als een client correct inlogt krijgt hij zo een token van de server dat hij dan telkens moet meesturen.
-Als dan zo een request met token binnenkomt, kan de server de signature opnieuw genereren, als het overeenkomt met het origineel weet hij dat het token van hem afkomstig is en de payload dus geldig is (en dus de gebruiker is wij hij beweert te zijn)
+Het concept is als volgt: de server kan een signature (= handtekening) genereren voor een bepaalde payload. Deze signature wordt berekend o.b.v. een secret dat enkel door de server gekend is. Als iemand anders een token probeert te faken, zal de server dit altijd merken. Als een client correct inlogt, krijgt hij zo'n token van de server. Deze token moet bij elk request door de client meegestuurd worden (natuurlijk enkel waar authenticatie/autorisatie nodig is).
 
-Dat wilt dus zeggen dat iedereen die zo een token heeft effectief een ingelogde gebruiker is (je hoeft dus iemand zijn username en wachtwoord niet te kennen als je zijn token kan bemachtigen), daarom vervallen tokens na een tijd, en zal de gebruiker opnieuw moeten inloggen.
+Als zo'n request met token binnenkomt, kan de server de signature opnieuw genereren. Als het overeenkomt met het origineel weet hij dat het token van hem afkomstig is en de payload dus geldig is (en dus de gebruiker is wij hij beweert te zijn).
+
+Dat wil dus zeggen dat iedereen die zo'n token heeft effectief een ingelogde gebruiker is (je hoeft dus iemand zijn username en wachtwoord niet te kennen als je zijn token kan bemachtigen). Daarom vervallen tokens na een tijd, en zal de gebruiker opnieuw moeten inloggen.
 
 ## Auth0 opzetten
 
