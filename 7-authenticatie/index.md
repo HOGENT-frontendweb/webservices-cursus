@@ -6,17 +6,26 @@ Authenticatie is bewijzen wie je bent, heel vaak met een gebruikersnaam en wacht
 
 Autorisatie is dan weer kijken of een gebruiker de juiste rechten heeft om toegang tot (een deel van) je webapplicatie te krijgen.
 
-Zelf gebruikersnamen en wachtwoorden opslaan is niet triviaal
+Zelf gebruikersnamen en wachtwoorden opslaan is niet triviaal, je kan niet zomaar een tabel maken waar je een wachtwoord en gebruikersnaam in opslaat, wachtwoorden moeten gehashed worden, met een salt om rainbow table attacks tegen te gaan.
+Voor sommige toepassingen verwachten gebruikers dat ze via hun google of facebook account kunnen inloggen; soms vereist een platform zelfs dat je bepaalde inlogsystemen integreert (iOS en Apple login bijvoorbeeld).
+Als je dan ook nog eens alles van 2FA wilt integreren besef je dat dit allemaal maken niet alleen niet triviaal is, maar ook best veel werk.
 
-**TODO**
-
-uitleg over GDPR artikel 32 (“the controller and the processor shall implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk.” ) / hashen / salt / rainbow attack etc.
+Daarom wordt er meer en meer gegrepen naar een third party service die deze taken op zich neemt, één zo'n service is Auth0.
 
 ### JWT
 
-**TODO**
+Het zou natuurlijk bijzonder onhandig zijn als je voor elke request opnieuw zou moeten inloggen, zeker bij moderne webapplicaties die vele requests gebruiken om één pagina op te bouwen. We moeten dus ergens kunnen 'onthouden' dat iemand ingelogd is, op een veilige manier.
 
-algemene uitleg over JWT tokens
+Hiervoor kan je (o.a.) een JSON Web Token (JWT) gebruiken, dat is in se een (BASE64) string die bij elke request meegestuurd wordt in de Authorization headers. Een JWT bestaat uit drie delen (zie een voorbeeld op https://jwt.io)
+
+1) een deel met meta informatie over het token (hash algoritme)
+2) een deel met de echte data, de payload (wie ingelogd is, wat de rechten zijn, wanneer de token vervalt, etc)
+3) een hash signature waarmee kan gecontroleerd worden dat het een echte token is.
+
+Het concept is als volgt: de server kan een signature genereren voor een payload, op basis van iets dat alleen hij kent (dus als iemand anders probeert een token te faken, gaat de server dit altijd kunnen zien), als een client correct inlogt krijgt hij zo een token van de server dat hij dan telkens moet meesturen.
+Als dan zo een request met token binnenkomt, kan de server de signature opnieuw genereren, als het overeenkomt met het origineel weet hij dat het token van hem afkomstig is en de payload dus geldig is (en dus de gebruiker is wij hij beweert te zijn)
+
+Dat wilt dus zeggen dat iedereen die zo een token heeft effectief een ingelogde gebruiker is (je hoeft dus iemand zijn username en wachtwoord niet te kennen als je zijn token kan bemachtigen), daarom vervallen tokens na een tijd, en zal de gebruiker opnieuw moeten inloggen.
 
 ## Auth0 opzetten
 
