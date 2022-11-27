@@ -42,21 +42,13 @@ Auth0 is een bedrijf dat authenticatie en autorisatie makkelijk maakt, vooral al
 
 Er bestaan veel goede tutorials/libraries en voorbeeldapplicaties om Auth0 te doen werken met vele front- en backends. Er is, jammer genoeg, wel (nog) geen off-the-shelf oplossing voor Koa beschikbaar. Dus we puzzelen hier zelf alles samen.
 
-Voor onze backend hebben we nood aan een Machine to Machine application (onze frontend gaat praten met onze backend). Open hiervoor het menu-item `Applications` > `Applications` en klik op `Create Application`.
-
-![Create application](./images/create_application_backend.png ':size=70%')
-
-Nadien dienen we ook een API te registreren. Open het menu-item `Applications` > `APIs` en klik op `Create API`. Hierbij is vooral de identifier belangrijk, deze kan je later niet meer wijzigen. Kies een unieke url.
+We creëeren eerst een API. Open het menu-item `Applications` > `APIs` en klik op `Create API`. Hierbij is vooral de identifier belangrijk, deze kan je later niet meer wijzigen. Kies een unieke url. (neem hier iets dat altijd met `https://` begint, sommige packages die we later gebruiken werken anders niet altijd naar behoren, en de foutboodschappen zijn niet fantastisch)
 
 ![Create API](./images/new_api.png ':size=70%')
 
 In de settings van deze API gaan we **Role-based Access Control (RBAC)** aanzetten, zodat we verschillende gebruikers verschillende toegangsrechten kunnen geven.
 
 ![RBAC settings](./images/rbac_settings.png ':size=70%')
-
-Als laatste dienen we ook nog de applicatie en de API te linken aan elkaar. Bij de settings van de applicatie (onder `APIs`) kan je dit aanzetten:
-
-![Link Api Application](./images/link_application_api.png ':size=70%')
 
 Het uiteindelijke doel is dat de server toegang tot bepaalde REST routes gaat afschermen. M.a.w. de client zal inloggen bij Auth0, een token krijgen, en die dan meesturen met de headers van elke request. Onze server moet vervolgens kijken of deze token echt is, en op basis daarvan requests al dan niet blokkeren.
 
@@ -80,9 +72,9 @@ We voegen nu een bestand `auth.js` toe aan de `core` map:
 const jwksrsa = require('jwks-rsa');
 const config = require('config');
 
-async function getJwtSecret() {
+function getJwtSecret() {
   try {
-    let secretFunction = await jwksrsa.koaJwtSecret({
+    let secretFunction = jwksrsa.koaJwtSecret({
       jwksUri: config.get('auth.jwksUri'), // 👈
       cache: true,
       cacheMaxEntries: 5,
@@ -164,6 +156,19 @@ En deze dan ook weer beschikbaar maken via `custom-environment-variables`:
     audience: 'AUTH_AUDIENCE',
     issuer: 'AUTH_ISSUER',
   },
+```
+
+Deze middleware dienen we dan nog op te roepen voor elke request dus in de `createServer.js`, bijvoorbeeld net voor de bodyparser.
+(zeker vóór de installRest, zodat we in de rest afhandeling kunnen checken of de user wel correct is ingelogd)
+
+```js
+
+  const logger = getLogger();
+  
+  app.use(checkJwtToken());
+
+  app.use(bodyParser());
+
 ```
 
 ## User informatie
