@@ -142,6 +142,7 @@ module.exports = {
 Je kan deze middleware ofwel blocking maken ofwel `passthrough: true` aanzetten, zoals wij doen. Met deze optie gaat de middleware een `ctx.state.user` aanmaken met alle info als de token ok is, en deze gewoon op null zetten indien niet. We gaan dit dus zelf nog moeten checken (maar dit maakt wel dat we makkelijk kunnen kiezen om sommige routes wel, en andere niet toe te laten).
 
 We dienen in de configuratie nu ook nog de audience en issuer mee te geven, issuer is jouw tenant, en audience de ID van je API:
+LET OP: de issuer moet hier een trailing slash hebben of het checken van de jwt gaat falen.
 
 ```.env
 AUTH_AUDIENCE='https://budget-transaction.pieter-hogent.com'
@@ -170,6 +171,31 @@ Deze middleware dienen we dan nog op te roepen voor elke request dus in de `crea
   app.use(bodyParser());
 
 ```
+
+Nu kan je kijken of alles werkt, voeg de volgende code toe om te kunnen zien dat alles werkt.
+
+```js
+  app.use(async (ctx ,next) => {
+    const logger = getLogger();
+    logger.debug(ctx.headers.authorization); // 👈 1
+    logger.debug(JSON.stringify(ctx.state.user)); // 👈 2
+    logger.debug(ctx.state.jwtOriginalError); // 👈 3
+    await next();
+  });
+```
+Gebruik de test tab van Auth0 om een token aan te maken via de terminal
+
+![auth0 test](./images/auth0_test_token.png ':size=70%')
+
+Doe dan een request met postman met deze token en bekijk de log.
+
+![postman request](./images/postman_send_token.png ':size=70%')
+
+1) zou een `Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IjNyTXBYY0JHN1MxcVBjd...` moeten loggen
+2) geeft je user object met een aantal keys 'sub', 'aud', etc (zie user informatie in het volgende hoofdtuk voor een voorbeeld)
+3) is hopelijk `undefined` anders heb je een error te fixen
+
+(verwijder deze testcode / zet ze in commentaar als alles werkt)
 
 ## User informatie
 
@@ -295,7 +321,7 @@ const findByAuth0Id = (auth0id) => {
 Verder passen we ook de create en update aan om een `auth0id` parameter mee te krijgen
 (dit zou moeten lukken zonder voorbeeldcode).
 
-Dan passen we in de `service/user.js` de create functie aan:
+Dan passen we in de `service/user.js` de register functie aan:
 
 ```js
 const register = ({
