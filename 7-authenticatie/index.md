@@ -443,7 +443,9 @@ function hasPermission(permission) {
     } else if (user && user.permissions && user.permissions.includes(permission)) {
       await next();
     } else {
-      ctx.throw(403, 'Forbidden');
+      ctx.throw(403, 'You are not allowed to view this part of the application', {
+        code: 'FORBIDDEN',
+      });
     }
   };
 }
