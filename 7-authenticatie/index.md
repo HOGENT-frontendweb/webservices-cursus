@@ -474,3 +474,25 @@ module.exports = (app) => {
 ```
 
 Alle andere routes aanpassen laten we als oefening.
+
+### Error response verbeteren
+
+Bij een fout met de JWT, bv. een ongeldige token, krijgen we onterecht een HTTP 403 Forbidden terug. De reden hiervoor is onze `hasPermission` functie, echter zou dit beter kunnen. Voeg onderstaande if-check toe aan de error handler middleware (in `src/createServer.js`), net na de `ServiceError` if-check:
+
+```js
+// ...
+
+if (error instanceof ServiceError) {
+  // ...
+}
+
+if (ctx.state.jwtOriginalError) {
+  statusCode = 401;
+  errorBody.code = 'UNAUTHORIZED';
+  errorBody.message = ctx.state.jwtOriginalError.message;
+  errorBody.details.jwtOriginalError = serializeError(ctx.state.jwtOriginalError);
+}
+// ...
+```
+
+Nu zou je een mooie HTTP 401 moeten terugkrijgen indien er een probleem is met de token.
