@@ -1,5 +1,17 @@
 # Authenticatie en autorisatie
 
+> **Startpunt voorbeeldapplicatie**
+>
+> Het volstaat om uit te checken op de `main` branch
+>
+> ```bash
+> git clone https://github.com/HOGENT-Web/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les7
+> yarn install
+> yarn start
+> ```
+
 ## Inleiding
 
 Authenticatie is bewijzen wie je bent, heel vaak met een gebruikersnaam en wachtwoord, en meer en meer in combinatie met TOTP (time based one time password), SMS en/of security keys als deel van two factor authentication (2FA).
@@ -496,3 +508,7 @@ if (ctx.state.jwtOriginalError) {
 ```
 
 Nu zou je een mooie HTTP 401 moeten terugkrijgen indien er een probleem is met de token.
+
+## Oplossing
+
+Zoals altijd is een oplossing te vinden in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget), deze keer op de branch `feature/auth0` in commit `8ebb0ec`.
