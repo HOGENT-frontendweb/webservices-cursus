@@ -10,5 +10,5 @@
 - [4. Datalaag](https://hogent-web.github.io/webservices-slides/4-datalaag.html?presentation=false)
 - [5. Testing](https://hogent-web.github.io/webservices-slides/5-testing.html?presentation=false)
 - [6. Swagger & Linting](https://hogent-web.github.io/webservices-slides/6-swagger.html?presentation=false)
-- [7. Authenticatie & Autorisatie](./7-authenticatie/index.md)
+- [7. Authenticatie & autorisatie](./7-authenticatie/index.md)
 - [8. Testen: authenticatie & autorisatie](./8-auth_testing/index.md)
