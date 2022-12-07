@@ -121,6 +121,10 @@ En dan in de `custom-environment-variables.js`:
 
 Met behulp van deze secret genererende functie kunnen we dan een middleware inschakelen om JWT tokens te verifiëren, nl. [koa-jwt](https://github.com/koajs/jwt)
 
+```zsh
+yarn add koa-jwt
+```
+
 We voegen een functie toe aan de `core/auth.js` om deze middleware beschikbaar te maken.
 
 ```js
@@ -243,7 +247,7 @@ Met de token de juiste url aanspreken bij Auth0 is alles wat we moeten doen. We 
 yarn add axios
 ```
 
-Dan vragen we de info op en voegen ze toe aan het `ctx.state.user` object dat al aanwezig was door de token de checken.
+Dan vragen we de info op en voegen ze toe aan het `ctx.state.user` object dat al aanwezig was door de token de checken. In `core/auth.js` voegen we het volgende toe.
 
 ```js
 const axios = require('axios');
@@ -256,7 +260,7 @@ async function addUserInfo(ctx) {
   try {
     const token = ctx.headers.authorization;
     const url = AUTH_USER_INFO;
-    if (token && url && ctx.user.state) {
+    if (token && url && ctx.state.user) {
       logger.debug(`addUserInfo: ${url}, ${JSON.stringify(token)}`);
 
       const userInfo = await axios.get(url, {
@@ -323,8 +327,8 @@ Pas ook de user seed aan zodat er iets in de `auth0id` velden terecht komt.
 In de `repository/user.js` voegen we een extra functie toe `findByAuth0Id`:
 
 ```js
-const findByAuth0Id = (auth0id) => {
-  return getKnex()(tables.user)
+const findByAuth0Id = async (auth0id) => {
+  return await getKnex()(tables.user)
     .where('auth0id', auth0id)
     .first();
 };
@@ -336,14 +340,14 @@ Verder passen we ook de create en update aan om een `auth0id` parameter mee te k
 Dan passen we in de `service/user.js` de register functie aan:
 
 ```js
-const register = ({
+const register = async ({
   name,
   auth0id,
 }) => {
   debugLog('Creating a new user', {
     name,
   });
-  return userRepository.create({
+  return await userRepository.create({
     name,
     auth0id,
   });
@@ -366,6 +370,22 @@ const getByAuth0Id = async (auth0id) => {
   return user;
 };
 ```
+Pas dan in `service/transaction.js` de create functie aan. De userId wordt doorgegeven ipv de user, di de userId van de aangemelde gebruiker. De user dient niet langer te worden aangemaakt.
+
+```js
+const create = async ({ amount, date, placeId, userId }) => {
+  debugLog('Creating new transaction', { amount, date, placeId, userId });
+
+  const id = await transactionRepository.create({
+    amount,
+    date,
+    placeId,
+    userId,
+  });
+  return getById(id);
+};
+```
+Pas ook de update aan.
 
 Als we nu een transactie toevoegen laten gebeuren door de 'huidige gebruiker' kunnen we dat als volgt bekomen.
 
@@ -415,7 +435,9 @@ createTransaction.validationScheme = {
 
 Bij Auth0 zelf dien je Roles aan te maken en deze dan aan users toe te kennen.
 
-Voor onze applicatie creëren we een `boekhouder` (read) role en een `gebruiker` role (read & write):
+Eerst dien je de permissies te definiëren. Voor onze applicatie hebben we `read` en `write` permissions. Open de `API` in het `Auth0 dashboard` en klik op de `Permissions tab`. Voeg de permissions `read` en `write` toe
+
+Voor onze applicatie creëren we een `boekhouder` (read) role en een `gebruiker` role (read & write). Ga hiervoor naar User Management > Roles:
 
 ![create role](./images/create_roles.png ':size=70%')
 
@@ -431,7 +453,7 @@ En dan wijzen we deze rollen toe aan onze gebruiker(s):
 
 ### Permissies checken
 
-De permissies zitten automatisch in de `permissions` key van het `ctx.state.user` object (als we RBAC hebben aangezet bij Auth0). Dus een middleware schrijven die deze permissies nakijkt is triviaal.
+De permissies zitten automatisch in de `permissions` key van het `ctx.state.user` object (als we RBAC hebben aangezet bij Auth0 en Add permissions in the access token). Dus een middleware schrijven die deze permissies nakijkt is triviaal.
 
 In `core/auth.js` voegen we het volgende toe.
 
