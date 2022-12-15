@@ -123,6 +123,8 @@ const fetchAccessToken = async () => {
     scope: 'openid profile email offline_access',
     client_id: config.get('auth.clientId'),
     client_secret: config.get('auth.clientSecret'),
+  }, {
+    headers: { "Accept-Encoding": "gzip,deflate,compress" } // 👈 5
   });
 
   return response.data.access_token;
@@ -158,6 +160,7 @@ module.exports = {
 2. We definiëren een functie die een access token kan ophalen bij Auth0. Deze doet een HTTP POST op {JOUW DOMEIN}/oauth/token en meldt aan met de aangemaakte testgebruiker. Je kan deze functie eventueel aanpassen zodat je de username en het wachtwoord meekrijgt als parameter.
 3. Exporteer deze functie voor eventueel later gebruik.
 4. Pas de `withServer` functie aan zodat deze telkens een access token aanvraagt en de HTTP header doorgeeft aan de setter.
+5. Mogelijks krijg je een onduidelijke foutboodschap als je laatste versie van axios (momenteel v1.2.1) gebruikt, dit is een fix (zie <https://github.com/axios/axios/issues/5346>).
 
 Om dit te doen werken, moeten we onze configuratie in `config/custom-environment-variables.js` aanpassen. Zo kunnen we alle nodige instellingen meegeven via het environment en hoeven we deze niet te committen naar GitHub. Je mag zeker je username, password en client secret niet pushen.
 
