@@ -534,3 +534,7 @@ Nu zou je een mooie HTTP 401 moeten terugkrijgen indien er een probleem is met d
 ## Oplossing
 
 Zoals altijd is een oplossing te vinden in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget), deze keer op de branch `feature/auth0` in commit `8ebb0ec`.
+
+## Must reads/see
+
+- [Cracking JSON Web Tokens](https://www.youtube.com/watch?v=2RKCDhH6dyA)
