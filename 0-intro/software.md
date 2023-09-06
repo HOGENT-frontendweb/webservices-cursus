@@ -12,8 +12,6 @@ Voor dit vak gaan we ervan uit dat je volgende **software installeert en configu
 
 ## NodeJS
 
-> Dit academiejaar kiezen we voor NodeJS v18.x.x, op 25/10/2022 wordt dit de [volgende LTS-versie](https://nodejs.org/en/about/releases/).
-
 Installeer NodeJS via een package manager:
 
 - Windows: `choco install nodejs`
@@ -50,7 +48,6 @@ Of kies voor een manuele installatie door de laatste versie te downloaden vanaf 
 
 Een aantal **verplichte** plugins voor VS Code:
 
-- [Beautify](https://marketplace.visualstudio.com/items?itemName=HookyQR.beautify)
 - [Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [Path Intellisense](https://marketplace.visualstudio.com/items?itemName=christian-kohler.path-intellisense)
@@ -69,13 +66,12 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 2. Zoek op "settings" en kies voor `Preferences: Open User Settings (JSON)`
 3. Kopieer onderstaande JSON-code en voeg toe aan het JSON-bestand dat geopend werd. Zorg ervoor dat je een geldig JSON-object maakt!
 
+> Merk op: de laatste setting schakelt de "Trusted workspaces" uit. Indien je dit niet wenst, verwijder deze setting.
+
 ```json
 {
   "editor.codeActionsOnSave": {
     "source.fixAll": true
-  },
-  "[javascript]": {
-    "editor.defaultFormatter": "HookyQR.beautify"
   },
   "errorLens.delay": 500,
   "errorLens.enabledDiagnosticLevels": [
@@ -94,8 +90,6 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
   "security.workspace.trust.enabled": false
 }
 ```
-
-> Merk op: de laatste setting schakelt de "Trusted workspaces" uit. Indien je dit niet wenst, verwijder deze setting.
 
 Een thema kan je uiteraard zelf kiezen, maar [One Dark Pro](https://marketplace.visualstudio.com/items?itemName=zhuangtongfa.Material-theme) is wel een overzichtelijk thema.
 
