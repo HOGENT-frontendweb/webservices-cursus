@@ -4,8 +4,11 @@
   "description": "> An awesome project.",
   "main": "index.js",
   "scripts": {
-    "start": "docsify serve . --port 7891"
+    "start": "docsify serve ."
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "docsify-cli": "^4.4.4"
+  }
 }
