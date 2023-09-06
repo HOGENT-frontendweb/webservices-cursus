@@ -57,6 +57,7 @@ Een aantal optionele, maar toch handige plugins:
 - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 - [Git Blame](https://marketplace.visualstudio.com/items?itemName=waderyan.gitblame)
 - [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
+- [vscode-twoslash-queries](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-twoslash-queries)
 
 ### Configuratie VS Code
 
@@ -72,6 +73,9 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 {
   "editor.codeActionsOnSave": {
     "source.fixAll": true
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
   "errorLens.delay": 500,
   "errorLens.enabledDiagnosticLevels": [
