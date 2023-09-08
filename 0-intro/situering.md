@@ -20,7 +20,7 @@ Wij hebben gekozen voor Koa. Waarom? Het is van de makers van het populaire Expr
 
 Programmeren leer je enkel door het te doen, niet door onze cursus te lezen. Je zal bijgevolg merken dat in het cursusmateriaal enkel het absolute minimum staat.
 
-Voor dit olod is er een examenopdracht: [opdracht op Chamilo](https://chamilo.hogent.be/index.php?go=CourseViewer&application=Chamilo%5CApplication%5CWeblcms&course=53234&tool=Document&browser=Table&tool_action=Viewer&publication=2046581). Kort gezegd moet je een NodeJS back-end maken tegen week 13. De voorwaarden van deze back-end staan duidelijk in de opdracht. De bijbehorende front-end maak je in het olod Front-end Web Development (indien van toepassing).
+Voor dit olod is er een examenopdracht: [opdracht op Chamilo](https://chamilo.hogent.be/index.php?go=CourseViewer&application=Chamilo%5CApplication%5CWeblcms&course=58946&tool=Document&browser=Table&tool_action=Viewer&publication=2201044). Kort gezegd moet je een NodeJS back-end maken tegen week 13. De voorwaarden van deze back-end staan duidelijk in de opdracht. De bijbehorende front-end maak je in het olod Front-end Web Development (indien van toepassing).
 
 Het examen van dit olod is mondeling. Je doet een demo van je applicatie. Dit is geen commerciële presentatie maar simpelweg tonen wat de app kan (en/of wat niet). Daarna beantwoord je enkele vragen die polsen naar je kennis van NodeJS.
 
