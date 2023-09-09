@@ -557,6 +557,39 @@ console.log(hasThree);
 
 Er komen steeds nieuwe functies bij. Je kan de volledige lijst van functies vinden op [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array). Mogelijks zijn nieuwe functies nog niet meteen ondersteund door Node.js of door browsers. Je kan dan gebruik maken van een polyfill om de functies toch te gebruiken, bundlers (zie Front-end Web Development) kunnen hier ook bij helpen.
 
+## Diverse handigheidjes
+
+JavaScript heeft ook diverse kleine handigheidjes, we vullen deze lijst stelselmatig verder aan als we op iets nieuw stuiten.
+
+### Shorthand object initializer
+
+Bij het aanmaken van objecten moet je steeds `key: value` geven per attribuut in het object. Maar wat als de attributen (en de waarde) uit een variabele komen én de naam van het attribuut is gelijk aan de naam van de variabele? Dan kan je gebruik maken van een verkorte syntax:
+
+<div data-runkit>
+
+```javascript
+const name = 'John';
+const age = 42;
+
+// dit schrijven (en zien) we niet graag:
+const person = {
+  name: name,
+  age: age,
+};
+
+// het kan korter:
+const person2 = {
+  name,
+  age,
+};
+
+// beide bevatten hetzelfde:
+console.log(person);
+console.log(person2);
+```
+
+</div>
+
 ## Must read/watch
 
 - [Statements vs. expressions](https://www.joshwcomeau.com/javascript/statements-vs-expressions/)
