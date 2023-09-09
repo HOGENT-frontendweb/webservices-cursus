@@ -600,6 +600,12 @@ Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <
 
 Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het feedbacktemplate).
 
+### JS drills
+
+Vervolgens loont het de moeite om een aantal JavaScript-drilloefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScriptsyntax en -functionaliteiten.
+
+Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en lees de instructies in de README.
+
 ## Must read/watch
 
 - [Statements vs. expressions](https://www.joshwcomeau.com/javascript/statements-vs-expressions/)
