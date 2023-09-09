@@ -1,0 +1,7 @@
+{
+  "no-duplicate-heading": false,
+  "line-length": false,
+  "ul-style": { "style": "dash" },
+  "no-trailing-spaces": true,
+  "no-inline-html": false
+}
