@@ -18,7 +18,7 @@
       auto2top: true,
       name: 'Web Services',
       loadSidebar: true,
-      subMaxLevel: 2,
+      subMaxLevel: 3,
       alias: {
         // Prevent unnecessary fallbacks for the sidebar
         '/.*/_sidebar.md': '/_sidebar.md'
@@ -34,7 +34,11 @@
         persist: false,
         sync: false,
       },
-      formatUpdated: '{DD}/{MM}/{YYYY} {HH}:{mm}'
+      formatUpdated: '{DD}/{MM}/{YYYY} {HH}:{mm}',
+      runkit: {
+        nodeVersion: '18',
+        evaluateOnLoad: false,
+      }
     };
   </script>
 
@@ -54,6 +58,9 @@
   <script src="./scripts/accordion.js"></script>
   <!-- Add last updated date and time to the bottom of each page -->
   <script src="./scripts/lastUpdated.js"></script>
+
+  <!-- Support for executing JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/docsify-plugin-runkit@1"></script>
 </body>
 
 </html>

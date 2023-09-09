@@ -4,7 +4,7 @@
 
 - [0. Algemene info](./0-intro/situering.md)
 - [0. Software](./0-intro/software.md)
-- [1. JavaScript (WIP)](https://hogent-web.github.io/webservices-slides/1-javascript.html?presentation=false)
+- [1. JavaScript (WIP)](./1-javascript/index.md)
 - [2. REST API (WIP)](https://hogent-web.github.io/webservices-slides/2-REST.html?presentation=false)
 - [3. REST API bouwen (WIP)](https://hogent-web.github.io/webservices-slides/3-REST2.html?presentation=false)
 - [4. Datalaag (WIP)](https://hogent-web.github.io/webservices-slides/4-datalaag.html?presentation=false)
