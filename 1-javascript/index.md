@@ -604,7 +604,7 @@ Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je 
 
 Vervolgens loont het de moeite om een aantal JavaScript-drilloefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScriptsyntax en -functionaliteiten.
 
-Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en lees de instructies in de README.
+Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en lees de instructies in de README. De oplossingen zijn te vinden op de branch [`solution`](https://github.com/HOGENT-Web/webservices-ch1-exercise/tree/solution).
 
 ## Must read/watch
 
