@@ -7,7 +7,7 @@
 - [0. Software](./0-intro/software.md)
 - [1. JavaScript (WIP)](./1-javascript/index.md)
 - [2. REST API (WIP)](./2-REST/index.md)
-- [3. REST API bouwen (WIP)](https://hogent-web.github.io/webservices-slides/3-REST2.html?presentation=false)
+- [3. REST API (WIP)](./3-REST2/index.md)
 - [4. Datalaag (WIP)](https://hogent-web.github.io/webservices-slides/4-datalaag.html?presentation=false)
 - [5. Testing (WIP)](https://hogent-web.github.io/webservices-slides/5-testing.html?presentation=false)
 - [6. Validatie en foutafhandeling (WIP)](https://hogent-web.github.io/webservices-slides/6-validation.html?presentation=false)
