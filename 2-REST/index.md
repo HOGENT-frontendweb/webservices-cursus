@@ -2,49 +2,54 @@
 
 ## Wat is een API?
 
-Een **API (Application Programming Interface)** is een software-interface die het mogelijk maakt dat twee applicaties met elkaar kunnen communiceren. Dit in tegenstelling tot een User Interface, die mensen met software laat werken. Ze maken de overdracht van gegevens van systeem naar systeem mogelijk. API’s bieden een gestandaardiseerde toegang tot de applicatiegegevens. Meer op [https://www.youtube.com/watch?v=s7wmiS2mSXY&t=29s](https://www.youtube.com/watch?v=s7wmiS2mSXY&t=29s)
+Een **API (Application Programming Interface)** is een software-interface die het mogelijk maakt dat twee applicaties met elkaar kunnen communiceren. Dit in tegenstelling tot een User Interface, die mensen met software laat werken. Ze maken de overdracht van gegevens van systeem naar systeem mogelijk. API’s bieden een gestandaardiseerde toegang tot de applicatiegegevens. Meer op <https://www.youtube.com/watch?v=s7wmiS2mSXY>.
 
-### Een voorbeeld van het gebruik van een API
+### Voorbeeld van het gebruik van een API
 
-Stel als voorbeeld dat je een klantenbeheer systeem ontwerpt. Klanten hebben een naam, adres, koophistoriek, ... en je wilt dat je verkopers klanten en hun orders kunnen toevoegen / aanpassen / verwijderen.
-Je kiest ervoor om alle data in een SQL databank op te slaan, en via een webinterface de gebruikers toe te laten om deze data te bekijken en beheren.
-Je zou kunnen een monolitische applicatie bouwen, die op een server draait, de data via queries opvraagt, en daarmee dan html pagina's bouwt en die terug zendt naar de browser (en daar is niets mis mee, dat wordt heel vaak gedaan, en de technologieën daarvoor gaan jullie later nog leren)
-Maar een alternatief is dat je het opsplitst in twee programma's. Het ene ('server') beheert de data en de toegang tot de databank. En de andere ('client') biedt een web UI aan. (bijvoorbeeld omdat je ook een android applicatie wilt aanbieden die dezelfde data aanspreekt, en je het server gedeelte wil hergebruiken; of gewoon omdat je verschillende teams hieraan laat werken en je zo makkelijker "separation of concerns" afdwingt)
-En dan is het probleem: hoe 'praten' die twee programma's met elkaar?
-In theorie kan je perfect SQL queries over een netwerk sturen, en de antwoorden ontvangen, maar je voelt direct aan dat dat niet zo een goed idee is. Bij de minste wijziging van het databank schema moeten alle clients volledig mee herschreven worden.
-We hebben dus een betere methode nodig om over een netwerk data (en data wijzigingen) heen en terug te sturen, **REST** is zo'n manier.
+Stel je voor dat je bezig bent met het ontwerp van een klantenbeheersysteem. In dit systeem wil je gegevens zoals klantnamen, adressen en koophistorie bijhouden. Daarnaast moeten verkopers de mogelijkheid hebben om klanten en hun bestellingen toe te voegen, te bewerken en te verwijderen.
+
+Om deze gegevens op te slaan, heb je ervoor gekozen om gebruik te maken van een relationele databank. Om gebruikers in staat te stellen deze gegevens te bekijken en te beheren, overweeg je het gebruik van een webinterface.
+
+Een benadering om dit te realiseren is het ontwikkelen van een monolithische applicatie, die op één server draait en gegevens ophaalt via database queries. Vervolgens worden HTML-pagina's gegenereerd en teruggestuurd naar de webbrowser. Dit is een veelgebruikte methode en zal later in de opleiding ook aan bod komen.
+
+Echter, een alternatieve aanpak is om het systeem op te splitsen in twee afzonderlijke programma's. Eén programma (de **server**) beheert de gegevens en de toegang tot de database, terwijl het andere (de **client**) een webinterface biedt. Je kan deze keuze maken omdat je bv. ook een Android-applicatie wil aanbieden die dezelfde data aanspreekt, en je het servergedeelte wil hergebruiken. Het kan ook handig zijn als verschillende teams aan de ontwikkeling werken, om een zo het principe van "separation of concerns" af te dwingen.
+
+Nu doemt de vraag op: hoe communiceren deze twee programma's met elkaar?
+
+In theorie zou je SQL-query's (vanuit de client) over een netwerk kunnen verzenden en de resultaten kunnen ontvangen, maar al snel zul je inzien dat dit niet de beste aanpak is. Zelfs kleine wijzigingen in het databankschema zouden vereisen dat alle clients volledig herschreven moeten worden.
+
+Daarom is het noodzakelijk om een efficiëntere methode te gebruiken om gegevens (en wijzigingen daarin) over het netwerk te verzenden, en **REST** is een van deze methoden.
 
 ### REST
 
-**Representational state transfer (REST)** is een **architectuurstijl** waarmee software met andere software kan communiceren. De term werd geïntroduceerd en gedefinieerd in 2000 door Roy Fielding in zijn [doctoraatsstudie](http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm). REST wordt veelal gebruikt voor het ontwerpen van API's voor het internet. REST gebruikt de **HTTP-methoden(GET / POST / PUT /DELETE)** om data tussen een clientapparaat en een server op te halen en te posten.
+**Representational state transfer (REST)** is een **architectuurstijl** waarmee software met andere software kan communiceren. De term werd geïntroduceerd en gedefinieerd in 2000 door Roy Fielding in zijn [doctoraatsstudie](http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm). REST wordt veelal gebruikt voor het ontwerpen van API's voor het internet. REST gebruikt de **HTTP-methoden(GET / POST / PUT /DELETE)** om data tussen een client en een server op te halen en te verzenden.
 
 Met het HTTP-protocol kunnen REST API’s software op het ene apparaat laten praten met software op een ander apparaat (of op hetzelfde apparaat), zelfs als deze verschillende besturingssystemen en architecturen gebruiken. De client kan om **resources** vragen in een taal die de server begrijpt, en de server reageert met de resource in een taal die de client kan verwerken. De server retourneert de **resource** in **JSON** (JavaScript Object Notation), XML (Extensible Markup Language) of tekstindelingen, maar veel API’s ondersteunen responses in aanvullende talen.
 
-### API-requests
+### API requests
 
 #### Resources
 
-Het fundamentele concept van een RESTful API is de **resource**. Alle informatie die benoemd kan worden is een resource: een document, afbeelding, verzameling (collection) van resources, niet-virtueel object (bijvoorbeeld een klant) etc. REST gebruikt een **resource identifier** om een resource te identificeren.
+Het fundamentele concept van een RESTful API is de **resource**. Alle informatie die benoemd kan worden is een resource: een document, afbeelding, verzameling (= collection) van resources, niet-virtueel object (bv. een klant), enz. REST gebruikt een **resource identifier** om een resource te identificeren.
 
-De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De uri verwijst naar een collectie. Gebruik hiervoor een zelfstandig naamwoord in het meervoud. Gebruik GEEN actiemethodes (een werkwoord)(uitz api/login en api/register voor het aanmelden en registreren). De data is dus opgebouwd uit resources en collecties, maar het is geen relationele database! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
+De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie. Gebruik hiervoor een zelfstandig naamwoord in het meervoud. Gebruik GEEN actiemethodes (een werkwoord), met uitzondering van `/api/users/login` en `/api/users/register` voor het aanmelden en registreren. De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
+
+Bekijk onderstaand voorbeeld. Let op de opbouw van de databank (= ERD), van de URI bovenaan en van de response (geel). Je merkt een duidelijk verschil tussen het databankschema en de response. Het is dus niet altijd zo dat de databankstructuur overeenkomt met de response. De API-ontwikkelaar beslist hoe de response eruit ziet. Lek dus geen implementatiedetails door in de response.
 
 ![Een voorbeeld](./images/rest_resources.png)
 
-#### http methods
+#### HTTP methods
 
-Een http request heeft naast een resource identifier ook altijd een **method**. Deze methods mappen perfect op de CRUD operaties, en worden dus zo gebruikt.
+Een HTTP request heeft naast een resource identifier ook altijd een **method**. Deze methods mappen perfect op de CRUD operaties, en worden als volgt gebruikt:
 
-1. GET: Read, data opvragen
+1. GET: Read - data opvragen
+2. POST: Create - nieuwe data toevoegen
+3. PUT: Update - data aanpassen
+4. DELETE: Delete - data verwijderen
 
-2. POST: Create, nieuwe data toevoegen
+Voor de resource uit ons klantenvoorbeeld hebben we volgende URI's. Merk op dat een resource steeds onderdeel is van een collectie, hier ‘Klanten'.
 
-3. PUT: Update, data aanpassen
-
-4. DELETE: Delete, data verwijderen
-
-Voor de klant resource hebben we volgende uri's. Merk op een resource is steeds onderdeel van een collectie, hier ‘Klanten'.
-
-| http-methode en uri      | resultaat                                  |
+| HTTP method en URI       | Resultaat                                  |
 | ------------------------ | ------------------------------------------ |
 | GET `/api/klanten`       | vraag een lijst van klanten op             |
 | GET `/api/klanten/32`    | vraag informatie op van de klant met id 32 |
@@ -52,81 +57,112 @@ Voor de klant resource hebben we volgende uri's. Merk op een resource is steeds 
 | PUT `/api/klanten/145`   | wijzig de informatie van klant met id 145  |
 | DELETE `/api/klanten/12` | verwijder klant met id 12                  |
 
-Een ander voorbeeld: [de brewery api](https://www.openbrewerydb.org/documentation)
+Een ander voorbeeld: [de brewery API](https://www.openbrewerydb.org/documentation)
 
 In de kern betekent REST dat je met collecties werkt met daarin resources, die je op een gestructureerde manier hebt opgebouwd, zodat de structuur voor iedere gebruiker helder is.
 
-Bovendien kunnen resources gemanipuleerd worden door hun voorstelling. Als een client een voorstelling van een resource heeft (inclusief eventuele metadata) heeft hij genoeg om resources aan te passen of te wijzigen en die wijzigingen terug door te sturen naar de API.
+Bovendien kunnen resources gemanipuleerd worden door hun voorstelling. Als een client een voorstelling van een resource heeft (inclusief eventuele metadata), heeft hij genoeg om resources aan te passen en die wijzigingen terug door te sturen naar de API.
 
-Er zijn nog een aantal Http request methods (PATCH, CONNECT, HEAD, OPTIONS, TRACE), maar die worden in de context van REST servers (bijna) niet gebruikt. (PATCH kom je soms eens tegen)
+Er zijn nog een aantal HTTP request methods (PATCH, CONNECT, HEAD, OPTIONS, TRACE), maar die worden in de context van REST servers (bijna) niet gebruikt. PATCH kom je soms eens tegen, en HEAD wordt frequent gebruikt in de context van bv. CORS, maar dat is voor later.
 
 #### POST vs PUT
 
 Wat soms tot verwarring leidt is wanneer je POST en wanneer je PUT gebruikt.
 
+Als je een nieuw enkelvoudig element toevoegt, is het duidelijk dat je een POST gebruikt. Maar wat als je een nieuw element aan een lijst toevoegt (denk aan een nieuw item in een bestelling)? Is dat een update van een bestaande lijst (PUT), of een POST, want er wordt een nieuw element toegevoegd?
+
 Voor een enkelvoudig element is het verschil duidelijk, maar wat als een element toegevoegd wordt aan een lijst. Is dat een update van een bestaande lijst (PUT), of een POST, want er wordt een nieuw element toegevoegd?
 
 Soms lees je wel eens dat je een POST gebruikt als het request resulteert in een nieuwe entry in de databank, en anders een PUT. Maar dat impliceert dat je de databank layout kent, en daar wil je niet op steunen natuurlijk.
 
-Eerlijk gezegd, als het een situatie is waar het niet vanzelfsprekend is wat je best gebruikt, doet het er niet echt toe ook. Technisch maakt het helemaal niets uit, het is gewoon een kwestie van afspraken. Het is wel belangrijk dat je eenduidig bent (niet de ene keer PUT en de andere keer POST voor eenzelfde situatie met een andere resource)
-Én dat je geen GET gebruikt, bvb. `GET /employee/create?name=rudy&age=27`, zoals je pre-REST soms wel eens zeg (of nu jammer genoeg nog altijd)
+Eerlijk gezegd, als het een situatie is waar het niet vanzelfsprekend is wat je best gebruikt, doet het er niet echt toe ook. Technisch maakt het helemaal niets uit, het is gewoon een kwestie van afspraken. Het is wel belangrijk dat je eenduidig bent, niet de ene keer PUT en de andere keer POST voor eenzelfde situatie met een andere resource.
+
+Gebruik in geen geval een GET, bv. `GET /employee/create?name=rudy&age=27`, zoals je pre-REST soms wel eens zag (of nu jammer genoeg nog altijd).
+
+#### PUT vs PATCH
+
+Ook het verschil tussen PUT en PATCH is niet altijd duidelijk.
+
+PUT en PATCH zijn beide methodes om een resource aan te passen. Het verschil is dat PUT de volledige resource doorstuurt, terwijl PATCH enkel de gewijzigde velden doorstuurt. In het voorbeeld van onze klanten zal een PUT de hele klant doorsturen terwijl een PATCH bv. enkel de naam doorstuurt.
 
 ### API responses
 
-De API-ontwikkelaar beslist welke formaten ze ondersteunen voor de respons. Een server kan bijvoorbeeld reageren met JSON, XML of tekst. De API moet de mogelijkheid hebben om de respons op te maken op basis van de behoeften van de client. IN het Klanten voorbeeld wordt JSON geretourneerd.
+De API-ontwikkelaar beslist welke formaten ze ondersteunen voor de response. Een server kan bijvoorbeeld reageren met JSON, XML of tekst. De API moet de mogelijkheid hebben om de response op te maken op basis van de behoeften van de client. In het voorbeeld van de klanten wordt JSON geretourneerd.
 
 Voor de responses wordt ook steeds een **HTTP status code** gebruikt. Bij een succesvol request wordt er een 2xx HTTP status code teruggegeven:
 
-![succesvolle responses](./images/api-response-succes.png)
+| Code    | Status     | Beschrijving                                                                        |
+| ------- | ---------- | ----------------------------------------------------------------------------------- |
+| **200** | OK         | Het request is geslaagd.                                                            |
+| **201** | Created    | Een resource is aangemaakt met een POST request. Het antwoord bevat een empty body. |
+| **204** | No Content | Een PUT, PATCH of DELETE request slaagt. Het antwoord bevat een empty body.         |
 
-Bij een foutmelding wordt een van de volgende status codes teruggegeven.
+Bij een foutmelding wordt een van de volgende status codes teruggegeven. Een code 4xx wordt gebruikt als de fout bij de client ligt, een code 5xx als de fout bij de server ligt.
 
-![succesvolle responses](./images/api-response-failure.png)
+| Code    | Status                | Beschrijving                                                                                                                              |
+| ------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| **400** | Bad Request           | Het request is ongeldig (bv. foute parameters in URL of body).                                                                            |
+| **401** | Unauthorized          | De authenticatie faalt, bv. door een onjuist wachtwoord of de client is simpelweg niet aangemeld.                                         |
+| **403** | Forbidden             | De client is aangemeld maar heeft geen toegang tot de resource (= onvoldoende rechten).                                                   |
+| **404** | Not Found             | De resource is niet gevonden.                                                                                                             |
+| **405** | Method Not Allowed    | De HTTP method is niet toegelaten voor deze resource.                                                                                     |
+| **406** | Not Acceptable        | De client heeft een accept header gestuurd die niet ondersteund wordt (bv. gevraagd om XML terwijl de server enkel JSON kan retourneren). |
+| **429** | Too Many Requests     | De client heeft te veel requests gestuurd in een bepaalde tijdspanne.                                                                     |
+| **500** | Internal Server Error | Er is een fout opgetreden aan de serverkant.                                                                                              |
+| **501** | Not Implemented       | Het endpoint is niet geïmplementeerd.                                                                                                     |
+| **503** | Service Unavailable   | De server is tijdelijk niet beschikbaar.                                                                                                  |
 
 ### Wat bedoelen we met REST-architectuurstijl?
 
 REST is een reeks principes die een ontwikkelaar moet volgen voordat hij zijn API als “RESTful” kan beschouwen. De principes zeggen niets over hoe de API moet worden geïmplementeerd.
 
-1.  **Uniforme interface**: een request identificeert een **resource** (zie verder), door gebruik te maken van **URI's** (uniform resource identifier). Er zijn vier architecturele beperkingen nodig om het gedrag van componenten vast te leggen:
+<!-- markdownlint-disable ol-prefix -->
 
-- Identificatie van resources
-- Manipulatie van resources door representations (JSON, XML,...)
-- Zelf-omschrijvende berichten
-- Hypermedia als de drijvende kracht van de applicatie status. De applicatie in deze context is de web applicatie die je server runt, hypermedia de hyperlinks/links die de server meestuurt in het antwoord.
+1. **Uniforme interface**: een request identificeert een **resource** (zie verder), door gebruik te maken van **URI's**. Er zijn vier architecturele beperkingen nodig om het gedrag van componenten vast te leggen:
 
-2.  **Client/server-architectuur**: de clients van de API gebruiken HTTP-calls om een resource te vragen (een GET-methode) of data naar de server te sturen (een PUT,POST of DELETE-methode). De client moet voldoende hebben aan de verschillende URI's voor alle resources. De documentatie van de API bevat de beschikbare uri's/methoden die door de API worden ondersteund. De client en de server moeten onafhankelijk van mekaar kunnen evolueren. Door de gebruikers interface te scheiden van de opslag, kan een gebruikersinterface voor meerdere platformen gebouwd worden.
-3.  **Stateless**: een stateless applicatie houdt geen verbinding in stand en slaat geen informatie op tussen requests van dezelfde client. Een client doet een request, de API voert de actie uit die in de request is gedefinieerd en reageert. Zodra de API reageert, verbreekt hij de verbinding en hij bewaart geen informatie over de client in het actieve geheugen. De API behandelt elke request als eerste request. Dit betekent dat ieder verzoek(request) van client naar server moet alle nodige informatie bevatten om het verzoek te begrijpen en kan geen gebruik maken van enige opgeslagen context op de server. De sessie status wordt volledig op de client opgeslagen.
-4.  **Cacheable**: een REST API moet caching van vaak gevraagde data mogelijk maken. Om bandbreedte, latency en serverbelasting te verminderen moet een API identificeren wat cachebare resources zijn, wie ze kan cachen en hoelang ze in de cache kunnen blijven.Goede caching maakt dat de server beter schaalt (want minder requests dient te verwerken) én dat de client sneller reageert. Als een antwoord cacheable is, krijgt de client rechten om het antwoord opnieuw te gebruiken voor latere, soortgelijke verzoeken.
-5.  **Gelaagd systeem**: een API kan meerdere lagen hebben, zoals proxyservers of loadbalancers, en de eindpuntserver kan extra servers inzetten om een respons te formuleren. De client weet niet welke server op de request reageert. Met een gelaagd systeem is een API makkelijker uit te breiden en dus schaalbaarder. Bvb de API staat op Server A, de data op Server B en de authenticatie wordt afgehandeld op Server C. Het grote voordeel is dat ze dan onafhankelijk van elkaar kunnen schalen, één grote zware database server met daarvoor een aantal kleine lichtere API servers bijvoorbeeld
+- Identificatie van resources.
+- Manipulatie van resources door representations (JSON, XML..).
+- Zelf-omschrijvende berichten.
+- Hypermedia als de drijvende kracht van de applicatie status. De applicatie in deze context is de web applicatiedie je server draait, hypermedia de hyperlinks/links die de server meestuurt in het antwoord.
 
-## Postman
+2. **Client/server-architectuur**: de clients van de API gebruiken HTTP calls om een resource te vragen (een GET-methode) of data naar de server te sturen (een PUT, POST of DELETE-methode). De client moet voldoende hebben aan de verschillende URI's voor alle resources. De documentatie van de API bevat de beschikbare URI's/methoden die door de API worden ondersteund. De client en de server moeten onafhankelijk van elkaar kunnen evolueren. Door de gebruikers interface te scheiden van de opslag, kan een gebruikersinterface voor meerdere platformen gebouwd worden.
+
+3. **Stateless**: een stateless applicatie houdt geen verbinding in stand en slaat geen informatie op tussen requests van dezelfde client. Een client doet een request, de API voert de actie uit die in het request is gedefinieerd en reageert. Zodra de API reageert, verbreekt hij de verbinding en bewaart hij geen informatie over de client in het actieve geheugen. De API behandelt elke request als een eerste request. Dit betekent dat ieder request van client naar server alle nodige informatie moet bevatten om het verzoek te begrijpen en kan geen gebruik maken van enige opgeslagen context op de server. De sessie-status wordt volledig op de client opgeslagen.
+
+4. **Cacheable**: een REST API moet caching van vaak gevraagde data mogelijk maken. Om bandbreedte, vertraging (= latency) en serverbelasting te verminderen moet een API identificeren wat cachebare resources zijn, wie ze kan cachen en hoelang ze in de cache kunnen blijven. Goede caching maakt dat de server beter schaalt (want minder requests te verwerken) én dat de client sneller reageert. Als een antwoord cacheable is, krijgt de client rechten om het antwoord opnieuw te gebruiken voor latere, soortgelijke verzoeken.
+
+5. **Gelaagd systeem**: een API kan meerdere lagen hebben, zoals proxyservers of loadbalancers, en de eindpuntserver kan extra servers inzetten om een response te formuleren. De client weet niet welke server op het request reageert. Met een gelaagd systeem is een API eenvoudiger uit te breiden en dus schaalbaarder. Bv. de API staat op Server A, de data op Server B en de authenticatie wordt afgehandeld op Server C. Het grote voordeel is dat ze dan onafhankelijk van elkaar kunnen schalen, bv. één grote, zware databankserver met daarvoor een aantal kleine, lichtere API servers.
+
+<!-- markdownlint-enable ol-prefix -->
+
+## REST clients
 
 ### GET
 
-GET requests kan je altijd makkelijk testen, gewoon in de adresbalk de URL typen en je browser toont het resultaat.
+GET requests kan je altijd eenvoudig testen. Typ de URL in de adresbalk van de browser en je browser toont het resultaat.
 
-Bijvoorbeeld, een API die het weer terug geeft [http://wttr.in/Gent?format=j1](http://wttr.in/Gent?format=j1)
+Probeer bijvoorbeeld eens het weer in Gent (of jouw gemeente/stad) op te vragen via: <http://wttr.in/Gent?format=j1>.
 
 ### POST/PUT
 
-POST en PUT requests zijn iets lastiger te testen, meestal moet je hier ook data meesturen in de body van de requests (waarom ben je anders een POST aan het doen?) en dat kan niet meer zo makkelijk in de browser
-Uiteindelijk is het natuurlijk de bedoeling dat de API via de client (een programma) aangesproken wordt, maar als je aan het ontwikkelen bent is het handig om software te hebben die alle soorten requests kan genereren. (niet in het minst voor als er iets niet werkt, dan weet je tenminste snel of het probleem zich aan de front- of backend bevindt)
+POST en PUT requests zijn iets lastiger te testen. Meestal moet je hier ook data meesturen in de body van de requests en dat kan niet zo eenvoudig in de browser. Uiteindelijk is het natuurlijk de bedoeling dat de API via de client (een programma) aangesproken wordt. Echter als je aan het ontwikkelen bent, is het handig om software te hebben die alle soorten requests kan genereren. Dit is zeker handig als er iets niet werkt, op die manier kan je testen of het probleem zich voordoet in de front- of back-end.
 
-Een vaak gebruikt programma hiervoor is [https://www.postman.com](https://www.postman.com)
+Een vaak gebruikt programma hiervoor is [Postman](https://www.postman.com). Er zijn ook alternatieven zoals bv. [Insomnia](https://insomnia.rest/) of [Thunder Client](https://marketplace.visualstudio.com/items?itemName=rangav.vscode-thunder-client) (een extensie voor VSCode).
 
 ### Postman
 
-Postman is ooit begonnen als een simpele applicatie om API's te testen maar is ondertussen gegroeid en gegroeid en een 'platform' geworden. Je kan allerlei collaboratie / automatisaties uitvoeren. Het is zowel als losstaande applicatie als in een browser bruikbaar. Maar je kan gelukkig nog altijd gewoon wat requests uitvoeren ook (al heb je tegenwoordig wel een account nodig om iets te kunnen doen 🙄)
+Postman is ooit begonnen als een simpele applicatie om API's te testen maar is ondertussen gegroeid en gegroeid en een heus platform geworden. Je kan allerlei collaboratie en automatisaties uitvoeren. Het is zowel als losstaande applicatie als in een browser bruikbaar. Maar je kan gelukkig nog altijd gewoon wat requests uitvoeren ook (al heb je tegenwoordig wel een account nodig om iets te kunnen doen 🙄).
 
 ### POST request
 
 ![Een POST request in Postman](./images/postman1.png)
-Je kiest de juiste method en typt de url in (we gebruiken hier een open API om afbeeldingen te generen:
-[https://kroki.io/plantuml/svg](https://kroki.io/plantuml/svg))
 
-Dan moeten we nog onze data in de body doorsturen, we specifiëren eerst dat de data plain text zal zijn in de headers (dit soort dingen is heel API afhankelijk)
+Je kiest de juiste method en typ de URL in het veld. We gebruiken hier een publieke API om afbeeldingen te generen:
+<https://kroki.io/plantuml/svg>.
 
-In de body komt de UML code te staan (kopieer gerust, code staat onder de afbeelding!). Dit is de beschrijving voor een simpel use case diagram (uiteraard weer zeer API afhankelijk dit)
+Vervolgens moeten we nog onze data in de body doorsturen. We specifiëren eerst in de `Content-Type` header dat we plain text zullen doorsturen.
+
+Uiteindelijk komt in de body de UML code te staan (kopieer gerust, code staat onder de afbeelding!). Dit is de beschrijving voor een simpel use case diagram (in PlantUML syntax).
 
 ![Een POST request in Postman - vervolg](./images/postman2.png)
 
@@ -148,23 +184,25 @@ customer -- (checkout)
 
 ## 3rd party API's
 
-Vaak worden API's en de client samen ontwikkeld (en een API leren ontwikkelen is in eerste instantie waar deze cursus over gaat), maar er zijn ook veel API's die op zich aangeboden worden en door (vele) verschillende clients gebruikt worden, bvb weersvoorspellingen, beursdata, ...
-Soms volledig gratis, soms altijd betalend, maar heel vaak daar ergens tussenin (bvb. eerste XXX requests / maand gratis, en dan €YYY per 1000 requests)
-Als ze (deels) betalend zijn komt er authorisatie bij kijken: om je te kunnen laten betalen, moet de API weten wie je bent en welke requests je doet natuurlijk.
+Vaak worden API's en de client samen ontwikkeld, en een API leren ontwikkelen is in eerste instantie waar deze cursus over gaat. Natuurlijk zijn er ook veel API's die op zich aangeboden worden en door (vele) verschillende clients gebruikt worden, zoals bv. weersvoorspellingen, beursdata...
 
-Daarover later meer, maar we kennen nu al genoeg om een oefening te maken met een publieke API.
+Soms zijn API's volledig gratis, soms volledig betalend, maar heel vaak daar ergens tussenin (bv. eerste XXX requests, eerste x maanden gratis, en dan €YYY per 1000 requests). Als ze (deels) betalend zijn, komt er authorisatie bij kijken: om je te kunnen laten betalen, moet de API weten wie je bent en welke requests je doet natuurlijk. Daarover later meer, maar we kennen nu al genoeg om een oefening te maken met een publieke API.
 
-Een mooi voorbeeld van publieke API's zijn de 100+ datasets die de stad Gent aanbiedt als open data, van de bezetting van de parkeergarages tot de locatie van de grazende schapen [https://data.stad.gent/explore/](https://data.stad.gent/explore/?disjunctive.keyword&disjunctive.theme&sort=modified)
+Een mooi voorbeeld van publieke API's zijn de 100+ datasets die de stad Gent aanbiedt als open data, van de bezetting van de parkeergarages tot de locatie van de grazende schapen: [https://data.stad.gent/explore/](https://data.stad.gent/explore/?disjunctive.keyword&disjunctive.theme&sort=modified).
 
-Maar er zijn er nog veel meer natuurlijk, een uitgebreide (niet exhaustieve) lijst van publiek beschikbare API's kan je hier vinden:[https://github.com/public-apis/public-apis](https://github.com/public-apis/public-apis)
+Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exhaustieve) lijst van publiek beschikbare API's kan je hier vinden: <https://github.com/public-apis/public-apis>.
 
 ### Oefening
 
-- Installeer [Postman](https://www.postman.com) en maak een account aan
-- Check dat alles werkt door de FBI's most wanted list op te vragen (GET request naar [https://api.fbi.gov/wanted/v1/list](https://api.fbi.gov/wanted/v1/list) )
-- Gebruik [http://kroki.io](http://kroki.io/erd) om de volgende erd te creëeren:
+- Installeer [Postman](https://www.postman.com) en maak een account aan.
+- Check dat alles werkt door de FBI's most wanted list op te vragen.
+  - Stuur hiervoor een GET request naar <https://api.fbi.gov/wanted/v1/list>.
+- Gebruik <http://kroki.io/erd> om onderstaand ERD te creëeren.
+  - Als je via de browser klikt op de link is het logisch dat je een 404 krijgt, je moet een POST uitvoeren via Postman.
 
 ![ERD](./images/kroki_erd.svg)
+
+<!-- TODO: hier verder gaan -->
 
 ## API routes beveiligen
 
@@ -316,7 +354,7 @@ Een live draaiende server herstart in principe natuurlijk nooit, maar tijdens he
 }
 ```
 
-1. package.json houdt bij welke packages we allemaal geïnstalleerd hebben, met hun versie. Dit maakt dat een andere programmeur makkelijk dezelfde omgeving kan opzetten, zonder dat we onze immense node_modules folder (of andere binaries) moeten syncen
+1. package.json houdt bij welke packages we allemaal geïnstalleerd hebben, met hun versie. Dit maakt dat een andere programmeur eenvoudig dezelfde omgeving kan opzetten, zonder dat we onze immense node_modules folder (of andere binaries) moeten syncen
 2. btw, NOOIT `node_modules` naar github pushen, gebruik .gitignore!!!
 3. Maar naast dependencies kunnen we hier ook scripts definiëren, die bepalen hoe onze server start, hoe testen gerunt worden etc. We voegen nu een start script toe, dat onze nodemon aanroept. En dan kunnen we starten met `yarn start`
 
@@ -324,7 +362,7 @@ Wijzig de hello world en kijk hoe je de server niet meer dient te herstarten (ev
 
 ## Winston
 
-Manueel links en rechts wat middleware injecteren om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om makkelijk meer of minder te loggen al naargelang we in productie of dev draaien.
+Manueel links en rechts wat middleware injecteren om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om eenvoudig meer of minder te loggen al naargelang we in productie of dev draaien.
 
 Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. En nog veel meer..., een goede logger is best een uitgebreid stuk software.
 
@@ -355,7 +393,7 @@ Onderstaand ERD zou een oplossing zijn vol met bovenstaande frequently made erro
 
 Onderstaande code werd hiervoor gebruikt:
 
-```
+```erd
 [Recipe]
 *name
 
@@ -453,5 +491,10 @@ Lees ook de [Best practices for sub and nested resources](https://www.moesif.com
 
 ## Oefening 2 - Je eigen project
 
-- Maak een ERD
-- Definieer de bijhorende endpoints
+Vorige les heb je (normaal gezien) nagedacht over het onderwerp van de examenopdracht. Daarop gaan we nu verder bouwen.
+
+Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <https://github.com/BurntSushi/erd>. Hou hierbij rekening met relaties en hoe je deze wegwerkt in een relationele databank (indien van toepassing).
+
+Definieer vervolgens de bijhorende endpoints. Gebruik hiervoor de best practices die je in dit hoofdstuk geleerd hebt. Je kan ook de API calls van de voorbeeldoplossing van de vorige oefening als leidraad gebruiken.
+
+Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het feedbacktemplate).

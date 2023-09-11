@@ -590,9 +590,9 @@ console.log(person2);
 
 </div>
 
-## Oefening
+## Oefeningen
 
-### Examenopdracht
+### Oefening 1 - Je eigen project
 
 Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](../0-intro/situering?id=wat-gaan-jullie-doen). De ervaring leert ons dat het enige tijd vergt om de leerstof van Web Services te verwerken en dat je tijdig moet beginnen aan de opdracht (maar dat is altijd, toch?).
 
@@ -600,7 +600,7 @@ Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <
 
 Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het feedbacktemplate).
 
-### JS drills
+### Oefening 2 - JS drills
 
 Vervolgens loont het de moeite om een aantal JavaScript-drilloefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScriptsyntax en -functionaliteiten.
 
