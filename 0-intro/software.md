@@ -12,18 +12,19 @@ Voor dit vak gaan we ervan uit dat je volgende **software installeert en configu
 
 ## NodeJS
 
-Installeer NodeJS via een package manager:
+Installeer NodeJS (**minimaal versie 20.6.0**) via een package manager:
 
 - Windows: `choco install nodejs`
 - macOS: `brew install node`
 - Linux: [distro afhankelijk](https://nodejs.org/en/download/package-manager)
 
-Of kies voor een manuele installatie door v18 te downloaden vanaf de website: <https://nodejs.org/en/>.
+Of kies voor een manuele installatie door **minimaal v20.6.0** te downloaden vanaf de website: <https://nodejs.org/en/>.
 
 Check na de installatie of NodeJS correct geïnstalleerd is door volgend commando uit te voeren:
 
 ```bash
-node --version
+$ node --version
+v20.6.0
 ```
 
 ## Yarn
