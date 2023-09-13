@@ -202,192 +202,73 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
 ![ERD](./images/kroki_erd.svg)
 
-<!-- TODO: hier verder gaan -->
-
 ## API routes beveiligen
 
-Sommige API's zijn vrij te gebruiken door iedereen (zoals de FBI most wanted) maar heel vaak is dat niet zo.
+Sommige API's zijn door iedereen vrij te gebruiken, zoals de FBI most wanted, maar heel vaak is dat niet zo.
 Er zijn in essentie twee redenen om een API call af te schermen
 
-- er zit gevoelige data achter die slechts één iemand of een beperkt aantal personen mag zien (neem bijvoorbeeld een facebook feed)
+- er zit gevoelige data achter die slechts één iemand of een beperkt aantal personen mag zien (neem bijvoorbeeld een Facebook feed)
 - de API aanbieden / beschikbaar stellen kost geld en de toegang moet dus gecontroleerd / gemeten worden
 
-Als data persoonlijk is wordt er meestal met een **login** systeem gewerkt, en tokens / cookies. Daarover in een later hoofdstuk (veel) meer. Maar als het gaat om te traceren hoe vaak een API gebruikt wordt is een login systeem niet echt een optie:
-Stel bijvoorbeeld dat jouw applicatie onderliggend google maps gebruikt. Het is niet echt realistisch dat iedereen die jouw applicatie gebruikt eerst met jouw credentials zou moeten inloggen of iets dergelijks.
-Voor zo'n use cases maakt men vaak gebruik van **API keys**
+Als data persoonlijk is wordt er meestal met een **login** systeem gewerkt (en tokens of cookies). Daarover in een later hoofdstuk (veel) meer. Maar als het gaat om te traceren hoe vaak een API gebruikt wordt is een login systeem niet echt een optie.
+
+Stel bijvoorbeeld dat jouw applicatie onderliggend Google Maps gebruikt. Het is niet echt realistisch dat iedereen die jouw applicatie gebruikt eerst met jouw credentials zou moeten inloggen of iets dergelijks. Voor zo'n use cases maakt men vaak gebruik van **API keys**.
 
 ### API keys
 
-Er valt veel te zeggen over hoe die dingen opgebouwd worden en werken, maar dat valt een beetje buiten de scope van deze cursus. Maar we willen toch een aantal best practices meegeven, voor diegenen die een 3rd party API verwerken in hun opdracht. Simpel gezegd is een API key een soort random string die je identificeert en die niet kan geraden worden. Dus als iemand jouw API key heeft, kan hij zich als jou voordoen (en dus op jouw kosten een API gebruiken).
-Dus nooit een API key in de client steken, maak requests naar je eigen API, en doe de third party access vanaf je eigen server. Hardcode nooit een API key in je code (sla op in een aparte file die niet in git opgenomen is). Gebruik access control als je API key dat toelaat (bij google kan je bijvoorbeeld een key enkel laten werken vanaf bepaalde domeinen, vanuit bepaalde apps).
+Er valt veel te zeggen over hoe API keys opgebouwd worden en werken, maar dat valt een beetje buiten de scope van deze cursus. Maar we willen toch een aantal best practices meegeven voor diegenen die een 3rd party API verwerken in hun opdracht.
 
-[Hier kan je meer info vinden over de best practices voor het gebruik van google api keys](https://cloud.google.com/docs/authentication/api-keys)(maar hetzelfde geldt voor andere services hun keys ook)
+Simpel gezegd is een API key een soort random string die je identificeert en die niet kan geraden worden. Dus als iemand jouw API key heeft, kan hij zich als jou voordoen (en dus op jouw kosten een API gebruiken).
 
-## Server
+Steek dus nooit een API key in de client. Maak daarentegen requests naar je eigen API, en doe de third party access vanaf je eigen server. Hardcode nooit een API key in je code (sla op in een apart bestand dat niet in git opgenomen is). Gebruik access control als je API key dat toelaat (bij Google kan je bijvoorbeeld een key enkel laten werken vanaf bepaalde domeinen vanuit of vanuit bepaalde apps).
 
-We willen natuurlijk niet gewoon bestaande API's aanspreken maar zelf zo'n API server maken. Een web server is op zich geen magie, gewoon een programma dat luistert op een bepaalde poort en http requests parset en beschikbaar stelt. Aangezien http requests altijd hetzelfde zijn, schrijft niemand compleet van nul een webserver (behalve als interessante oefening eens). Je kan in elke programmeertaal een server schrijven, wij kiezen JavaScript en dus NodeJS
+[Hier kan je meer info vinden over de best practices voor het gebruik van Google API keys](https://cloud.google.com/docs/authentication/api-keys) (maar hetzelfde geldt voor de keys van andere services).
 
-### Node.js
+## REST - Een uitgewerkt voorbeeld
 
-**Node.js** is "Server side JavaScript", º2009. Het is een single-threaded, open source, platformonafhankelijke runtime-omgeving gebouwd bovenop v8, de JavaScript engine van Chrome (werd open source in 2008). Meer info op [https://kinsta.com/nl/kennisbank/wat-is-node-js/](https://kinsta.com/nl/kennisbank/wat-is-node-js/).
+We maken een applicatie waarmee hobbykoks recepten kunnen opslaan en delen met elkaar. Koks kunnen daarbij recepten van andere koks opslaan om bv. later eens uit te proberen.
 
-**NPM** is het package ecosysteem van Node.js. Het is het grootste ecosysteem van alle open source bibliotheken ter wereld, met meer dan 1 miljoen pakketten en het groeit nog steeds. NPM is gratis te gebruiken en duizenden open source ontwikkelaars dragen er dagelijks aan bij.
+### Entiteiten
 
-Voor het bouwen van web API's wordt er meestal een framework gebruikt en geen 'naakte' Node.js (Express waarschijnlijk de gekendste). Wij gaan [Koa](https://koajs.com/) gebruiken, het nieuwe hippe framework van hetzelfde team achter Express.
+We hebben drie entiteiten met volgende attributen:
 
-## Koa
+- User
+  - firstName
+  - lastName
+- adres
+- Recipe
+  - name
+  - createdBy (wie het recept toegevoegd heeft)
+- Ingredient
+  - name
+  - amount
+  - unit
+  - Relaties
 
-We maken eerst een nieuw project aan. Maak een nieuwe folder aan voor de webservice en installeer KOA.
+### Relaties
 
-```bash
-> mkdir webservices-budget
-> cd webservices-budget
-> yarn add koa
-```
+We onderscheiden volgende relaties:
 
-### De obligate Hello World
+Een gebruiker heeft meerdere opgeslagen recepten (niet verplicht om er te hebben)
+Een recept wordt toegevoegd door één gebruiker
+Een recept heeft meerdere ingrediënten
+Een ingrediënt hoort maar bij één recept
 
-Maak een bestand `index.js` aan in de root.
+### Frequently made errors (FME)
 
-```js
-const Koa = require('koa'); // 👈 1
-const app = new Koa(); // 👈 1
+Door de jaren heen merkten we een aantal terugkomende fouten in het ontwerp van applicaties die gemaakt werden voor onze examenopdracht. We sommen ze hier even op:
 
-app.use(async (ctx) => {
-  // 👈 3
-  ctx.body = 'Hello World';
-});
-
-app.listen(9000); // 👈 2
-```
-
-1. We importeren koa en initïaliseren een Koa object
-2. We laten het luisteren op poort 9000
-3. We geven als body de string "Hello World" terug, voor elke request
-4. Dit kunnen we testen door `node index.js` uit te voeren en naar [http://localhost:9000](http://localhost:9000) te surfen.
-
-## Middleware
-
-Koa is niet meer dan een grote 'ketting' van zogeheten middleware functies. Het idee is dat je allemaal verschillende functies definieert die elk een (kleine) taak op zich nemen en dat die in een bepaalde volgorde geïnstalleerd worden.
-Elke middleware functie voert dan zijn deel van het werk uit en roept dan gewoon 'next()' aan, de volgende functie kan dan verder werken met het bewerkte resultaat tot nu toe, tot de laatste die het antwoord terug geeft.
-
-![Koa middleware](./images/simple_middleware.png)
-
-Pas `index.js` aan.
-
-```js
-const Koa = require('koa');
-const app = new Koa();
-
-app.use(async ctx, next) => {// 👈 1 en 2
-ctx.body = 'Hello World';
-await next();
-});
-
-app.use(async (ctx, next) => {// 👈 3
-console.log(ctx);
-await next();
-});
-
-app.listen(9000);
-
-```
-
-1. `app.use` met een functie aanroepen is zo'n middleware functie installeren
-2. en de functie heeft een tweede parameter `next`, die de volgende functie in de ketting aanspreekt
-3. we kunnen bijvoorbeeld het context object eens loggen nadat we de body gezet hebben. Je dient `index.js` te herstarten en dan eens refreshen om het resultaat te zien.
-
-Koa doet heel wat werk voor ons doet (het request omzetten naar een geparsed object met alle info).
-
-Onze server maken is nu een heleboel zo'n middlewares installeren en zelf schrijven om elke request te verwerken.
-
-### Middlewares in Koa
-
-Middlewares in Koa zijn een beetje specialer dan in Node.js of Express bijvoorbeeld. In Koa is het mogelijk om tweemaal in elke middleware te komen:
-
-1. eens vóór de aanroep van `next()`
-2. én eens ná de aanroep van `next()`
-
-Dit is wat men het "onion model" noemt:
-
-![Onion model](images/onion-koa.jpg)
-
-Het request komt binnen en alle middlewares worden in volgorde van definitie uitgevoerd. Elk van deze middlewares roept vervolgens `next()` aan om de volgende middleware in rij uit te voeren. Uiteindelijk komt men ooit aan de laatste middleware en dan keert Koa terug in omgekeerde volgorde doorheen alle middlewares.
-Het is dus eenvoudig om iets voor en na `next()` uit te voeren:
-
-```js
-app.use(async (ctx, next) => {
-  // doe iets vooraf
-  await next();
-  // doe iets achteraf
-});
-```
-
-Hierbij is de **`await`** heel belangrijk! Als je deze vergeet, zal de code achter `next()` meteen uitgevoerd worden.
-
-Wil je niets meer doen in de middleware, dan doe je beter `return next()`. Deze middleware zal dan automatisch overgeslagen worden.
-
-Het mooie aan dit geheel is dat Koa hiervoor niets speciaal hoeft te doen, dit is het gedrag van Promises.
-
-## Nodemon
-
-```bash
-~/webservices-budget$> yarn add nodemon --dev
-```
-
-Een live draaiende server herstart in principe natuurlijk nooit, maar tijdens het ontwikkelen is het wel onhandig om altijd de server te moeten stoppen en herstarten telkens we iets willen zien of testen. Daarom maken we gebruik van
-[Nodemon](https://www.npmjs.com/package/nodemon). Nodemon houdt een folder in de gaten en herstart de server telkens er een file wijzigt. --dev installeert de package enkel in development (zie devDependencies)!!!
-
-### package.json
-
-```json
-{
-  "scripts": {
-    "start": "nodemon index.js"
-  },
-  "dependencies": {
-    "koa": "^2.14.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
-  }
-}
-```
-
-1. package.json houdt bij welke packages we allemaal geïnstalleerd hebben, met hun versie. Dit maakt dat een andere programmeur eenvoudig dezelfde omgeving kan opzetten, zonder dat we onze immense node_modules folder (of andere binaries) moeten syncen
-2. btw, NOOIT `node_modules` naar github pushen, gebruik .gitignore!!!
-3. Maar naast dependencies kunnen we hier ook scripts definiëren, die bepalen hoe onze server start, hoe testen gerunt worden etc. We voegen nu een start script toe, dat onze nodemon aanroept. En dan kunnen we starten met `yarn start`
-
-Wijzig de hello world en kijk hoe je de server niet meer dient te herstarten (eventueel wel je pagina herladen...)
-
-## Winston
-
-Manueel links en rechts wat middleware injecteren om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om eenvoudig meer of minder te loggen al naargelang we in productie of dev draaien.
-
-Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. En nog veel meer..., een goede logger is best een uitgebreid stuk software.
-
-Er bestaan gelukkig vele degelijke third party log libraries, we gaan [Winston](https://github.com/winstonjs/) gebruiken.
-
-## Oefening 1
-
-Zet een basis webserver op met Koa voor je **eigen project**. Zorg dat je `hello world zien krijgt als je er naartoe surft
-Voeg [Winston](https://github.com/winstonjs/winston) toe aan je project, bekijk de documentatie hoe je dit doet en log dat de server correct opgestart is
-
-Een werkend voorbeeld vind je op [Github](https://github.com/HOGENT-Web/webservices-budget)(maar doe het eerst zelf eens 😏). Check uit op commit `f8a1f12
-
-```bash
-~/webservices-budget$> git clone https://github.com/HOGENT-Web/webservices-budget.git
-~/webservices-budget$> cd webservices-budget
-~/webservices-budget$> git checkout -b oplossing f8a1f12
-```
-
-## Een uitgewerkt voorbeeld
-
-We willen een website maken waar gebruikers recepten en bijhorende ingredienten kunnen aanmaken en opvragen. Gebruikers kunnen recepten ook opslaan. We dienen hiervoor de API aan te maken.
+- Geen tussentabellen voor veel-op-veel relatie
+- Geen foreign key voor een-op-veel relatie
+- Samengestelde sleutels i.p.v. een id, strings als een id (lastig in API calls)
+- Geen API call definities
+- GET all request geeft alle relaties terug (vaak onnodig)
+- Adres/locatie als string in een tabel (lastig om hierop queries uit te voeren)
+- ERD niet voldoende om doel van de applicatie te verwezenlijken
 
 ### ERD met Frequently Made Errors
 
-Onderstaand ERD zou een oplossing zijn vol met bovenstaande frequently made errors:
+Onderstaand ERD zou een oplossing zijn voor onze receptenapplicatie, vol met bovenstaande frequently made errors:
 
 ![Oplossing met FME](https://kroki.io/erd/svg/eNqLDkpNzixIjeXSykvMTeXiivbMSy9KTclMzSuBiSXm5pfmlXCV5mWWAOVDi1OLgDKZKVxpmUXFJX4gFTmJUEZiSkpRanExFxdIlYKhrq6WAsR8LggFEUJYAVGnhaQOAI2aLp8=)
 
@@ -413,7 +294,7 @@ Recipe 1--* Ingredient
 User *--* Recipe
 ```
 
-Wat is er fout aan deze ERD?
+Wat is er fout aan dit ERD?
 
 ### ERD
 
@@ -421,17 +302,17 @@ Een mogelijke oplossing ziet eruit als volgt:
 
 ![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjsOwjAQRPs5RWojF7kCVGkoQFSIwsQDspQ40XqNxO1JMB9XO5p9eprzgX2YeYEJHtGNxKYXOqXfPoFzF-9CHxi1Itw45ajIMeiCnBKlPG9Bku5XYnCfkFRIRczjlYJ5SuqG3eSJPujqP7oH_W9CXlSdh5F3sSSs8qa11jQFQjml-o-ruMqIKjfG2vYreQGGTFDg)
 
-Je merkt nog een samengestelde sleutel in SavedRecipe. Het kan wel nuttig zijn om geen samengestelde sleutels te gebruiken, dat is persoonlijke voorkeur. IN dat geval bevat de table SavedRecipe ook een id.
+Je merkt nog een samengestelde sleutel in SavedRecipe. Het kan wel nuttig zijn om geen samengestelde sleutels te gebruiken, dat is persoonlijke voorkeur. In dat geval bevat de tabel SavedRecipe ook een id, naast de `userId` en `recipeId`.
 
 Qua invoer via de API calls heeft dit weinig invloed. Een gebruiker zal altijd aangemeld zijn en dus kennen we altijd het `userId`, het `recipeId` wordt meegegeven via de API call.
 
-De service-functie voor het opslaan van een recipe kan wel complexer worden. Met samengestelde sleutels zal de databank een fout gooien als je tweemaal hetzelfde recept wil opslaan. Je moet vervolgens zelf deze error parsen, dat kan lastig zijn afhankelijk van de gekozen databank en/of client library. Zonder samengestelde sleutels moet je zelf checken of een recept al dan niet dubbel opgeslagen wordt.
+De code voor het opslaan van een recept kan wel complexer worden. Met samengestelde sleutels zal de databank een fout gooien als je tweemaal hetzelfde recept wil opslaan. Je moet vervolgens zelf deze error parsen, dat kan lastig zijn afhankelijk van de gekozen databank en/of client library. Zonder samengestelde sleutels moet je zelf checken of een recept al dan niet dubbel opgeslagen wordt.
 
 Algemene regel: laat zoveel mogelijk door je databank afhandelen. Deze zijn hiervoor geoptimaliseerd en doen dergelijke checks razendsnel (en sparen extra queries).
 
 Onderstaande code werd gebruikt voor de oplossing:
 
-```
+```erd
 [Recipe]
 *id
 name
@@ -464,6 +345,15 @@ SavedRecipe *--1 Recipe
 
 ### API calls
 
+Hieronder lijsten we de vereiste functionaliteiten van de applicatie op. Denk even na (niet meteen verder scrollen/kijken) en definieer de nodige API calls (volgens de REST principes) om deze functionaliteiten te implementeren.
+
+- Een gebruiker moet alle recepten kunnen bekijken.
+- Een gebruiker moet een recept in detail kunnen bekijken (met zijn ingrediënten dus).
+- Een gebruiker moet een recept kunnen toevoegen/aanpassen/verwijderen.
+- Een gebruiker moet de ingrediënten van een recept kunnen bekijken.
+- Een gebruiker moet een ingredient van een recept kunnen toevoegen/aanpassen/verwijderen.
+- Een gebruiker moet zijn opgeslagen recepten kunnen bekijken.
+
 #### Recipe
 
 - `GET /api/recipes`: alle recepten zonder ingrediënten, evt. met createdBy
@@ -471,23 +361,189 @@ SavedRecipe *--1 Recipe
 - `POST /api/recipes`: recept toevoegen met zijn ingrediënten
 - `PUT /api/recipes/:id`: recept aanpassen
 - `DELETE /api/recipes/:id`: recept verwijderen
+- `GET /api/recipes/:recipeId/ingredients`: alle ingrediënten van een recept ophalen
+- `POST /api/recipes/:recipeId/ingredients`: een ingrediënt toevoegen aan een recept
+- `PUT /api/recipes/:recipeId/ingredients/:id`: een ingrediënt van een recept aanpassen
+- `DELETE /api/recipes/:recipeId/ingredients/:id`: een ingrediënt van een recept verwijderen
 
 #### User
 
 - `GET /api/users/:id/recipes`: opgeslagen recepten opvragen
-  - Soms wordt ook `GET /api/users/me/recipes` gedaan als je toch aangemeld moet zijn, id zit in de token (zie verder)
+  - Soms wordt ook `GET /api/users/me/recipes` gedaan als je toch aangemeld moet zijn, het id van de gebruiker zit nl. in de token (hierover later meer)
 
-Lees ook de [Best practices for sub and nested resources](https://www.moesif.com/blog/technical/api-design/REST-API-Design-Best-Practices-for-Sub-and-Nested-Resources/).
+Lees ook de [REST API Design Best Practices for Sub and Nested Resources](https://www.moesif.com/blog/technical/api-design/REST-API-Design-Best-Practices-for-Sub-and-Nested-Resources/).
 
-### Frequently made errors (FME)
+## Server
 
-- Geen tussentabellen voor veel-op-veel relatie
-- Geen foreign key voor een-op-veel relatie
-- Samengestelde sleutels i.p.v. een id, strings als een id (lastig in API calls)
-- Geen API call definities
-- GET all request geeft alle relaties terug (vaak onnodig)
-- Adres/locatie als string in een tabel (lastig om hierop queries uit te voeren)
-- ERD niet voldoende om doel van de applicatie te verwezenlijken
+We willen natuurlijk niet gewoon bestaande API's aanspreken maar zelf zo'n API server maken. Een web server is op zich geen magie. Het is gewoon een programma dat luistert op een bepaalde poort, HTTP requests parset en beschikbaar stelt. Aangezien HTTP requests altijd hetzelfde zijn, schrijft niemand compleet van nul een webserver (behalve als interessante oefening eens). Je kan in elke programmeertaal een server schrijven, wij kiezen JavaScript en dus [Node.js](https://nodejs.org/en).
+
+### Node.js
+
+**Node.js** is "Server side JavaScript", het kwam uit in 2009. Het is een single-threaded, open source, platformonafhankelijke runtime-omgeving gebouwd bovenop v8, de JavaScript engine van Chrome (werd open source in 2008). Meer info op <https://kinsta.com/nl/kennisbank/wat-is-node-js/>.
+
+**NPM** is het package ecosysteem van Node.js. Het is het grootste ecosysteem van alle open source bibliotheken ter wereld, met meer dan 1 miljoen pakketten en het groeit nog steeds. NPM is gratis te gebruiken en duizenden open source ontwikkelaars dragen er dagelijks aan bij.
+
+Voor het bouwen van web API's wordt er meestal een framework gebruikt en geen 'naakte' Node.js. Express is waarschijnlijk de meest gekende. Wij gebruiken in deze cursus [Koa](https://koajs.com/), het nieuwe hippe framework van hetzelfde team achter Express.
+
+## Koa
+
+We maken eerst een nieuw project aan. Maak een nieuwe map aan voor de web service en installeer Koa.
+
+```bash
+mkdir webservices-budget
+cd webservices-budget
+yarn add koa
+```
+
+### De obligate Hello World
+
+Maak een bestand `index.js` aan in de root van de map die je net gemaakt hebt. Plak onderstaande code in het bestand.
+
+```js
+const Koa = require('koa'); // 👈 1
+const app = new Koa(); // 👈 1
+
+app.use(async (ctx) => {
+  // 👈 3
+  ctx.body = 'Hello World';
+});
+
+app.listen(9000); // 👈 2
+```
+
+1. We importeren Koa en initïaliseren een Koa object, i.e. een webserver.
+2. We laten de applicatie luisteren op poort 9000.
+3. We geven als body de string "Hello World" terug (voor elke request).
+4. Dit kunnen we testen door `node index.js` uit te voeren en naar <http://localhost:9000> te surfen.
+   - Mocht je een conflict krijgen op poort 9000, bv. door een andere applicatie die op die poort luistert, kan je de poort aanpassen in de code en opnieuw uitvoeren. Dit geeft telkens de error code `EADDRINUSE` (Address already in use) in de terminal.
+
+## Middleware
+
+Koa is niet meer dan een grote 'ketting' van zogeheten middleware functies. Het idee is dat je allemaal verschillende functies definieert die elk een (kleine) taak op zich nemen, en dat die functies in een bepaalde volgorde geïnstalleerd worden in de Koa applicatie.
+
+Elke middleware functie voert dan zijn deel van het werk uit en roept vervolgens gewoon de `next`-functie aan. De volgende functie kan dan verder werken met het bewerkte resultaat tot nu toe, tot de laatste middleware, die het antwoord terug geeft.
+
+![Koa middleware](./images/simple_middleware.png)
+
+Pas `index.js` aan.
+
+```js
+const Koa = require('koa');
+const app = new Koa();
+
+app.use(async ctx, next) => {// 👈 1 en 2
+  ctx.body = 'Hello World';
+  await next();
+});
+
+app.use(async (ctx, next) => {// 👈 3
+  console.log(ctx);
+  await next();
+});
+
+app.listen(9000);
+
+```
+
+1. Via `app.use` kan je een middleware installeren in de applicatie. De meegegeven functie is wat men de middleware noemt.
+2. De middleware-functie heeft twee parameters: `ctx` en `next`. `ctx` is het context object, dat alle info bevat over de request en de response. `next` is een functie die de volgende middleware in de ketting aanspreekt.
+3. We kunnen bijvoorbeeld het context object eens loggen nadat we de body gezet hebben. Stop het vorige commando in de terminal en voer opnieuw `node index.js` uit. Ga naar de browser en refresh om het resultaat te zien.
+
+Koa doet heel wat werk voor ons doet, zoals bv. het request omzetten naar een geparsed object met alle info.
+
+Onze server maken is nu zo'n heleboel middlewares installeren en zelf schrijven om elke request te verwerken.
+
+### Middlewares in Koa
+
+Middlewares in Koa zijn een beetje specialer dan in Node.js of Express bijvoorbeeld. In Koa is het mogelijk om tweemaal in elke middleware te komen:
+
+1. eens vóór de aanroep van `next()`
+2. én eens ná de aanroep van `next()`
+
+Dit is wat men het **onion model** noemt:
+
+![Onion model](images/onion-koa.jpg)
+
+Het request komt binnen en alle middlewares worden in volgorde van definitie uitgevoerd. Elk van deze middlewares roept vervolgens `next()` aan om de volgende middleware in rij uit te voeren. Uiteindelijk komt men ooit aan de laatste middleware en dan keert Koa terug in omgekeerde volgorde doorheen alle middlewares.
+Het is dus eenvoudig om iets voor en na `next()` uit te voeren:
+
+```js
+app.use(async (ctx, next) => {
+  // doe iets vooraf
+  await next();
+  // doe iets achteraf
+});
+```
+
+Hierbij is de `await` heel belangrijk! Als je deze vergeet, zal de code achter `next()` meteen uitgevoerd worden.
+
+Wil je niets meer doen in de middleware, dan doe je beter `return next()`. Deze middleware zal dan automatisch overgeslagen worden.
+
+Het mooie aan dit geheel is dat Koa hiervoor niets speciaal hoeft te doen: dit is het standaardgedrag van Promises.
+
+## Nodemon
+
+Een live draaiende server herstart in principe natuurlijk nooit, maar tijdens het ontwikkelen is het wel onhandig om altijd manueel de server te moeten stoppen en herstarten telkens we iets willen zien of testen. Daarom maken we gebruik van
+[Nodemon](https://www.npmjs.com/package/nodemon). Nodemon houdt een map in de gaten en herstart de server telkens er een bestand wijzigt.
+
+Installeer nodemon in de map van je project:
+
+```bash
+yarn add nodemon --dev
+```
+
+De optie `--dev` zorgt ervoor dat het package als dev dependency geïnstalleerd wordt.
+
+### package.json
+
+Open de `package.json` in de map van jouw project. Kopieer de `scripts` naar jouw `package.json`:
+
+```json
+{
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "dependencies": {
+    "koa": "^2.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
+```
+
+1. De `package.json` houdt bij welke packages we allemaal geïnstalleerd hebben, met hun versie. Dit maakt dat een andere programmeur eenvoudig dezelfde omgeving kan opzetten, zonder dat we onze immense `node_modules` folder (of andere binaries) moeten meesturen.
+   1. De `dependencies` zijn de packages die nodig zijn om de applicatie te laten werken.
+   2. De `devDependencies` zijn de packages die nodig zijn om de applicatie te ontwikkelen, maar niet nodig zijn om de applicatie te laten werken. M.a.w. deze packages zijn niet nodig in de `src` map (hierover later meer).
+2. Push `node_modules` **nooit** naar GitHub, gebruik volgende `.gitignore`: <https://github.com/github/gitignore/blob/main/Node.gitignore>.
+3. Naast dependencies kunnen we hier ook scripts definiëren. Hiermee kunnen we bepaalde shortcuts voor commando's definiëren. Je kan de naam van het script zelf kiezen, maar typische scripts zijn bv. `start` (bepaalt hoe de server start) of `test` (voert de testen uit).
+4. We hebben in dit voorbeeld een start-script toegevoegd dat nodemon gebruikt om de server te starten. Dit script kan je nu uitvoeren met `yarn start`.
+
+Er zijn nog heel wat andere opties voor de `package.json`. Je vindt alles op <https://docs.npmjs.com/cli/v10/configuring-npm/package-json>.
+
+Voer `yarn start` uit, wijzig de string "Hello world" en kijk hoe je de server niet meer dient te herstarten (eventueel wel je pagina herladen...)
+
+## Winston
+
+Manueel links en rechts wat middleware injecteren om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om eenvoudig meer of minder te loggen al naargelang we in productie of development draaien.
+
+Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. En nog veel meer..., een goede logger is best een uitgebreid stuk software.
+
+Er bestaan gelukkig veel degelijke third party log libraries, we gebruiken [Winston](https://github.com/winstonjs/) in deze cursus.
+
+## Oefening 1 - Winston
+
+Zet een basis webserver op met Koa voor je **eigen project**. Zorg dat je "Hello world" te zien krijgt als je er naartoe surft in een browser.
+
+Voeg [Winston](https://github.com/winstonjs/winston) toe aan je project. Bekijk in de documentatie hoe je dit doet en log dat de server correct opgestart is. Hint: voeg een callback toe aan `app.listen`, na poort 9000. Deze callback wordt uitgevoerd als de server opgestart en klaar is.
+
+Een werkend voorbeeld vind je op [GitHub](https://github.com/HOGENT-Web/webservices-budget) (maar doe het eerst zelf eens 😏). Check uit op commit `f8a1f12`
+
+```bash
+git clone https://github.com/HOGENT-Web/webservices-budget.git
+cd webservices-budget
+git checkout -b oplossing f8a1f12
+```
 
 ## Oefening 2 - Je eigen project
 
