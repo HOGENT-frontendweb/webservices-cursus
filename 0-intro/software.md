@@ -1,6 +1,6 @@
 # Software
 
-Voor dit vak gaan we ervan uit dat je volgende **software installeert en configureert voor de eerste les**:
+Voor dit olod gaan we ervan uit dat je volgende **software installeert en configureert voor de eerste les**:
 
 - [Software](#software)
   - [NodeJS](#nodejs)
