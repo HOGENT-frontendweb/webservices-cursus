@@ -1,15 +1,14 @@
 # REST API bouwen
 
-> "The first step of any project is to grossly underestimate its complexity and difficulty." - Nicoll Hunt
-
-## budget app startpunt
-
-```bash
-~> git clone git@github.com:HOGENT-Web/webservices-budget.git (of git pull als het niet de eerste keer is)
-~> cd webservices-budget
-~/webservices-budget$> git checkout -b les3 08186c6
-~/webservices-budget$> yarn install
-```
+> **Startpunt voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-Web/webservices-budget/
+> cd webservices-budget
+> git checkout -b les3 08186c6
+> yarn install
+> yarn start
+> ```
 
 ### Oefening: De Budget app
 

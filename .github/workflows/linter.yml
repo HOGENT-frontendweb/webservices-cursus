@@ -1,0 +1,28 @@
+# linter.yml
+name: Lint markdown files
+
+# Run on every push or pull request to main
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    name: Lint markdown files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Lint markdown files
+        uses: super-linter/super-linter@slim-v5
+        env:
+          VALIDATE_ALL_CODEBASE: true # Validate all files in the repository, not just the ones changed
+          DEFAULT_BRANCH: main
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MARKDOWN_CONFIG_FILE: .markdownlint.json
