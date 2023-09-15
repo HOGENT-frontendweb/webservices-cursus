@@ -5,4 +5,4 @@
 
 [Naar cursus](0-intro/situering)
 [Algemene info](0-intro/situering)
-[Software](0-intro/software.md)
+[Software](0-intro/software)
