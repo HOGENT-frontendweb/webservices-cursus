@@ -330,8 +330,6 @@ We definiëren een klasse die een error uit de service-laag voorstelt. Het is ee
 ```js
 const NOT_FOUND = 'NOT_FOUND'; // 👈 2
 const VALIDATION_FAILED = 'VALIDATION_FAILED'; // 👈 2
-const UNAUTHORIZED = 'UNAUTHORIZED'; // 👈 2
-const FORBIDDEN = 'FORBIDDEN'; // 👈 2
 
 // 👈 1
 class ServiceError extends Error {
@@ -351,28 +349,12 @@ class ServiceError extends Error {
     return new ServiceError(VALIDATION_FAILED, message, details);
   } // 👈 5
 
-  static unauthorized(message, details) {
-    return new ServiceError(UNAUTHORIZED, message, details);
-  } // 👈 5
-
-  static forbidden(message, details) {
-    return new ServiceError(FORBIDDEN, message, details);
-  } // 👈 5
-
   get isNotFound() {
     return this.code === NOT_FOUND;
   } // 👈 4
 
   get isValidationFailed() {
     return this.code === VALIDATION_FAILED;
-  } // 👈 4
-
-  get isUnauthorized() {
-    return this.code === UNAUTHORIZED;
-  } // 👈 4
-
-  get isForbidden() {
-    return this.code === FORBIDDEN;
   } // 👈 4
 }
 
@@ -416,12 +398,6 @@ app.use(async (ctx, next) => {
         statusCode = 400;
       }
 
-      if (error.isUnauthorized) {
-        statusCode = 401;
-      }
-
-      if (error.isForbidden) {
-        statusCode = 403;
       }
     } // 👈 5
 
