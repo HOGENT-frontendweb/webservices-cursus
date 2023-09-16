@@ -387,13 +387,89 @@ Voor het bouwen van web API's wordt er meestal een framework gebruikt en geen 'n
 
 ## Koa
 
-We maken eerst een nieuw project aan. Maak een nieuwe map aan voor de web service en installeer Koa.
+We maken eerst een nieuw project aan. Maak een nieuwe map aan voor de web service en ga naar deze map.
 
 ```bash
 mkdir webservices-budget
 cd webservices-budget
+```
+
+Vervolgens initialiseren we een nieuw Yarn project. Je bent vrij om te kiezen voor alternatieven zoals [npm](https://www.npmjs.com/package/npm) of [pnpm](https://pnpm.io/), maar we gebruiken hier [Yarn](https://yarnpkg.com/).
+
+```bash
+yarn init
+```
+
+Beantwoord alle vragen:
+
+- name: webservices-budget (of een andere naam in het geval van je eigen project)
+- version: 1.0.0
+- description: Demo application for the course Web Services.
+- entry point: index.js
+- repository url: mag je leeg laten
+- author: VOORNAAM NAAM &lt;EMAIL&gt;
+- license: MIT
+- private: true
+
+Vervolgens installeer je Koa.
+
+```bash
 yarn add koa
 ```
+
+### yarn
+
+[yarn](https://yarnpkg.com/) is het programma dat alle dependencies zal installeren, een andere misschien iets gekendere is [npm](https://www.npmjs.com/package/npm). Ze doen beide hetzelfde en zijn inwisselbaar maar de ene keer `yarn` gebruiken en de andere keer `npm` is dan weer geen goed idee. Ze kunnen andere versies van packages cachen e.d. en dan kan je rare fouten tegenkomen.
+
+### package.json
+
+De [package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) bevat alle metadata van ons project, meer in het bijzonder alle dependencies en commando's om onze app te starten. Het `yarn init` commando zou een `package.json` gemaakt moeten hebben in de root van je project. Open deze, en je zou iets als volgt moeten zien:
+
+[package.json](examples/package.json ':include :type=code')
+
+De `package.json` bevat enkele properties:
+
+- `dependencies`: de packages waarvan deze applicatie gebruik maakt
+- `devDependencies`: packages enkel nodig in development (en dus niet in productie)
+- `scripts`: laten toe om een soort van shortcuts te maken voor scripts (bv. de applicatie starten, testen, builden voor productie, etc.)
+
+Met een simpele `yarn install` installeren we meteen een identieke omgeving (met zowel `dependencies` als `devDependencies`) en dat maakt het handiger om in een team te werken (`yarn install --prod` installeert enkel de `dependencies`).
+
+Het verschil tussen `dependencies` en `devDependencies` is het moment wanneer ze gebruikt worden. De `dependencies` zijn nodig in productie, m.a.w. de applicatie kan niet werken zonder deze packages. De `devDependencies` zijn enkel nodig om bv. het leven van de developer makkelijker te maken (types in TypeScript, linting, etc.) of bevatten packages die enkel gebruikt worden *at build time*, of dus wanneer de applicatie (door webpack) omgevormd wordt tot iets wat browsers begrijpen.
+
+Dependencies maken gebruik van [semantic versioning](https://semver.org/) (lees gerust eens door de specificatie). Kort gezegd houdt dit in dat elk versienummer bestaat uit drie delen: `MAJOR.MINOR.PATCH`, elke deel wordt met één verhoogd in volgende gevallen:
+
+- `MAJOR`: wijzigingen die ***niet*** compatibel zijn met oudere versies
+- `MINOR`: wijzigen die ***wel*** compatibel zijn met oudere versies
+- `PATCH`: kleine bugfixes (compatibel met oudere versies)
+
+In een `package.json` zie je ook vaak versies zonder prefix of met een tilde (~) of hoedje (^) als prefix, dit heeft volgende betekenis:
+
+- geen prefix: exact deze versie
+- tilde (~): ongeveer deze versie (zie <https://docs.npmjs.com/cli/v6/using-npm/semver#tilde-ranges-123-12-1>)
+- hoedje (^): compatibel met deze versie (<https://docs.npmjs.com/cli/v6/using-npm/semver#caret-ranges-123-025-004>)
+
+Kortom, een tilde is strenger dan een hoedje.
+
+Het lijkt misschien een beetje raar, maar zo'n `package.json` wordt voor vele toepassingen en frameworks gebruikt. JavaScript programmeurs zijn gewoon van een `git pull`, `yarn install` en `yarn start` te doen, zonder per se te moeten weten hoe een specifiek framework opgestart wordt.
+
+We hebben in bovenstaand voorbeeld een start-script toegevoegd dat je kan gebruiken om de server te starten. Kopieer de `scripts` naar jouw `package.json`. Dit script kan je nu uitvoeren met `yarn start`.
+
+Er zijn nog heel wat andere opties voor de `package.json`. Je vindt alles op <https://docs.npmjs.com/cli/v10/configuring-npm/package-json>.
+
+### yarn.lock
+
+Wanneer je een package installeert, zal yarn een `yarn.lock` bestand aanmaken. Dit bestand bevat de exacte versies van de packages die geïnstalleerd zijn. Dit bestand moet je zeker mee opnemen in je git repository. Dit zorgt ervoor dat iedereen exact dezelfde versies van de packages gebruikt.
+
+Dit bestand vermijdt versieconflicten aangezien in de `package.json` niet altijd de exacte versie staat maar een bepaalde syntax die aangeeft welke versies toegelaten zijn (zie vorige sectie).
+
+### .gitignore
+
+Voor we verder gaan, maken we nog een `.gitignore` bestand aan. Dit bestand zorgt ervoor dat bepaalde bestanden/mappen niet naar GitHub gepusht worden. Dit is bv. handig voor de `node_modules` folder, die we niet willen pushen omdat deze heel groot is en we deze niet nodig hebben om de applicatie te laten werken. Je kan nl. de dependencies eenvoudig opnieuw installeren d.m.v. `yarn install`.
+
+Download de `.gitignore` van <https://github.com/github/gitignore/blob/main/Node.gitignore> en plaats deze in de root van je project. Het is belangrijk dat je het bestand exact de naam `.gitignore` heeft.
+
+Kijk gerust eens welke bestanden er allemaal genegeerd worden. Je kan dit bestand ook aanpassen naar eigen wens, maar dit is een vrij complete voor een Node.js project.
 
 ### De obligate Hello World
 
@@ -404,7 +480,7 @@ const Koa = require('koa'); // 👈 1
 const app = new Koa(); // 👈 1
 
 app.use(async (ctx) => {
-  // 👈 3
+  // 👇 3
   ctx.body = 'Hello World';
 });
 
@@ -431,7 +507,7 @@ Pas `index.js` aan.
 const Koa = require('koa');
 const app = new Koa();
 
-app.use(async ctx, next) => {// 👈 1 en 2
+app.use(async (ctx, next) => {// 👈 1 en 2
   ctx.body = 'Hello World';
   await next();
 });
@@ -492,36 +568,17 @@ Installeer nodemon in de map van je project:
 yarn add nodemon --dev
 ```
 
-De optie `--dev` zorgt ervoor dat het package als dev dependency geïnstalleerd wordt.
-
-### package.json
-
-Open de `package.json` in de map van jouw project. Kopieer de `scripts` naar jouw `package.json`:
+De optie `--dev` zorgt ervoor dat het package als dev dependency geïnstalleerd wordt. Pas het `start` script als volgt aan:
 
 ```json
 {
   "scripts": {
     "start": "nodemon index.js"
-  },
-  "dependencies": {
-    "koa": "^2.14.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.0.1"
   }
 }
 ```
 
-1. De `package.json` houdt bij welke packages we allemaal geïnstalleerd hebben, met hun versie. Dit maakt dat een andere programmeur eenvoudig dezelfde omgeving kan opzetten, zonder dat we onze immense `node_modules` folder (of andere binaries) moeten meesturen.
-   1. De `dependencies` zijn de packages die nodig zijn om de applicatie te laten werken.
-   2. De `devDependencies` zijn de packages die nodig zijn om de applicatie te ontwikkelen, maar niet nodig zijn om de applicatie te laten werken. M.a.w. deze packages zijn niet nodig in de `src` map (hierover later meer).
-2. Push `node_modules` **nooit** naar GitHub, gebruik volgende `.gitignore`: <https://github.com/github/gitignore/blob/main/Node.gitignore>.
-3. Naast dependencies kunnen we hier ook scripts definiëren. Hiermee kunnen we bepaalde shortcuts voor commando's definiëren. Je kan de naam van het script zelf kiezen, maar typische scripts zijn bv. `start` (bepaalt hoe de server start) of `test` (voert de testen uit).
-4. We hebben in dit voorbeeld een start-script toegevoegd dat nodemon gebruikt om de server te starten. Dit script kan je nu uitvoeren met `yarn start`.
-
-Er zijn nog heel wat andere opties voor de `package.json`. Je vindt alles op <https://docs.npmjs.com/cli/v10/configuring-npm/package-json>.
-
-Voer `yarn start` uit, wijzig de string "Hello world" en kijk hoe je de server niet meer dient te herstarten (eventueel wel je pagina herladen...)
+Voer `yarn start` uit, wijzig de string "Hello world" en kijk hoe je de server niet meer dient te herstarten (eventueel wel je pagina herladen...).
 
 ## Winston
 
@@ -535,14 +592,16 @@ Er bestaan gelukkig veel degelijke third party log libraries, we gebruiken [Wins
 
 Zet een basis webserver op met Koa voor je **eigen project**. Zorg dat je "Hello world" te zien krijgt als je er naartoe surft in een browser.
 
-Voeg [Winston](https://github.com/winstonjs/winston) toe aan je project. Bekijk in de documentatie hoe je dit doet en log dat de server correct opgestart is. Hint: voeg een callback toe aan `app.listen`, na poort 9000. Deze callback wordt uitgevoerd als de server opgestart en klaar is.
+Voeg [Winston](https://github.com/winstonjs/winston) toe aan je project. Bekijk in de documentatie hoe je dit doet en log dat de server correct opgestart is. Maak jouw oplossing niet complexer dan nodig, later zullen we de logger nog uitbreiden.
 
-Een werkend voorbeeld vind je op [GitHub](https://github.com/HOGENT-Web/webservices-budget) (maar doe het eerst zelf eens 😏). Check uit op commit `f8a1f12`
+> 💡 Hint: voeg een callback toe aan `app.listen`, na poort 9000. Deze callback wordt uitgevoerd als de server opgestart en klaar is. Kijk eens naar de documentatie van `listen op <https://nodejs.org/api/net.html#serverlisten>.
+
+Een werkend voorbeeld vind je op [GitHub](https://github.com/HOGENT-Web/webservices-budget) (maar doe het eerst zelf eens 😏), check uit op commit `625fb6a`.
 
 ```bash
 git clone https://github.com/HOGENT-Web/webservices-budget.git
 cd webservices-budget
-git checkout -b oplossing f8a1f12
+git checkout -b oplossing 625fb6a
 ```
 
 ## Oefening 2 - Je eigen project
