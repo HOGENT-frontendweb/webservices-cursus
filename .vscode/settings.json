@@ -1,0 +1,38 @@
+{
+  "cSpell.language": "en,nl",
+  "cSpell.caseSensitive": false,
+  "cSpell.words": [
+    "cacheable",
+    "Chamilo",
+    "cloudoplossingen",
+    "databankschema",
+    "databankserver",
+    "distro",
+    "geparsed",
+    "merget",
+    "rebasen",
+    "specifiëren",
+    "tussentabel",
+    "tussentabellen",
+    "voorbeeldapp"
+  ],
+  "cSpell.ignoreWords": [
+    "Aelbrecht",
+    "CORS",
+    "dbaeumer",
+    "EADDRINUSE",
+    "enduml",
+    "Fira",
+    "firacode",
+    "Fireship",
+    "HOGENT",
+    "Menlo",
+    "olod",
+    "olods",
+    "rudy",
+    "runkit",
+    "startuml",
+    "skinparam",
+    "twoslash"
+  ]
+}

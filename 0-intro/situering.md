@@ -4,11 +4,11 @@
 
 Waarschijnlijk weet je wel tot welk keuzepakket dit olod behoort, maar we bevinden ons voor de duidelijkheid binnen het keuzepakket `Development`:
 
-![Keuzepakketen](./images/MT_development.png ':size=70%')
+![Keuzepakketten](./images/MT_development.png ':size=70%')
 
 En meer bepaald hier:
 
-![Dit olod in de keuzepakketen](./images/MT_olods.png ':size=70%')
+![Dit olod in de keuzepakketten](./images/MT_olods.png ':size=70%')
 
 ## Wat gaan we doen?
 
@@ -34,7 +34,7 @@ Je weet de deadline, plan je werk goed in! Wacht niet tot de laatste paar weken 
 
 ### Voorbeelden
 
-Naar goeie traditie schrijven we hier enkele voorbeelden van jullie voorgangers. Impressioneer ons en mogelijks komt jouw idee hier te staan:
+Naar goeie traditie schrijven we hier enkele voorbeelden van jullie voorgangers. Imponeer ons en mogelijks komt jouw idee hier te staan:
 
 - Auto-verhuur
 - Stockbeheer voor het IT-lab
@@ -67,8 +67,8 @@ Er moeten ook nog een paar kleine en grote aanpassingen gebeuren aan de cursusin
 | week 6  | datalaag en CRUD                              |
 | week 7  | (geen nieuwe theorie, aan de opdracht werken) |
 | week 8  | swagger, testen, linter                       |
-| week 9  | authenticatie / authorisatie                  |
-| week 10 | testen met authenticatie / authorisatie       |
+| week 9  | authenticatie / autorisatie                   |
+| week 10 | testen met authenticatie / autorisatie        |
 | week 11 | CI/CD, online zetten                          |
 | week 12 | (geen nieuwe theorie, aan de opdracht werken) |
 

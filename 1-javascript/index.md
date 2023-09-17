@@ -269,7 +269,7 @@ console.log(multiply(...numbers));
 
 </div>
 
-### Destrucuring
+### Destructuring
 
 Destructuring is een techniek die je toelaat om een object of array te ontleden in variabelen. Je kan destructuring gebruiken om bv. een of meerdere keys uit een object te halen en deze op te slaan in variabelen. Je kan ook bv. het eerste element uit een array halen en de rest van de array opslaan in een variabele.
 
@@ -598,11 +598,11 @@ Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](../
 
 Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <https://github.com/BurntSushi/erd>. Hou hierbij rekening met relaties en hoe je deze wegwerkt in een relationele databank (indien van toepassing).
 
-Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het feedbacktemplate).
+Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het template voor feedback).
 
 ### Oefening 2 - JS drills
 
-Vervolgens loont het de moeite om een aantal JavaScript-drilloefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScriptsyntax en -functionaliteiten.
+Vervolgens loont het de moeite om een aantal JavaScript drill-oefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScript-syntax en -functionaliteiten.
 
 Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en lees de instructies in de README. De oplossingen zijn te vinden op de branch [`solution`](https://github.com/HOGENT-Web/webservices-ch1-exercise/tree/solution).
 
