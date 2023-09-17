@@ -144,13 +144,11 @@ module.exports = validate; // 👈 2
 6. Indien we een schema kregen voor de params parameters, dan controleren we eerst of het effectief een instantie van een Joi schema is (bv. door `Joi.object()`) gemaakt. Zo niet, dan creëren we dit zelf, met een leeg schema indien er niets opgegeven werd. Dit is nodig aangezien de `validate` functie enkel beschikbaar is op een Joi schema.
 7. We voeren de validatie uit m.b.v. de [`validate`](https://joi.dev/api/?v=17.4.2#anyvalidatevalue-options) functie. Als de invoer geldig is, is `error` undefined en bevat value de gevalideerde en genormaliseerde waarde. Als de invoer ongeldig is, wordt aan de error een [ValidationError](https://joi.dev/api/?v=17.4.2#errors) object toegewezen dat meer informatie geeft.
 8. We geven ook enkele opties `JOI_OPTIONS` mee aan deze functie. We bewaren deze opties globaal aangezien we nog de query parameters en body moeten valideren
-
-- `abortEarly`: wanneer true (default), stopt de validatie bij de eerste fout, anders worden alle gevonden fouten geretourneerd
-- `allowUnknown`: indien true, staat het object toe onbekende sleutels te bevatten die worden genegeerd (default: false)
-- `context`: biedt een externe gegevensset die in referenties kan worden gebruikt. Hebben we nodig voor `Joi.ref`.
-- `convert`: indien true (default), wordt geprobeerd waarden naar de vereiste typen te casten. Bv. een string naar een getal
-- `presence`: stelt de standaard aanwezigheidsvereisten in. Ondersteunde modi: 'optional' (default), 'required' en 'forbidden'
-
+   - `abortEarly`: wanneer true (default), stopt de validatie bij de eerste fout, anders worden alle gevonden fouten geretourneerd
+   - `allowUnknown`: indien true, staat het object toe onbekende sleutels te bevatten die worden genegeerd (default: false)
+   - `context`: biedt een externe gegevensset die in referenties kan worden gebruikt. Hebben we nodig voor `Joi.ref`.
+   - `convert`: indien true (default), wordt geprobeerd waarden naar de vereiste typen te casten. Bv. een string naar een getal
+   - `presence`: stelt de standaard aanwezigheidsvereisten in. Ondersteunde modi: 'optional' (default), 'required' en 'forbidden'
 9. Indien fouten: formatteer en bewaar de fouten (zie verder). Indien geen fouten: stel de params context-waarde gelijk aan de `value`
 10. Indien we fouten hadden, throwt de context een status code 400 (bad request) en worden de details van de fouten vermeld
 
@@ -179,12 +177,10 @@ const cleanupJoiError = (
 ```
 
 1. `error`: dit is een [ValidationError](https://joi.dev/api/?v=17.9.1#errors). Deze bevat een `details` property met een array van alle fouten
-2. Per fout `{	message,	path,	type,}` krijgen we volgende informatie:
-
-- `message`: beschrijving van de fout
-- `path`: geordende array waarbij elk element de accessor is van de waarde waar de fout is opgetreden
-- `type`: type van de fout
-
+2. Per fout `{ message, path, type }` krijgen we volgende informatie:
+   - `message`: beschrijving van de fout
+   - `path`: geordende array waarbij elk element de accessor is van de waarde waar de fout is opgetreden
+   - `type`: type van de fout
 3. `joinedPath` voegt de paden samen d.m.v. een punt, of indien er geen paden zijn wordt de value genomen
 4. en construeert een object met het gecombineerde pad als key en een array met alle fouten als value
 5. Uiteindelijk retourneren we dit object

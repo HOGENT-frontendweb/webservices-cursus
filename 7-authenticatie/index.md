@@ -295,10 +295,10 @@ const create = async ({
 // ...
 ```
 
-1.  E-mailadres en password hash voegen we toe als parameter bij create
-2.  Deze geven we dan ook mee aan onze insert
-3.  We voegen ook een extra parameter roles toe
-4.  Deze rollen moeten we dan omzetten naar JSON alvorens we ze opslaan in de databank (zie migratie). Bij het ophalen wordt deze kolom automatisch geparsed voor ons, m.a.w. we krijgen een array.
+1. E-mailadres en password hash voegen we toe als parameter bij create
+2. Deze geven we dan ook mee aan onze insert
+3. We voegen ook een extra parameter roles toe
+4. Deze rollen moeten we dan omzetten naar JSON alvorens we ze opslaan in de databank (zie migratie). Bij het ophalen wordt deze kolom automatisch geparsed voor ons, m.a.w. we krijgen een array.
 
 Ook in de `service` komen deze extra kolommen mee als parameter. Let wel op: hier komt het wachtwoord nog als plain text binnen!
 

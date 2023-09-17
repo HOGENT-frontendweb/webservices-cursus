@@ -366,13 +366,11 @@ module.exports = {
 2. We definiëren een array met alle op te halen kolommen. Merk op: we maken aliassen voor de kolommen uit de tabellen `places` en `transactions` aangezien deze identiek zijn aan elkaar en voor conflicten zullen zorgen
 3. Definieer een functie findById en exporteer.
 4. Haal de transactie op
-
-- We gebruiken opnieuw de Knex-instantie (`getKnex()`) om een nieuwe query te starten voor de `transactions` tabel.
-- We filteren op id (`where`-clause)
-- en kiezen het eerste record (`first()`, er is er logischerwijs maar één), anders kan het id geen primary key zijn...
-- en selecteren de gedefinieerde kolommen(`first(SELECT_COLUMNS)`). We kunnen de array hergebruiken in findAll
-- we joinen ook nog de tabellen waarmee een transactie een relatie heeft: `places` en `users`
-
+   - We gebruiken opnieuw de Knex-instantie (`getKnex()`) om een nieuwe query te starten voor de `transactions` tabel.
+   - We filteren op id (`where`-clause)
+   - en kiezen het eerste record (`first()`, er is er logischerwijs maar één), anders kan het id geen primary key zijn...
+   - en selecteren de gedefinieerde kolommen(`first(SELECT_COLUMNS)`). We kunnen de array hergebruiken in findAll
+   - we joinen ook nog de tabellen waarmee een transactie een relatie heeft: `places` en `users`
 5. we definiëren een functie die een transactie uit de databank omvormt naar een mooi object. Als er een transactie gevonden werd, dan vormen we het resultaat om naar het gewenste formaat. Return eens de niet omgevormde transactie om het verschil te zien (dit is dan het pure query-antwoord).
 
 ### Oefening

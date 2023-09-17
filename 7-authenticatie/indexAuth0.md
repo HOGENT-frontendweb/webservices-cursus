@@ -199,6 +199,7 @@ Nu kan je kijken of alles werkt, voeg de volgende code toe om te kunnen zien dat
     await next();
   });
 ```
+
 Gebruik de test tab van Auth0 om een token aan te maken via de terminal
 
 ![auth0 test](./images/auth0_test_token.png ':size=70%')
@@ -370,6 +371,7 @@ const getByAuth0Id = async (auth0id) => {
   return user;
 };
 ```
+
 Pas dan in `service/transaction.js` de create functie aan. De userId wordt doorgegeven ipv de user, di de userId van de aangemelde gebruiker. De user dient niet langer te worden aangemaakt.
 
 ```js
@@ -385,6 +387,7 @@ const create = async ({ amount, date, placeId, userId }) => {
   return getById(id);
 };
 ```
+
 Pas ook de update aan.
 
 Als we nu een transactie toevoegen laten gebeuren door de 'huidige gebruiker' kunnen we dat als volgt bekomen.

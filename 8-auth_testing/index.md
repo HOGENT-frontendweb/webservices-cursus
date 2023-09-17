@@ -262,10 +262,10 @@ const {  testAuthHeader,} = require('../common/auth');// 👈 5
 const data = {
   // ...
   /* 👈 1
-	users: [{
-		id: '7f28c5f9-d711-4cd6-ac15-d13d71abff80',
-		name: 'Test User'
-	}]
+  users: [{
+    id: '7f28c5f9-d711-4cd6-ac15-d13d71abff80',
+    name: 'Test User'
+  }]
   */
 };
 
@@ -288,17 +288,17 @@ describe('Transactions', () => {
 
   beforeAll(async () => {
     /*👈 2
-		server = await createServer();
-		request = supertest(server.getApp().callback());
-		knex = getKnex();
+    server = await createServer();
+    request = supertest(server.getApp().callback());
+    knex = getKnex();
     */
     loginHeader = await login(request); // 👈 3
   });
 
   /*👈 2
-	afterAll(async () => {
-		await server.stop();
-	});
+  afterAll(async () => {
+    await server.stop();
+  });
   */
 
   // ...

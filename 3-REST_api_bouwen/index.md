@@ -10,7 +10,7 @@
 > yarn start
 > ```
 
-### Oefening: De Budget app
+## Oefening: De Budget app
 
 De app die we gaan maken bevat volgende pagina's
 
@@ -377,7 +377,7 @@ const transactionService = require('./service/transaction'); // 👈 1
 
 router.get('/api/transactions', async (ctx) => {
   logger.info(JSON.stringify(ctx.request));
-  //	ctx.body = "[{'user': 'Benjamin', 'amount': 100, 'place': 'Irish Pub', date: '2021-08-15' }]"// 👈 2
+  // ctx.body = "[{'user': 'Benjamin', 'amount': 100, 'place': 'Irish Pub', date: '2021-08-15' }]"// 👈 2
   ctx.body = transactionService.getAll(); // 👈 2
 });
 
@@ -477,7 +477,7 @@ Dit kan je 't makkelijkst testen via Postman.
 
 Niet alle routes kunnen gewoon een hardcoded string zijn, soms heb je een parameter nodig bvb. `/api/transactions/15, /api/transactions/43, ...` om een transactie voor een id op te vragen.
 
-In `@koa/router` doen we dit door `:naam_van_de_parameter` in de url op te nemen. De variabele is dan beschikbaar in `ctx.params.naam_van_de_parameter`. (Merk op dat een url nooit een : kan bevatten (behalve die in http://), dus er kan nooit dubbelzinnigheid optreden of het : deel uitmaakt van de url of een parameter aankondigd)
+In `@koa/router` doen we dit door `:naam_van_de_parameter` in de url op te nemen. De variabele is dan beschikbaar in `ctx.params.naam_van_de_parameter`. (Merk op dat een url nooit een : kan bevatten (behalve die in `http://`), dus er kan nooit dubbelzinnigheid optreden of het : deel uitmaakt van de url of een parameter aankondigd)
 
 We willen dus een transactie kunnen opvragen op basis van zijn id, bvb `/api/transactions/15`.
 

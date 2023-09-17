@@ -72,7 +72,7 @@ We roepen hier `withServer` aan alsof het ook een functie uit de Jest library is
 
 Om via Cypress te kunnen aanmelden gaan we een testgebruiker aanmaken in het [Auth0 Dashboard](https://manage.auth0.com/). Ga hiervoor naar User Management > Users en klik op `Create User`. Kies onderstaande instellingen:
 
-- Email: e2e-testing@budgetapp.be
+- Email: <e2e-testing@budgetapp.be>
 - Password: kies zelf een wachtwoord
 - Repeat Password: (zou duidelijk moeten zijn)
 - Connection: Username-Password-Authentication
