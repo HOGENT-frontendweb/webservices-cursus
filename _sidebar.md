@@ -13,5 +13,5 @@
 - [6. Validatie en foutafhandeling (WIP)](./6-validatie/index.md)
 - [7. Authenticatie & autorisatie (WIP)](./7-authenticatie/index.md)
 - [8. Testen: authenticatie & autorisatie (WIP)](./8-auth_testing/index.md)
-- [9. CI/CD (WIP)](https://hogent-web.github.io/webservices-slides/9-cicd.html?presentation=false)
+- [9. CI/CD (WIP)](./9-cicd/index.md)
 - [10. Linting en Swagger (optioneel + WIP)](https://hogent-web.github.io/webservices-slides/10-swagger.html?presentation=false)
