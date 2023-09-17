@@ -40,7 +40,7 @@
 - invoervalidatie in Joi bestaat uit 2 stappen
 
 1. definieer het validatieschema a.d.h.v. [de ingebouwde functies](https://joi.dev/api/) in Joi
-2. valideer de data tegen het schema a.d.h.v. [`Joi.validate(...)`](<(https://joi.dev/api/?v=17.7.0#anyvalidatevalue-options)>)
+2. valideer de data tegen het schema a.d.h.v. [`Joi.validate(...)`](https://joi.dev/api/?v=17.7.0#anyvalidatevalue-options)
 
 ### Joi: definitie schema
 
