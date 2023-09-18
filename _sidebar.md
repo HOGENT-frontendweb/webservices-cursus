@@ -8,7 +8,7 @@
 - [1. JavaScript (WIP)](./1-javascript/index.md)
 - [2. REST API intro](./2-REST_api_intro/index.md)
 - [3. REST API bouwen](./3-REST_api_bouwen/index.md)
-- [4. Datalaag (WIP)](./4-datalaag/index.md)
+- [4. Datalaag](./4-datalaag/index.md)
 - [5. Testing (WIP)](https://hogent-web.github.io/webservices-slides/5-testing.html?presentation=false)
 - [6. Validatie en foutafhandeling (WIP)](./6-validatie/index.md)
 - [7. Authenticatie & autorisatie (WIP)](./7-authenticatie/index.md)
