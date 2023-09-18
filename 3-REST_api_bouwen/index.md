@@ -39,8 +39,6 @@ Voor we aan de API beginnen, moeten we onze server beter configureerbaar maken. 
 
 De configuratie doen we liefst op 1 plaats. In `app.js` verwijzen we bv. naar poort 9000, dit zetten we best niet in code. In de logger staat het level op `info`, maar dit willen we enkel in productie - in development willen we level `debug`.
 
-<!-- TODO: env-cmd weg als we ingebouwde node optie gebruiken -->
-
 Eerst installeren we 2 packages: [config](https://www.npmjs.com/package/config) en [env-cmd](https://www.npmjs.com/package/env-cmd).
 
 ```bash
@@ -51,6 +49,7 @@ yarn add env-cmd --dev
 - **config** laat toe om eenvoudig configuratie te switchen op basis van de environment variabele `NODE_ENV`.
 - **env-cmd** laat toe om een programma te draaien waar de environment variabelen uit een bestand gehaald worden.
   - Merk op dat we dit toevoegen aan de `devDependencies` omdat we dit enkel nodig hebben tijdens development. In productie zullen we de environment variabelen op een andere manier meegeven (zie later).
+  - Node.js heeft recent een [ingebouwde manier gekregen om environment variabelen in te stellen](https://nodejs.org/en/blog/release/v20.6.0). Echter is het wel een beetje een gedoe om dat te gebruiken in combinatie met nodemon en jest aangezien je de bestandsnaam van het `.env` bestand aan het `node` commando moet meegeven. Daarom gebruiken we voorlopig nog `env-cmd`. Experimenteer gerust met de ingebouwde manier in je eigen project.
 
 Het package `config` vereist dat de `NODE_ENV` environment variabele gedefinieerd is. Deze stel je typisch in op 'development', 'production'... De library zoekt in de `config` map naar een bestand met die naam (bv. `config/development.js`).
 
