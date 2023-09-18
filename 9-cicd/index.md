@@ -56,7 +56,7 @@ Het hele concept van CI/CD valt buiten de scope van dit olod. We proberen jullie
 Om de back-end en front-end online te zetten, zijn er een aantal services nodig:
 
 - [Render](https://render.com/)
-- [MySQL-databank in het VIC](https://phpmyadmin-frontendweb.vichogent.be/) (= Virtual IT Company van HOGENT)
+- [MySQL databank in het VIC](https://phpmyadmin-frontendweb.vichogent.be/) (= Virtual IT Company van HOGENT)
 
 ### Render
 
@@ -66,15 +66,15 @@ Er bestaan heel wat software- en cloudoplossingen om CI/CD toe te passen. Vaak z
 
 Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](https://render.com/). De Render omgeving is gratis (tot een bepaalde limiet uiteraard) en biedt meteen een oplossing voor zowel back-end als front-end. Het is ontzettend eenvoudig - een beetje klikken, invullen en klaar.
 
-### MySQL-databank in het VIC
+### MySQL databank in het VIC
 
-Als we onze back-end online willen zetten, hebben we een MySQL-databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL-databank opstarten, maar wij gebruik MySQL (naar analogie met het olod Databases I). *Feel free to switch, but you're on your own then.*
+Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruik MySQL (naar analogie met het olod Databases I). *Feel free to switch, but you're on your own then.*
 
 Er bestaan heel wat gratis MySQL services online maar eigenlijk geen enkele degelijke waar je geen kredietkaart voor nodig hebt, ofwel zien ze er sketchy uit of zijn ze vaak down.
 
-Daarom hosten we zelf een MySQL-databank in het VIC (Virtual IT Company van HOGENT). Jullie krijgen (of kregen) een mail met de inloggegevens van jouw persoonlijke MySQL-databank. **Let op: er wordt maar één databank per persoon voorzien!**
+Daarom hosten we zelf een MySQL databank in het VIC (Virtual IT Company van HOGENT). Jullie krijgen (of kregen) een mail met de inloggegevens van jouw persoonlijke MySQL databank. **Let op: er wordt maar één databank per persoon voorzien!**
 
-**Dus je moet zelf geen MySQL-databank aanmaken!** Droppen van de databank is niet mogelijk vanuit de phpMyAdmin-interface, wel vanuit code. Dat laatste kunnen we in MySQL niet verhinderen, de permissies zijn niet zo specifiek in te stellen. Wil je terug een lege databank? Drop dan simpelweg alle tabellen manueel.
+**Dus je moet zelf geen MySQL databank aanmaken!** Droppen van de databank is niet mogelijk vanuit de phpMyAdmin-interface, wel vanuit code. Dat laatste kunnen we in MySQL niet verhinderen, de permissies zijn niet zo specifiek in te stellen. Wil je terug een lege databank? Drop dan simpelweg alle tabellen manueel.
 
 We zijn geen gigantisch datacenter, dus we kunnen niet garanderen dat de databank altijd online zal zijn of snel zal reageren. We doen ons best om de databank zo goed mogelijk online te houden.
 
