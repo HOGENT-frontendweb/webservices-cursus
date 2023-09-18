@@ -166,3 +166,26 @@ Voeg zelf o.b.v. de documentatie van [swagger-jsdoc](https://www.npmjs.com/packa
 - Uiteraard kan dit ook meteen in je eigen project
 - (ja, als developer moet je zelf ook dingen kunnen uitzoeken en leren gebruiken)
 - Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget)
+
+## koa-helmet
+
+Pas `installMiddleware.js`. Koa-helmet's CSP is niet nodig in development. Levert problemen op met Swagger UI.
+`./core/installMiddleware.js`
+
+```js
+const koaHelmet = require('koa-helmet');
+//..
+// Add the body parser
+app.use(bodyParser());
+
+// Add some security headers
+app.use(
+  koaHelmet({
+    // Not needed in development (destroys Swagger UI)
+    contentSecurityPolicy: isDevelopment ? false : undefined,
+  })
+);
+
+// Add CORS
+//..
+```

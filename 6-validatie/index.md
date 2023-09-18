@@ -544,3 +544,40 @@ Werk aan je eigen project
 - Voeg foutafhandeling toe
 
 TIP: als extra kan je een ander validatie framework gebruiken
+
+## koa helmet
+
+De module ["koa-helmet"](https://www.npmjs.com/package/koa-helmet) is een middleware voor Koa. `koa-helmet` is een wrapper voor [`helmet voor express`](https://github.com/helmetjs/helmet) om met koa te werken. Het stelt verschillende HTTP response headers in om de beveiliging van webapplicaties die met Koa zijn gebouwd te verbeteren.
+
+Enkele van de beveiligingsheaders die door "koa-helmet" zijn geïmplementeerd, zijn onder meer:
+
+- Content Security Policy (CSP): Het helpt Cross-Site Scripting (XSS)-aanvallen te voorkomen. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+- X-Content-Type-Options: Het voorkomt aanvallen van content-sniffing attacks door de browser te dwingen zich aan het aangegeven content-types te houden. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options)
+- Strict-Transport-Security: Het dwingt het gebruik van veilige HTTPS-verbindingen af ​​door de browser te instrueren om alleen via HTTPS toegang te krijgen tot de website. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
+- X-Frame-opties: Het voorkomt clickjacking-aanvallen door te beperken waar uw site in een iframe kan worden ingesloten.[Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)
+
+Meer info op [https://github.com/helmetjs/helmet](https://github.com/helmetjs/helmet)
+
+Samenvattend vereenvoudigt "koa-helmet" het proces van het instellen en beheren van beveiligingsheaders in Koa-applicaties, waardoor de algehele beveiligingspositie wordt verbeterd en bescherming wordt geboden tegen veelvoorkomende webkwetsbaarheden. Het helpt het risico op verschillende beveiligingsproblemen te minimaliseren en beschermt de gebruikers en de applicatie tegen mogelijke aanvallen.
+
+### koa helmet installeren
+
+```bash
+> yarn add koa-helmet
+```
+
+Pas `installMiddleware.js`. Installeer koa-helmet in de middleware pipeline.
+`./core/installMiddleware.js`
+
+```js
+const koaHelmet = require('koa-helmet');
+//..
+// Add the body parser
+app.use(bodyParser());
+
+// Add some security headers
+app.use(koaHelmet());
+
+// Add CORS
+//..
+```
