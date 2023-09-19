@@ -17,9 +17,9 @@
 
 :root {
   /* App styles*/
-  --theme-hue       : 41;
+  --theme-hue: 41;
   --theme-saturation: 95%;
-  --theme-lightness : 59%;
+  --theme-lightness: 59%;
 
   /* Base styles */
   --base-font-size: 16px;
@@ -50,4 +50,11 @@ iframe {
 img {
   display: block;
   margin: 0 auto;
+}
+
+.markdown-section code:not([class*=lang-]):not([class*=language-]) {
+  color: var(--code-theme-variable);
+  margin: 0;
+  background: none;
+  border: none;
 }
