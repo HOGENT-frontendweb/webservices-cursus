@@ -476,6 +476,7 @@ Kijk gerust eens welke bestanden er allemaal genegeerd worden. Je kan dit bestan
 Maak een bestand `index.js` aan in de root van de map die je net gemaakt hebt. Plak onderstaande code in het bestand.
 
 ```js
+// index.js
 const Koa = require('koa'); // 👈 1
 const app = new Koa(); // 👈 1
 
@@ -504,6 +505,7 @@ Elke middleware functie voert dan zijn deel van het werk uit en roept vervolgens
 Pas `index.js` aan.
 
 ```js
+// index.js
 const Koa = require('koa');
 const app = new Koa();
 
@@ -571,6 +573,7 @@ yarn add nodemon --dev
 De optie `--dev` zorgt ervoor dat het package als dev dependency geïnstalleerd wordt. Pas het `start` script als volgt aan:
 
 ```json
+// package.json
 {
   "scripts": {
     "start": "nodemon index.js"
