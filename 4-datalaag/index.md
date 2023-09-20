@@ -198,7 +198,6 @@ const tables = Object.freeze({
   place: 'places',
 });
 
-
 module.exports = {
   initializeData, // 👈 3
   getKnex, // 👈 11
@@ -327,7 +326,7 @@ const formatTransaction = ({
 
 // 👇 3
 const findById = async (id) => {
-   // 👇 begin query (4)
+  // 👇 begin query (4)
   const transaction = await getKnex()(tables.transaction)
     .join(
       `${tables.place}`,
@@ -464,7 +463,8 @@ Er is geen gouden graal, dit is slechts een voorbeeldaanpak. We hebben nu volgen
 Indien je voor een ORM framework gaat, pas dan de service- en REST-laag aan.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `TODO:`
 
@@ -548,37 +548,140 @@ module.exports = {
 - De `down`-functie gooit simpelweg de eventueel gemaakte tabel weg.
   - Waarom is hier geen `async` nodig? Deze functie retourneert de `Promise` meteen, dus `async` is niet nodig
 
+### Databank aanmaken
+
+Alvorens we de migratie uitvoeren dienen we er zeker van te zijn dat de database bestaat. Dit is niet altijd het geval. We kunnen de databank ook laten aanmaken door KnexJS. We voegen hiervoor een extra stap toe in onze `initializeData` functie:
+
+```js
+async function initializeData() {
+  const logger = getLogger();
+  logger.info('Initializing connection to the database');
+
+  const knexOptions = {
+    client: DATABASE_CLIENT,
+    connection: {
+      host: DATABASE_HOST,
+      port: DATABASE_PORT,
+      // database: DATABASE_NAME, // 👈 1
+      user: DATABASE_USERNAME,
+      password: DATABASE_PASSWORD,
+      insecureAuth: isDevelopment,
+    },
+  };
+  knexInstance = knex(knexOptions); // 👈 1
+
+  // 👇 2
+  try {
+    await knexInstance.raw('SELECT 1+1 AS result');
+    await knexInstance.raw(`CREATE DATABASE IF NOT EXISTS ${DATABASE_NAME}`); // 👈 3
+
+    // We need to update the Knex configuration and reconnect to use the created database by default
+    // USE ... would not work because a pool of connections is used
+    await knexInstance.destroy(); // 👈 4
+
+    knexOptions.connection.database = DATABASE_NAME; // 👈 5
+    knexInstance = knex(knexOptions); // 👈 6
+    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
+  } catch (error) {
+    logger.error(error.message, { error });
+    throw new Error('Could not initialize the data layer');
+  }
+
+  // ...
+}
+```
+
+1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
+2. Vervolgens breiden we onze connectiecheck uit.
+3. We maken een databank aan, indien deze nog niet bestaat.
+4. We gooien de connectie weg.
+5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
+6. We maken een nieuwe connectie aan.
+7. We testen of de connectie goed functioneert.
+
 ### Migrations uitvoeren
 
 Migrations worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
 
 ```js
+const { join } = require('path');
+
 async function initializeData() {
+  //..
+
   const knexOptions = {
-    // ...
-    migrations: { // 👈 1
+    //..
+    debug: isDevelopment,
+    migrations: {
       tableName: 'knex_meta',
       directory: join('src', 'data', 'migrations'),
-    },
+    }, // 👈 1
   };
-  // ...
 
-  // 👇 2
+  //..
+  // Run migrations
+  // 👈 2
   try {
     await knexInstance.migrate.latest();
   } catch (error) {
     logger.error('Error while migrating the database', {
       error,
     });
+
+    // No point in starting the server when migrations failed
     throw new Error('Migrations failed, check the logs');
   }
-
+  logger.info('Succesfully connected to the database');
   return knexInstance;
 }
+//..
 ```
 
 1. We geven mee aan Knex waar onze migraties staan en in welke tabel hij metadata over de uitgevoerde migraties mag bijhouden.
 2. Nadat de connectie aangemaakt is en goed functioneert, voeren we de migraties uit. We gebruiken de `latest` functie van de Knex Migration API. Deze functie zal kijken op welke versie de databank zit en zal deze vervolgens up to date maken. Als de migraties gefaald zijn, gooien we een error waardoor de server crasht. Het heeft geen zin om de server te starten met een mogelijks corrupte databank, de developer moet dit zelf controleren en fixen.
+
+### Opmerking
+
+De volgorde van uitvoeren van migraties is belangrijk. Je dient eerst de Place en User tabel te creëren, dan pas de Transaction tabel. In de Transaction tabel definiëren we de referentiële integriteit. Belangrijk is om mee te geven hoe de delete dient te gebeuren : CASCADE, RESTRICT, NO ACTION, SET NULL
+
+Voor de migratie van de Transaction tabel
+
+`src/data/migrations/202309190850_createTransactionTable.js`
+
+```js
+const { tables } = require('..');
+
+module.exports = {
+  up: async (knex) => {
+    await knex.schema.createTable(tables.transaction, (table) => {
+      table.increments('id');
+
+      table.integer('amount').notNullable();
+
+      table.dateTime('date').notNullable();
+
+      table.integer('user_id').unsigned().notNullable();
+
+      // Give this foreign key a name for better error handling in service layer
+      table
+        .foreign('user_id', 'fk_transaction_user')
+        .references(`${tables.user}.id`)
+        .onDelete('CASCADE');
+
+      table.integer('place_id').unsigned().notNullable();
+
+      // Give this foreign key a name for better error handling in service layer
+      table
+        .foreign('place_id', 'fk_transaction_place')
+        .references(`${tables.place}.id`)
+        .onDelete('CASCADE');
+    });
+  },
+  down: (knex) => {
+    return knex.schema.dropTableIfExists(tables.transaction);
+  },
+};
+```
 
 ### Oefening 6 - Je eigen project
 
@@ -630,12 +733,14 @@ Seeds worden typisch uitgevoerd voor de server opstart. We voegen deze code toe 
 async function initializeData() {
   const knexOptions = {
     // ...
-    seeds: { // 👈 1
+    seeds: {
+      // 👈 1
       directory: join('src', 'data', 'seeds'),
     },
   };
   // ...
-  if (isDevelopment) { // 👈 2
+  if (isDevelopment) {
+    // 👈 2
     // 👇 3
     try {
       await knexInstance.seed.run();
@@ -657,54 +762,6 @@ async function initializeData() {
 ### Oefening 7 - Je eigen project
 
 Maak de seeding aan voor 1 tabel en zorg ervoor dat de seeding kan worden uitgevoerd.
-
-## Databank aanmaken
-
-Onze code ging er nu vanuit dat de databank reeds bestond. Dit is niet altijd het geval. We kunnen de databank ook laten aanmaken door KnexJS. We voegen hiervoor een extra stap toe in onze `initializeData` functie:
-
-```js
-async function initializeData() {
-  const knexOptions = {
-    client: DATABASE_CLIENT,
-    connection: {
-      host: DATABASE_HOST,
-      port: DATABASE_PORT,
-      // database: DATABASE_NAME, // 👈 1
-      user: DATABASE_USERNAME,
-      password: DATABASE_PASSWORD,
-      insecureAuth: isDevelopment,
-    },
-  };
-  knexInstance = knex(knexOptions); // 👈 1
-
-  // 👇 2
-  try {
-    await knexInstance.raw('SELECT 1+1 AS result');
-    await knexInstance.raw(`CREATE DATABASE IF NOT EXISTS ${DATABASE_NAME}`); // 👈 3
-
-    // We need to update the Knex configuration and reconnect to use the created database by default
-    // USE ... would not work because a pool of connections is used
-    await knexInstance.destroy(); // 👈 4
-
-    knexOptions.connection.database = DATABASE_NAME; // 👈 5
-    knexInstance = knex(knexOptions); // 👈 6
-    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
-  } catch (error) {
-    logger.error(error.message, { error });
-    throw new Error('Could not initialize the data layer');
-  }
-
-  // ...
-}
-```
-
-1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
-2. Vervolgens breiden we onze connectiecheck uit.
-3. We maken een databank aan, indien deze nog niet bestaat.
-4. We gooien de connectie weg.
-5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
-6. We maken een nieuwe connectie aan.
-7. We testen of de connectie goed functioneert.
 
 ## Het totaalplaatje
 

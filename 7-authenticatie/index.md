@@ -1096,9 +1096,11 @@ router.delete(
 
 - scherm de routes van de places af: enkel authenticatie vereist
 - doe hetzelfde voor de transactions
+- `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de service en repository laag aan. Ook voor het tellen van het aantal rijen dient met de aangemelde gebruiker rekening gehouden te worden
+- `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker
+- `POST /api/transactions/:id` de userId van de te creëeren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT` en de `DELETE`
 - zorg ervoor dat de user service enkel users met deze velden retourneert: id, name en email
-- hint: hergebruik makeExposedUser
-- zorg ervoor dat het aanmaken van een transactie terug werkt: stel userId in op het id van de ingelogde gebruiker
+  - hint: hergebruik makeExposedUser
 - oplossing: authenticatie - check uit op commit 129bdb6 van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/tree/authenticatie)
 
 ```bash
