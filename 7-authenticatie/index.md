@@ -35,16 +35,16 @@ een JWT bestaat uit 3 delen:
 - payload
 - signature
 
-Deze drie delen worden gescheiden door een punt en staan in base64url encodering
+Deze drie delen worden gescheiden door een punt en staan in `base64url` encodering
 
 ### JWT: header
 
 Dit bestaat gewoonlijk uit twee delen:
 
-- type: het type van token, in dit geval JWT
-- signing algorithm: het algoritme gebruikt om de token te ondertekenen. bv. HMAC SHA256, RSA
+- `type`: het type van token, in dit geval JWT
+- `signing algorithm`: het algoritme gebruikt om de token te ondertekenen. bv. HMAC SHA256, RSA
 
-Je kan de header gewoon van base64url naar plain text omvorme. Met het voorbeeld geeft dit:
+Je kan de header gewoon van `base64url` naar plain text omvormen. Met het voorbeeld geeft dit:
 
 ```json
 {
@@ -57,16 +57,17 @@ Je kan de header gewoon van base64url naar plain text omvorme. Met het voorbeeld
 
 Dit bevat de sessie-info of zogenaamde claims. Er zijn enkele voorgedefinieerde claims, zoals
 
-- iss: wie de token uitgaf
-- exp: vervaldatum
-- sub: waarvoor deze token dient (bv. authenticatie, password reset)
+- `iss`: wie de token uitgaf
+- `exp`: vervaldatum
+- `sub`: waarvoor deze token dient (bv. authenticatie, password reset)
+- `iat`: issued at time
 - ...
 - Je kan ook eigen properties toevoegen:
   - e-mailadres van de aangemelde gebruiker
   - naam van de aangemelde gebruiker
   - ...
 
-De token uit het voorbeeld bevat volgende payload:
+Het token uit het voorbeeld bevat volgende payload:
 
 ```json
 {
@@ -79,15 +80,15 @@ De token uit het voorbeeld bevat volgende payload:
 ### JWT: signature
 
 - de signature is wat een JWT veilig maakt
-- het neemt de info uit de header, samen met een secret om zo de payload te ondertekenen
+- het neemt de info uit de header, samen met een `secret` om zo de payload te ondertekenen
 - niet meer dan een handtekening die aangeeft of de payload gewijzigd is
 - als iemand de payload wijzigt, zal de signature anders zijn en wordt de token ongeldig beschouwd
 
 ## Wachtwoorden opslaan
 
-We moeten onze wachtwoorden opslaan in de databank. We doen dit uiteraard niet in plain text. We hashen de wachtwoorden met [argon2](https://github.com/P-H-C/phc-winner-argon2). Dit is een van de nieuwste en beste hashing algoritmes voor o.a. wachtwoorden.
+We moeten onze wachtwoorden opslaan in de databank. We doen dit uiteraard niet in plain text. We `hashen` de wachtwoorden met [argon2](https://github.com/P-H-C/phc-winner-argon2). Dit is een van de nieuwste en beste hashing algoritmes voor o.a. wachtwoorden.
 
-### hashing: herhaling
+### Hashing: herhaling
 
 - een hashing algoritme is een one-way algoritme
 - het neemt een input en vormt deze om naar een output met een vast aantal bits
@@ -95,7 +96,7 @@ We moeten onze wachtwoorden opslaan in de databank. We doen dit uiteraard niet i
 - zo kan je de bewerking niet omgekeerd doen en achterhalen wat de input was
 - dit is wat we willen om wachtwoorden op te slaan
 
-### hashing: salt
+### Hashing: salt
 
 - sommige hashing algoritmes gebruiken een **salt**
 - dit is een willekeurig string (met vaste lengte)
@@ -103,7 +104,7 @@ We moeten onze wachtwoorden opslaan in de databank. We doen dit uiteraard niet i
 - dus: hetzelfde wachtwoord hashen met een andere salt, geeft een andere hash
 - dit maakt bv. dictionary attacks moeilijker
 
-### voorbeeld: helpers voor hashing
+### Voorbeeld: helpers voor hashing
 
 We gebruiken het package `argon2` om het `argon2` algoritme te gebruiken in NodeJS
 
@@ -111,7 +112,7 @@ We gebruiken het package `argon2` om het `argon2` algoritme te gebruiken in Node
 yarn add argon2
 ```
 
-### voorbeeld: configuratie hashing
+### Voorbeeld: configuratie hashing
 
 We voegen wat configuratie toe voor argon2.
 
@@ -135,9 +136,9 @@ module.exports = {
 - `timeCost`: we laten het hashing algoritme 6 iteraties uitvoeren
 - `memoryCost`: elke thread van het algoritme mag 128MiB gebruiken
 
-De laatste twee opties bepalen de duur van de hashing: hoe groter deze getallen, hoe langer het duurt. Langer is altijd beter, maar je applicatie moet nog bruikbaar blijven
+De laatste twee opties bepalen de duur van de hashing: hoe groter deze getallen, hoe langer het duurt. Langer is altijd beter, maar je applicatie moet nog bruikbaar blijven.
 
-### voorbeeld: helpers voor hashing
+### Voorbeeld: helpers voor hashing
 
 We definiëren een module met een aantal helpers om een wachtwoord te hashen/controlen.
 
@@ -184,8 +185,8 @@ module.exports = {
 }; // 👈 3
 ```
 
-1. Importeer alle gedefinieerde configuratie
-2. Importeer het argon2 package
+1. Importeer alle gedefinieerde configuratie.
+2. Importeer het argon2 package.
 3. Definieer twee helperfuncties om een wachtwoord te hashen en om te checken of een gegeven wachtwoord gelijk dezelfde hash oplevert. Wachtwoorden vergelijken kan enkel door te checken of ze dezelfde hash opleveren. Exporteer de functies.
 4. De argon2 library exporteert een `hash`-functie om een gegeven string te hashen. Het verwacht de string als eerste argument en wat opties als tweede argument. We geven onze configuratie mee aan de juiste optie. We kiezen de `argon2id` versie van het algoritme (resistent tegen GPU en tradeoff attacks).
 5. De argon2 library exporteert een `verify`-functie om te checken of een gegeven string dezelfde hash oplevert. We geven opnieuw alle configuratie mee.
@@ -193,6 +194,8 @@ module.exports = {
 ### DIY: helpers voor hashing
 
 Kopieer deze code in een `src/testpw.js` bestand en test zelf of jouw code werkt! Speel een beetje met de configuratie en bekijk de invloed op de uitvoeringstijd van het algoritme.
+
+Om de code uit te voeren: `node src/testpw.js`
 
 `src/testpw.js`
 
@@ -224,21 +227,9 @@ async function main() {
 main();
 ```
 
-## Oefening: user service
-
-Maak een user service met alle CRUD-operaties, de repository krijg je al cadeau. De create functie van de user service heet register en krijg je ook cadeau. Je hoeft nog geen route te voorzien om een user aan te maken, enkel deze:
-
-- GET `/api/users`
-- GET `/api/users/:id`
-- PUT `/api/users/:id`
-- DELETE `/api/users/:id`
-
-oplossing: user repository/service
-check uit op commit 4981b7b van onze voorbeeldapplicatie
-
 ## Voorbeeld: wachtwoord opslaan
 
-Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe migratie.
+Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe **migratie**.
 
 `src/data/migrations/202309141600_addAuthInfoToUserTable.js`
 
@@ -267,80 +258,16 @@ module.exports = {
 ```
 
 1. We wijzigen dus de `users` tabel.
-2. We voegen drie nieuwe kolommen toe: een `e-mailadres` een `gehashed wachtwoord` en de `rollen` van de gebruiker. Merk op: we slaan de rollen op als JSON, dit moeten we dus opvangen in de repository.
+2. We voegen drie nieuwe kolommen toe: een `e-mailadres` een `gehashed wachtwoord` en de `rollen` van de gebruiker. Merk op: we slaan de rollen op als JSON, dit moeten we dus opvangen in de repository. De rollen gebruiken we straks voor de authorisatie.
 3. We geven deze index een naam voor beter error handling (zie later).
 4. In de down-functie verwijderen we de aangemaakte kolommen.
 
-De extra kolommen hebben als gevolg dat de user repository nu ook een `e-mailadres` en `password hash` verwacht als parameter bij create.
-
-`src/repository/user.js`
-
-```js
-// ...
-const create = async ({
-  name,
-  email, // 👈 1
-  passwordHash, // 👈 1
-  roles, // 👈 3
-}) => {
-  const [id] = await getKnex()(tables.user).insert({
-    id,
-    name,
-    email, // 👈 2
-    password_hash: passwordHash, // 👈 2
-    roles: JSON.stringify(roles), // 👈 4
-  });
-  return id;
-};
-// ...
-```
-
-1. E-mailadres en password hash voegen we toe als parameter bij create
-2. Deze geven we dan ook mee aan onze insert
-3. We voegen ook een extra parameter roles toe
-4. Deze rollen moeten we dan omzetten naar JSON alvorens we ze opslaan in de databank (zie migratie). Bij het ophalen wordt deze kolom automatisch geparsed voor ons, m.a.w. we krijgen een array.
-
-Ook in de `service` komen deze extra kolommen mee als parameter. Let wel op: hier komt het wachtwoord nog als plain text binnen!
-
-`src/service/user.js`
-
-```js
-const Role = require('../core/roles'); // 👈 3
-// ...
-const register = async ({
-  name,
-  email, // 👈 1
-  password, // 👈 1
-}) => {
-  const passwordHash = await hashPassword(password); // 👈 2
-
-  const userId = await userRepository
-    .create({
-      name,
-      email, // 👈 2
-      passwordHash, // 👈 2
-      roles: [Role.USER], // 👈 3
-    })
-    .catch(handleDBError);
-
-  const user = await userRepository.findById(userId);
-
-  return await makeLoginData(user);
-};
-// ...
-```
-
-1. We voegen email en wachtwoord toe
-2. We hashen het wachtwoord in de service-laag en geven het door aan de repository
-3. De rollen geven we als array mee, de repository zet deze voor ons om
-
-Pas de seed voor users aan met deze code. Deze seed stelt voor elke user het wachtwoord 12345678 in
+Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen kunnen `user` en/of `admin` worden toegekend.
 
 `sr/data/seeds/202309150900_users.js`
 
 ```js
 const { tables } = require('..');
-const Role = require('../../core/roles');
 
 module.exports = {
   seed: async (knex) => {
@@ -378,6 +305,75 @@ module.exports = {
 };
 ```
 
+De extra kolommen hebben als gevolg dat de **user repository** nu ook een `e-mailadres` en `password hash` en `rollen` verwacht als parameter bij `create`.
+
+`src/repository/user.js`
+
+```js
+// ...
+const create = async ({
+  name,
+  email, // 👈 1
+  passwordHash, // 👈 1
+  roles, // 👈 3
+}) => {
+  const [id] = await getKnex()(tables.user).insert({
+    id,
+    name,
+    email, // 👈 2
+    password_hash: passwordHash, // 👈 2
+    roles: JSON.stringify(roles), // 👈 4
+  });
+  return id;
+};
+// ...
+```
+
+1. E-mailadres, password hash voegen we toe als parameter bij create
+2. Deze geven we dan ook mee aan onze insert
+3. We voegen ook een extra parameter roles toe
+4. Deze rollen moeten we dan omzetten naar JSON alvorens we ze opslaan in de databank (zie migratie). Bij het ophalen wordt deze kolom automatisch geparsed voor ons, m.a.w. we krijgen een array.
+
+**Oefening**: pas ook de andere methodes aan waar nodig.
+
+Ook in de **user service** komen deze extra kolommen mee als parameter. Let wel op: hier komt het wachtwoord nog als plain text binnen!
+
+`src/service/user.js`
+
+```js
+// ...
+const register = async ({
+  name,
+  email, // 👈 1
+  password, // 👈 1
+}) => {
+  const passwordHash = await hashPassword(password); // 👈 2
+
+  const userId = await userRepository
+    .create({
+      name,
+      email, // 👈 2
+      passwordHash, // 👈 2
+      roles: ['user'], // 👈 3
+    })
+    .catch(handleDBError);
+
+  const user = await userRepository.findById(userId);
+
+  return await makeLoginData(user);
+};
+// ...
+```
+
+1. We voegen email en wachtwoord toe
+2. We hashen het wachtwoord in de service-laag en geven het email en hashed wachtwoord door aan de repository
+3. De rollen geven we als array mee. De repository zet deze voor ons om naar JSON
+
+**Oefening**:
+
+- pas ook de andere methodes aan waar nodig
+- pas **user rest** aan waar nodig
+
 ## Voorbeeld: helpers voor JWT
 
 We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) om JWT's te signen en verifiëren
@@ -404,11 +400,11 @@ module.exports = {
 };
 ```
 
-- `secret`: we definiëren het secret waarmee de payload ondertekend zal worden
-- `experationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten
-- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`)
+- `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
+- `experationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
+- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
 
-We definiëren een module met een aantal helpers om een JWT te maken/controleren
+We definiëren een module met een aantal helpers om een JWT te maken/controleren.
 
 `src/core/jwt.js`
 
@@ -452,8 +448,8 @@ module.exports = {
 
 1. Importeer alle gedefinieerde configuratie
 2. Importeer het jsonwebtoken package
-3. Definieer een helper om een JWT te maken. Deze krijgt een gebruiker mee als argument
-4. We geven deze twee properties mee als payload. Je moet deze verplicht apart definiëren
+3. Definieer een helper `generateJWT` om een JWT te maken. Deze krijgt een gebruiker mee als argument
+4. We geven deze twee properties mee als JWT payload. Je moet deze verplicht apart definiëren
 5. Daarnaast definiëren we enkele properties nodig voor het ondertekenen van de JWT
 
    - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` staat in seconden en onze configuratie rekent met milliseconden, daarom moeten we dit omvormen.
@@ -461,12 +457,12 @@ module.exports = {
    - `issuer`: welke server(s) de token uitgeven
    - `subject`: waarvoor deze token dient, in dit geval voor authenticatie (auth)
 
-6. We retourneren een `Promise` die zal resolven als de JWT ondertekend is. We moeten de `sign`-functie wrappen in een `Promise` aangezien deze werkt o.b.v. callbacks om asynchroon te zijn maar dit werkt niet makkelijk. De `sign`-functie neemt de payload, het secret en de sign opties als argument en als laatste argument verwacht deze een callback die opgeroepen zal worden als de token ondertekenend is of als er iets fout liep. In deze callback resolven of rejecten we de `Promise` indien nodig.
+6. We retourneren een `Promise` die zal resolven als de JWT ondertekend is. We moeten de `sign`-functie wrappen in een `Promise` aangezien deze werkt o.b.v. callbacks om asynchroon te zijn. Maar dit werkt niet makkelijk. De `sign`-functie neemt de JWT payload (`tokenData`), het secret en de sign opties als argument en als laatste argument verwacht deze een callback die opgeroepen zal worden als de token ondertekend is of als er iets fout liep. In deze callback resolven of rejecten we de `Promise` indien nodig.
 
-We definiëren nog een tweede helper die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
+We definiëren nog een tweede helper `verifyJWT` die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
 
 - JWT is verlopen
-- er is prutst aan de payload
+- er is geprutst aan de payload
 - JWT is niet bedoeld voor deze server
 - ...
 
@@ -499,9 +495,9 @@ module.exports = {
 ```
 
 1. We geven opnieuw de informatie mee die we verwachten in de token
-2. Omdat `jwt.verify` ook met een callback werkt, moeten we deze wrappen in een Promise. `jwt.verify` verwacht de JWT, het secret en de opties als argumenten. ALs laatste argument volgt een callback die opgeroepen zal worden als de token gecontroleerd is. In deze callback resolven of rejecten we de Promise indien nodig.
+2. Omdat `jwt.verify` ook met een callback werkt, moeten we deze wrappen in een Promise. `jwt.verify` verwacht de JWT, het secret en de opties als argumenten. Als laatste argument volgt een callback die opgeroepen zal worden als de token gecontroleerd is. In deze callback resolven of rejecten we de Promise indien nodig.
 
-Kopieer deze code in een `src/testjwt.js` bestand en test zelf of jouw code werkt!
+Kopieer onderstaande code in een `src/testjwt.js` bestand en test zelf of jouw code werkt!
 
 Uitvoeren: `node src/testjwt.js`
 
@@ -517,7 +513,7 @@ function messWithPayload(jwt) {
   );
 
   // make me admin please ^^
-  parsedPayload.roles.push('ADMIN');
+  parsedPayload.roles.push('admin');
 
   const newPayload = Buffer.from(
     JSON.stringify(parsedPayload),
@@ -532,7 +528,7 @@ async function main() {
     firstName: 'Thomas',
     lastName: 'Aelbrecht',
     email: 'thomas.aelbrecht@hogent.be',
-    roles: ['USER'],
+    roles: ['user'],
   };
 
   const jwt = await generateJWT(fakeUser);
@@ -611,7 +607,7 @@ module.exports = {
 };
 ```
 
-We passen de `ServiceErrors` aan. Mogelijke fouten zijn
+We passen **ServiceError** aan. Mogelijke fouten zijn
 
 - unauthorized: authenticatie faalt
 - forbidden: authorisatie faalt
@@ -650,7 +646,7 @@ module.exports = ServiceError;
 2. Voorzie de static methods
 3. Voorzie de getters
 
-In de middleware voor het afhandelen van de ServiceErrors voegen we toe
+In de **middleware voor het afhandelen van de ServiceError** voegen we de afhandeling van `isUnauthorized` en `isForbidden` toe
 
 `core/installMiddlewares.js`
 
@@ -691,7 +687,7 @@ module.exports = {
 1. Daarvoor schrijven we deze query. We kunnen veilig `first()` gebruiken aangezien er een UNIQUE index staat op de kolom `email`.
 2. Vergeet deze functie dan ook niet te exporteren
 
-We definiëren een functie `login` die een gebruiker met een bepaald e-mailadres probeert aan te melden.
+We definiëren een functie `login` die een gebruiker met een bepaald e-mailadres probeert aan te melden. Als de gebruiker is aangemeld retourneren we het token en de publieke informatie van de gebruiker (id, name, email en rollen)
 
 `src/service/user.js`
 
@@ -755,58 +751,52 @@ module.exports = {
 8. Vervolgens retourneren we de token en enkel de velden van de user die publiek zijn. Voor dit laatste maken we opnieuw een helperfunctie (we hebben deze nog nodig bij bv. `findById`)
 9. Vergeet ook deze functie niet te exporteren
 
-Vervolgens maken een module voor alle routes m.b.t. de gebruikers.
+**Oefening**: pas ook de overige methodes aan
 
-`src/rest/_user.js`
+- register retourneert het token en de publieke user data
+- getAll, ... retourneren de publieke user data (dus zeker geen wachtwoorden!)
+
+Vervolgens passen we de **rest module** voor alle routes m.b.t. de gebruikers aan.
+
+`src/rest/user.js`
 
 ```js
-const Router = require('@koa/router'); // 👈 1
-const userService = require('../service/user'); // 👈 2
+//..
 
-// 👈 5
+// 👈 1
 const login = async (ctx) => {
-  const { email, password } = ctx.request.body; // 👈 5
-  const token = await userService.login(email, password); // 👈 6
-  ctx.status = 200; // 👈 7
-  ctx.body = token; // 👈 7
+  const { email, password } = ctx.request.body; // 👈 2
+  const token = await userService.login(email, password); // 👈 3
+  ctx.status = 200; // 👈 4
+  ctx.body = token; // 👈 4
 };
+login.validationScheme = {
+  body: {
+    email: Joi.string().email(),
+    password: Joi.string(),
+  },
+}; // 👈 5
 
-// 👈 3
 module.exports = function installUsersRoutes(app) {
   const router = new Router({
     prefix: '/users',
-  }); // 👈 4
-
-  router.post('/login', login); // 👈 8
-
-  app.use(router.routes()).use(router.allowedMethods()); // 👈 4
+  });
+  //..
+  router.post('/login', validate(login.validationScheme), login); // 👈 6
+  //..
 };
 ```
 
-1. We importeren de `Router` en `user service` alvast
-2. We exporteren een functie die alle routes van de gebruikers zal installeren in een gegeven Koa applicatie of router
-3. We definiëren een geneste router voor de routes met prefix `/user`
-4. We definiëren een functie voor onze `aanmeld`-route
-5. We halen het e-mailadres en wachtwoord uit de HTTP body
-6. We proberen de gebruiker aan te melden
-7. Als dat gelukt is, geven we de token-informatie mee in de HTTP response body en geven we een status code 200
-8. We geven deze functie mee aan de POST op `/login`
-
-We importeren onze `installatie`-functie voor de user routes en roepen deze aan in de initialisatie-functie van de REST-laag
-
-`src/rest/index.js`
-
-```js
-const installUserRouter = require('./_user'); // 👈
-
-module.exports = (app) => {
-  // ...
-  installUserRouter(router); // 👈
-  // ...
-};
-```
+1. We definiëren een functie voor onze `aanmeld`-route
+2. We halen het e-mailadres en wachtwoord uit de HTTP body
+3. We proberen de gebruiker aan te melden
+4. Als dat gelukt is, geven we de token-informatie mee in de HTTP response body en geven we een status code 200
+5. We valideren de input
+6. We geven deze functie mee aan de POST op `/login`
 
 ## Voorbeeld: registreren
+
+We overlopen hier nog eens de belangrijkste code van her registreer proces.
 
 `src/service/user.js`
 
@@ -835,13 +825,13 @@ const register = async ({
 };
 ```
 
-1. we geven nu ook een e-mailadres en wachtwoord mee als we een nieuwe gebruiker toevoegen
-2. hierbij moeten we eerst het wachtwoord hashen
-3. vervolgens maken we de gebruiker met deze gegevens. We maken elke nieuwe gebruiker standaard enkel `USER`
+1. We geven nu ook een e-mailadres en wachtwoord mee als we een nieuwe gebruiker toevoegen
+2. Hierbij moeten we eerst het wachtwoord hashen
+3. Vervolgens maken we de gebruiker met deze gegevens. We maken elke nieuwe gebruiker standaard enkel `USER`
 4. Vervolgens halen we de zojuist gecrëerde gebruiker op
-5. vervolgens maken we voor deze gebruiker ook token-informatie. Zo is een geregistreerde gebruiker meteen aangemeld.
+5. Dan maken we voor deze gebruiker ook token-informatie en de publieke user info aan. Zo is een geregistreerde gebruiker meteen aangemeld.
 
-We definiëren een request handler voor het registreren.
+We bekijken ook nog eens de `request handler` voor het registreren.
 
 `src/rest/_user.js`
 
@@ -851,21 +841,32 @@ const register = async (ctx) => {
   ctx.body = token; // 👈 2
   ctx.status = 200; // 👈 2
 };
+register.validationScheme = {
+  body: {
+    name: Joi.string().max(255),
+    email: Joi.string().email(),
+    password: Joi.string().min(8).max(30),
+  },
+}; // 👈 3
 
 module.exports = function installUsersRoutes(app) {
   // ...
-  router.post('/register', register); // 👈 3
+  router.post('/register', validate(register.validationScheme), register); // 👈 4
   // ...
 };
 ```
 
 1. We registreren de nieuwe gebruiker (alle informatie zit in de HTTP body). We krijgen de token-informatie terug
 2. We retourneren deze token-informatie in de HTTP response body, evenals een statuscode 200.
-3. We geven deze functie mee aan de POST op `/register`
+3. We definiëren de validatie van de input
+4. We geven deze functie mee aan de POST op `/register`
 
 ## Voorbeeld: helpers voor authenticatie/autorisatie
 
-We definiëren een module die twee helpers exporteert. Beide helpers zijn middlewares voor Koa.
+We definiëren **een module die twee helpers** exporteert. Beide helpers zijn **middlewares** voor Koa.
+
+- de eerste helper dwingt af dat de gebruiker moet aangemeld zijn om een endpoint uit te voeren
+- de tweede helper dwingt af dat de gebruiker de juiste rollen heeft om een endpoint uit te voeren
 
 `src/core/auth.js`
 
@@ -904,14 +905,14 @@ module.exports = {
 2. Een andere helper die een middleware opmaakt die een bepaalde rol afdwingt (**autorisatie**)
 3. We halen de `Authorization` header op
 4. We laten de user service deze token verifiëren en parsen, en verwachten sessie-informatie terug. We implementeren deze functie later
-5. We slaan de sessie-informatie op in de state van de huidige context. In de `ctx.state` kan je bijhouden wat je wil
-6. We slaan ook de JWT op
+5. We slaan de sessie-informatie op in de `state` van de huidige `context`. In de `ctx.state` kan je bijhouden wat je wil
+6. We slaan ook de JWT op in `ctx.state`
 7. We roepen de volgende middleware in de rij aan
-8. We halen de rollen uit de sessie-informatie. Merk op: deze middleware vereist dat de `requireAuthentication` middleware reeds uitgevoerd is, let dus op de volgorde
+8. We halen de rollen uit de sessie-informatie. Merk op: deze middleware vereist dat de `requireAuthentication` middleware reeds uitgevoerd is, let dus op de volgorde!!!
 9. We laten de user service checken of de aangemelde gebruiker de vereiste rol heeft. We implementeren deze functie ook later
 10. Als laatste roepen we ook de volgende middleware in de rij aan
 
-We definiëren een eerste functie om een JWT te verifiëren en te parsen.
+We definiëren een eerste **functie om een JWT te verifiëren en te parsen**.
 
 `src/service/user.js`
 
@@ -965,7 +966,7 @@ const checkAndParseSession = async (authHeader) => {
 6. Als laatste retourneren we alle sessie-informatie, alsook de token
 7. Opdat de applicatie ook zou runnen als de authenticatie disabled is... Maak de nodige aanpassing in de configs.
 
-De laatste functie in de `user service` zal checken of een gegeven rol in de array van rollen voorkomt. De array bevat alle rollen van de grebuiker (uit de JWT payload gehaald).
+De laatste **functie** in de `user service` zal **checken of een gegeven rol in de array van rollen voorkomt**. De array bevat alle rollen van de grebuiker (uit de JWT payload gehaald).
 
 `src/service/user.js`
 
@@ -987,14 +988,14 @@ const checkRole = (role, roles) => {
 
 1. Met de functie includes kunnen we controleren of de rol voorkomt in de array
 2. Als de rol niet in de array zit, wordt een Forbidden fout geworpen, die zal worden afgehandeld door de middleware
-3. Als authenticatie disabled,...
+3. Als authenticatie disabled is,...
 
-Hoe gebruiken we deze middlewares nu?
+**Hoe gebruiken we deze middlewares nu?**
 
 `src/rest/user/js`
 
 ```js
-const { requireAuthentication, makeRequireRole } = require('../core/auth'); // 👈 1
+const { requireAuthentication, makeRequireRole } = require('../core/auth'); // 👈 2
 const Role = require('../core/roles'); // 👈 4
 // ...
 
@@ -1004,16 +1005,37 @@ module.exports = function installUsersRoutes(app) {
   });
 
   // Public routes
-  router.post('/login', login);
-  router.post('/register', register);
+  router.post('/login', validate(login.validationScheme), login); // 👈 1
+  router.post('/register', validate(register.validationScheme), register); // 👈 1
 
   const requireAdmin = makeRequireRole(Role.ADMIN); // 👈 4
 
   // Routes with authentication/autorisation
-  router.get('/', requireAuthentication, requireAdmin, getAllUsers); // 👈 3 en 4
-  router.get('/:id', requireAuthentication, getUserById); // 👈 3
-  router.put('/:id', requireAuthentication, updateUserById); // 👈 3
-  router.delete('/:id', requireAuthentication, deleteUserById); // 👈 3
+  router.get(
+    '/',
+    requireAuthentication,
+    requireAdmin,
+    validate(getAllUsers.validationScheme),
+    getAllUsers
+  ); // 👈 3 en 4
+  router.get(
+    '/:id',
+    requireAuthentication,
+    validate(getUserById.validationScheme),
+    getUserById
+  ); // 👈 3
+  router.put(
+    '/:id',
+    requireAuthentication,
+    validate(updateUserById.validationScheme),
+    updateUserById
+  ); // 👈 3
+  router.delete(
+    '/:id',
+    requireAuthentication,
+    validate(deleteUserById.validationScheme),
+    deleteUserById
+  ); // 👈 3
 
   app.use(router.routes()).use(router.allowedMethods());
 };
@@ -1021,12 +1043,12 @@ module.exports = function installUsersRoutes(app) {
 
 1. `login` en `register` zijn twee publieke API calls, die laten we gerust
 2. We importeren onze nieuwe middlewares
-3. en dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn. Aaangemeld zijn = Authorization header bevat een geldige JWT
+3. en dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn. Aangemeld zijn = Authorization header bevat een geldige JWT
 4. We willen ook de `GET /api/users` enkel toegankelijk maken voor admins. Daarom maken we een middleware die op deze rol checkt en voegen deze toe aan de route
 
 ## Controleer of de aangemelde gebruiker toegang heeft tot de gegeven user info
 
-We dienen nog te controleren of de aangemelde gebruiker wel toegang heeft tot de gevraagde user informatie. Enkel de admin en de gebruiekr zelf heeft daartoe toegang.
+We dienen nog te controleren of de aangemelde gebruiker wel toegang heeft tot de gevraagde user informatie. Enkel de admin en de gebruiker zelf heeft daartoe toegang.
 
 `src/rest/user.js`
 
@@ -1084,7 +1106,7 @@ router.delete(
 ); // 👈
 ```
 
-## sidenote
+## Sidenote
 
 - in de praktijk wil je liever externe services gebruiken
 - dit geeft minder problemen met o.a. GDPR
@@ -1092,16 +1114,14 @@ router.delete(
 - voorbeelden: [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazon.com/cognito/)
   ...
 
-## oefening: authenticatie
+## Oefening: authenticatie
 
-- scherm de routes van de places af: enkel authenticatie vereist
-- doe hetzelfde voor de transactions
+- scherm de routes van de places af: authenticatie vereist
+- doe hetzelfde voor de transactions. Pas indien nodig ook de andere lagan aan.
 - `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de service en repository laag aan. Ook voor het tellen van het aantal rijen dient met de aangemelde gebruiker rekening gehouden te worden
 - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker
 - `POST /api/transactions/:id` de userId van de te creëeren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT` en de `DELETE`
-- zorg ervoor dat de user service enkel users met deze velden retourneert: id, name en email
-  - hint: hergebruik makeExposedUser
-- oplossing: authenticatie - check uit op commit 129bdb6 van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/tree/authenticatie)
+- oplossing: authenticatie - check uit op commit ?????TODO van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/tree/authenticatie)
 
 ```bash
 git pull

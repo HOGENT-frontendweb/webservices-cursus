@@ -803,6 +803,10 @@ Werk aan je eigen project!
 - Vervolledig je repositories en services in je project met alle benodigde CRUD-operaties.
 - Vervolledig ook de migrations en seeds.
 
+OF
+
+- Voeg in de Budget WebService de migratie, seeding, repo, service en rest toe voor de CRUD van de Users
+
 ## Mogelijke extra's voor de examenopdracht
 
 - Gebruik van een ORM framework.
