@@ -284,7 +284,7 @@ const address = {
   number: 152
 };
 
-// we halen de naam en leeftijd uit het object en slaan ze op in variabelen
+// we halen de straat en het huisnummer uit het object en slaan ze op in variabelen
 const { street, number } = address;
 
 console.log(street);
