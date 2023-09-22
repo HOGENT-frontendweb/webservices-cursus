@@ -43,7 +43,7 @@ Naar goeie traditie schrijven we hier enkele voorbeelden van jullie voorgangers.
 - Websites om te zoeken/luisteren naar podcasts
 - Website voor een vereniging of het bedrijf van een vriend(in), familielid...
 
-## Slides?
+## Cursusmateriaal?
 
 Het cursusmateriaal wordt op GitHub gehost: <https://hogent-web.github.io/webservices-cursus>.
 
