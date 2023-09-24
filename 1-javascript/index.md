@@ -131,7 +131,7 @@ console.log(counter());
 
 </div>
 
-Deze functie definieert een variabele `count` gelijk aan nul. Vervolgens geeft er een functie terug die dit getal verhoogt en teruggeeft. We kunnen de functie blijven aanroepen en krijgen telkens een hoger getal terug. Merk dus op dat de functie `counter` nog steeds toegang heeft tot de variabele `count`, ook al is de functie `createCounter al lang uitgevoerd.
+Deze functie definieert een variabele `count` gelijk aan nul. Vervolgens geeft er een functie terug die dit getal verhoogt en teruggeeft. We kunnen de functie blijven aanroepen en krijgen telkens een hoger getal terug. Merk dus op dat de functie `counter` nog steeds toegang heeft tot de variabele `count`, ook al is de functie `createCounter` al lang uitgevoerd.
 
 ### Currying
 
@@ -594,11 +594,11 @@ console.log(person2);
 
 ### Oefening 1 - Je eigen project
 
-Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](../0-intro/situering?id=wat-gaan-jullie-doen). De ervaring leert ons dat het enige tijd vergt om de leerstof van Web Services te verwerken en dat je tijdig moet beginnen aan de opdracht (maar dat is altijd, toch?).
+Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](./0-intro/situering?id=wat-gaan-jullie-doen). De ervaring leert ons dat het enige tijd vergt om de leerstof van Web Services te verwerken en dat je tijdig moet beginnen aan de opdracht (maar dat is altijd, toch?).
 
-Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <https://github.com/BurntSushi/erd>. Hou hierbij rekening met relaties en hoe je deze wegwerkt in een relationele databank (indien van toepassing).
+Schrijf in het kort op waarover de applicatie zal gaan, welke functionaliteiten er *mogelijks* in zullen zitten, welke entiteiten er zullen zijn... Je doet dit bij voorkeur in een Markdown-bestand (nee, we gebruiken Word *niet* meer hiervoor). Door in tekstvorm te werken, kan je dit bestand bijhouden in jouw eigen GitHub repository.
 
-Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het template voor feedback).
+Vraag hulp/feedback aan je lector als je niet zeker bent van je idee. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het template voor feedback).
 
 ### Oefening 2 - JS drills
 
