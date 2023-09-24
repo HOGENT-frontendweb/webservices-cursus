@@ -37,7 +37,7 @@ Pas de `package.json` aan, voeg onderstaand script toe
 
 ```json
 "scripts": {
-	"lint": "npx eslint . --fix"
+  "lint": "npx eslint . --fix"
 }
 ```
 
