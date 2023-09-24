@@ -596,6 +596,25 @@ console.log(person2);
 
 Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](./0-intro/situering?id=wat-gaan-jullie-doen). De ervaring leert ons dat het enige tijd vergt om de leerstof van Web Services te verwerken en dat je tijdig moet beginnen aan de opdracht (maar dat is altijd, toch?).
 
+Maak alvast een lege GitHub classroom repository aan en clone deze:
+
+```bash
+git clone <JOUW_GIT_REPOSITORY_URL>
+```
+
+Vul alvast de `README.md` en `dossier.md` aan voor zover mogelijk:
+
+- `README.md`: vul de titel en je naam, studentennummer en e-mailadres in.
+- `dossier.md`: vul de titel in, duid aan welk(e) vak(ken) je volgt, en vul de link(s) naar de GitHub repository/repositories in.
+
+Commit vervolgens deze wijzigingen:
+
+```bash
+git add .
+git commit -m "✨ Initial commit ✨"
+git push -u origin main
+```
+
 Schrijf in het kort op waarover de applicatie zal gaan, welke functionaliteiten er *mogelijks* in zullen zitten, welke entiteiten er zullen zijn... Je doet dit bij voorkeur in een Markdown-bestand (nee, we gebruiken Word *niet* meer hiervoor). Door in tekstvorm te werken, kan je dit bestand bijhouden in jouw eigen GitHub repository.
 
 Vraag hulp/feedback aan je lector als je niet zeker bent van je idee. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het template voor feedback).
