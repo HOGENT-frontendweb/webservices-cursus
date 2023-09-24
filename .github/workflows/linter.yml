@@ -25,3 +25,9 @@ jobs:
           files: "**/*.md"
           config_file: .markdownlint.json
           dot: false
+
+      - name: Check for dead links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: "yes"
+          base-branch: "main"
