@@ -463,6 +463,7 @@ const numbers = [5, 2, 3, 1, 4];
 const sum = numbers.reduce((accumulator, number) => {
   return accumulator + number;
 }, 0);
+console.log(sum);
 
 // reduce kan je ook gebruiken om een group by te doen
 // laten we de even en oneven getallen groeperen in een array
@@ -477,6 +478,7 @@ const groupBy = numbers.reduce((accumulator, number) => {
   even: [],
   odd: [],
 });
+console.log(groupBy);
 ```
 
 </div>
