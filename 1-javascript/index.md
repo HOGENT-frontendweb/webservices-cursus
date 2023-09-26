@@ -614,7 +614,7 @@ Commit vervolgens deze wijzigingen:
 ```bash
 git add .
 git commit -m "✨ Initial commit ✨"
-git push -u
+git push
 ```
 
 Schrijf in het kort op waarover de applicatie zal gaan, welke functionaliteiten er *mogelijks* in zullen zitten, welke entiteiten er zullen zijn... Je doet dit bij voorkeur in een Markdown-bestand (nee, we gebruiken Word *niet* meer hiervoor). Door in tekstvorm te werken, kan je dit bestand bijhouden in jouw eigen GitHub repository.
