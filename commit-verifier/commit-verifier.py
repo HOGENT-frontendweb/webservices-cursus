@@ -100,4 +100,7 @@ if __name__ == "__main__":
 
         print("")
 
+    if not should_fail:
+        print("No broken GitHub commit references found.")
+
     sys.exit(should_fail and 1 or 0)
