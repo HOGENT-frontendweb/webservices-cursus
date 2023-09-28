@@ -258,7 +258,7 @@ module.exports = {
 ```
 
 1. We wijzigen dus de `users` tabel.
-2. We voegen drie nieuwe kolommen toe: een `e-mailadres` een `gehashed wachtwoord` en de `rollen` van de gebruiker. Merk op: we slaan de rollen op als JSON, dit moeten we dus opvangen in de repository. De rollen gebruiken we straks voor de authorisatie.
+2. We voegen drie nieuwe kolommen toe: een `e-mailadres` een `gehashed wachtwoord` en de `rollen` van de gebruiker. Merk op: we slaan de rollen op als JSON, dit moeten we dus opvangen in de repository. De rollen gebruiken we straks voor de autorisatie.
 3. We geven deze index een naam voor beter error handling (zie later).
 4. In de down-functie verwijderen we de aangemaakte kolommen.
 
@@ -610,7 +610,7 @@ module.exports = {
 We passen **ServiceError** aan. Mogelijke fouten zijn
 
 - unauthorized: authenticatie faalt
-- forbidden: authorisatie faalt
+- forbidden: autorisatie faalt
 
 `core/serviceError.js`
 

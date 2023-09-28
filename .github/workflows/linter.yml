@@ -30,3 +30,6 @@ jobs:
         uses: gaurav-nelson/github-action-markdown-link-check@v1
         with:
           base-branch: "main"
+
+      - name: Check for broken GitHub commit references
+        uses: ./commit-verifier

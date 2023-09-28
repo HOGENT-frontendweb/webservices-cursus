@@ -1,0 +1,6 @@
+# action.yml
+name: "Check for broken GitHub commit references"
+description: "Search for broken GitHub commit references in markdown files in the given directory and its subdirectories"
+runs:
+  using: "docker"
+  image: "Dockerfile"
