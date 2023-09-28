@@ -2,13 +2,11 @@
 
 ## Situering
 
-Waarschijnlijk weet je wel tot welk keuzepakket dit olod behoort, maar we bevinden ons voor de duidelijkheid binnen het keuzepakket `Development`:
-
-![Keuzepakketten](./images/MT_development.png ':size=70%')
-
-En meer bepaald hier:
+Dit olod behoort tot de keuzepakketten `Development` en `AI & Data Engineer`, zoals je hieronder kan zien:
 
 ![Dit olod in de keuzepakketten](./images/MT_olods.png ':size=70%')
+
+Indien je in het keuzepakket `Development` zit, dan volg je waarschijnlijk Front-end Web Development gelijktijdig met dit olod. Indien je in het keuzepakket `AI & Data Engineer` zit, dan volg je enkel dit olod.
 
 ## Wat gaan we doen?
 
