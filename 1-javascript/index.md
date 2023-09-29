@@ -598,7 +598,7 @@ console.log(person2);
 
 Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](./0-intro/situering?id=wat-gaan-jullie-doen). De ervaring leert ons dat het enige tijd vergt om de leerstof van Web Services te verwerken en dat je tijdig moet beginnen aan de opdracht (maar dat is altijd, toch?).
 
-Maak alvast een lege GitHub classroom repository aan en clone deze:
+Maak een nieuwe GitHub repository aan via de GitHub classroom link in de introductie van de Chamilo-cursus. Clone jouw Git repository uit de GitHub classroom:
 
 ```bash
 git clone <JOUW_GIT_REPOSITORY_URL>
