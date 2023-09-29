@@ -32,7 +32,7 @@ Met het HTTP-protocol kunnen REST API’s software op het ene apparaat laten pra
 
 Het fundamentele concept van een RESTful API is de **resource**. Alle informatie die benoemd kan worden is een resource: een document, afbeelding, verzameling (= collection) van resources, niet-virtueel object (bv. een klant), enz. REST gebruikt een **resource identifier** om een resource te identificeren.
 
-De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie. Gebruik hiervoor een zelfstandig naamwoord in het meervoud. Gebruik GEEN actiemethodes (een werkwoord), met uitzondering van `/api/users/login` en `/api/users/register` voor het aanmelden en registreren. De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
+De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie, zoals bvb `/api/klanten` verwijst naar de verzameling van de klant objecten. Gebruik hiervoor een zelfstandig naamwoord in het meervoud. Gebruik GEEN actiemethodes (een werkwoord), met uitzondering van `/api/users/login` en `/api/users/register` voor het aanmelden en registreren. De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
 
 Bekijk onderstaand voorbeeld. Let op de opbouw van de databank (= ERD), van de URI bovenaan en van de response (geel). Je merkt een duidelijk verschil tussen het databankschema en de response. Het is dus niet altijd zo dat het databankschema overeenkomt met de response. De API-ontwikkelaar beslist hoe de response eruit ziet. Lek dus geen implementatiedetails door in de response.
 
@@ -61,7 +61,7 @@ Een ander voorbeeld: [de brewery API](https://www.openbrewerydb.org/documentatio
 
 In de kern betekent REST dat je met collecties werkt met daarin resources, die je op een gestructureerde manier hebt opgebouwd, zodat de structuur voor iedere gebruiker helder is.
 
-Bovendien kunnen resources gemanipuleerd worden door hun voorstelling. Als een client een voorstelling van een resource heeft (inclusief eventuele metadata), heeft hij genoeg om resources aan te passen en die wijzigingen terug door te sturen naar de API.
+Bovendien kunnen resources gemanipuleerd worden door hun voorstelling. Als een client een **voorstelling** van een resource heeft (inclusief eventuele metadata), heeft hij genoeg om resources aan te passen en die wijzigingen terug door te sturen naar de API.
 
 Er zijn nog een aantal HTTP request methods (PATCH, CONNECT, HEAD, OPTIONS, TRACE), maar die worden in de context van REST servers (bijna) niet gebruikt. PATCH kom je soms eens tegen, en HEAD wordt frequent gebruikt in de context van bv. CORS, maar dat is voor later.
 
@@ -118,7 +118,7 @@ REST is een reeks principes die een ontwikkelaar moet volgen voordat hij zijn AP
 
 <!-- markdownlint-disable ol-prefix -->
 
-1. **Uniforme interface**: een request identificeert een **resource** (zie verder), door gebruik te maken van **URI's**. Er zijn vier architecturale beperkingen nodig om het gedrag van componenten vast te leggen:
+1. **Uniforme interface**: een request identificeert een **resource**, door gebruik te maken van **URI's**. Er zijn vier architecturale beperkingen nodig om het gedrag van componenten vast te leggen:
 
 - Identificatie van resources.
 - Manipulatie van resources door representations (JSON, XML..).
@@ -235,24 +235,22 @@ We hebben drie entiteiten met volgende attributen:
 - User
   - firstName
   - lastName
-- adres
+  - adres
 - Recipe
   - name
-  - createdBy (wie het recept toegevoegd heeft)
 - Ingredient
   - name
   - amount
   - unit
-  - Relaties
 
 ### Relaties
 
 We onderscheiden volgende relaties:
 
-Een gebruiker heeft meerdere opgeslagen recepten (niet verplicht om er te hebben)
-Een recept wordt toegevoegd door één gebruiker
-Een recept heeft meerdere ingrediënten
-Een ingrediënt hoort maar bij één recept
+- Een gebruiker heeft meerdere opgeslagen recepten (niet verplicht om er te hebben)
+- Een recept wordt toegevoegd door één gebruiker, een gebruiker kan meerdere recepten toevoegen
+- Een recept heeft meerdere ingrediënten
+- Een ingrediënt hoort maar bij één recept
 
 ### Frequently made errors (FME)
 
@@ -261,10 +259,10 @@ Door de jaren heen merkten we een aantal terugkomende fouten in het ontwerp van 
 - Geen tussentabellen voor veel-op-veel relatie
 - Geen foreign key voor een-op-veel relatie
 - Samengestelde sleutels i.p.v. een id, strings als een id (lastig in API calls)
-- Geen API call definities
-- GET all request geeft alle relaties terug (vaak onnodig)
 - Adres/locatie als string in een tabel (lastig om hierop queries uit te voeren)
 - ERD niet voldoende om doel van de applicatie te verwezenlijken
+- Geen API call definities
+- GET all request geeft alle relaties terug (vaak onnodig)
 
 ### ERD met Frequently Made Errors
 
@@ -611,7 +609,7 @@ git checkout -b oplossing 625fb6a
 
 Vorige les heb je (normaal gezien) nagedacht over het onderwerp van de examenopdracht. Daarop gaan we nu verder bouwen.
 
-Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <https://github.com/BurntSushi/erd>. Hou hierbij rekening met relaties en hoe je deze wegwerkt in een relationele databank (indien van toepassing).
+Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <https://github.com/BurntSushi/erd>. Hou hierbij rekening met relaties en hoe je deze wegwerkt in een relationele databank (indien van toepassing). Je kan je ERD al toevoegen aan je dossier.
 
 Definieer vervolgens de bijhorende endpoints. Gebruik hiervoor de best practices die je in dit hoofdstuk geleerd hebt. Je kan ook de API calls van de voorbeeldoplossing van de vorige oefening als leidraad gebruiken.
 
