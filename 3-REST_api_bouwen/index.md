@@ -3,7 +3,7 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget/
+> git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
 > git checkout -b les3 625fb6a
 > yarn install
