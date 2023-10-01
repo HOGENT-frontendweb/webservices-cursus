@@ -166,7 +166,7 @@ Uiteindelijk komt in de body de UML code te staan (kopieer gerust, code staat on
 
 ![Een POST request in Postman - vervolg](./images/postman2.png)
 
-```js
+```text
 @startuml
 left to right direction
 skinparam packageStyle rectangle
@@ -202,6 +202,36 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
 ![ERD](./images/kroki_erd.svg)
 
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  ```erd
+  [Klant]
+  *name
+  +persoonId
+  +adresId
+
+  [Adres]
+  *id
+  straat
+  nr
+  +stadId
+
+  [Stad]
+  *id
+  postcode
+  naam
+
+  [Persoon]
+  *id
+  voornaam
+  naam
+
+  Klant 1--1 Adres
+  Klant 1--1 Persoon
+  Adres 1--* Stad
+  ```
+
 ## API routes beveiligen
 
 Sommige API's zijn door iedereen vrij te gebruiken, zoals de FBI most wanted, maar heel vaak is dat niet zo.
@@ -235,7 +265,6 @@ We hebben drie entiteiten met volgende attributen:
 - User
   - firstName
   - lastName
-  - adres
 - Recipe
   - name
 - Ingredient
