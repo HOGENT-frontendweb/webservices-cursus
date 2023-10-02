@@ -121,7 +121,7 @@ REST is een reeks principes die een ontwikkelaar moet volgen voordat hij zijn AP
 1. **Uniforme interface**: een request identificeert een **resource**, door gebruik te maken van **URI's**. Er zijn vier architecturale beperkingen nodig om het gedrag van componenten vast te leggen:
 
 - Identificatie van resources.
-- Manipulatie van resources door representations (JSON, XML..).
+- Manipulatie van resources door representations (JSON, XML...).
 - Zelf-omschrijvende berichten.
 - Hypermedia als de drijvende kracht van de applicatie status. De applicatie in deze context is de web applicatie die je server draait, hypermedia de hyperlinks/links die de server meestuurt in het antwoord.
 
@@ -196,7 +196,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
 - Installeer [Postman](https://www.postman.com) en maak een account aan.
 - Check dat alles werkt door de FBI's most wanted list op te vragen.
-  - Stuur hiervoor een GET request naar <https://api.fbi.gov/wanted/v1/list>.
+  - Stuur hiervoor een GET request naar <https://api.fbi.gov/wanted/v1/list>
 - Gebruik <http://kroki.io/erd> om onderstaand ERD te creëren.
   - Als je via de browser klikt op de link is het logisch dat je een 404 krijgt, je moet een POST uitvoeren via Postman.
 
