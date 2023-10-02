@@ -197,7 +197,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 - Installeer [Postman](https://www.postman.com) en maak een account aan.
 - Check dat alles werkt door de FBI's most wanted list op te vragen.
   - Stuur hiervoor een GET request naar <https://api.fbi.gov/wanted/v1/list>
-- Gebruik <http://kroki.io/erd> om onderstaand ERD te creëren.
+- Gebruik <https://kroki.io/erd> om onderstaand ERD te creëren.
   - Als je via de browser klikt op de link is het logisch dat je een 404 krijgt, je moet een POST uitvoeren via Postman.
 
 ![ERD](./images/kroki_erd.svg)
