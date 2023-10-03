@@ -35,6 +35,20 @@ Installeer `yarn` als alternatieve package manager voor `npm`:
 npm install -g yarn
 ```
 
+Test of `yarn` correct geïnstalleerd is en kan gebruikt worden:
+
+```bash
+yarn --version
+```
+
+Dit zou een versienummer moeten opleveren.
+
+Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. De fout is in de vorm van `yarn.ps1 cannot be loaded because running scripts is disabled on this system`. Indien dit het geval is, open een PowerShell terminal in Administrator modus. Voer vervolgens het volgende commando uit en antwoord met `A` op de vraag:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
+```
+
 ## Visual Studio Code
 
 Installeer Visual Studio Code via een package manager:
