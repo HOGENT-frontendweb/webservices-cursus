@@ -265,6 +265,7 @@ We hebben drie entiteiten met volgende attributen:
 - User
   - firstName
   - lastName
+  - address
 - Recipe
   - name
 - Ingredient
@@ -327,7 +328,7 @@ Wat is er fout aan dit ERD?
 
 Een mogelijke oplossing ziet eruit als volgt:
 
-![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjsOwjAQRPs5RWojF7kCVGkoQFSIwsQDspQ40XqNxO1JMB9XO5p9eprzgX2YeYEJHtGNxKYXOqXfPoFzF-9CHxi1Itw45ajIMeiCnBKlPG9Bku5XYnCfkFRIRczjlYJ5SuqG3eSJPujqP7oH_W9CXlSdh5F3sSSs8qa11jQFQjml-o-ruMqIKjfG2vYreQGGTFDg)
+![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjEOwjAQBPt7RepELvIFqNJQgKgiChMvyFJsR-czEr_HxhG4utXeaLTzGYvdcKPeGvLagYaFoQXm8CaaJ_9kGAsvDaFdSF4oeSsZuUZwfT4sRzkVYtV7iMKAkE_uDqYtRNHrMRjQYqX4L_oF85swpOyaTA78rXKkou9GpfquYlRPrf7zGq5xUpO7Xqlxl3wAuhtRLA==)
 
 Je merkt nog een samengestelde sleutel in SavedRecipe. Het kan wel nuttig zijn om geen samengestelde sleutels te gebruiken, dat is persoonlijke voorkeur. In dat geval bevat de tabel SavedRecipe ook een id, naast de `userId` en `recipeId`.
 
@@ -361,8 +362,8 @@ postalCode
 city
 
 [SavedRecipe]
-*userId
-*recipeId
+*+userId
+*+recipeId
 
 User 1--* Recipe
 Recipe 1--* Ingredient
