@@ -207,7 +207,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
   ```erd
   [Klant]
-  *name
+  *id
   +persoonId
   +adresId
 
