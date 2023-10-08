@@ -80,7 +80,7 @@ We passen onze nodemon-configuratie aan zodat het `.env` bestand ingelezen wordt
     ],
     "ext": "js,json",
     "legacyWatch": true,
-    "exec": "node --inspect=0.0.0.0:9001 --trace-warnings src/index.js"
+    "exec": "node --inspect=0.0.0.0:9001 --trace-warnings index.js"
   }
 }
 ```
@@ -247,8 +247,9 @@ We voegen alvast de bodyparser toe.
 ```js
 const Koa = require('koa');
 const config = require('config');
-const { getLogger } = require('./core/logging');
 const bodyParser = require('koa-bodyparser'); // 👈 1
+
+//...winston
 
 const app = new Koa();
 const logger = getLogger();
