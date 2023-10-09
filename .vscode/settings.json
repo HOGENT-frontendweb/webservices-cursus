@@ -54,6 +54,5 @@
     "startuml",
     "skinparam",
     "twoslash"
-  ],
-  "docsifyPreview.indexFile": "index.html"
+  ]
 }
