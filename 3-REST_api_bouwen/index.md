@@ -76,7 +76,8 @@ We passen onze nodemon-configuratie aan zodat het `.env` bestand ingelezen wordt
     "delay": "80",
     "watch": [
       "config",
-      "src"
+      "src",
+      "index.js"
     ],
     "ext": "js,json",
     "legacyWatch": true,
@@ -190,7 +191,7 @@ Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD 
 
 Binnen onze middlewarefuncties bevat de context alle info over het request zoals die bij onze server toekomt.
 
-Voeg onderstaande code toe aan `src/index.js`:
+Voeg onderstaande code toe aan `index.js`:
 
 ```js
 app.use(async (ctx, next) => {
@@ -314,6 +315,10 @@ Maak een nieuwe map `src` en verplaats de `index.js` hier naartoe. Pas de `packa
 {
   "main": "src/index.js",
   "nodemonConfig": {
+    "watch": [
+      "config",
+      "src",
+    ],
     "exec": "node --inspect=0.0.0.0:9001 --trace-warnings src/index.js",
     // ...
   },
