@@ -253,7 +253,6 @@ const bodyParser = require('koa-bodyparser'); // 👈 1
 //...winston
 
 const app = new Koa();
-const logger = getLogger();
 
 app.use(bodyParser()); // 👈 2
 
@@ -415,6 +414,7 @@ const getById = (id) => {
 const create = ({ amount, date, placeId, user }) => {
   throw new Error('Not implemented yet!');
 };
+
 const updateById = (id, { amount, date, placeId, user }) => {
   throw new Error('Not implemented yet!');
 };
