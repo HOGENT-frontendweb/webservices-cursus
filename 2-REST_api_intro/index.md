@@ -147,7 +147,7 @@ Probeer bijvoorbeeld eens het weer in Gent (of jouw gemeente/stad) op te vragen 
 
 POST en PUT requests zijn iets lastiger te testen. Meestal moet je hier ook data meesturen in de body van de requests en dat kan niet zo eenvoudig in de browser. Uiteindelijk is het natuurlijk de bedoeling dat de API via de client (een programma) aangesproken wordt. Echter als je aan het ontwikkelen bent, is het handig om software te hebben die alle soorten requests kan genereren. Dit is zeker handig als er iets niet werkt, op die manier kan je testen of het probleem zich voordoet in de front- of back-end.
 
-Een vaak gebruikt programma hiervoor is [Postman](https://www.postman.com). Recent kwam [Postman met een extensie voor VS Code](https://marketplace.visualstudio.com/items?itemName=Postman.postman-for-vscode). Er zijn natuurlijk nog alternatieven zoals bv. [Insomnia](https://insomnia.rest/) of [Thunder Client](https://marketplace.visualstudio.com/items?itemName=rangav.vscode-thunder-client) (een extensie voor VSCode).
+Een vaak gebruikt programma hiervoor is [Postman](https://www.postman.com). Recent kwam [Postman met een extensie voor VS Code](https://marketplace.visualstudio.com/items?itemName=Postman.postman-for-vscode). Er zijn natuurlijk nog alternatieven zoals bv. [Insomnia](https://insomnia.rest/) of [Thunder Client](https://marketplace.visualstudio.com/items?itemName=rangav.vscode-thunder-client) (een extensie voor VSCode). In de eerste les heb je reeds Postman geïnstalleerd, maar wissel gerust naar een andere tool als je dat verkiest.
 
 ### Postman
 
@@ -194,8 +194,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
 ### Oefening
 
-- Installeer [Postman](https://www.postman.com) en maak een account aan.
-- Check dat alles werkt door de FBI's most wanted list op te vragen.
+- Gebruik Postman om most wanted list van de FBI op te vragen.
   - Stuur hiervoor een GET request naar <https://api.fbi.gov/wanted/v1/list>
 - Gebruik <https://kroki.io/erd/svg> om onderstaand ERD te creëren.
   - Als je via de browser klikt op de link is het logisch dat je een 404 krijgt, je moet een POST uitvoeren via Postman.

@@ -25,7 +25,7 @@
 
 ### Linting: tools installeren
 
-Voeg de [ESLint extensie](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) toe aan VS Code. Installeer ESLint in het project
+Voeg, indien nog niet gedaan, de [ESLint extensie](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) toe aan VS Code. Installeer ESLint in het project
 
 ```bash
 > yarn add eslint --dev

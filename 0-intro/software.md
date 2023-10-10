@@ -9,6 +9,7 @@ Voor dit olod gaan we ervan uit dat je volgende **software installeert en config
     - [Visual Studio Code: plugins](#visual-studio-code-plugins)
     - [Configuratie VS Code](#configuratie-vs-code)
     - [Fira Code lettertype](#fira-code-lettertype)
+  - [Postman](#postman)
 
 ## NodeJS
 
@@ -136,3 +137,11 @@ Voeg nadien volgende JSON-configuratie toe aan de settings van VS Code (zie hier
   "editor.tabSize": 2
 }
 ```
+
+## Postman
+
+Installeer Postman via een package manager:
+
+- Windows: `choco install postman`
+- macOS: `brew install --cask postman`
+- Linux: [distro afhankelijk](https://www.postman.com/downloads/)
