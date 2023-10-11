@@ -77,6 +77,8 @@ Een aantal optionele, maar toch handige plugins:
 - [TODO Highlight](https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight)
 - [vscode-twoslash-queries](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-twoslash-queries)
 
+Talloze andere plugins, thema's... vind je bijvoorbeeld op <https://viatsko.github.io/awesome-vscode/>.
+
 ### Configuratie VS Code
 
 Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. De eenvoudigste manier is om dit via de JSON-interface te doen:
@@ -95,6 +97,7 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
   "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
   },
+  "editor.linkedEditing": true,
   "errorLens.delay": 500,
   "errorLens.enabledDiagnosticLevels": [
       "error",
