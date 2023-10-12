@@ -120,11 +120,13 @@ We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons
 {
   "scripts": {
     "start": "env-cmd nodemon",
-    "test": "env-cmd -f .env.test jest",
-    "test:coverage": "env-cmd -f .env.test jest --coverage"
+    "test": "env-cmd -f .env.test jest --runInBand",
+    "test:coverage": "env-cmd -f .env.test jest --runInBand --coverage"
   },
 }
 ```
+
+We gebruiken hier ook de `runInBand` optie van Jest zodat onze testen niet parallel worden uitgevoerd. Dit zorgt er o.a. voor dat het werken met testdata iets eenvoudiger is.
 
 ## Refactoring
 
@@ -558,11 +560,11 @@ describe('Transactions', () => {
 
   describe('POST /api/transactions', () => {
     const transactionsToDelete = []; // 👈 2
-    const usersToDelete = []; // 👈 3
 
     // 👇 1
     beforeAll(async () => {
       await knex(tables.place).insert(data.places);
+      await knex(tables.user).insert(data.users);
     });
 
     afterAll(async () => {
@@ -578,7 +580,7 @@ describe('Transactions', () => {
 
       // 👇 3
       await knex(tables.user)
-        .whereIn('id', usersToDelete)
+        .whereIn('id', dataToDelete.users)
         .delete();
     });
   });
@@ -599,7 +601,7 @@ it('should 201 and return the created transaction', async () => {
       amount: 102,
       date: '2021-05-27T13:00:00.000Z',
       placeId: 1,
-      user: 'Test User'
+      userId: 1,
     });
 
   expect(response.status).toBe(201); // 👈 2
@@ -610,12 +612,13 @@ it('should 201 and return the created transaction', async () => {
     id: 1,
     name: 'Test place',
   });
-  expect(response.body.user.id).toBeTruthy(); // 👈 5
-  expect(response.body.user.name).toBe('Test User');  // 👈 5
+  expect(response.body.user).toEqual({ // 👈 5
+    id: 1,
+    name: 'Test User'
+  });
 
   // 👇 6
   transactionsToDelete.push(response.body.id);
-  usersToDelete.push(response.body.user.id);
 });
 ```
 
@@ -626,25 +629,7 @@ it('should 201 and return the created transaction', async () => {
 5. Controleer of de response de juiste user bevat. De id moet bestaan, de naam moet gelijk zijn aan de naam die we hebben doorgegeven.
 6. Voeg de id's toe aan de arrays zodat we de data kunnen verwijderen na de testen.
 
-Voer de test uit, hij zal falen. Hoe komt dit?
-
-<!-- markdownlint-disable-next-line -->
-+ Oplossing +
-
-  Stel de juiste statuscode in bij de afhandeling van het request.
-
-  ```js
-  // src/rest/transactions.js
-  const createTransaction = async (ctx) => {
-    const newTransaction = await transactionService.create({
-      ...ctx.request.body,
-      placeId: Number(ctx.request.body.placeId),
-      date: new Date(ctx.request.body.date),
-    });
-    ctx.body = newTransaction;
-    ctx.status = 201; // 👈
-  };
-  ```
+Voer de test uit en controleer of hij slaagt.
 
 Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -693,14 +678,19 @@ Schrijf een test voor het endpoint DELETE /api/transactions/:id:
   - testen of de statuscode 400 is als het id geen nummer is
   - testen of de statuscode 404 is als de transactie niet bestaat
 
-### Oefening 4 - Places
+### Oefening 4 - Testen voor de andere endpoints
 
-Maak de testen aan voor alle endpoints onder /api/places. Denk na over de testen die je nu al kan schrijven en welke je pas kan schrijven als validatie is toegevoegd aan de back-end.
+Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/api/health`. Denk na over de testen die je nu al kan schrijven en welke je pas kan schrijven als validatie is toegevoegd aan de back-end.
 
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
   TODO: oplossing toevoegen (of linken naar GitHub)
+
+  Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
+
+  - testen of de statuscode 400 is als de request body, URL... niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
+  - testen of de statuscode 404 is als de place niet bestaat
 
 ## Extra's voor de examenopdracht
 
