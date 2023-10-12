@@ -1,13 +1,11 @@
 # Testing
 
-<!-- TODO: startpunt aanpassen -->
-
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5 TODO:
+> git checkout -b les5 4f79853
 > yarn install
 > yarn start
 > ```
@@ -543,7 +541,14 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  TODO: oplossing toevoegen (of linken naar GitHub)
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `b969d7e`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing b969d7e
+  yarn install
+  yarn start
+  ```
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -650,7 +655,14 @@ Schrijf een test voor het endpoint PUT /api/transactions/:id:
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  TODO: oplossing toevoegen (of linken naar GitHub)
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `bbea3e7`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing bbea3e7
+  yarn install
+  yarn start
+  ```
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -671,7 +683,14 @@ Schrijf een test voor het endpoint DELETE /api/transactions/:id:
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  TODO: oplossing toevoegen (of linken naar GitHub)
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `fbc1d5f`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing fbc1d5f
+  yarn install
+  yarn start
+  ```
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -685,7 +704,14 @@ Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/ap
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  TODO: oplossing toevoegen (of linken naar GitHub)
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `dc52535`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing dc52535
+  yarn install
+  yarn start
+  ```
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
