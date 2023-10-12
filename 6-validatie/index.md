@@ -1,13 +1,11 @@
 # Validatie en foutafhandeling
 
-<!-- TODO: startpunt aanpassen -->
-
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 TODO:
+> git checkout -b les6 dc52535
 > yarn install
 > yarn start
 > ```
@@ -268,8 +266,6 @@ if (bodyError) {
 Zorg ervoor dat de validatie wordt uitgevoerd als het POST-request wordt uitgevoerd. Je kan hiervoor de code van de GET-request als voorbeeld gebruiken.
 
 ## Request logging
-
-<!-- TODO: waar maken we src/core/installMiddleware.js aan? -->
 
 We voegen een extra middleware toe die elk binnenkomend request zal loggen. Dit helpt enorm bij het debuggen. We installeren eerst een package om leuke emoji's te tonen in de console.
 
