@@ -13,5 +13,5 @@
 - [6. Validatie en foutafhandeling](./6-validatie/index.md)
 - [7. Authenticatie & autorisatie (WIP)](./7-authenticatie/index.md)
 - [8. Testen: authenticatie & autorisatie (WIP)](./8-auth_testing/index.md)
-- [9. CI/CD (WIP)](./9-cicd/index.md)
+- [9. CI/CD](./9-cicd/index.md)
 - [10. Linting en Swagger (optioneel + WIP)](./10-linting_swagger/index.md)
