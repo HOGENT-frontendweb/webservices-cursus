@@ -723,8 +723,6 @@ module.exports = {
 3. Vervolgens voegen we onze testdata toe. Je kan kiezen om vaste ids te nemen of om deze te laten genereren door de databank.
    - Wat is een voordeel van vaste ids? Hiermee is het eenvoudig om relaties te definiëren. Logisch, want je kent het id van elke record, bij generatie is dit telkens verschillend.
 
-<!-- TODO: hier verder gaan -->
-
 ### Seeds uitvoeren
 
 Seeds worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
