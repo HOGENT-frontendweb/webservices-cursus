@@ -1,5 +1,7 @@
 # Authenticatie en autorisatie
 
+<!-- TODO: uitchecken op authenticatie branch + op specifieke commit -->
+
 > **Startpunt voorbeeldapplicatie**
 >
 > Het volstaat om uit te checken op de `main` branch
@@ -55,6 +57,7 @@ We gaan een beetje globale setup toevoegen. Deze wordt uitgevoerd alvorens één
 
 `test/global.setup.js`
 
+<!-- cSpell: disable -->
 ```js
 const config = require('config'); // 👈 2
 const { initializeLogging } = require('../src/core/logging'); // 👈 2
@@ -90,6 +93,7 @@ module.exports = async () => {
   ]);
 }; // 👈 4
 ```
+<!-- cSpell: enable -->
 
 1. Maak een bestand global.setup.js in de `test` map. We moeten een async functie, die de globale setup bevat, exporteren
 2. We moeten eerst de logging initialiseren want op dit punt hebben we nog geen server
@@ -184,7 +188,7 @@ module.exports = {
 8. Als het geen succesvol request was, dan gooien we een error. De error zal onze test(s) laten falen, in de meeste gevallen is dit een hele test suite
 9. We retourneren de correct geformatteerde `Authorization` header
 
-### Oefening
+### Oefening 1 - Login admin helper
 
 Definieer een helper genaamd `loginAdmin` die hetzelfde doet voor de admin user.
 
@@ -213,7 +217,7 @@ module.exports = {
 };
 ```
 
-We voegen een module toe die de nagaat of voor een bepaalde url de juiste statuscode geretourneerd wordt als de gebruiker niet is aangemeld of een ongeldig token wordt verstuurd. Daar de testen voor elk van de endpoints dient te gebeuren maken we hiervoor een aparte module aan.
+We voegen een module toe die de nagaat of voor een bepaalde URL de juiste statuscode geretourneerd wordt als de gebruiker niet is aangemeld of een ongeldig token wordt verstuurd. Daar de testen voor elk van de endpoints dient te gebeuren maken we hiervoor een aparte module aan.
 
 `test/common/auth.js`
 
@@ -245,7 +249,7 @@ module.exports = {
 };
 ```
 
-1. de functie heeft 1 parameter, nl `requestFactory`. Deze factory creëert de request voor een bepaalde method en url.
+1. de functie heeft 1 parameter, nl `requestFactory`. Deze factory creëert de request voor een bepaalde HTTP methode en URL.
 2. de eerste test controleert het retourneren van een statuscode 401 als de gebruiker niet is aangemeld en hierdoor niet gemachtigd is om het endpoint te bevragen.
 3. de tweede test controleert het retourneren van een statuscode 401 als een ongeldig token wordt meegestuurd en de gebruiker hierdoor niet gemachtigd is om het endpoint te bevragen.
 
@@ -321,20 +325,25 @@ describe('Transactions', () => {
 2. Gebruik de nieuwe `withServer` helper om de server te starten. Stel via de `setter` knex en request in. Vergeet de imports niet op te ruimen.
 3. Gebruik nu de `login` helper om aan te melden. De `login` header houden we bij voor later.
 4. Voeg aan elk request deze login header toe
-5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geauthorizeerd is
+5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is
 
-### Oefening
+### Oefening 2 - Testen afwerken
 
-Herhaal hetzelfde voor alle andere testen van transactions en places en users.
+Herhaal hetzelfde voor alle andere testen van transactions en places en users:
 
-- voeg de login header toe
-- test voor elke url of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geauthorizeerd is
+- Voeg de login header toe.
+- Test voor elke URL of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
 
-### Oplossing: integratietesten
+<!-- TODO: oplossing toevoegen aan voorbeeldproject (aparte branch) -->
 
-check uit op branch authenticatie van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/tree/authenticatie)
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
 
-```bash
-git pull
-git checkout -b authenticatie-testen origin/authenticatie
-```
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b authenticatie-testen origin/authenticatie
+  yarn install
+  yarn start
+  ```

@@ -1065,7 +1065,7 @@ In de praktijk wil je liever externe services gebruiken voor authenticatie en au
 
 Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazon.com/cognito/)...
 
-## Oefening 2 - Authenticatie
+## Oefening 3 - Authenticatie
 
 - Scherm de routes van de places af, authenticatie is vereist.
 - Doe hetzelfde voor de transactions. Pas indien nodig ook de andere lagan aan.
