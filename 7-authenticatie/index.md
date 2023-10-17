@@ -212,7 +212,7 @@ main();
 
 ## Voorbeeld: wachtwoord opslaan
 
-Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe **migratie** in `src/data/migrations/202309141600_addAuthInfoToUserTable.js`:
+Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe **migratie** in `src/data/migrations/202309191630_addAuthInfoToUserTable.js`:
 
 ```js
 const { tables } = require('..');
@@ -297,14 +297,21 @@ const create = async ({
   passwordHash, // 👈 1
   roles, // 👈 1
 }) => {
-  const [id] = await getKnex()(tables.user).insert({
-    id,
-    name,
-    email, // 👈 2
-    password_hash: passwordHash, // 👈 2
-    roles: JSON.stringify(roles), // 👈 3
-  });
-  return id;
+  try {
+    const [id] = await getKnex()(tables.user).insert({
+      id,
+      name,
+      email, // 👈 2
+      password_hash: passwordHash, // 👈 2
+      roles: JSON.stringify(roles), // 👈 3
+    });
+    return id;
+  } catch (error) {
+    getLogger().error('Error in create', {
+      error,
+    });
+    throw error;
+  }
 };
 // ...
 ```
@@ -322,20 +329,19 @@ const register = async ({
   email, // 👈 1
   password, // 👈 1
 }) => {
-  const passwordHash = await hashPassword(password); // 👈 2
+  try {
+    const passwordHash = await hashPassword(password); // 👈 2
 
-  const userId = await userRepository
-    .create({
+    const userId = await userRepository.create({
       name,
       email, // 👈 2
       passwordHash, // 👈 2
       roles: ['user'], // 👈 3
-    })
-    .catch(handleDBError);
-
-  const user = await userRepository.findById(userId);
-
-  return await makeLoginData(user);
+    });
+    return await userRepository.findById(userId);
+  } catch (error) {
+    throw handleDBError(error);
+  }
 };
 // ...
 ```
@@ -349,6 +355,18 @@ const register = async ({
 - Pas ook de andere functies aan waar nodig (in de repository en service).
 - Pas ook de REST-laag van de users aan waar nodig.
 
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie` op commit `8c2a689`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b authenticatie-oef1 8c2a689
+  yarn install
+  yarn start
+  ```
+
 ## Voorbeeld: helpers voor JWT
 
 We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) om JWT's te ondertekenen en verifiëren:
@@ -359,12 +377,12 @@ yarn add jsonwebtoken
 
 We voegen wat configuratie toe voor jsonwebtoken in `config/development.js`, `config/production.js` en `config/test.js`:
 
+<!-- cSpell: disable -->
 ```js
 module.exports = {
   auth: {
     jwt: {
-      secret: /* cspell: disable-next-line */
-        'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
+      secret: 'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
       expirationInterval: 60 * 60 * 1000, // ms (1 hour)
       issuer: 'budget.hogent.be',
       audience: 'budget.hogent.be',
@@ -372,6 +390,7 @@ module.exports = {
   },
 };
 ```
+<!-- cSpell: enable -->
 
 - `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
 - `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
@@ -664,7 +683,7 @@ We definiëren een functie `login` in `src/service/user.js` die een gebruiker me
 
 ```js
 // ...
-const { verifyPassword } = require('../core/password'); // 👈 4
+const { verifyPassword, verifyPassword } = require('../core/password'); // 👈 4
 const { generateJWT } = require('../core/jwt'); // 👈 7
 
 // 👇 8
@@ -734,7 +753,6 @@ Vervolgens passen we de rest module voor alle routes m.b.t. de gebruikers aan (`
 const login = async (ctx) => {
   const { email, password } = ctx.request.body; // 👈 2
   const token = await userService.login(email, password); // 👈 3
-  ctx.status = 200; // 👈 4
   ctx.body = token; // 👈 4
 };
 login.validationScheme = { // 👈 5
@@ -757,7 +775,7 @@ module.exports = function installUsersRoutes(app) {
 1. We definiëren een functie voor onze `login` route.
 2. We halen het e-mailadres en wachtwoord uit de HTTP body.
 3. We proberen de gebruiker aan te melden.
-4. Als dat gelukt is, geven we de token-informatie mee in de HTTP response body en geven we een status code 200.
+4. Als dat gelukt is, geven we de token-informatie mee in de HTTP response body.
 5. We voorzien ook een validatieschema voor de input.
 6. We geven deze functie mee aan de POST op `/login` en doen ook de invoervalidatie.
 
@@ -766,11 +784,11 @@ module.exports = function installUsersRoutes(app) {
 Pas ook de overige functies aan:
 
 - `register` retourneert enkel het token en de publieke user data
-- `getAll`... mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!)
+- `getAll` en `getById` mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!)
 
 ## Voorbeeld: registreren
 
-We overlopen hier nog eens de belangrijkste code van het registreer proces. In `src/service/user.js` hebben we:
+We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.js` hebben we:
 
 ```js
 // ...
@@ -793,7 +811,6 @@ const register = async ({
   });
 
   const user = await userRepository.findById(userId); // 👈 4
-
   return await makeLoginData(user); // 👈 5
 };
 ```
@@ -916,6 +933,12 @@ const checkAndParseSession = async (authHeader) => {
     throw new Error(error.message);
   } // 👈 4
 };
+
+// ...
+module.exports = {
+  checkAndParseSession,
+  // ...
+};
 ```
 
 1. Als er geen header meegegeven werd aan het request, gooien we een fout.
@@ -936,6 +959,12 @@ const checkRole = (role, roles) => {
       'You are not allowed to view this part of the application'
     ); // 👈 2
   }
+};
+
+// ...
+module.exports = {
+  checkRole,
+  // ...
 };
 ```
 
@@ -989,7 +1018,8 @@ module.exports = function installUsersRoutes(app) {
     deleteUserById
   ); // 👈 3
 
-  app.use(router.routes()).use(router.allowedMethods());
+  app.use(router.routes())
+    .use(router.allowedMethods());
 };
 ```
 
@@ -1028,33 +1058,25 @@ const checkUserId = (ctx, next) => {
   return next();
 };
 // ...
-// Routes with authentication
-router.get(
-  '/',
-  requireAuthentication,
-  requireAdmin,
-  validate(getAllUsers.validationScheme),
-  getAllUsers
-);
 router.get(
   '/:id',
   requireAuthentication,
-  validate(getUserById.validationScheme),
   checkUserId, // 👈
+  validate(getUserById.validationScheme),
   getUserById
 );
 router.put(
   '/:id',
   requireAuthentication,
-  validate(updateUserById.validationScheme),
   checkUserId, // 👈
+  validate(updateUserById.validationScheme),
   updateUserById
 );
 router.delete(
   '/:id',
   requireAuthentication,
-  validate(deleteUserById.validationScheme),
   checkUserId, // 👈
+  validate(deleteUserById.validationScheme),
   deleteUserById
 );
 ```
@@ -1071,18 +1093,17 @@ Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazo
 - Doe hetzelfde voor de transactions. Pas indien nodig ook de andere lagan aan.
 - `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de service- en repositorylaag aan. Ook voor het tellen van het aantal rijen dient met de aangemelde gebruiker rekening gehouden te worden.
 - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
-- `POST /api/transactions/:id` de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT` en de `DELETE`.
-
-<!-- TODO: oplossing toevoegen aan voorbeeldproject (aparte branch) -->
+- `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
+- `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
 
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie`
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie` in de commit `90d9ffd`
 
   ```bash
   git clone https://github.com/HOGENT-Web/webservices-budget.git
-  git checkout -b authenticatie origin/authenticatie
+  git checkout -b authenticatie-oef2 90d9ffd
   yarn install
   yarn start
   ```

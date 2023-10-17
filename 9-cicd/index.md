@@ -1,5 +1,7 @@
 # CI/CD
 
+<!-- TODO: JWT secret ? -->
+
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
