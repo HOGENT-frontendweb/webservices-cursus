@@ -20,7 +20,7 @@ De JWT bevat alle gegevens in plain text, maar geëncodeerd als `base64url` stri
 
 Als een JWT alle sessie-info als plain text bevat, kan ik die wijzigen? Ja, je kan die informatie wijzigen. Kan ik mij dan voordoen als iemand anders? Nee, normaal niet. De JWT bevat ook een **signature**. Deze signature wordt berekend op basis van de payload en een `secret`. Als je de payload wijzigt, zal de signature niet meer kloppen en wordt de JWT ongeldig beschouwd.
 
-### JWT: structuur
+### Structuur
 
 Dit is een voorbeeld van een JWT:
 
@@ -38,7 +38,7 @@ Een JWT bestaat uit 3 delen:
 
 Deze drie delen worden gescheiden door een punt en staan in [`base64url` encodering](https://en.wikipedia.org/wiki/Base64). Elk van deze delen kan je dus gewoon decoderen naar plain text en dan zal je een JSON object krijgen.
 
-### JWT: header
+### Header
 
 Dit bestaat gewoonlijk uit twee delen:
 
@@ -54,7 +54,7 @@ Je kan de header gewoon van `base64url` naar plain text omvormen. Met het voorbe
 }
 ```
 
-### JWT: payload
+### Payload
 
 Dit bevat de sessie-info of zogenaamde claims. Er zijn enkele voorgedefinieerde claims, zoals
 
@@ -78,7 +78,7 @@ Het token uit het voorbeeld bevat volgende payload:
 }
 ```
 
-### JWT: signature
+### Signature
 
 De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen met een _secret_ om zo de payload te ondertekenen. Het is niet meer dan een handtekening die aangeeft of de payload gewijzigd is. Als iemand de payload wijzigt, zal de signature anders zijn en wordt de token ongeldig beschouwd.
 
