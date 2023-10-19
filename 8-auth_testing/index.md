@@ -1,15 +1,13 @@
 # Authenticatie en autorisatie
 
-<!-- TODO: uitchecken op authenticatie branch + op specifieke commit -->
-
 > **Startpunt voorbeeldapplicatie**
 >
-> Het volstaat om uit te checken op de `main` branch
+> Het volstaat om uit te checken op de `authenticatie` branch en op commit `4fc1d12`
 >
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7
+> git checkout -b les8 4fc1d12
 > yarn install
 > yarn start
 > ```
@@ -41,14 +39,14 @@ Maak een bestand `__tests__/global.setup.js` met volgende inhoud:
 <!-- cSpell: disable -->
 ```js
 const config = require('config'); // 👈 2
-const { initializeLogging } = require('../src/core/logging'); // 👈 2
+const { initializeLogger } = require('../src/core/logging'); // 👈 2
 const Role = require('../src/core/roles'); // 👈 4
 const { initializeData, getKnex, tables } = require('../src/data'); // 👈 3 en 4
 
 // 👇 1
 module.exports = async () => {
   // Create a database connection
-  initializeLogging(config.get('log.level'), config.get('log.disabled')); // 👈 2
+  initializeLogger(config.get('log.level'), config.get('log.disabled')); // 👈 2
   await initializeData(); // 👈 3
 
   // Insert a test user with password 12345678
@@ -243,7 +241,8 @@ We zullen ervoor zorgen dat de testen voor onze transacties terug slagen. Pas hi
 
 ```js
 // ...
-const { testAuthHeader } = require('../common/auth');// 👈 5
+const { withServer, login } = require('../supertest.setup'); // 👈 2 en 3
+const { testAuthHeader } = require('../common/auth'); // 👈 5
 
 // ...
 const data = {
@@ -264,14 +263,14 @@ const dataToDelete = {
 
 describe('Transactions', () => {
   // let server; 👈 2
-  let supertest, knex, authHeader; // 👈 3
+  let request, knex, authHeader; // 👈 3
 
   // 👇 2
   withServer(({
-    supertest: s,
+    supertest,
     knex: k,
   }) => {
-    supertest = s;
+    request = supertest;
     knex = k;
   });
 
@@ -281,7 +280,7 @@ describe('Transactions', () => {
     request = supertest(server.getApp().callback());
     knex = getKnex();
     */
-    loginHeader = await login(request); // 👈 3
+    authHeader = await login(request); // 👈 3
   });
 
   /* 👇 2
@@ -296,14 +295,15 @@ describe('Transactions', () => {
     // ...
 
     test('it should 200 and return all transactions', async () => {
-      const response = await request.get(url).set('Authorization', authHeader); // 👈 4
+      const response = await request.get(url)
+        .set('Authorization', authHeader); // 👈 4
 
       // expects hier
     });
   });
   // ...
 
-  testAuthHeader(() => supertest.get(url));// 👈 5
+  testAuthHeader(() => request.get(url));// 👈 5
 });
 ```
 
@@ -311,16 +311,16 @@ describe('Transactions', () => {
 2. Gebruik de nieuwe `withServer` helper om de server te starten. Stel via de `setter` knex en request in. Vergeet de imports niet op te ruimen.
 3. Gebruik nu de `login` helper om aan te melden. De `login` header houden we bij voor later.
 4. Voeg aan elk request deze login header toe.
-5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
+5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is. Voeg dit toe aan elke test suite van de verschillende endpoints.
 
 ### Oefening 2 - Testen afwerken
 
 Herhaal hetzelfde voor alle andere testen van transactions, places en users:
 
 - Voeg de login header toe.
+- Pas de requests, indien nodig, aan, bv. bij sommige hoef je het `userId` niet meer mee te geven.
 - Test voor elke URL of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
-
-<!-- TODO: oplossing toevoegen aan voorbeeldproject (aparte branch) -->
+- Let bij de testen van gebruikers op dat je de gebruikers die je nodig hebt om aan te melden niet verwijdert.
 
 <!-- markdownlint-disable-next-line -->
 + Oplossing +

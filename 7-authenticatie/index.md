@@ -1061,22 +1061,22 @@ const checkUserId = (ctx, next) => {
 router.get(
   '/:id',
   requireAuthentication,
-  checkUserId, // 👈
   validate(getUserById.validationScheme),
+  checkUserId, // 👈
   getUserById
 );
 router.put(
   '/:id',
   requireAuthentication,
-  checkUserId, // 👈
   validate(updateUserById.validationScheme),
+  checkUserId, // 👈
   updateUserById
 );
 router.delete(
   '/:id',
   requireAuthentication,
-  checkUserId, // 👈
   validate(deleteUserById.validationScheme),
+  checkUserId, // 👈
   deleteUserById
 );
 ```
