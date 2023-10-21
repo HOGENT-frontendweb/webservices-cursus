@@ -31,3 +31,9 @@ Maak een bestand `launch.json` aan in de `.vscode` map en voeg volgende configur
 Dit zorgt ervoor dat VS Code de debugger zal koppelen aan <localhost:9001>. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
 
 Alvorens je aan het debuggen gaat, check of jouw start-commando de optie `--inspect=0.0.0.0:9001` bevat. Indien je onze uitgebreide nodemon configuratie gebruikt, is dit al het geval.
+
+Dan kan je in VS Code debugger starten door op het play-icoontje te klikken in de debug tab:
+
+![Start VS Code debuggen](img/debugging-in-vscode.png)
+
+Voeg breakpoints toe door op de lijnnummers te klikken. De debugger zal nu stoppen op deze lijn wanneer deze uitgevoerd wordt (doordat je bv. een request uitvoert in Postman).
