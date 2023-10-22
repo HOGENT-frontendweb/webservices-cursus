@@ -466,11 +466,11 @@ Indien je voor een ORM framework gaat, pas dan de service- en REST-laag aan.
 
 - Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `TODO:`
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `ff02f75`
 
   ```bash
   git clone https://github.com/HOGENT-Web/webservices-budget.git
-  git checkout -b oplossing TODO:
+  git checkout -b oplossing ff02f75
   yarn install
   yarn start
   ```
