@@ -625,7 +625,7 @@ const getTransactionById = async (ctx) => {
 const updateTransaction = async (ctx) => {
   ctx.body = transactionService.updateById(Number(ctx.params.id), {
     ...ctx.request.body,
-    placeId: new Date(ctx.request.body.placeId),
+    placeId: Number(ctx.request.body.placeId),
     date: new Date(ctx.request.body.date),
   });
 };
