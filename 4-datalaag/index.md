@@ -156,7 +156,7 @@ async function initializeData() {
   const logger = getLogger(); // 👈 9
   logger.info('Initializing connection to the database'); // 👈 9
 
-  // 👇 1 - start knex opties
+  // 👇 6 - start knex opties
   const knexOptions = {
     client: DATABASE_CLIENT,
     connection: {
@@ -340,7 +340,7 @@ const findById = async (id) => {
       '=',
       `${tables.transaction}.user_id`
     )
-    .where('id', id)
+    .where(`${tables.transaction}.id`, id)
     .first(SELECT_COLUMNS);
   // 👆 einde query (4)
 
