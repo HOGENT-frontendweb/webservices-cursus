@@ -179,6 +179,8 @@ async function initializeData() {
     throw new Error('Could not initialize the data layer'); // 👈 10
   }
 
+  logger.info('Successfully initialized connection to the database'); // 👈 9
+
   return knexInstance; // 👈 7
 }
 
@@ -301,6 +303,7 @@ const SELECT_COLUMNS = [
   'date',
   `${tables.place}.id as place_id`,
   `${tables.place}.name as place_name`,
+  'rating',
   `${tables.user}.id as user_id`,
   `${tables.user}.name as user_name`,
 ];
@@ -309,6 +312,7 @@ const SELECT_COLUMNS = [
 const formatTransaction = ({
   place_id,
   place_name,
+  rating,
   user_id,
   user_name,
   ...rest
@@ -317,6 +321,7 @@ const formatTransaction = ({
   place: {
     id: place_id,
     name: place_name,
+    rating,
   },
   user: {
     id: user_id,
@@ -329,13 +334,13 @@ const findById = async (id) => {
   // 👇 begin query (4)
   const transaction = await getKnex()(tables.transaction)
     .join(
-      `${tables.place}`,
+      tables.place,
       `${tables.place}.id`,
       '=',
       `${tables.transaction}.place_id`
     )
     .join(
-      `${tables.user}`,
+      tables.user,
       `${tables.user}.id`,
       '=',
       `${tables.transaction}.user_id`
