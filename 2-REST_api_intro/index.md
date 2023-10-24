@@ -229,7 +229,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
   Klant 1--1 Adres
   Klant 1--1 Persoon
-  Adres 1--* Stad
+  Adres *--1 Stad
   ```
 
 ## API routes beveiligen
