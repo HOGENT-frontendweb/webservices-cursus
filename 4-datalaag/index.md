@@ -179,6 +179,7 @@ async function initializeData() {
     throw new Error('Could not initialize the data layer'); // 👈 10
   }
 
+  logger.info('Successfully connected to the database'); // 👈 9
   return knexInstance; // 👈 7
 }
 
@@ -631,7 +632,7 @@ async function initializeData() {
     // No point in starting the server when migrations failed
     throw new Error('Migrations failed, check the logs');
   }
-  logger.info('Succesfully connected to the database');
+  logger.info('Successfully connected to the database');
   return knexInstance;
 }
 //..
