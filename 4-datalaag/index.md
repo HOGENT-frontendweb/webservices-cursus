@@ -573,7 +573,7 @@ async function initializeData() {
   // 👇 2
   try {
     await knexInstance.raw('SELECT 1+1 AS result');
-    await knexInstance.raw(`CREATE DATABASE IF NOT EXISTS ${DATABASE_NAME}`); // 👈 3
+    await knexInstance.raw('CREATE DATABASE IF NOT EXISTS ??', DATABASE_NAME); // 👈 3
 
     // We need to update the Knex configuration and reconnect to use the created database by default
     // USE ... would not work because a pool of connections is used
@@ -593,7 +593,7 @@ async function initializeData() {
 
 1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
 2. Vervolgens breiden we onze connectiecheck uit.
-3. We maken een databank aan, indien deze nog niet bestaat.
+3. We maken een databank aan, indien deze nog niet bestaat. De `??` zijn een placeholder voor de databanknaam, die we als parameter doorgeven. Deze wordt geëscaped door KnexJS.
 4. We gooien de connectie weg.
 5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
 6. We maken een nieuwe connectie aan.
