@@ -109,7 +109,7 @@ yarn add mysql2
 
 ### Databank configuratie
 
-Eerst moeten we onze configuratie uitbreiden met de gegevens van onze databank. Pas `src/config/development.js` als volgt aan:
+Eerst moeten we onze configuratie uitbreiden met de gegevens van onze databank. Pas `config/development.js` als volgt aan:
 
 ```js
 module.exports = {
