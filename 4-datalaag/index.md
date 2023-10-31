@@ -538,7 +538,7 @@ module.exports = {
     });
   },
   down: (knex) => {
-    return knex.schema.dropTableIfExists('places');
+    return knex.schema.dropTableIfExists(tables.place);
   },
 };
 ```
@@ -707,14 +707,16 @@ Seeds zijn JavaScript modules die één functie `seed` exporteren. Deze functie 
 Maak het seed bestand aan voor de seeding van de places tabel. Maak hiervoor een map `seeds` in de map data. Maak een nieuw bestand `202309111935_places.js` met deze inhoud:
 
 ```js
+const { tables } = require('..');
+
 module.exports = {
   // 👇 1
   seed: async (knex) => {
     // first delete all entries
-    await knex('places').delete(); // 👈 2
+    await knex(tables.place).delete(); // 👈 2
 
     // then add the fresh places
-    await knex('places').insert([
+    await knex(tables.place).insert([
       { id: 1, name: 'Loon', rating: 5 },
       { id: 2, name: 'Dranken Geers', rating: 3 },
       { id: 3, name: 'Irish Pub', rating: 4 },
