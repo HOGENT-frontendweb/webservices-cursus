@@ -157,7 +157,7 @@ OpenAPI definities schrijf je in YAML of JSON. We maken gebruik van YAML. Docume
 - `Servers`: de API servers en base URL
 - `API tags`: tags worden gebruikt voor het groeperen van gerelateerde operaties bvb transactions, places.
 - `API components`: documentatie van de verschillende herbruikbare data modellen: schema's, parameters, beveiligingsschema's, requestBodies, responses, headers, voorbeelden, koppelingen en callbacks.
-- `API paths`: paden naar de documentatie. Relatief t.o.v. deroot
+- `API paths`: paden naar de documentatie. Relatief t.o.v. de root
 
 Voeg zelf o.b.v. de documentatie van [swagger-jsdoc](https://www.npmjs.com/package/swagger-jsdoc) en [koa2-swagger-ui](https://www.npmjs.com/package/koa2-swagger-ui) Swagger toe aan onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget)
 
@@ -170,11 +170,13 @@ Voeg zelf o.b.v. de documentatie van [swagger-jsdoc](https://www.npmjs.com/packa
 ## koa-helmet
 
 Pas `installMiddleware.js`. Koa-helmet's CSP is niet nodig in development. Levert problemen op met Swagger UI.
+
 `./core/installMiddleware.js`
 
 ```js
 const koaHelmet = require('koa-helmet');
 //..
+const isDevelopment = NODE_ENV==='development';
 // Add the body parser
 app.use(bodyParser());
 
