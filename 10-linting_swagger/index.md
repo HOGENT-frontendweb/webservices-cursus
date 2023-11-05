@@ -169,16 +169,14 @@ Voeg zelf o.b.v. de documentatie van [swagger-jsdoc](https://www.npmjs.com/packa
 
 ## koa-helmet
 
-Pas `installMiddleware.js`. Koa-helmet's CSP is niet nodig in development. Levert problemen op met Swagger UI.
-
-`./core/installMiddleware.js`
+Pas `src/core/installMiddleware.js`. Koa-helmet's CSP is niet nodig in development, dit levert problemen op met Swagger UI.
 
 ```js
-const koaHelmet = require('koa-helmet');
-//..
+// ...
+
 const isDevelopment = NODE_ENV==='development';
-// Add the body parser
-app.use(bodyParser());
+
+// ...
 
 // Add some security headers
 app.use(
