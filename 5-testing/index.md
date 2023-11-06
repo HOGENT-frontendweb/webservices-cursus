@@ -643,7 +643,7 @@ Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzi
 
 ### Oefening 2 - PUT /api/transactions/:id
 
-Schrijf een test voor het endpoint PUT /api/transactions/:id:
+Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
 
 1. Maak een nieuwe test suite aan voor het endpoint PUT /api/transactions/:id.
 2. Zorg ervoor data wat testdata aanwezig is in de databank.
@@ -669,9 +669,9 @@ Schrijf een test voor het endpoint PUT /api/transactions/:id:
   - testen of de statuscode 400 is als de request body niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
   - testen of de statuscode 404 is als de place niet bestaat
 
-### Oefening 3 - DELETE /api/transactions/:id
+### Oefening 3 - DELETE /api/transactions/
 
-Schrijf een test voor het endpoint DELETE /api/transactions/:id:
+Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
 
 1. Maak een nieuwe test suite aan voor het endpoint DELETE /api/transactions/:id.
 2. Zorg ervoor data wat testdata aanwezig is in de databank.
