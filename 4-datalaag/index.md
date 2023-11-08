@@ -271,6 +271,227 @@ Voeg de datalaag toe aan je eigen project.
 
 > 💡 Tip: je kan als extra functionaliteit ook gebruik maken van een ORM framework. Zoek op wat de best practices zijn voor het gebruik van een ORM framework in Node.js. Implementeer het maken van een verbinding met de database.
 
+## Migrations
+
+Vooraleer we queries kunnen uitvoeren op de databank, moeten we deze eerst aanmaken. Dit doen we met behulp van **migrations**. In sommige NoSQL databanken, zoals MongoDB, is dit niet nodig, maar in relationele databanken is dit een must.
+
+Migrations zijn een soort version control voor de databank. Ze kijken op welke versie het databankschema zit en doen eventueel updates. Ze brengen het databankschema naar een nieuwere versie.
+
+Je kan ook wijzigingen ongedaan maken als er iets fout liep. Dit is zeer belangrijk bij databanken in productie! In development kan je simpelweg de databank droppen en opnieuw maken, dat is geen probleem. Echter is dit not done in productie.
+
+Het is wel belangrijk dat je let op de volgorde van uitvoeren van de migraties om geen problemen te krijgen met bv. foreign keys die nog niet zouden bestaan.
+
+![Migraties](./images/versioncontrol-xkcd.jpg ':size=70%')
+
+### Migrations: KnexJS
+
+KnexJS heeft [builtin migrations](https://knexjs.org/#Migrations). Je moet in de [configuratie](https://knexjs.org/#Installation-migrations) enkel aangeven waar de migrations staan.
+
+Migrations in KnexJS zijn JavaScript modules die twee functies exporteren:
+
+1. `up`: bevat de code die deze migratie uitvoert.
+2. `down`: bevat de code die de migratie ongedaan maakt.
+
+Er is één bestand per migratie. De bestandsnaam bevat een timestamp en een korte beschrijving van de migratie: `YYYYMMDDHHmm_description.js`, bv. `202309111840_createUserTable.js`. Door de timestamp vooraan kan je een bepaalde volgorde afdwingen. KnexJS voert de migraties uit in alfabetische volgorde.
+
+In onze budget app hebben we enkele migraties:
+
+- `places` tabel aanmaken
+- `users` tabel aanmaken
+- `transactions` tabel aanmaken
+- een kolom `rating` aan een place toevoegen
+
+### Migrations: voorbeeld
+
+We starten met het aanmaken van een migratie voor de tabel `uses`. Maak een map `migrations` aan in de map `data`. Voeg vervolgens een bestand `202309111840_createUserTable.js` toe met volgende inhoud:
+
+```js
+const { tables } = require('..');
+
+module.exports = {
+  // 👇 1
+  up: async (knex) => {
+    await knex.schema.createTable(tables.user, (table) => { // 👈 2
+      table.increments('id'); // 👈 3
+
+      table.string('name', 255).notNullable(); // 👈 4
+    });
+  },
+  // 👇 1
+  down: async (knex) => {
+    return knex.schema.dropTableIfExists(tables.user);
+  },
+};
+```
+
+1. Een migration-bestand exporteert twee functies genaamd `up` en `down`. Beide functies krijgen de Knex-instantie mee als argument. Dit is de interface naar de databank.
+2. De `up`-functie zal de tabel `users` aanmaken. Hiervoor wordt de `createTable`-functie van de [Knex Schema API](https://knexjs.org/guide/schema-builder.html) gebruikt.
+   - Het eerste argument van de `createTable` functie is de tabelnaam. Uiteraard codeer je dit niet hard, je kan het `tables` object uit de datalaag importeren.
+   - Het tweede argument is een functie die een interface naar de tabel meekrijgt. Met deze interface kunnen we de tabel volledig instellen (kolommen, indices...). Merk op: deze interface bouwt een CREATE TABLE DDL-statement op. Per functie-aanroep op deze interface wordt geen DDL-statement uitgevoerd! Enkel als de functie van dit 2e argument uitgevoerd is worden de nodige DDL statements uitgevoerd.
+3. We maken eerst een kolom met als naam `id`, het type van deze kolom is `INT`. Deze kolom heeft een auto-increment en is daarom de primary key
+4. We voegen nog een kolom `name` toe. Deze kolom is van het type `string` en heeft een maximum lengte van 255 karakters. Deze kolom mag ook geen `NULL` bevatten
+5. De `down`-functie gooit simpelweg de eventueel gemaakte tabel weg.
+   - Het is niet altijd zo dat je een tabel weggooit. Als je in een migratie bv. een kolom toevoegt, verwijder je die kolom in de `down` functie. Als je bv. het type van een kolom zou wijzigen, herstel je dat in deze functie.
+
+We kunnen een gelijkaardige migratie voorzien voor de `places` tabel in een bestand `202309111845_createPlaceTable.js`:
+
+```js
+const { tables } = require('..');
+
+module.exports = {
+  up: async (knex) => {
+    await knex.schema.createTable(tables.place, (table) => {
+      table.increments('id');
+
+      table.string('name', 255).notNullable();
+
+      table.unique('name', 'idx_place_name_unique'); // 👈
+    });
+  },
+  down: async (knex) => {
+    return knex.schema.dropTableIfExists('places');
+  },
+};
+```
+
+In deze tabel stellen we ook nog een `UNIQUE INDEX` in op de kolom `name`. We geven deze index de naam `idx_place_name_unique` om (later) eenvoudiger een mooie foutboodschap te kunnen retourneren naar de client. Je kan deze checks ook in de code uitvoeren maar databankservers zijn vaak meer uit de kluiten gewassen dan de backend-server. **Alles wat de databank kan doen, laat je de databank doen**
+
+### Databank aanmaken
+
+Alvorens we de migratie uitvoeren dienen we er zeker van te zijn dat de databank bestaat. Dit is niet altijd het geval. We kunnen de databank ook laten aanmaken door KnexJS. We voegen hiervoor een extra stap toe in onze `initializeData` functie:
+
+```js
+async function initializeData() {
+  const logger = getLogger();
+  logger.info('Initializing connection to the database');
+
+  const knexOptions = {
+    client: DATABASE_CLIENT,
+    connection: {
+      host: DATABASE_HOST,
+      port: DATABASE_PORT,
+      // database: DATABASE_NAME, // 👈 1
+      user: DATABASE_USERNAME,
+      password: DATABASE_PASSWORD,
+      insecureAuth: isDevelopment,
+    },
+  };
+  knexInstance = knex(knexOptions); // 👈 1
+
+  // 👇 2
+  try {
+    await knexInstance.raw('SELECT 1+1 AS result');
+    await knexInstance.raw('CREATE DATABASE IF NOT EXISTS ??', DATABASE_NAME); // 👈 3
+
+    // We need to update the Knex configuration and reconnect to use the created database by default
+    // USE ... would not work because a pool of connections is used
+    await knexInstance.destroy(); // 👈 4
+
+    knexOptions.connection.database = DATABASE_NAME; // 👈 5
+    knexInstance = knex(knexOptions); // 👈 6
+    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
+  } catch (error) {
+    logger.error(error.message, { error });
+    throw new Error('Could not initialize the data layer');
+  }
+
+  // ...
+}
+```
+
+1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
+2. Vervolgens breiden we onze connectiecheck uit.
+3. We maken een databank aan, indien deze nog niet bestaat. De `??` zijn een placeholder voor de databanknaam, die we als parameter doorgeven. Deze wordt geëscaped door KnexJS.
+4. We gooien de connectie weg.
+5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
+6. We maken een nieuwe connectie aan.
+7. We testen of de connectie goed functioneert.
+
+### Migrations uitvoeren
+
+Migrations worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
+
+```js
+const { join } = require('path');
+
+async function initializeData() {
+  //..
+
+  const knexOptions = {
+    //..
+    debug: isDevelopment,
+    migrations: {
+      tableName: 'knex_meta',
+      directory: join('src', 'data', 'migrations'),
+    }, // 👈 1
+  };
+
+  //..
+  // Run migrations
+  // 👈 2
+  try {
+    await knexInstance.migrate.latest();
+  } catch (error) {
+    logger.error('Error while migrating the database', {
+      error,
+    });
+
+    // No point in starting the server when migrations failed
+    throw new Error('Migrations failed, check the logs');
+  }
+  logger.info('Successfully connected to the database');
+  return knexInstance;
+}
+//..
+```
+
+1. We geven mee aan Knex waar onze migraties staan en in welke tabel hij metadata over de uitgevoerde migraties mag bijhouden.
+2. Nadat de connectie aangemaakt is en goed functioneert, voeren we de migraties uit. We gebruiken de `latest` functie van de Knex Migration API. Deze functie zal kijken op welke versie de databank zit en zal deze vervolgens up to date maken. Als de migraties gefaald zijn, gooien we een error waardoor de server crasht. Het heeft geen zin om de server te starten met een mogelijks corrupte databank, de developer moet dit zelf controleren en fixen.
+
+### Volgorde van uitvoeren
+
+**De volgorde van uitvoeren van migraties is belangrijk.** Je dient eerst de `places` en `users` tabel te creëren, en dan pas de `transactions` tabel. In de `transactions` tabel definiëren we de referentiële integriteit. Belangrijk is om mee te geven hoe de delete dient te gebeuren: `CASCADE`, `RESTRICT`, `NO ACTION` of `SET NULL`.
+
+Maak de migratie van de `transactions` tabel in het bestand `src/data/migrations/202309190850_createTransactionTable.js`:
+
+```js
+const { tables } = require('..');
+
+module.exports = {
+  up: async (knex) => {
+    await knex.schema.createTable(tables.transaction, (table) => {
+      table.increments('id');
+
+      table.integer('amount').notNullable();
+
+      table.dateTime('date').notNullable();
+
+      table.integer('user_id').unsigned().notNullable();
+
+      // Give this foreign key a name for better error handling in service layer
+      table
+        .foreign('user_id', 'fk_transaction_user')
+        .references(`${tables.user}.id`)
+        .onDelete('CASCADE');
+
+      table.integer('place_id').unsigned().notNullable();
+
+      // Give this foreign key a name for better error handling in service layer
+      table
+        .foreign('place_id', 'fk_transaction_place')
+        .references(`${tables.place}.id`)
+        .onDelete('CASCADE');
+    });
+  },
+  down: async (knex) => {
+    return knex.schema.dropTableIfExists(tables.transaction);
+  },
+};
+```
+
+### Oefening 6 - Je eigen project
+
+Maak voor een aantal tabellen in je project de migraties aan en voer deze uit. Voorzie ook reeds een migratie voor een tabel die een relatie heeft met een andere tabel die je reeds aangemaakt hebt.
 ## Repository
 
 Een repository is een abstractie voor de datalaag. Het definieert een aantal functies (CRUD...) die queries uitvoeren en,indien nodig, de query resultaten omvormen naar OO-objecten. Het is de tussenpersoon tussen domein en databank. Zo is het "eenvoudig" om te switchen tussen databanken. Dit is eenvoudiger in een taal met interfaces en klassen (bv. TypeScript). [Lees meer over het repository patroon](https://medium.com/@pererikbergman/repository-design-pattern-e28c0f3e4a30)
@@ -511,205 +732,6 @@ Momenteel hebben we nog een aantal vragen in onze applicatie:
 
 Het antwoord: we doen dit niet handmatig, zelfs geen dummy data!
 
-## Migrations
-
-Migrations zijn een soort version control voor de databank. Ze kijken op welke versie het databankschema zit en doen eventueel updates. Ze brengen het databankschema naar een nieuwere versie.
-
-Je kan ook wijzigingen ongedaan maken als er iets fout liep. Dit is zeer belangrijk in production databanken!
-
-Het is wel belangrijk dat je let op de volgorde van uitvoeren van de migraties om geen problemen te krijgen met bv. foreign keys die nog niet zouden bestaan.
-
-![Migraties](./images/versioncontrol-xkcd.jpg ':size=70%')
-
-### Migrations: KnexJS
-
-KnexJS heeft [builtin migrations](https://knexjs.org/#Migrations). Je moet in de [configuratie](https://knexjs.org/#Installation-migrations) enkel aangeven waar de migrations staan.
-
-Migrations in KnexJS zijn JavaScript modules die twee functies exporteren:
-
-1. `up`: bevat de code die deze migratie uitvoert.
-2. `down`: bevat de code die de migratie ongedaan maakt.
-
-Er is één bestand per migratie. De bestandsnaam bevat een timestamp en een korte beschrijving van de migratie: `YYYYMMDDHHmm_description.js`, bv. `202309111840_createUserTable.js`. Door de timestamp vooraan kan je een bepaalde volgorde afdwingen. KnexJS voert de migraties uit in alfabetische volgorde.
-
-In onze budget app hebben we enkele migraties:
-
-- `places` tabel aanmaken
-- `users` tabel aanmaken
-- `transactions` tabel aanmaken
-- een kolom `rating` aan een place toevoegen
-
-### Migrations: voorbeeld
-
-We starten met het aanmaken van een migratie voor de tabel `places`. Maak een map `migrations` aan in de map `data`. Voeg vervolgens een bestand `202309111845_createPlaceTable.js` toe met volgende inhoud:
-
-```js
-const { tables } = require('..');
-
-module.exports = {
-  up: async (knex) => {
-    await knex.schema.createTable(tables.place, (table) => {
-      table.increments('id'); // 👈 1
-
-      table.string('name', 255).notNullable(); // 👈 2
-
-      table.unique('name', 'idx_place_name_unique'); // 👈 3
-    });
-  },
-  down: (knex) => {
-    return knex.schema.dropTableIfExists('places');
-  },
-};
-```
-
-- Een migration-file exporteert twee functies genaamd `up` en `down`. De `up` functie is in dit voorbeeld `async` door het gebruik van `await`, nodig voor de creatie van de tabel.
-- Beide functies krijgen de Knex-instantie mee als argument. Dit is de interface naar de databank.
-- De `up`-functie zal de tabel `places` aanmaken. Hiervoor wordt de `createTable`-functie van de [Knex Schema API](https://knexjs.org/guide/schema-builder.html) gebruikt Het eerste argument van de `createTable` functie is de tabelnaam. Uiteraard codeer je dit niet hard, dit is maar een voorbeeld. Je kan het tables object uit de datalaag importeren.
-- Het tweede argument is een functie die een interface naar de tabel meekrijgt. Met deze interface kunnen we de tabel volledig instellen (kolommen, indices...). Merk op: deze interface bouwt een CREATE TABLE DDL-statement op. Per functie-aanroep op deze interface wordt geen DDL-statement uitgevoerd! Enkel als de functie van dit 2e argument uitgevoerd is.
-  1. We maken eerst een kolom met als naam `id`, het type van deze kolom is `INT`. Deze kolom heeft een auto-increment en is daarom de primary key
-  2. We voegen nog een kolom `name` toe. Deze kolom is van het type `string` en heeft een maximum lengte van 255 karakters. Deze kolom mag ook geen `NULL` bevatten
-  3. We stellen ook nog een `UNIQUE INDEX` in op de kolom `name`. We geven deze index de naam `idx_place_name_unique` om eenvoudiger een mooie foutboodschap te kunnen retourneren naar de client. Je kan deze checks ook in de code uitvoeren maar databankservers zijn vaak meer uit de kluiten gewassen dan de backend-server. **Alles wat de databank kan doen, laat je de databank doen**
-- De `down`-functie gooit simpelweg de eventueel gemaakte tabel weg.
-  - Waarom is hier geen `async` nodig? Deze functie retourneert de `Promise` meteen, dus `async` is niet nodig
-
-### Databank aanmaken
-
-Alvorens we de migratie uitvoeren dienen we er zeker van te zijn dat de database bestaat. Dit is niet altijd het geval. We kunnen de databank ook laten aanmaken door KnexJS. We voegen hiervoor een extra stap toe in onze `initializeData` functie:
-
-```js
-async function initializeData() {
-  const logger = getLogger();
-  logger.info('Initializing connection to the database');
-
-  const knexOptions = {
-    client: DATABASE_CLIENT,
-    connection: {
-      host: DATABASE_HOST,
-      port: DATABASE_PORT,
-      // database: DATABASE_NAME, // 👈 1
-      user: DATABASE_USERNAME,
-      password: DATABASE_PASSWORD,
-      insecureAuth: isDevelopment,
-    },
-  };
-  knexInstance = knex(knexOptions); // 👈 1
-
-  // 👇 2
-  try {
-    await knexInstance.raw('SELECT 1+1 AS result');
-    await knexInstance.raw('CREATE DATABASE IF NOT EXISTS ??', DATABASE_NAME); // 👈 3
-
-    // We need to update the Knex configuration and reconnect to use the created database by default
-    // USE ... would not work because a pool of connections is used
-    await knexInstance.destroy(); // 👈 4
-
-    knexOptions.connection.database = DATABASE_NAME; // 👈 5
-    knexInstance = knex(knexOptions); // 👈 6
-    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
-  } catch (error) {
-    logger.error(error.message, { error });
-    throw new Error('Could not initialize the data layer');
-  }
-
-  // ...
-}
-```
-
-1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
-2. Vervolgens breiden we onze connectiecheck uit.
-3. We maken een databank aan, indien deze nog niet bestaat. De `??` zijn een placeholder voor de databanknaam, die we als parameter doorgeven. Deze wordt geëscaped door KnexJS.
-4. We gooien de connectie weg.
-5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
-6. We maken een nieuwe connectie aan.
-7. We testen of de connectie goed functioneert.
-
-### Migrations uitvoeren
-
-Migrations worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
-
-```js
-const { join } = require('path');
-
-async function initializeData() {
-  //..
-
-  const knexOptions = {
-    //..
-    debug: isDevelopment,
-    migrations: {
-      tableName: 'knex_meta',
-      directory: join('src', 'data', 'migrations'),
-    }, // 👈 1
-  };
-
-  //..
-  // Run migrations
-  // 👈 2
-  try {
-    await knexInstance.migrate.latest();
-  } catch (error) {
-    logger.error('Error while migrating the database', {
-      error,
-    });
-
-    // No point in starting the server when migrations failed
-    throw new Error('Migrations failed, check the logs');
-  }
-  logger.info('Successfully connected to the database');
-  return knexInstance;
-}
-//..
-```
-
-1. We geven mee aan Knex waar onze migraties staan en in welke tabel hij metadata over de uitgevoerde migraties mag bijhouden.
-2. Nadat de connectie aangemaakt is en goed functioneert, voeren we de migraties uit. We gebruiken de `latest` functie van de Knex Migration API. Deze functie zal kijken op welke versie de databank zit en zal deze vervolgens up to date maken. Als de migraties gefaald zijn, gooien we een error waardoor de server crasht. Het heeft geen zin om de server te starten met een mogelijks corrupte databank, de developer moet dit zelf controleren en fixen.
-
-### Opmerking
-
-De volgorde van uitvoeren van migraties is belangrijk. Je dient eerst de Place en User tabel te creëren, dan pas de Transaction tabel. In de Transaction tabel definiëren we de referentiële integriteit. Belangrijk is om mee te geven hoe de delete dient te gebeuren : CASCADE, RESTRICT, NO ACTION, SET NULL
-
-Voor de migratie van de Transaction tabel
-
-`src/data/migrations/202309190850_createTransactionTable.js`
-
-```js
-const { tables } = require('..');
-
-module.exports = {
-  up: async (knex) => {
-    await knex.schema.createTable(tables.transaction, (table) => {
-      table.increments('id');
-
-      table.integer('amount').notNullable();
-
-      table.dateTime('date').notNullable();
-
-      table.integer('user_id').unsigned().notNullable();
-
-      // Give this foreign key a name for better error handling in service layer
-      table
-        .foreign('user_id', 'fk_transaction_user')
-        .references(`${tables.user}.id`)
-        .onDelete('CASCADE');
-
-      table.integer('place_id').unsigned().notNullable();
-
-      // Give this foreign key a name for better error handling in service layer
-      table
-        .foreign('place_id', 'fk_transaction_place')
-        .references(`${tables.place}.id`)
-        .onDelete('CASCADE');
-    });
-  },
-  down: (knex) => {
-    return knex.schema.dropTableIfExists(tables.transaction);
-  },
-};
-```
-
-### Oefening 6 - Je eigen project
-
-Maak voor een tabel in je project de migratie aan en voer deze uit.
 
 ## Seeds
 
