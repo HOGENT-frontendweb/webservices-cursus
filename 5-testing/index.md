@@ -47,7 +47,7 @@ Om testen te kunnen maken heb je nood aan een test library en een test runner. B
 - [Jest](https://jestjs.io/)
 - [Mocha](https://mochajs.org/)
 - [Jasmine](https://jasmine.github.io/)
-- [Vitest]([https://](https://vitest.dev/))
+- [Vitest](https://vitest.dev/)
 
 ## Integratietesten
 
