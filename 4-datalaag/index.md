@@ -10,8 +10,6 @@
 > yarn start
 > ```
 
-**Voer [dit SQL-script uit](./data/budget.sql ':ignore').** Zonder dit script kan je geen queries uitvoeren tot het einde van dit hoofdstuk.
-
 ## Gelaagde architectuur
 
 De **gelaagde architectuur** is een veel gebruikte architectuur waarin code is opgebouwd uit diverse lagen. In de context van het web zijn dit vaak volgende lagen:
@@ -21,7 +19,7 @@ De **gelaagde architectuur** is een veel gebruikte architectuur waarin code is o
 - Repositorylaag (optioneel indien je gebruik maakt van ORM)
 - Datalaag
 
-Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In NodeJS heb je de keuze, er is geen verplichte structuur.
+Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In Node.js heb je de keuze, er is geen verplichte structuur.
 
 Een alternatieve structuur, veel gebruikt bij microservices, is de [**hexagonale structuur**](https://medium.com/idealo-tech-blog/hexagonal-ports-adapters-architecture-e3617bcf00a0). Een mooie (maar complexe) implementatie in Node.js (en TypeScript) vind je hier: <https://github.com/jbreckmckye/node-typescript-architecture>.
 
@@ -97,7 +95,9 @@ Wij kiezen [knex.js](https://www.npmjs.com/package/knex) als querybuilder voor o
 
 Voel je vrij om voor het project bv. een ORM framework te gebruiken!
 
-We installeren knex en een MySQL client:
+## Connectie met de databank
+
+We installeren allereerst knex en een MySQL client:
 
 ```bash
 yarn add knex
@@ -125,9 +125,32 @@ module.exports = {
 };
 ```
 
-We splitsen deze zo klein mogelijk op om zoveel mogelijk vrijheid te hebben. Pas de instellingen aan jouw lokale instellingen aan of voorzie environment variables in de `custom-environment-variables.js` en `.env` bestanden.
+We splitsen deze zo klein mogelijk op om zoveel mogelijk vrijheid te hebben. Voorzie ook de nodige environment variables in `custom-environment-variables.js`:
 
-## Connectie met de databank
+```js
+module.exports = {
+  // ...
+  database: {
+    client: 'DATABASE_CLIENT',
+    host: 'DATABASE_HOST',
+    port: 'DATABASE_PORT',
+    name: 'DATABASE_NAME',
+    username: 'DATABASE_USERNAME',
+    password: 'DATABASE_PASSWORD',
+  },
+};
+```
+
+Eventueel kan je in jouw `.env` een gebruikersnaam en wachtwoord opgeven, zo hoef je dit niet in de configuratiebestanden te noteren:
+
+```ini
+DATABASE_USERNAME=<jouw-username>
+DATABASE_PASSWORD=<jouw-wachtwoord>
+```
+
+> :exclamation: Voeg **NOOIT** de credentials van de productie-omgeving toe aan de configuratie. Voorzie die altijd via environment variables of via een ander veilig mechanisme.
+
+### Datalaag opbouwen
 
 We maken een module voor onze datalaag. Maak in de map `data` een bestand`index.js` aan met volgende inhoud:
 
