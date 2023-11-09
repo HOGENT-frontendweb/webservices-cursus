@@ -109,7 +109,7 @@ yarn add mysql2
 
 ### Databank configuratie
 
-Eerst moeten we onze configuratie uitbreiden met de gegevens van onze databank. Pas `src/config/development.js` als volgt aan:
+Eerst moeten we onze configuratie uitbreiden met de gegevens van onze databank. Pas `config/development.js` als volgt aan:
 
 ```js
 module.exports = {
@@ -179,7 +179,7 @@ async function initializeData() {
   const logger = getLogger(); // 👈 9
   logger.info('Initializing connection to the database'); // 👈 9
 
-  // 👇 1 - start knex opties
+  // 👇 6 - start knex opties
   const knexOptions = {
     client: DATABASE_CLIENT,
     connection: {
@@ -564,6 +564,18 @@ async function initializeData() {
 2. We voeren de seed enkel uit indien we in development mode zijn.
 3. We gebruiken de run functie van de Knex Seed API. Hierna is de datalaag pas echt opgestart. Het is niet erg als de seeds falen; we loggen dit enkel, de server kan nadien gewoon opstarten.
 
+#### Opmerking over migrations en seeds uitvoeren
+
+Migrations en seeds moeten steeds vóór de start van de server uitgevoerd worden. Dat geeft een aantal mogelijkheden:
+
+- externe service die hiervoor zorgt
+- scripts die uitgevoerd worden voor de server start (voor `yarn start`)
+- de server doet het zelf
+
+Wij kozen voor de laatste optie.
+
+> :exclamation: Let op! Onze aanpak is niet aangepast voor/getest op servers die parallel draaien! De server is niet op de hoogte van de andere servers. Gevolg? Mogelijke conflicten tussen meerdere servers die tegelijk migreren of seeden.
+
 ### Oefening 7 - Je eigen project
 
 Maak de seed aan voor één tabel en zorg ervoor dat deze seed kan worden uitgevoerd.
@@ -622,6 +634,7 @@ const SELECT_COLUMNS = [
   'date',
   `${tables.place}.id as place_id`,
   `${tables.place}.name as place_name`,
+  'rating',
   `${tables.user}.id as user_id`,
   `${tables.user}.name as user_name`,
 ];
@@ -630,6 +643,7 @@ const SELECT_COLUMNS = [
 const formatTransaction = ({
   place_id,
   place_name,
+  rating,
   user_id,
   user_name,
   ...rest
@@ -638,6 +652,7 @@ const formatTransaction = ({
   place: {
     id: place_id,
     name: place_name,
+    rating,
   },
   user: {
     id: user_id,
@@ -650,18 +665,18 @@ const findById = async (id) => {
   // 👇 begin query (4)
   const transaction = await getKnex()(tables.transaction)
     .join(
-      `${tables.place}`,
+      tables.place,
       `${tables.place}.id`,
       '=',
       `${tables.transaction}.place_id`
     )
     .join(
-      `${tables.user}`,
+      tables.user,
       `${tables.user}.id`,
       '=',
       `${tables.transaction}.user_id`
     )
-    .where('id', id)
+    .where(`${tables.transaction}.id`, id)
     .first(SELECT_COLUMNS);
   // 👆 einde query (4)
 
@@ -797,36 +812,21 @@ Indien je voor een ORM framework gaat, pas dan de service- en REST-laag aan.
 
 ## Het totaalplaatje
 
-Hoe en wanneer moeten migrations en seeds uitgevoerd worden?
-
-- vóór de start van de server
-
-Dat geeft een aantal mogelijkheden:
-
-- externe service die hiervoor zorgt
-- scripts die uitgevoerd worden voor de server start (voor `yarn start`)
-- de server doet het zelf
-
-Wij hebben de laatste optie gekozen.
-
-> :exclamation: Let op! Onze aanpak is niet aangepast voor/getest op servers die parallel draaien! De server is niet op de hoogte van de andere servers. Gevolg? Mogelijke conflicten tussen meerdere servers die tegelijk migreren of seeden.
-
-### Opstarten van de datalaag
-
-Als de datalaag opstart, worden volgende stappen uitgevoerd:
+Op dit punt is het belangrijk om inzicht te hebben in alles wat gebeurt in de datalaag, want dat is een heleboel. Als de datalaag opstart, worden volgende stappen uitgevoerd:
 
 1. connectie maken met databank (zonder databank te specifiëren)
 2. connectie controleren
 3. databank aanmaken (indien onbestaand)
 4. connectie weggooien
 5. nieuwe connectie maken (op de aangemaakte databank)
-6. migraties uitvoeren
+6. connectie controleren
+7. migraties uitvoeren
    - indien gefaald: server stopt
-7. indien in development: seeds uitvoeren
+8. indien in development: seeds uitvoeren
    - indien gefaald: geen probleem, server start verder op
-8. datalaag is succesvol opgestart
+9. datalaag is succesvol opgestart
 
-Code: zie [GitHub](https://github.com/HOGENT-Web/webservices-budget/blob/main/src/data/index.js)
+Code: zie [GitHub](https://github.com/HOGENT-Web/webservices-budget/blob/main/src/data/index.js). Kan je elke stap koppelen aan een stukje code?
 
 ## Oefening 8 - Je eigen project
 
@@ -837,7 +837,7 @@ Werk aan je eigen project!
 
 OF
 
-- Voeg in webservices-budget de migratie, seeding, repo, service en rest toe voor de CRUD van de users
+- Voeg in webservices-budget de migratie, seeding, repo, service en rest toe voor de CRUD-operaties van de users
 
 <!-- markdownlint-disable-next-line -->
 + Oplossing +

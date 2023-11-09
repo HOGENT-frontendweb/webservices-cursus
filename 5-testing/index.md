@@ -1,13 +1,11 @@
 # Testing
 
-<!-- TODO: startpunt aanpassen -->
-
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5 TODO:
+> git checkout -b les5 4f79853
 > yarn install
 > yarn start
 > ```
@@ -30,6 +28,18 @@ We onderscheiden 3 soorten testen:
 
 Hoe hoger je in de piramide gaat, hoe trager de testen zijn en hoe meer ze kosten. Daarom zie je typisch heel veel testen onderaan de piramide, en veel minder bovenaan.
 
+## Test Driven Development (TDD)
+
+Binnen Test Driven Development (TDD) ga je als volgt te werk:
+
+1. Schrijf een test
+2. Doe de test falen
+3. Pas de code aan
+4. Doe de test slagen
+5. Refactor: verbeter de code zonder de functionaliteit te wijzigen
+
+Probeer om dit principe zoveel mogelijk toe te passen in je eigen project, het is een goeie gewoonte om TDD te werken.
+
 ## Tools
 
 Om testen te kunnen maken heb je nood aan een test library en een test runner. Binnen JavaScript zijn er verschillende mogelijkheden:
@@ -37,7 +47,7 @@ Om testen te kunnen maken heb je nood aan een test library en een test runner. B
 - [Jest](https://jestjs.io/)
 - [Mocha](https://mochajs.org/)
 - [Jasmine](https://jasmine.github.io/)
-- [Vitest]([https://](https://vitest.dev/))
+- [Vitest](https://vitest.dev/)
 
 ## Integratietesten
 
@@ -82,26 +92,39 @@ Antwoord op de vragen als volgt:
 - Would you like to use Jest when running "test" script in "package.json"?: yes
 - Would you like to use Typescript for the configuration file?: no
 - Choose the test environment that will be used for testing: node
-- Do you want Jest to add coverage reports?: yes
+- Do you want Jest to add coverage reports?: no
 - Which provider should be used to instrument code for coverage?: v8
 - Automatically clear mock calls, instances, contexts and results before every test?: no
 
 Dit commando maakt een bestand `jest.config.js` aan. Je vindt de nodige informatie over deze configuratie op <https://jestjs.io/docs/configuration>.
 
-Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests__/**/*.[jt]s?(x)` en `**/?(*.)+(spec|test).[tj]s?(x)`. Het zoekt dus naar bestanden die zich in een map `__tests__` bevinden, of bestanden die eindigen op `.spec.js`, `.test.js`, `.spec.ts` of `.test.ts`.
+Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests__/**/*.[jt]s?(x)` en `**/?(*.)+(spec|test).[tj]s?(x)`. Het zoekt dus naar bestanden die zich in een map `__tests__` bevinden, of bestanden die eindigen op `.spec.js`, `.test.js`, `.spec.ts` of `.test.ts`. Pas in dit bestand volgende property aan en plaats uit commentaar:
+
+```js
+{
+  testMatch: [
+    "**/__tests__/**/?(*.)+(spec|test).[jt]s?(x)",
+  ],
+}
+```
+
+Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Zonder deze aanpassing probeert Jest ook ons configuratiebestand `test.js` uit te voeren.
 
 Je kan ervoor opteren om unit testen te maken voor bv. de servicelaag. In dat geval maak je een map `__tests__` aan in de `src/service` map en plaats je daar je unit testen in. We plaatsen onze testen in een map `__tests__` in de root map van onze applicatie, want het zijn integratietesten voor de hele applicatie.
 
-We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons `.env.test` bestand wordt ingeladen. Pas het `test` script in `package.json` aan als volgt:
+We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons `.env.test` bestand wordt ingeladen. Pas het `test` script in `package.json` aan als volgt en voeg een `test:coverage` script toe om de coverage te berekenen:
 
 ```json
 {
   "scripts": {
     "start": "env-cmd nodemon",
-    "test": "env-cmd -f .env.test jest"
+    "test": "env-cmd -f .env.test jest --runInBand",
+    "test:coverage": "env-cmd -f .env.test jest --runInBand --coverage"
   },
 }
 ```
+
+We gebruiken hier ook de `runInBand` optie van Jest zodat onze testen niet parallel worden uitgevoerd. Dit zorgt er o.a. voor dat het werken met testdata iets eenvoudiger is.
 
 ## Refactoring
 
@@ -115,24 +138,12 @@ We gaan onze code wat refactoren zodat we onze testen kunnen schrijven. We gaan 
 Maak een nieuw bestand `src/core/installMiddlewares.js`. Maak en exporteer een functie `installMiddlewares` die alle huidige middlewares (buiten de routers) installeert in een Koa applicatie. Deze Koa applicatie wordt meegegeven als parameter. Kopieer ook de nodige imports en configuratievariabelen.
 
 ```js
-const koaCors = require('@koa/cors');
 const config = require('config');
 const bodyParser = require('koa-bodyparser');
-const koaHelmet = require('koa-helmet');
-const koaQs = require('koa-qs');
-const { koaSwagger } = require('koa2-swagger-ui');
-const emoji = require('node-emoji');
-const swaggerJsdoc = require('swagger-jsdoc');
+const koaCors = require('@koa/cors');
 
-const { getLogger } = require('./logging');
-const ServiceError = require('./serviceError');
-const swaggerOptions = require('../swagger.config');
-
-const NODE_ENV = config.get('env');
-const EXPOSE_STACK = config.get('exposeStack');
 const CORS_ORIGINS = config.get('cors.origins');
 const CORS_MAX_AGE = config.get('cors.maxAge');
-const isDevelopment = NODE_ENV === 'development';
 
 /**
  * Install all required middlewares in the given app.
@@ -140,112 +151,21 @@ const isDevelopment = NODE_ENV === 'development';
  * @param {koa.Application} app - The Koa application.
  */
 module.exports = function installMiddleware(app) {
-  // Log when requests come in and go out
-  app.use(async (ctx, next) => {
-    getLogger().info(`${emoji.get('fast_forward')} ${ctx.method} ${ctx.url}`);
+   app.use(
+    koaCors({
+      origin: (ctx) => {
+        if (CORS_ORIGINS.indexOf(ctx.request.header.origin) !== -1) {
+          return ctx.request.header.origin;
+        }
+        // Not a valid domain at this point, let's return the first valid as we should return a string
+        return CORS_ORIGINS[0];
+      },
+      allowHeaders: ['Accept', 'Content-Type', 'Authorization'],
+      maxAge: CORS_MAX_AGE,
+    })
+  );
 
-    const getStatusEmoji = () => {
-      if (ctx.status >= 500) return emoji.get('skull');
-      if (ctx.status >= 400) return emoji.get('x');
-      if (ctx.status >= 300) return emoji.get('rocket');
-      if (ctx.status >= 200) return emoji.get('white_check_mark');
-      return emoji.get('rewind');
-    };
-
-    try {
-      await next();
-
-      getLogger().info(
-        `${getStatusEmoji()} ${ctx.method} ${ctx.status} (${ctx.response.get('X-Response-Time')}) ${ctx.url}`,
-      );
-    } catch (error) {
-      getLogger().error(`${emoji.get('x')} ${ctx.method} ${ctx.status} ${ctx.url}`, {
-        error,
-      });
-
-      // Rethrow the error for further handling by Koa
-      throw error;
-    }
-  });
-
-  // Add the body parser
   app.use(bodyParser());
-
-  // Add some security headers
-  app.use(koaHelmet({
-    // Not needed in development (destroys Swagger UI)
-    contentSecurityPolicy: isDevelopment ? false : undefined,
-  }));
-
-  // Add CORS
-  app.use(koaCors({
-    origin: (ctx) => {
-      if (CORS_ORIGINS.indexOf(ctx.request.header.origin) !== -1) {
-        return ctx.request.header.origin;
-      }
-      // Not a valid domain at this point, let's return the first valid as we should return a string
-      return CORS_ORIGINS[0];
-    },
-    allowHeaders: [
-      'Accept',
-      'Content-Type',
-      'Authorization',
-    ],
-    maxAge: CORS_MAX_AGE,
-  }));
-
-  // Add a handler for known errors
-  app.use(async (ctx, next) => {
-    try {
-      await next();
-    } catch (error) {
-      getLogger().error('Error occured while handling a request', {
-        error,
-      });
-
-      let statusCode = error.status || 500;
-      let errorBody = {
-        code: error.code || 'INTERNAL_SERVER_ERROR',
-        message: error.message,
-        details: error.details || {},
-        stack: EXPOSE_STACK ? error.stack : undefined,
-      };
-
-      if (error instanceof ServiceError) {
-        if (error.isNotFound) {
-          statusCode = 404;
-        }
-
-        if (error.isValidationFailed) {
-          statusCode = 400;
-        }
-
-        if (error.isUnauthorized) {
-          statusCode = 401;
-        }
-
-        if (error.isForbidden) {
-          statusCode = 403;
-        }
-      }
-
-      ctx.status = statusCode;
-      ctx.body = errorBody;
-    }
-  });
-
-  // Handle 404 not found with uniform response
-  app.use(async (ctx, next) => {
-    await next();
-
-    if (ctx.status === 404) {
-      ctx.status = 404;
-      ctx.body = {
-        code: 'NOT_FOUND',
-        message: `Unknown resource: ${ctx.url}`,
-      };
-    }
-  });
 };
 ```
 
@@ -273,9 +193,57 @@ Start de server en controleer of alles nog werkt.
 
 We hernoemen `src/index.js` naar `src/createServer.js`.
 
-<!-- TODO: aanvullen als code hoofdstuk 4 toegevoegd is -->
-
 ```js
+const config = require('config');
+const Koa = require('koa');
+const { initializeLogger, getLogger } = require('./core/logging');
+const installRest = require('./rest');
+const { initializeData, shutdownData } = require('./data');
+const installMiddleware = require('./core/installMiddleware');
+
+const NODE_ENV = config.get('env');
+const LOG_LEVEL = config.get('log.level');
+const LOG_DISABLED = config.get('log.disabled');
+
+module.exports = async function createServer() { // 👈 1
+  initializeLogger({
+    level: LOG_LEVEL,
+    disabled: LOG_DISABLED,
+    defaultMeta: {
+      NODE_ENV,
+    },
+  });
+
+  await initializeData();
+
+  const app = new Koa();
+
+  installMiddleware(app);
+
+  installRest(app);
+
+  // 👇 2
+  return {
+    getApp() {
+      return app;
+    },
+
+    start() {
+      return new Promise((resolve) => {
+        app.listen(9000, () => {
+          getLogger().info('🚀 Server listening on http://localhost:9000');
+          resolve();
+        });
+      });
+    },
+
+    async stop() {
+      app.removeAllListeners();
+      await shutdownData();
+      getLogger().info('Goodbye! 👋');
+    },
+  };
+};
 ```
 
 Vervolgens maken we een nieuwe `src/index.js`:
@@ -313,6 +281,34 @@ main(); // 👈 2
 6. We maken een functie `onClose` aan die we gebruiken om de server te stoppen en de applicatie af te sluiten. Als we deze functie niet zouden gebruiken, dan wordt bv. de databankconnectie niet mooi afgesloten en gaat Jest nooit stoppen met uitvoeren van de testen.
 7. We registreren deze functie als handler voor de `SIGTERM` en `SIGQUIT` events. Deze events worden getriggerd als de applicatie wordt gestopt (bv. door Jest).
 8. Het is belangrijk om de applicatie zelf ook expliciet te stoppen met een exit code `0`. Dit wordt niet meer automatisch gedaan als je een handler registreert voor `SIGTERM` en `SIGQUIT`.
+
+Als laatste voegen we een shutdownData functie toe aan `src/data/index.js` en exporteren deze ook:
+
+```js
+// ...
+
+async function shutdownData() {
+  const logger = getLogger();
+
+  logger.info('Shutting down database connection');
+
+  await knexInstance.destroy();
+  knexInstance = null;
+
+  logger.info('Database connection closed');
+}
+
+// ...
+
+module.exports = {
+  // ...
+  shutdownData,
+};
+```
+
+Deze functie sluit de connectie met de databank en zet de Knex instantie op `null`.
+
+Door deze refactoring kunnen we onze server gebruiken in onze testen zonder dat we deze hoeven op te starten. Zonder deze refactoring zouden we twee terminals nodig hebben: één om de server te starten en één om de testen uit te voeren. Dit zou ook onhandig zijn in CI/CD pipelines.
 
 ## Integratietesten schrijven
 
@@ -372,4 +368,356 @@ describe('Transactions', () => {
 
 #### De test zelf
 
-<!-- TODO: hier verder gaan (slide 87) -->
+Nu is het tijd om een eerste echte integratietest te schrijven!
+
+```js
+describe('Transactions', () => {
+  // ...
+
+  describe('GET /api/transactions', () => { // 👈 1
+
+    it('should 200 and return all transactions', async () => { // 👈 2
+      const response = await request.get(url); // 👈 3
+      expect(response.status).toBe(200); // 👈 4
+    });
+  });
+});
+```
+
+1. We maken een nieuwe test suite aan voor de `GET /api/transactions` endpoint. Zo kan je alle testen voor dit endpoint groeperen en krijg je een mooie en overzichtelijke uitvoer in de console.
+2. We definiëren een test om te checken of alle transacties opgehaald kunnen worden.
+3. We sturen een GET request naar `/api/transactions`.
+4. We verwachten dat de statuscode van de response gelijk is aan 200.
+   - Merk op: Deze test is te algemeen. We moeten ook verifiëren of de verwachte transacties in het response aanwezig zijn. Hiervoor moet de database aangevuld worden met testdata.
+
+Voer de test uit met `yarn test` en controleer of hij slaagt.
+
+#### Testdata
+
+We definiëren wat testdata bovenaan in het bestand `transactions.spec.js`, we zien hier drie transacties, één place en één user:
+
+```js
+const data = {
+  transactions: [{
+    id: 1,
+    user_id: 1,
+    place_id: 1,
+    amount: 3500,
+    date: new Date(2021, 4, 25, 19, 40),
+  },
+  {
+    id: 2,
+    user_id: 1,
+    place_id: 1,
+    amount: -220,
+    date: new Date(2021, 4, 8, 20, 0),
+  },
+  {
+    id: 3,
+    user_id: 1,
+    place_id: 1,
+    amount: -74,
+    date: new Date(2021, 4, 21, 14, 30),
+  }],
+  places: [{
+    id: 1,
+    name: 'Test place',
+    rating: 3,
+  }],
+  users: [{
+    id: 1,
+    name: 'Test User'
+  }]
+};
+```
+
+De data zal ook verwijderd moeten worden uit de database. We definiëren bovenaan ook een `dataToDelete` die de id's bevat die uit de database verwijderd dienen te worden.
+
+```js
+const dataToDelete = {
+  transactions: [1, 2, 3],
+  places: [1],
+  users: [1]
+};
+```
+
+We voegen de testdate toe aan de databank voor alle testen omtrent `GET /api/transactions` uitgevoerd worden:
+
+```js
+const { tables, getKnex } = require('../../src/data'); // 👈 2
+
+describe('Transactions', () => {
+  // ...
+
+  describe('GET /api/transactions', () => {
+
+    // 👇 1
+    beforeAll(async () => {
+      await knex(tables.place).insert(data.places);
+      await knex(tables.user).insert(data.users);
+      await knex(tables.transaction).insert(data.transactions);
+    });
+
+    // 👇 3
+    afterAll(async () => {
+      await knex(tables.transaction)
+        .whereIn('id', dataToDelete.transactions)
+        .delete();
+
+      await knex(tables.place)
+        .whereIn('id', dataToDelete.places)
+        .delete();
+
+        await knex(tables.user)
+        .whereIn('id', dataToDelete.users)
+        .delete();
+    });
+
+    it('should 200 and return all transactions', async () => {
+      const response = await request.get(url);
+      expect(response.status).toBe(200);
+      expect(response.body.items.length).toBe(3); // 👈 4
+    });
+  });
+});
+```
+
+1. We gebruiken de `beforeAll` functie om de testdata toe te voegen aan de databank voor alle testen uit deze test suite uitgevoerd worden. We gebruiken de `insert` functie van Knex om de data toe te voegen.
+2. We gebruiken de `tables` constante om de juiste tabelnamen te gebruiken.
+3. De data moet ook verwijderd worden na alle testen. We gebruiken de `afterAll` functie om dit te doen nadat alle testen uit deze test suite uitgevoerd zijn. We gebruiken de `delete` functie van Knex om de data te verwijderen.
+4. Controleer nu of het aantal opgehaalde transacties het verwachte aantal is.
+
+We breiden de test uit om te controleren of de juiste transacties worden opgehaald:
+
+```js
+it('should 200 and should return all transactions', async () => {
+  const response = await request.get(url);
+  expect(response.status).toBe(200);
+  expect(response.body.items.length).toBe(3);
+
+  // 👇
+  expect(response.body.items[1]).toEqual({
+    id: 3,
+    user: {
+      id: 1,
+      name: 'Test User',
+    },
+    place: {
+      id: 1,
+      name: 'Test place',
+    },
+    amount: -74,
+    date: new Date(2021, 4, 21, 14, 30).toJSON(),
+  });
+  expect(response.body.items[2]).toEqual({
+    id: 1,
+    user: {
+      id: 1,
+      name: 'Test User',
+    },
+    place: {
+      id: 1,
+      name: 'Test place',
+    },
+    amount: 3500,
+    date: new Date(2021, 4, 25, 19, 40).toJSON(),
+  });
+});
+```
+
+Voer de test uit en controleer of hij slaagt.
+
+### Oefening 1 - GET /api/transactions/:id
+
+Schrijf een test voor het endpoint `GET /api/transactions/:id`:
+
+1. Maak een nieuwe test suite aan voor het endpoint `GET /api/transactions/:id`.
+2. Zorg ervoor data wat testdata aanwezig is in de databank.
+3. Ruim deze data ook op na de testen.
+4. Voer de test uit:
+   1. Check of de statuscode gelijk is aan 200.
+   2. Check of de geretourneerde transactie zoals verwacht is.
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `b969d7e`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing b969d7e
+  yarn install
+  yarn start
+  ```
+
+  Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
+
+  - testen of de statuscode 404 is als de transactie niet bestaat
+  - testen of de statuscode 400 is als de id geen nummer is
+
+### POST /api/transactions
+
+Maak een nieuwe test suite aan voor het endpoint `POST /api/transactions`:
+
+```js
+describe('Transactions', () => {
+  // ...
+
+  describe('POST /api/transactions', () => {
+    const transactionsToDelete = []; // 👈 2
+
+    // 👇 1
+    beforeAll(async () => {
+      await knex(tables.place).insert(data.places);
+      await knex(tables.user).insert(data.users);
+    });
+
+    afterAll(async () => {
+      // 👇 2
+      await knex(tables.transaction)
+        .whereIn('id', transactionsToDelete)
+        .delete();
+
+      // 👇 1
+      await knex(tables.place)
+        .whereIn('id', dataToDelete.places)
+        .delete();
+
+      // 👇 3
+      await knex(tables.user)
+        .whereIn('id', dataToDelete.users)
+        .delete();
+    });
+  });
+});
+```
+
+1. We voegen enkel de places toe aan de databank, want we hebben enkel een place nodig om een transactie aan te maken. De user wordt nl. elke keer aangemaakt in de databank (dit wordt opgelost bij het hoofdstuk rond authenticatie).
+2. We voegen een array toe om de id's van de transacties bij te houden die we moeten verwijderen na de testen. We zullen er nl. één toevoegen hier, daarvan weten we het id nog niet.
+3. We doen hetzelfde voor de users.
+
+Daarna schrijven we de test:
+
+```js
+it('should 201 and return the created transaction', async () => {
+  // 👇 1
+  const response = await request.post(url)
+    .send({
+      amount: 102,
+      date: '2021-05-27T13:00:00.000Z',
+      placeId: 1,
+      userId: 1,
+    });
+
+  expect(response.status).toBe(201); // 👈 2
+  expect(response.body.id).toBeTruthy(); // 👈 3
+  expect(response.body.amount).toBe(102); // 👈 4
+  expect(response.body.date).toBe('2021-05-27T13:00:00.000Z'); // 👈 4
+  expect(response.body.place).toEqual({  // 👈 4
+    id: 1,
+    name: 'Test place',
+  });
+  expect(response.body.user).toEqual({ // 👈 5
+    id: 1,
+    name: 'Test User'
+  });
+
+  // 👇 6
+  transactionsToDelete.push(response.body.id);
+});
+```
+
+1. Voer het POST request uit. Met de send functie kan je de request body doorgeven.
+2. Check of de statuscode gelijk is aan 201.
+3. Check of de response een id bevat. De waarde maakt hier niet uit, het moet enkel bestaan.
+4. Controleer of de response de juiste waarden bevat.
+5. Controleer of de response de juiste user bevat. De id moet bestaan, de naam moet gelijk zijn aan de naam die we hebben doorgegeven.
+6. Voeg de id's toe aan de arrays zodat we de data kunnen verwijderen na de testen.
+
+Voer de test uit en controleer of hij slaagt.
+
+Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
+
+- testen of de statuscode 400 is als de request body niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
+- testen of de statuscode 404 is als de place niet bestaat
+
+### Oefening 2 - PUT /api/transactions/:id
+
+Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
+
+1. Maak een nieuwe test suite aan voor het endpoint PUT /api/transactions/:id.
+2. Zorg ervoor data wat testdata aanwezig is in de databank.
+3. Ruim deze data ook op na de testen.
+4. Voer de test uit:
+   1. Check of de statuscode gelijk is aan 200.
+   2. Check of de geretourneerde transactie zoals verwacht is.
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `bbea3e7`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing bbea3e7
+  yarn install
+  yarn start
+  ```
+
+  Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
+
+  - testen of de statuscode 400 is als de request body niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
+  - testen of de statuscode 404 is als de place niet bestaat
+
+### Oefening 3 - DELETE /api/transactions/
+
+Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
+
+1. Maak een nieuwe test suite aan voor het endpoint DELETE /api/transactions/:id.
+2. Zorg ervoor data wat testdata aanwezig is in de databank.
+3. Ruim deze data ook op na de testen.
+4. Voer de test uit:
+   1. Check of de statuscode gelijk is aan 204.
+   2. Check of de body leeg is.
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `fbc1d5f`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing fbc1d5f
+  yarn install
+  yarn start
+  ```
+
+  Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
+
+  - testen of de statuscode 400 is als het id geen nummer is
+  - testen of de statuscode 404 is als de transactie niet bestaat
+
+### Oefening 4 - Testen voor de andere endpoints
+
+Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/api/health`. Denk na over de testen die je nu al kan schrijven en welke je pas kan schrijven als validatie is toegevoegd aan de back-end.
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `dc52535`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing dc52535
+  yarn install
+  yarn start
+  ```
+
+  Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
+
+  - testen of de statuscode 400 is als de request body, URL... niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
+  - testen of de statuscode 404 is als de place niet bestaat
+
+## Extra's voor de examenopdracht
+
+- Gebruik een andere test library (bv. [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/), [Vitest](http://localhost:3000/[https://](https://vitest.dev/))...)

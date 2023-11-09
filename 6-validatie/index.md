@@ -1,13 +1,11 @@
 # Validatie en foutafhandeling
 
-<!-- TODO: startpunt aanpassen -->
-
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 TODO:
+> git checkout -b les6 dc52535
 > yarn install
 > yarn start
 > ```
@@ -59,7 +57,7 @@ const getTransactionById = async (ctx) => {
 };
 
 // 👇 2
-getAllTransactions.validationScheme = {
+getTransactionById.validationScheme = {
   params: Joi.object({
     id: Joi.number().integer().positive(),
   }), // 👈 3
@@ -160,7 +158,7 @@ module.exports = validate; // 👈 2
 
 #### Errors formatteren
 
-De Joi validatie geeft een `ValidationError` terug. Deze bevat een `details` property met een array van alle fouten. We willen deze fouten formatteren zodat we mooi per type parameter de fouten kunnen groeperen. Voeg volgende code toe in: `src/core/_validation.js`
+De Joi validatie geeft een `ValidationError` terug. Deze bevat een `details` property met een array van alle fouten. We willen deze fouten formatteren zodat we mooi per type parameter de fouten kunnen groeperen. Voeg volgende code toe in: `src/core/validation.js`
 
 ```js
 const cleanupJoiError = (
@@ -230,7 +228,7 @@ createTransaction.validationScheme = {
     amount: Joi.number().invalid(0),
     date: Joi.date().iso().less('now'),
     placeId: Joi.number().integer().positive(),
-    user: Joi.string(),
+    userId: Joi.number().integer().positive(),
   },
 };
 ```
@@ -239,8 +237,7 @@ createTransaction.validationScheme = {
 2. Hier valideren we enkel de `body` van het HTTP request. Er zijn verder geen parameters voor dit HTTP request
    - `amount`: moet een getal zijn, maar mag niet 0 zijn.
    - `date`: moet in ISO formaat staan en moet voor vandaag liggen.
-   - `placeId`: moet een positief geheel getal zijn.
-   - `user`: moet een string zijn. Als je reeds authenticatie in je API hebt, is de user uiteraard niet nodig!
+   - `placeId` en `userId`: moeten een positief geheel getal zijn.
 
 #### Validatie
 
@@ -267,9 +264,29 @@ if (bodyError) {
 
 Zorg ervoor dat de validatie wordt uitgevoerd als het POST-request wordt uitgevoerd. Je kan hiervoor de code van de GET-request als voorbeeld gebruiken.
 
-## Request logging
+### Validatie voor requests zonder invoer
 
-<!-- TODO: waar maken we src/core/installMiddleware.js aan? -->
+Ook requests die geen invoer verwachten moeten de invoer valideren, nl. controleren of er effectief niks is meegegeven. Een gebruiker kan nl. meegeven wat hij wil en mogelijks wordt dit toch verwerkt. Dit kan leiden tot onverwachte resultaten of zelfs fouten.
+
+In onze validation middleware kan je simpelweg `null` meegeven als parameters als je helemaal geen invoer verwacht. Als je één van de parameters (`body`, `query` of `params`) niet verwacht, dan laat je die leeg en vul je enkel de parameters in die je wel verwacht.
+
+Voeg volgende code toe in `src/rest/transactions.js`:
+
+```js
+// ...
+getAllTransactions.validationScheme = null;
+
+// ...
+router.get(
+  '/',
+  validate(getAllTransactions.validationScheme),
+  getAllTransactions
+);
+```
+
+Controleer of je een foutmelding krijgt als je toch invoer meegeeft bij het request.
+
+## Request logging
 
 We voegen een extra middleware toe die elk binnenkomend request zal loggen. Dit helpt enorm bij het debuggen. We installeren eerst een package om leuke emoji's te tonen in de console.
 
@@ -281,6 +298,7 @@ We voegen vervolgens onze middleware toe voor het toevoegen van de `bodyParser` 
 
 ```js
 const emoji = require('node-emoji'); // 👈 1
+const { getLogger } = require('./logger'); // 👈 1
 // ...
 
 // 👇 1
@@ -301,9 +319,7 @@ app.use(async (ctx, next) => {
     await next(); // 👈 5
 
     getLogger().info(
-      `${getStatusEmoji()} ${ctx.method} ${ctx.status} (${ctx.response.get(
-        'X-Response-Time'
-      )}) ${ctx.url}`
+      `${getStatusEmoji()} ${ctx.method} ${ctx.status} ${ctx.url}`
     ); // 👈 5
   } catch (error) {
     getLogger().error(
@@ -322,7 +338,7 @@ app.use(bodyParser());
 ```
 
 1. Voeg deze middleware toe net voor de de installatie van de bodyParser middleware.
-2. Importeer `node-emoji`.
+2. Importeer `node-emoji` en de getter van onze logger.
 3. We loggen alvast wanneer het request binnen komt. In Koa kan een request soms "uitsterven" door foutieve async/await, errors die "opgegeten" worden... Dan is het altijd handig om te weten of het request effectief binnen kwam of niet.
 4. We definiëren een inline functie om de juiste emoji te krijgen afhankelijk van de HTTP status code van het response.
 5. We wachten de request afhandeling af en loggen het resultaat.
@@ -387,23 +403,29 @@ module.exports = ServiceError;
 We voegen een extra middleware toe om fouten af te handelen. Voeg dit als laatste middleware toe in `src/core/installMiddleware.js`:
 
 ```js
+// imports
+const ServiceError = require('./serviceError'); // 👈 1
+
+// config
+const NODE_ENV = config.get('env'); // 👈 2
+
 // ...
 
-// 👇 1
+// 👇 3
 app.use(async (ctx, next) => {
   try {
-    await next(); // 👈 2
+    await next(); // 👈 4
   } catch (error) {
-    getLogger().error('Error occured while handling a request', { error }); // 👈 3
-    let statusCode = error.status || 500; // 👈 4
-    let errorBody = { // 👈 4
+    getLogger().error('Error occured while handling a request', { error }); // 👈 5
+    let statusCode = error.status || 500; // 👈 6
+    let errorBody = { // 👈 6
       code: error.code || 'INTERNAL_SERVER_ERROR',
       message: error.message,
       details: error.details || {},
       stack: NODE_ENV !== 'production' ? error.stack : undefined,
     };
 
-    // 👇 5
+    // 👇 7
     if (error instanceof ServiceError) {
       if (error.isNotFound) {
         statusCode = 404;
@@ -414,12 +436,12 @@ app.use(async (ctx, next) => {
       }
     }
 
-    ctx.status = statusCode; // 👈 6
-    ctx.body = errorBody; // 👈 6
+    ctx.status = statusCode; // 👈 8
+    ctx.body = errorBody; // 👈 8
   }
 });
 
-// 👇 7
+// 👇 9
 // Handle 404 not found with uniform response
 app.use(async (ctx, next) => {
   await next();
@@ -434,14 +456,16 @@ app.use(async (ctx, next) => {
 });
 ```
 
-1. Voeg een stukje middleware toe.
-2. Definiëren een try/catch en laat het request gewoon doorgaan. We willen enkel een mogelijke error opvangen.
-3. Log alvast de error die opgetreden is. Een standaard JavaScript error wordt niet goed geprint op de console, onze logger kan hier wel goed mee omgaan.
+1. Importeer onze `ServiceError`.
+2. Haal de `NODE_ENV` op uit de config.
+3. Voeg een stukje middleware toe.
+4. Definiëren een try/catch en laat het request gewoon doorgaan. We willen enkel een mogelijke error opvangen.
+5. Log alvast de error die opgetreden is. Een standaard JavaScript error wordt niet goed geprint op de console, onze logger kan hier wel goed mee omgaan.
    - Check in `src/core/logging.js` maar eens waarom dit zo is.
-4. Vervolgens maken we reeds onze response body op. Voorlopig nemen we de status uit de Koa context of standaard 500.
-5. Vervolgens updaten we de status als de opgetreden error een `ServiceError` is en we kennen de error.
-6. Als laatste stellen we de `status` en `body` van het response in.
-7. Het enige geval waarbij we nog geen mooi error response hebben is een 404 van de Koa router. Dit vangen we op deze manier op.
+6. Vervolgens maken we reeds onze response body op. Voorlopig nemen we de status uit de Koa context of standaard 500. We retourneren ook enkel de stack in de body als we niet in productie draaien (om security redenen).
+7. Vervolgens updaten we de status als de opgetreden error een `ServiceError` is en we kennen de error.
+8. Als laatste stellen we de `status` en `body` van het response in.
+9. Het enige geval waarbij we nog geen mooi error response hebben is een 404 van de Koa router. Dit vangen we op deze manier op.
 
 > 💡 Tip: kijk eens wat een mooi response we krijgen als we verkeerde invoer geven 🤩
 
@@ -453,6 +477,7 @@ Als we een record toevoegen aan de database, dan kan er van alles foutlopen:
 
 - niet voldaan aan unique constraint
 - niet voldaan aan de referentiële integriteit
+- ...
 
 Hiervoor maken we eerst een aparte functie `handleDBError`, zodat we deze binnen de verschillende modules kan gebruikt worden. Maak hiervoor een bestand `_handleDBError.js` aan in de `src/service` map. We starten dit bestand met underscore aangezien dit bestand nergens anders nodig is, dat is een conventie.
 
@@ -553,21 +578,20 @@ const create = async ({ amount, date, placeId, userId }) => {
 
 ## Oefening 2 - Validatie toepassen en testen
 
-<!--TODO: commit aanpassen-->
-
-- Check uit op commit TODO: van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/) en bekijk de validate-functie. Deze werd aangepast om ook query parameters te valideren.
+- Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/) en bekijk de `validate`-functie. Deze werd aangepast om ook query parameters te valideren.
 - Ook voor de overige endpoints werd een validatieschema toegevoegd.
+  - **Let op:** voorzie ook validatie voor requests die geen invoer verwachten!
 - Integratietesten werden toegevoegd om te checken op invoervalidatie.
 
 ## Oefening 3 - Je eigen project
 
 Werk aan je eigen project:
 
-- Maak gebruik van invoervalidatie voor alle endpoints en voeg de `validate()` functie toe.
+- Maak gebruik van invoervalidatie voor alle endpoints en voeg de `validate`-functie toe.
 - Voeg de request logging middleware toe.
 - Voeg foutafhandeling toe.
 
-> 💡 Tip: als extra functionaliteit kan je een ander validatie framework gebruiken.
+> 💡 Tip: als extra functionaliteit kan je een andere validatie library of middleware gebruiken.
 
 ## Koa Helmet
 

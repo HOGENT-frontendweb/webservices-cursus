@@ -1,5 +1,7 @@
 # CI/CD
 
+<!-- TODO: JWT secret ? -->
+
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
@@ -15,7 +17,7 @@ Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Ser
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
 | [Continuous Integration/Delivery](#continuous-integrationdelivery) | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Nodige services](#nodige-services)                                | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Refactoring](#refactoring)                                        | :heavy_multiplication_x:  | :heavy_check_mark:       |
+| [Refactoring](#refactoring)                                        | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Render account aanmaken](#render-account-aanmaken)                | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Back-end online zetten](#back-end-online-zetten)                  | :heavy_multiplication_x:  | :heavy_check_mark:       |
 | [Front-end online zetten](#front-end-online-zetten)                | :heavy_check_mark:        | :heavy_multiplication_x: |
@@ -82,7 +84,9 @@ Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailt
 
 ## Refactoring
 
-> **Let op!** Deze sectie is **niet** van toepassing voor het olod Front-end Web Development.
+Deze sectie is verdeeld in een stuk voor de [back-end](#back-end) en een stuk voor de front-end. De back-end sectie is enkel van toepassing voor het olod Web Services. De [front-end](#front-end) sectie is enkel van toepassing voor het olod Front-end Web Development.
+
+### Back-end
 
 We moeten eerst een paar kleine aanpassingen doen aan onze code zodat deze werkt in onze productie-omgeving. Wij starten onze server altijd op poort 9000, maar op Render kan je de poort niet zomaar kiezen (je bent niet alleen op de server). Render kiest zelf een poort die het beschikbaar heeft, geeft die door aan je proces, en verwacht dan dat je je daaraan bindt.
 
@@ -114,9 +118,9 @@ module.exports = {
   database: {
     host: 'DATABASE_HOST',
     port: 'DATABASE_PORT',
+    name: 'DATABASE_NAME',
     username: 'DATABASE_USERNAME',
     password: 'DATABASE_PASSWORD',
-    name: 'DATABASE_NAME',
   },
   auth: {
     jwt: {
@@ -149,6 +153,20 @@ Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van 
 ```
 
 Nu zijn we klaar om onze back-end online te zetten.
+
+### Front-end
+
+Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg!
+
+```json
+{
+  "engines": {
+    "npm": ">=9.8.0",
+    "node": ">=20.6.0",
+    "yarn": ">=1.22.0"
+  }
+}
+```
 
 ## Render account aanmaken
 

@@ -228,7 +228,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
   Klant 1--1 Adres
   Klant 1--1 Persoon
-  Adres 1--* Stad
+  Adres *--1 Stad
   ```
 
 ## API routes beveiligen
@@ -327,7 +327,7 @@ Wat is er fout aan dit ERD?
 
 Een mogelijke oplossing ziet eruit als volgt:
 
-![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjEOwjAQBPt7RepELvIFqNJQgKgiChMvyFJsR-czEr_HxhG4utXeaLTzGYvdcKPeGvLagYaFoQXm8CaaJ_9kGAsvDaFdSF4oeSsZuUZwfT4sRzkVYtV7iMKAkE_uDqYtRNHrMRjQYqX4L_oF85swpOyaTA78rXKkou9GpfquYlRPrf7zGq5xUpO7Xqlxl3wAuhtRLA==)
+![Oplossing ERD](./images/ERD_recipes.png)
 
 Je merkt nog een samengestelde sleutel in SavedRecipe. Het kan wel nuttig zijn om geen samengestelde sleutels te gebruiken, dat is persoonlijke voorkeur. In dat geval bevat de tabel SavedRecipe ook een id, naast de `userId` en `recipeId`.
 
@@ -350,6 +350,7 @@ name
 name
 amount
 unit
++recipeId
 
 [User]
 *id
