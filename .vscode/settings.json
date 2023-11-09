@@ -44,6 +44,7 @@
   "cSpell.ignoreWords": [
     "Aelbrecht",
     "bodyparser",
+    "Codegen",
     "CORS",
     "dbaeumer",
     "EADDRINUSE",
@@ -54,6 +55,7 @@
     "HMAC",
     "HOGENT",
     "instanceof",
+    "Javadoc",
     "Menlo",
     "occured",
     "olod",
@@ -65,6 +67,7 @@
     "skinparam",
     "testjwt",
     "testpw",
-    "twoslash"
+    "twoslash",
+    "Zakas",
   ]
 }
