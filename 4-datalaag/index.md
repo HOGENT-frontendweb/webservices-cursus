@@ -271,9 +271,60 @@ Voeg de datalaag toe aan je eigen project.
 
 > 💡 Tip: je kan als extra functionaliteit ook gebruik maken van een ORM framework. Zoek op wat de best practices zijn voor het gebruik van een ORM framework in Node.js. Implementeer het maken van een verbinding met de database.
 
+### Databank automatisch aanmaken
+
+Het zou handig zijn als onze server automatisch onze databank aanmaakt, dat is niet altijd het geval. In bv. een MongoDB wordt die automatisch aangemaakt indien deze nog niet bestaat. In MySQL is dit niet het geval. We kunnen dit oplossen door een extra stap toe te voegen in onze `initializeData` functie:
+
+```js
+async function initializeData() {
+  const logger = getLogger();
+  logger.info('Initializing connection to the database');
+
+  const knexOptions = {
+    client: DATABASE_CLIENT,
+    connection: {
+      host: DATABASE_HOST,
+      port: DATABASE_PORT,
+      // database: DATABASE_NAME, // 👈 1
+      user: DATABASE_USERNAME,
+      password: DATABASE_PASSWORD,
+      insecureAuth: isDevelopment,
+    },
+  };
+  knexInstance = knex(knexOptions); // 👈 1
+
+  // 👇 2
+  try {
+    await knexInstance.raw('SELECT 1+1 AS result');
+    await knexInstance.raw('CREATE DATABASE IF NOT EXISTS ??', DATABASE_NAME); // 👈 3
+
+    // We need to update the Knex configuration and reconnect to use the created database by default
+    // USE ... would not work because a pool of connections is used
+    await knexInstance.destroy(); // 👈 4
+
+    knexOptions.connection.database = DATABASE_NAME; // 👈 5
+    knexInstance = knex(knexOptions); // 👈 6
+    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
+  } catch (error) {
+    logger.error(error.message, { error });
+    throw new Error('Could not initialize the data layer');
+  }
+
+  // ...
+}
+```
+
+1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
+2. Vervolgens breiden we onze connectiecheck uit.
+3. We maken een databank aan, indien deze nog niet bestaat. De `??` zijn een placeholder voor de databanknaam, die we als parameter doorgeven. Deze wordt geëscaped door KnexJS.
+4. We gooien de connectie weg.
+5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
+6. We maken een nieuwe connectie aan.
+7. We testen of de connectie goed functioneert.
+
 ## Migrations
 
-Vooraleer we queries kunnen uitvoeren op de databank, moeten we deze eerst aanmaken. Dit doen we met behulp van **migrations**. In sommige NoSQL databanken, zoals MongoDB, is dit niet nodig, maar in relationele databanken is dit een must.
+Vooraleer we queries kunnen uitvoeren op de databank, moeten we hierin eerst de nodige tabellen en relaties definiëren. Dit doen we met behulp van **migrations**. In sommige NoSQL databanken, zoals MongoDB, is dit niet nodig, maar in relationele databanken is dit een must.
 
 Migrations zijn een soort version control voor de databank. Ze kijken op welke versie het databankschema zit en doen eventueel updates. Ze brengen het databankschema naar een nieuwere versie.
 
@@ -303,7 +354,7 @@ In onze budget app hebben we enkele migraties:
 
 ### Migrations: voorbeeld
 
-We starten met het aanmaken van een migratie voor de tabel `uses`. Maak een map `migrations` aan in de map `data`. Voeg vervolgens een bestand `202309111840_createUserTable.js` toe met volgende inhoud:
+We starten met het aanmaken van een migratie voor de tabel `users`. Maak een map `migrations` aan in de map `data`. Voeg vervolgens een bestand `202309111840_createUserTable.js` toe met volgende inhoud:
 
 ```js
 const { tables } = require('..');
@@ -355,57 +406,6 @@ module.exports = {
 ```
 
 In deze tabel stellen we ook nog een `UNIQUE INDEX` in op de kolom `name`. We geven deze index de naam `idx_place_name_unique` om (later) eenvoudiger een mooie foutboodschap te kunnen retourneren naar de client. Je kan deze checks ook in de code uitvoeren maar databankservers zijn vaak meer uit de kluiten gewassen dan de backend-server. **Alles wat de databank kan doen, laat je de databank doen**
-
-### Databank aanmaken
-
-Alvorens we de migratie uitvoeren dienen we er zeker van te zijn dat de databank bestaat. Dit is niet altijd het geval. We kunnen de databank ook laten aanmaken door KnexJS. We voegen hiervoor een extra stap toe in onze `initializeData` functie:
-
-```js
-async function initializeData() {
-  const logger = getLogger();
-  logger.info('Initializing connection to the database');
-
-  const knexOptions = {
-    client: DATABASE_CLIENT,
-    connection: {
-      host: DATABASE_HOST,
-      port: DATABASE_PORT,
-      // database: DATABASE_NAME, // 👈 1
-      user: DATABASE_USERNAME,
-      password: DATABASE_PASSWORD,
-      insecureAuth: isDevelopment,
-    },
-  };
-  knexInstance = knex(knexOptions); // 👈 1
-
-  // 👇 2
-  try {
-    await knexInstance.raw('SELECT 1+1 AS result');
-    await knexInstance.raw('CREATE DATABASE IF NOT EXISTS ??', DATABASE_NAME); // 👈 3
-
-    // We need to update the Knex configuration and reconnect to use the created database by default
-    // USE ... would not work because a pool of connections is used
-    await knexInstance.destroy(); // 👈 4
-
-    knexOptions.connection.database = DATABASE_NAME; // 👈 5
-    knexInstance = knex(knexOptions); // 👈 6
-    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
-  } catch (error) {
-    logger.error(error.message, { error });
-    throw new Error('Could not initialize the data layer');
-  }
-
-  // ...
-}
-```
-
-1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
-2. Vervolgens breiden we onze connectiecheck uit.
-3. We maken een databank aan, indien deze nog niet bestaat. De `??` zijn een placeholder voor de databanknaam, die we als parameter doorgeven. Deze wordt geëscaped door KnexJS.
-4. We gooien de connectie weg.
-5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
-6. We maken een nieuwe connectie aan.
-7. We testen of de connectie goed functioneert.
 
 ### Migrations uitvoeren
 
@@ -492,6 +492,82 @@ module.exports = {
 ### Oefening 6 - Je eigen project
 
 Maak voor een aantal tabellen in je project de migraties aan en voer deze uit. Voorzie ook reeds een migratie voor een tabel die een relatie heeft met een andere tabel die je reeds aangemaakt hebt.
+
+## Seeds
+
+Met seeds kan je testdata toevoegen aan een databank. Dit wordt typisch enkel gebruikt in development, niet in testing of production. Typisch maak je één seed per tabel. Let hier ook op de volgorde, bv. bij relaties!
+
+> :bulb: Mocht je in productie toch data willen toevoegen, zoals bv. een aantal categorieën van producten in een webshop, dan maak je hiervoor een migratie en geen seed.
+
+Indien je niet zelf de data wil genereren, kan je gebruik maken van het package [@faker-js/faker](https://github.com/faker-js/faker).
+
+### Seeds: KnexJS
+
+KnexJS heeft [builtin seeds](https://knexjs.org/#Seeds-API). Je moet in de [configuratie](https://knexjs.org/#Seeds-CLI) enkel aangeven waar seeds staan.
+
+Seeds zijn JavaScript modules die één functie `seed` exporteren. Deze functie bevat de code die de testdata toevoegt. Er is één bestand per seed (of dus per tabel). De bestandsnaam bevat een timestamp en een korte beschrijving van de seed: `YYYYMMDDHHmm_description.js`, bv. `202309111930_places.js`. Door de timestamp vooraan kan je een bepaalde volgorde afdwingen. KnexJS voert de seeds uit in alfabetische volgorde.
+
+Maak het seed bestand aan voor de seeding van de places tabel. Maak hiervoor een map `seeds` in de map data. Maak een nieuw bestand `202309111935_places.js` met deze inhoud:
+
+```js
+module.exports = {
+  // 👇 1
+  seed: async (knex) => {
+    await knex('places').delete(); // 👈 2
+
+    // 👇 3
+    await knex('places').insert([
+      { id: 1, name: 'Loon', rating: 5 },
+      { id: 2, name: 'Dranken Geers', rating: 3 },
+      { id: 3, name: 'Irish Pub', rating: 4 },
+    ]);
+  },
+};
+```
+
+1. Een seed bestand exporteert één functie genaamd `seed`. Deze functie krijgt opnieuw de Knex-instantie mee als argument. Dit is de interface naar de databank.
+2. Het is nuttig om eerst de tabel leeg te maken. Mogelijks bleef er nog data achter van een vorige opstart. Dit kan zorgen voor id conflicten, e.d.
+   - Let op met de `truncate()` functie. Deze kan je niet gebruiken als je een tabel wil leegmaken die referentiële integriteit heeft met een andere tabel. Je kan dit wel oplossen door de referentiële integriteit tijdelijk uit te schakelen, maar `delete()` is iets eenvoudiger hier.
+3. Vervolgens voegen we onze testdata toe. Je kan kiezen om vaste ids te nemen of om deze te laten genereren door de databank.
+   - Wat is een voordeel van vaste ids? Hiermee is het eenvoudig om relaties te definiëren. Logisch, want je kent het id van elke record, bij generatie is dit telkens verschillend.
+
+### Seeds uitvoeren
+
+Seeds worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
+
+```js
+async function initializeData() {
+  const knexOptions = {
+    // ...
+    seeds: {
+      // 👈 1
+      directory: join('src', 'data', 'seeds'),
+    },
+  };
+  // ...
+  if (isDevelopment) { // 👈 2
+    // 👇 3
+    try {
+      await knexInstance.seed.run();
+    } catch (error) {
+      logger.error('Error while seeding database', {
+        error,
+      });
+    }
+  }
+
+  return knexInstance;
+}
+```
+
+1. We geven aan Knex mee waar de seeds staan. We voegen deze code toe aan onze `initializeData`.
+2. We voeren de seed enkel uit indien we in development mode zijn.
+3. We gebruiken de run functie van de Knex Seed API. Hierna is de datalaag pas echt opgestart. Het is niet erg als de seeds falen; we loggen dit enkel, de server kan nadien gewoon opstarten.
+
+### Oefening 7 - Je eigen project
+
+Maak de seed aan voor één tabel en zorg ervoor dat deze seed kan worden uitgevoerd.
+
 ## Repository
 
 Een repository is een abstractie voor de datalaag. Het definieert een aantal functies (CRUD...) die queries uitvoeren en,indien nodig, de query resultaten omvormen naar OO-objecten. Het is de tussenpersoon tussen domein en databank. Zo is het "eenvoudig" om te switchen tussen databanken. Dit is eenvoudiger in een taal met interfaces en klassen (bv. TypeScript). [Lees meer over het repository patroon](https://medium.com/@pererikbergman/repository-design-pattern-e28c0f3e4a30)
@@ -708,104 +784,16 @@ Er is geen gouden graal, dit is slechts een voorbeeldaanpak. We hebben nu volgen
 Indien je voor een ORM framework gaat, pas dan de service- en REST-laag aan.
 
 <!-- markdownlint-disable-next-line -->
++ Oplossing +
 
-- Oplossing +
-
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `TODO:`
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `76352e8`
 
   ```bash
   git clone https://github.com/HOGENT-Web/webservices-budget.git
-  git checkout -b oplossing TODO:
+  git checkout -b oplossing 76352e8
   yarn install
   yarn start
   ```
-
-### Problemen!
-
-Momenteel hebben we nog een aantal vragen in onze applicatie:
-
-- Wie zal ervoor zorgen dat het databank-schema up to date is met de laatste versie van het schema? Denk aan:
-  - nieuwe tabellen, kolommen, procedures, triggers...
-  - hernoemde tabellen, kolommen...
-  - verdwenen tabellen, kolommen...
-- Wie zal ervoor zorgen dat we degelijke dummy data hebben in de databank?
-
-Het antwoord: we doen dit niet handmatig, zelfs geen dummy data!
-
-
-## Seeds
-
-Met seeds kan je testdata toevoegen aan een databank. Dit wordt typisch enkel gebruikt in development (niet in testing of production). Typisch maak je één seed per tabel.
-
-Let hier ook op de volgorde, bv. bij relaties!
-
-### Seeds: KnexJS
-
-KnexJS heeft [builtin seeds](https://knexjs.org/#Seeds-API). Je moet in de [configuratie](https://knexjs.org/#Seeds-CLI) enkel aangeven waar seeds staan.
-
-Seeds zijn JavaScript modules die één functie `seed` exporteren. Deze functie bevat de code die de testdata toevoegt. Er is één bestand per seed (of dus per tabel). De bestandsnaam bevat een timestamp en een korte beschrijving van de seed: `YYYYMMDDHHmm_description.js`, bv. `202309111930_places.js`. Door de timestamp vooraan kan je een bepaalde volgorde afdwingen. KnexJS voert de seeds uit in alfabetische volgorde.
-
-Maak het seed bestand aan voor de seeding van de places tabel. Maak hiervoor een map `seeds` in de map data. Maak een nieuw bestand `202309111935_places.js` met deze inhoud:
-
-```js
-module.exports = {
-  // 👇 1
-  seed: async (knex) => {
-    // first delete all entries
-    await knex('places').delete(); // 👈 2
-
-    // then add the fresh places
-    await knex('places').insert([
-      { id: 1, name: 'Loon', rating: 5 },
-      { id: 2, name: 'Dranken Geers', rating: 3 },
-      { id: 3, name: 'Irish Pub', rating: 4 },
-    ]); // 👈 3
-  },
-};
-```
-
-1. Een seed bestand exporteert één functie genaamd `seed`. Deze functie krijgt opnieuw de Knex-instantie mee als argument. Dit is de interface naar de databank.
-2. Het is nuttig om eerst de tabel leeg te maken. Mogelijks bleef er nog data achter van een vorige opstart. Dit kan zorgen voor id conflicten, e.d.
-3. Vervolgens voegen we onze testdata toe. Je kan kiezen om vaste ids te nemen of om deze te laten genereren door de databank.
-   - Wat is een voordeel van vaste ids? Hiermee is het eenvoudig om relaties te definiëren. Logisch, want je kent het id van elke record, bij generatie is dit telkens verschillend.
-
-### Seeds uitvoeren
-
-Seeds worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
-
-```js
-async function initializeData() {
-  const knexOptions = {
-    // ...
-    seeds: {
-      // 👈 1
-      directory: join('src', 'data', 'seeds'),
-    },
-  };
-  // ...
-  if (isDevelopment) {
-    // 👈 2
-    // 👇 3
-    try {
-      await knexInstance.seed.run();
-    } catch (error) {
-      logger.error('Error while seeding database', {
-        error,
-      });
-    }
-  }
-
-  return knexInstance;
-}
-```
-
-1. We geven aan Knex mee waar de seeds staan. We voegen deze code toe aan onze `initializeData`.
-2. We voeren de seed enkel uit indien we in development mode zijn.
-3. We gebruiken de run functie van de Knex Seed API. Hierna is de datalaag pas echt opgestart. Het is niet erg als de seeds falen; we loggen dit enkel, de server kan nadien gewoon opstarten.
-
-### Oefening 7 - Je eigen project
-
-Maak de seeding aan voor 1 tabel en zorg ervoor dat de seeding kan worden uitgevoerd.
 
 ## Het totaalplaatje
 
@@ -819,9 +807,9 @@ Dat geeft een aantal mogelijkheden:
 - scripts die uitgevoerd worden voor de server start (voor `yarn start`)
 - de server doet het zelf
 
-We kiezen de laatste optie.
+Wij hebben de laatste optie gekozen.
 
-Let op! Onze aanpak is niet aangepast voor/getest op servers die parallel draaien! De server is niet op de hoogte van de andere servers. Gevolg? Mogelijke conflicten tussen meerdere servers die tegelijk migreren of seeden.
+> :exclamation: Let op! Onze aanpak is niet aangepast voor/getest op servers die parallel draaien! De server is niet op de hoogte van de andere servers. Gevolg? Mogelijke conflicten tussen meerdere servers die tegelijk migreren of seeden.
 
 ### Opstarten van de datalaag
 
@@ -849,7 +837,19 @@ Werk aan je eigen project!
 
 OF
 
-- Voeg in de Budget WebService de migratie, seeding, repo, service en rest toe voor de CRUD van de Users
+- Voeg in webservices-budget de migratie, seeding, repo, service en rest toe voor de CRUD van de users
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `4f79853`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing 4f79853
+  yarn install
+  yarn start
+  ```
 
 ## Mogelijke extra's voor de examenopdracht
 
