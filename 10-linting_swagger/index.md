@@ -2,38 +2,32 @@
 
 > **Startpunt voorbeeldapplicatie**
 >
+> Het volstaat om uit te checken op de `main` branch, op de `authenticatie` branch mag ook.
+>
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
 > yarn install
-> git checkout -b les6 820b9fa
 > yarn start
 > ```
 
 ## Linting
 
-- linting is statische analyse van code
-- het wordt gebruikt om problemen zoals verkeerde syntax en twijfelachtig gebruik van code te detecteren
-- waarom linting en formatting?
-  - errors, typos en syntax errors vinden
-  - best practices volgen
-  - consistentie van code style (bv. tussen verschillende developers)
-  - committen van "bad" code vermijden
-  - warning bij gebruik van harmful methods
-- [ESLint](https://github.com/eslint/eslint), gecreëerd door Nicholas C. Zakas in 2013, is een linting tool voor JavaScript.
-- [Airbnb](https://github.com/airbnb/javascript) heeft een eigen coding style opgesteld. Je kan hiervan vertrekken, of van de standaard aanbevolen instellingen van ESLint.
+Linting is statische analyse van code, de code wordt dus geanalyseerd zonder ze uit te voeren. Het wordt vooral gebruikt om problemen zoals verkeerde syntax en twijfelachtig gebruik van code te detecteren (bad practices, bad code, harmful methods...). Daarnaast zijn linters ook uitermate geschikt voor het afdwingen van een uniforme codeerstijl binnen een team van programmeurs.
+
+[ESLint](https://github.com/eslint/eslint), gecreëerd door Nicholas C. Zakas in 2013, is een linting tool voor JavaScript. Je kan een eigen configuratie ontwerpen of gebruik maken van een reeds gedefinieerde zoals die van [Airbnb](https://github.com/airbnb/javascript). Er zijn tal van plugins beschikbaar om ESLint uit te breiden met extra linting rules.
 
 ### Linting: tools installeren
 
-Voeg de [ESLint extensie](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) toe aan VS Code. Installeer ESLint in het project
+Voeg de [ESLint extensie](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) toe aan VS Code. Installeer ESLint en een plugin in het project:
 
 ```bash
-> yarn add eslint --dev
-> yarn add eslint-plugin-import --dev
+yarn add --dev eslint eslint-plugin-import
 ```
 
-`eslint-plugin-import`: meldingen over imports volgorde + vele andere mogelijkheden voor imports
-Pas de `package.json` aan, voeg onderstaand script toe
+`eslint-plugin-import` zorgt er o.a. voor dat we meldingen kunnen krijgen over de volgorde van imports, naast vele andere mogelijkheden voor imports.
+
+Pas de `package.json` aan, voeg onderstaand script toe:
 
 ```json
 "scripts": {
@@ -41,9 +35,7 @@ Pas de `package.json` aan, voeg onderstaand script toe
 }
 ```
 
-Maak een `.eslintrc.json` bestand in de root folder met een leeg JSON-object in. Dit bestand bevat onze configuratie voor linting en formatting.
-
-`.eslintrc.json`
+Maak een `.eslintrc.json` bestand in de root met een leeg JSON-object in. Dit bestand bevat onze configuratie voor linting en formatting.
 
 ```json
 {
@@ -78,13 +70,13 @@ Maak een `.eslintrc.json` bestand in de root folder met een leeg JSON-object in.
 }
 ```
 
-1. Met `env` geven we aan welke JS-environments we gebruiken/nodig hebben. In ons geval: ES6 en ES2021 syntax, NodeJS en Jest
-2. We erven over van de aangeraden ESLint configuratie
-3. We gebruiken [ECMAScript versie 12](https://dev.to/naimlatifi5/ecmascript-2021-es12-new-features-2l67) en ECMAScript modules
-4. We voegen een plugin toe die onze imports voor ons zal sorteren
-5. Om deze plugin aan te zetten, moeten we deze rule instellen
+1. Met `env` geven we aan welke JS-environments we gebruiken/nodig hebben, in ons geval: ES6 en ES2021 syntax, Node.js en Jest.
+2. We erven over van de aangeraden ESLint configuratie.
+3. We gebruiken [ECMAScript versie 12](https://dev.to/naimlatifi5/ecmascript-2021-es12-new-features-2l67) en ECMAScript modules.
+4. We voegen een plugin toe die onze imports voor ons zal sorteren.
+5. Om deze plugin aan te zetten, moeten we deze rule instellen.
 
-Je kan zelf nog rules toevoegen aan de `.eslintrc.json`. Je kan ESLint zo instellen dat automatisch herstel wordt uitgevoerd telkens je CTRL+S (of COMMAND+S) drukt. Open de JSON settings via F1 > Zoek naar "Preferences: Open Settings (JSON)" en voeg onderstaand toe (zonder de { })
+Je kan zelf nog rules toevoegen aan de `.eslintrc.json`. Je kan VS Code zo instellen dat automatisch herstel wordt uitgevoerd telkens je CTRL+S (of COMMAND+S) drukt. Open de JSON settings via F1 > Zoek naar "Preferences: Open Settings (JSON)" en voeg onderstaand toe (zonder de { }):
 
 ```json
 {
@@ -101,7 +93,7 @@ Run voor elke commit: `yarn lint`. Dit zal je code linten, sommige problemen zel
 
 Voeg regels toe voor volgende vereisten:
 
-- standaard gebruiken we 2 spaties om te indenteren, switch cases ook
+- standaard gebruiken we 2 spaties om in te springen (= *indentation*), ook bij switch cases
 - we willen alleen UNIX line endings
 - we willen alleen enkele quotes gebruiken, geen dubbele
 - elke lijn moet eindigen met een puntkomma
@@ -111,9 +103,10 @@ Voeg regels toe voor volgende vereisten:
 - er moeten steeds haakjes staan rond de parameters van een arrow function
 - de accolades moeten in één bestand op een uniforme manier gebruikt worden (bv. allemaal meteen na de parameterlijst of allemaal op de volgende lijn)
 - we laten definitie van inline functies wel toe
-  Alle mogelijke regels vind je in de [documentatie](https://eslint.org/docs/latest/rules/) (of via Google).
 
-Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget)
+Alle mogelijke regels vind je in de [documentatie](https://eslint.org/docs/latest/rules/) (of via Google).
+
+Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget).
 
 ## Swagger vs Open API
 
