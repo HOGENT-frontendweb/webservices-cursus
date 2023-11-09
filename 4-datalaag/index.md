@@ -810,7 +810,19 @@ Werk aan je eigen project!
 
 OF
 
-- Voeg in de Budget WebService de migratie, seeding, repo, service en rest toe voor de CRUD van de Users
+- Voeg in webservices-budget de migratie, seeding, repo, service en rest toe voor de CRUD van de Users
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `4f79853`
+
+  ```bash
+  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git checkout -b oplossing 4f79853
+  yarn install
+  yarn start
+  ```
 
 ## Mogelijke extra's voor de examenopdracht
 
