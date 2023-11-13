@@ -15,4 +15,3 @@
 - [8. Testen: authenticatie & autorisatie](./8-auth_testing/index.md)
 - [9. CI/CD](./9-cicd/index.md)
 - [10. Linting en Swagger (optioneel)](./10-linting_swagger/index.md)
-- [11. FAQ](./11_faq/index.md)

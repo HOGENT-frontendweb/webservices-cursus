@@ -301,6 +301,43 @@ app.use(router.routes()) // 👈 3
 4. Daarna kunnen we routes definiëren, elke route is een 'werkwoord' met een path op ons router object. Dus je kan `router.get`, `router.put`... gebruiken. Na het path geef je de middlewares die uitgevoerd moeten worden bij dit request. In ons geval is dit slechts één middleware, maar meerdere kunnen zeker (denk aan authenticatie, validatie...).
 5. Uiteindelijk zorgen we dan dat de return waarde ingesteld wordt. De logger van de request is niet meer nodig, die mag weg.
 
+## Debugging
+
+Een applicatie ontwikkelen zonder eens te moeten debuggen is een utopie, ook in Node.js.
+
+Net zoals in vanilla JavaScript kan je hier gebruik maken van o.a. `console.log`, maar op die manier debuggen is tijdrovend en lastig. Het zou handig zijn als we in VS Code konden debuggen... Uiteraard kan dit ook!
+
+Maak een bestand `launch.json` aan in de `.vscode` map (of zoek via F1 naar "Debug: Add configuration" en selecteer Node.js) en voeg volgende configuratie toe:
+
+```json
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "attach",
+      "name": "Attach to server",
+      "port": 9001,
+      "address": "localhost",
+      "restart": true,
+      "timeout": 10000
+    }
+  ]
+}
+```
+
+Dit zorgt ervoor dat VS Code de debugger zal koppelen aan <localhost:9001>. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
+
+Alvorens je aan het debuggen gaat, check of jouw start-commando de optie `--inspect=0.0.0.0:9001` bevat. Indien je onze uitgebreide nodemon configuratie gebruikt, is dit al het geval.
+
+Start je applicatie. Dan kan je in VS Code debugger starten door op het play-icoontje (naast 'Attach to server') te klikken in de debug tab:
+
+![Start VS Code debuggen](images/debugging-in-vscode.png)
+
+Voeg breakpoints toe door op de lijnnummers te klikken. De debugger zal nu stoppen op deze lijn wanneer deze uitgevoerd wordt (doordat je bv. een request uitvoert in Postman). **Test dit uit!**
+
+Je kan ook `--inspect-brk` toevoegen aan het start-commando zodat de debugger automatisch stopt bij de eerste lijn van je applicatie. Dit is handig als je bv. het configureren van je app wil checken aangezien de applicatie al opgestart zal zijn wanneer de debugger pas koppelt. Let op dat je deze optie niet altijd laat staan in het commando aangezien de applicatie dan nooit zal starten zonder dat er een debugger gekoppeld is.
+
 ## Mappenstructuur
 
 In wat volgt gaan we de code wat herstructureren zodat we een mooie gelaagde applicatie krijgen. We gaan de code (voorlopig) opsplitsen in 2 lagen:
