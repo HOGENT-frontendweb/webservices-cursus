@@ -4,7 +4,7 @@
 
 Dit olod behoort tot de keuzepakketten `Development` en `AI & Data Engineer`, zoals je hieronder kan zien:
 
-![Dit olod in de keuzepakketten](./images/MT_olods.png ':size=70%')
+![Dit olod in de keuzepakketten](../images/MT_olods.png ':size=70%')
 
 Indien je in het keuzepakket `Development` zit, dan volg je waarschijnlijk Front-end Web Development gelijktijdig met dit olod. Indien je in het keuzepakket `AI & Data Engineer` zit, dan volg je enkel dit olod.
 
