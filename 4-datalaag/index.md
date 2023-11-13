@@ -513,9 +513,7 @@ Maak het seed bestand aan voor de seeding van de places tabel. Maak hiervoor een
 module.exports = {
   // 👇 1
   seed: async (knex) => {
-    await knex('places').delete(); // 👈 2
-
-    // 👇 3
+    // 👇 2
     await knex('places').insert([
       { id: 1, name: 'Loon', rating: 5 },
       { id: 2, name: 'Dranken Geers', rating: 3 },
@@ -526,9 +524,7 @@ module.exports = {
 ```
 
 1. Een seed bestand exporteert één functie genaamd `seed`. Deze functie krijgt opnieuw de Knex-instantie mee als argument. Dit is de interface naar de databank.
-2. Het is nuttig om eerst de tabel leeg te maken. Mogelijks bleef er nog data achter van een vorige opstart. Dit kan zorgen voor id conflicten, e.d.
-   - Let op met de `truncate()` functie. Deze kan je niet gebruiken als je een tabel wil leegmaken die referentiële integriteit heeft met een andere tabel. Je kan dit wel oplossen door de referentiële integriteit tijdelijk uit te schakelen, maar `delete()` is iets eenvoudiger hier.
-3. Vervolgens voegen we onze testdata toe. Je kan kiezen om vaste ids te nemen of om deze te laten genereren door de databank.
+2. We voegen onze testdata toe. Je kan kiezen om vaste ids te nemen of om deze te laten genereren door de databank.
    - Wat is een voordeel van vaste ids? Hiermee is het eenvoudig om relaties te definiëren. Logisch, want je kent het id van elke record, bij generatie is dit telkens verschillend.
 
 ### Seeds uitvoeren
@@ -545,8 +541,10 @@ async function initializeData() {
     },
   };
   // ...
-  if (isDevelopment) { // 👈 2
-    // 👇 3
+
+  const [nrOfPlaces] = await getKnex()(tables.place).count(); // 👈 2
+  if (isDevelopment && nrOfUsers['count(*)'] === 0) { // 👈 3
+    // 👇 4
     try {
       await knexInstance.seed.run();
     } catch (error) {
@@ -561,8 +559,9 @@ async function initializeData() {
 ```
 
 1. We geven aan Knex mee waar de seeds staan. We voegen deze code toe aan onze `initializeData`.
-2. We voeren de seed enkel uit indien we in development mode zijn.
-3. We gebruiken de run functie van de Knex Seed API. Hierna is de datalaag pas echt opgestart. Het is niet erg als de seeds falen; we loggen dit enkel, de server kan nadien gewoon opstarten.
+2. We tellen het aantal records in de tabel `places`.
+3. We voeren de seed enkel uit indien we in development mode zijn en er nog geen records in de tabel staan.
+4. We gebruiken de run functie van de Knex Seed API. Hierna is de datalaag pas echt opgestart. Het is niet erg als de seeds falen; we loggen dit enkel, de server kan nadien gewoon opstarten.
 
 #### Opmerking over migrations en seeds uitvoeren
 
