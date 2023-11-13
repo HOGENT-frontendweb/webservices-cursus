@@ -66,10 +66,10 @@ Er moeten ook nog een paar kleine en grote aanpassingen gebeuren aan de cursusin
 | week 5  | datalaag en CRUD                              |
 | week 6  | datalaag en CRUD                              |
 | week 7  | (geen nieuwe theorie, aan de opdracht werken) |
-| week 8  | swagger, testen, linter                       |
-| week 9  | authenticatie / autorisatie                   |
-| week 10 | testen met authenticatie / autorisatie        |
-| week 11 | CI/CD, online zetten                          |
+| week 8  | testen, swagger, linter                       |
+| week 9  | validatie en foutafhandeling                  |
+| week 10 | authenticatie / autorisatie (+ testen)        |
+| week 11 | CI/CD (= online zetten)                       |
 | week 12 | (geen nieuwe theorie, aan de opdracht werken) |
 
 ## Help, ik zit vast?
