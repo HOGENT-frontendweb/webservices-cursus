@@ -1,7 +1,4 @@
 <!-- markdownlint-disable first-line-h1 -->
-<small>
-  Een aantal hoofdstukken zullen sterk aangepast worden t.o.v. vorig jaar. Deze niet-afgewerkte hoofdstukken worden aangeduid met een "Work In Progress" label: WIP. Deze zullen zeker nog wijzigen, het is dus niet de bedoeling dat je deze hoofdstukken reeds doorneemt.
-</small>
 
 - [0. Algemene info](./0-intro/situering.md)
 - [0. Software](./0-intro/software.md)
