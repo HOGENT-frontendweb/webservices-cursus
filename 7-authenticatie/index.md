@@ -118,7 +118,7 @@ module.exports = {
 ```
 
 - `saltLength`: we kiezen een salt van 16 bytes (128 bits)
-- `hasLength`: onze hash moet 32 bytes groot zijn (256 bits)
+- `hashLength`: onze hash moet 32 bytes groot zijn (256 bits)
 - `timeCost`: we laten het hashing algoritme 6 iteraties uitvoeren
 - `memoryCost`: elke thread van het algoritme mag 128MiB gebruiken
 
