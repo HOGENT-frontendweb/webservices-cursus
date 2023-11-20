@@ -291,7 +291,7 @@ Controleer of je een foutmelding krijgt als je toch invoer meegeeft bij het requ
 We voegen een extra middleware toe die elk binnenkomend request zal loggen. Dit helpt enorm bij het debuggen. We installeren eerst een package om leuke emoji's te tonen in de console.
 
 ```bash
-yarn add node-emoji
+yarn add node-emoji@1.11.0
 ```
 
 We voegen vervolgens onze middleware toe voor het toevoegen van de `bodyParser` middleware in `src/core/installMiddleware.js`:
