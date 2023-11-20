@@ -199,7 +199,7 @@ const validate = require('../core/validation'); // 👈 1
 // ...
 
 router.get(
-  '/;id',
+  '/:id',
   validate(getTransactionById.validationScheme), // 👈 2
   getTransactionById
 );
@@ -298,7 +298,7 @@ We voegen vervolgens onze middleware toe voor het toevoegen van de `bodyParser` 
 
 ```js
 const emoji = require('node-emoji'); // 👈 1
-const { getLogger } = require('./logger'); // 👈 1
+const { getLogger } = require('./logging'); // 👈 1
 // ...
 
 // 👇 1
@@ -576,20 +576,21 @@ const create = async ({ amount, date, placeId, userId }) => {
 3. Gooi een `ServiceError.notFound` als de plaats niet bestaat in de `create` method.
 4. Als de create van een transactie mislukt, proberen we de fout om te zetten naar een `ServiceError` of gooien we de fout opnieuw.
 
-## Oefening 2 - Validatie toepassen en testen
+## Integratietesten
 
 - Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/) en bekijk de `validate`-functie. Deze werd aangepast om ook query parameters te valideren.
 - Ook voor de overige endpoints werd een validatieschema toegevoegd.
   - **Let op:** voorzie ook validatie voor requests die geen invoer verwachten!
 - Integratietesten werden toegevoegd om te checken op invoervalidatie.
 
-## Oefening 3 - Je eigen project
+## Oefening 2 - Je eigen project
 
 Werk aan je eigen project:
 
 - Maak gebruik van invoervalidatie voor alle endpoints en voeg de `validate`-functie toe.
 - Voeg de request logging middleware toe.
 - Voeg foutafhandeling toe.
+- Voeg de testen toe.
 
 > 💡 Tip: als extra functionaliteit kan je een andere validatie library of middleware gebruiken.
 
