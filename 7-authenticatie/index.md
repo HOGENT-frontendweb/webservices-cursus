@@ -1107,3 +1107,9 @@ Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazo
   yarn install
   yarn start
   ```
+
+## Extra's voor de examenopdracht
+
+- Gebruik van een externe authenticatieprovider (bv. [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
+- Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie
+- Schrijf een custom validator voor Joi om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
