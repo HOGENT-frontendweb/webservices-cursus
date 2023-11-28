@@ -683,7 +683,7 @@ We definiëren een functie `login` in `src/service/user.js` die een gebruiker me
 
 ```js
 // ...
-const { verifyPassword, verifyPassword } = require('../core/password'); // 👈 4
+const { hashPassword, verifyPassword } = require('../core/password'); // 👈 4
 const { generateJWT } = require('../core/jwt'); // 👈 7
 
 // 👇 8
