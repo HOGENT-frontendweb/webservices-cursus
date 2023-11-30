@@ -127,7 +127,6 @@ const JWT_EXPIRATION_INTERVAL = config.get('auth.jwt.expirationInterval'); // �
 const generateJWT = (user) => {
   // 👇 4
   const tokenData = {
-    userId: user.id,
     roles: user.roles,
   };
 
@@ -136,7 +135,7 @@ const generateJWT = (user) => {
     expiresIn: Math.floor(JWT_EXPIRATION_INTERVAL / 1000),
     audience: JWT_AUDIENCE,
     issuer: JWT_ISSUER,
-    subject: 'auth',
+    subject: `${user.id}`,
   };
 
   // 👇 6
@@ -182,13 +181,13 @@ module.exports = {
 1. Importeer alle gedefinieerde configuratie.
 2. Importeer het `jsonwebtoken` package.
 3. Definieer een helper `generateJWT` om een JWT te maken, deze krijgt een gebruiker mee als argument.
-4. We geven deze twee properties mee als JWT payload. Je moet deze verplicht apart definiëren
+4. We geven de `roles` als JWT payload, je moet deze verplicht apart definiëren
 5. Daarnaast definiëren we enkele properties nodig voor het ondertekenen van de JWT:
 
    - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` staat in seconden en onze configuratie rekent met milliseconden, daarom moeten we dit omvormen.
    - `audience`: welke servers de token mogen accepteren.
    - `issuer`: welke server(s) de token uitgeven.
-   - `subject`: waarvoor deze token dient, in dit geval voor authenticatie (auth).
+   - `subject`: voor wie deze token dient (bv. het id van de gebruiker), dit moet een string zijn.
 
 6. We retourneren een `Promise` die zal resolven als de JWT ondertekend is. We moeten de `sign`-functie wrappen in een `Promise` aangezien deze werkt o.b.v. callbacks om asynchroon te zijn. Maar dit werkt niet makkelijk. De `sign`-functie neemt de JWT payload (`tokenData`), het secret en de sign opties als argument en als laatste argument verwacht deze een callback die opgeroepen zal worden als de token ondertekend is of als er iets fout liep. In deze callback resolven of rejecten we de `Promise` indien nodig.
 7. We definiëren nog een tweede helper `verifyJWT` (in `src/core/jwt.js`) die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
@@ -925,11 +924,11 @@ const checkAndParseSession = async (authHeader) => {
 
   const authToken = authHeader.substring(7); // 👈 3
   try {
-    const { roles, userId } = await verifyJWT(authToken); // 👈 5
+    const { roles, sub } = await verifyJWT(authToken); // 👈 5
 
 
     return {
-      userId,
+      userId: Number(sub),
       roles,
       authToken,
     }; // 👈 6
@@ -951,6 +950,7 @@ module.exports = {
 3. Vervolgens verwijderen we de "Bearer " van de token, zo hebben we enkel de JWT over.
 4. We wrappen alles in een try-catch om de fouten nog eens afzonderlijk te loggen. Alle fouten die gegooid worden, hebben te maken met de geldigheid van de JWT (verlopen, ongeldig signature...)
 5. We verifiëren de JWT. Als deze geldig is, dan krijgen we de payload van de token terug.
+   - Merk op: de `sub` property van de payload bevat de id van de gebruiker maar als string. We zetten deze om naar een getal.
 6. Als laatste retourneren we alle sessie-informatie, alsook de token.
 
 De laatste functie in de user service (`src/service/user.js`) zal checken of een gegeven rol in de array van rollen voorkomT. De array bevat alle rollen van de gebRuiker (uit de JWT payload gehaald).
