@@ -94,7 +94,7 @@ Een hashing algoritme is een one-way algoritme. Het neemt een input en vormt dez
 
 Sommige hashing algoritmes gebruiken een **salt**. Dit is een willekeurig string (met vaste lengte) en wordt gebruikt om een verschillende hash te genereren bij een identieke input. Dus: hetzelfde wachtwoord hashen met een andere salt, geeft een andere hash. Dit maakt bv. [dictionary attacks](https://www.sciencedirect.com/topics/computer-science/dictionary-attack) moeilijker.
 
-### Voorbeeld: helpers voor hashing
+### Helpers voor hashing
 
 We gebruiken het package `argon2` om het argon2 algoritme te gebruiken in Node.js:
 
@@ -210,7 +210,7 @@ main();
 ```
 <!-- cSpell: enable -->
 
-## Voorbeeld: wachtwoord opslaan
+### Wachtwoord opslaan in de databank
 
 Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe **migratie** in `src/data/migrations/202309191630_addAuthInfoToUserTable.js`:
 
@@ -367,7 +367,7 @@ const register = async ({
   yarn start
   ```
 
-## Voorbeeld: helpers voor JWT
+## Helpers voor JWT's
 
 We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) om JWT's te ondertekenen en verifiëren:
 
@@ -435,8 +435,31 @@ const generateJWT = (user) => {
   });
 };
 
-module.exports = { // 👈 3
+// 👇 7
+const verifyJWT = (authToken) => {
+  // 👇 8
+  const verifyOptions = {
+    audience: JWT_AUDIENCE,
+    issuer: JWT_ISSUER,
+    subject: 'auth',
+  };
+
+  // 👇 9
+  return new Promise((resolve, reject) => {
+    jwt.verify(authToken, JWT_SECRET, verifyOptions, (err, decodedToken) => {
+      if (err || !decodedToken) {
+        console.log('Error while verifying token:', err.message);
+        return reject(err || new Error('Token could not be parsed'));
+      }
+      return resolve(decodedToken);
+    });
+  });
+};
+
+// 👇 10
+module.exports = {
   generateJWT,
+  verifyJWT,
 };
 ```
 
@@ -452,45 +475,16 @@ module.exports = { // 👈 3
    - `subject`: waarvoor deze token dient, in dit geval voor authenticatie (auth).
 
 6. We retourneren een `Promise` die zal resolven als de JWT ondertekend is. We moeten de `sign`-functie wrappen in een `Promise` aangezien deze werkt o.b.v. callbacks om asynchroon te zijn. Maar dit werkt niet makkelijk. De `sign`-functie neemt de JWT payload (`tokenData`), het secret en de sign opties als argument en als laatste argument verwacht deze een callback die opgeroepen zal worden als de token ondertekend is of als er iets fout liep. In deze callback resolven of rejecten we de `Promise` indien nodig.
+7. We definiëren nog een tweede helper `verifyJWT` (in `src/core/jwt.js`) die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
 
-We definiëren nog een tweede helper `verifyJWT` (in `src/core/jwt.js`) die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
+   - JWT is verlopen
+   - Er is geprutst aan de payload
+   - JWT is niet bedoeld voor deze server
+   - ...
 
-- JWT is verlopen
-- Er is geprutst aan de payload
-- JWT is niet bedoeld voor deze server
-- ...
-
-```js
-// ...
-const verifyJWT = (authToken) => {
-  // 👇 1
-  const verifyOptions = {
-    audience: JWT_AUDIENCE,
-    issuer: JWT_ISSUER,
-    subject: 'auth',
-  };
-
-  // 👇 2
-  return new Promise((resolve, reject) => {
-    jwt.verify(authToken, JWT_SECRET, verifyOptions, (err, decodedToken) => {
-      if (err || !decodedToken) {
-        console.log('Error while verifying token:', err.message);
-        return reject(err || new Error('Token could not be parsed'));
-      }
-      return resolve(decodedToken);
-    });
-  });
-};
-
-module.exports = {
-  generateJWT,
-  verifyJWT, // 👈 3
-};
-```
-
-1. We geven opnieuw de informatie mee die we verwachten in de token.
-2. Omdat `jwt.verify` ook met een callback werkt, moeten we deze wrappen in een Promise. `jwt.verify` verwacht de JWT, het secret en de opties als argumenten. Als laatste argument volgt een callback die opgeroepen zal worden als de token gecontroleerd is. In deze callback resolven of rejecten we de `Promise` indien nodig.
-3. We exporteren deze helper.
+8. We geven opnieuw de informatie mee die we verwachten in de token.
+9. Omdat `jwt.verify` ook met een callback werkt, moeten we deze wrappen in een Promise. `jwt.verify` verwacht de JWT, het secret en de opties als argumenten. Als laatste argument volgt een callback die opgeroepen zal worden als de token gecontroleerd is. In deze callback resolven of rejecten we de `Promise` indien nodig.
+10. Exporteer de twee helpers.
 
 Kopieer onderstaande code in een `src/testjwt.js` bestand en test zelf of jouw code werkt! Je kan dit script uitvoeren d.m.v. `node src/testjwt.js`
 
@@ -541,7 +535,7 @@ async function main() {
 main();
 ```
 
-## Voorbeeld: aanmelden
+## Aanmelden
 
 We definiëren alle rollen in onze applicatie in een constant object. Zo is het eenvoudig om ze te wijzigen indien nodig. Voeg onderstaande code toe aan `src/core/roles.js`
 
@@ -786,7 +780,7 @@ Pas ook de overige functies aan:
 - `register` retourneert enkel het token en de publieke user data
 - `getAll` en `getById` mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!)
 
-## Voorbeeld: registreren
+## Registreren
 
 We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.js` hebben we:
 
@@ -849,7 +843,7 @@ module.exports = function installUsersRoutes(app) {
 3. We voorzien ook een validatieschema voor de input.
 4. We geven deze functie mee aan de POST op `/register` en doen ook de invoervalidatie.
 
-## Voorbeeld: helpers voor authenticatie/autorisatie
+## Helpers voor authenticatie/autorisatie
 
 We definiëren een module `src/core/auth.js` die twee helpers exporteert. Beide helpers zijn middlewares voor Koa.
 
