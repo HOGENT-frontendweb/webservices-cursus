@@ -2,12 +2,13 @@
 
 > **Startpunt voorbeeldapplicatie**
 >
-> Het volstaat om uit te checken op de `authenticatie` branch en op commit `4fc1d12`
+> Het volstaat om uit te checken op de `authenticatie` branch en op commit `faf3c57`
 >
 > ```bash
 > git clone https://github.com/HOGENT-Web/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 4fc1d12
+> git checkout origin/authenticatie
+> git checkout -b les8 faf3c57
 > yarn install
 > yarn start
 > ```
@@ -250,7 +251,7 @@ const data = {
   // 👇 1
   /*
   users: [{
-    id: '7f28c5f9-d711-4cd6-ac15-d13d71abff80',
+    id: 1,
     name: 'Test User'
   }]
   */
@@ -258,7 +259,7 @@ const data = {
 
 const dataToDelete = {
   // ...
-  //users: ['7f28c5f9-d711-4cd6-ac15-d13d71abff80']  👈 1
+  //users: [1]  👈 1
 };
 
 describe('Transactions', () => {
