@@ -47,7 +47,11 @@ const { initializeData, getKnex, tables } = require('../src/data'); // 👈 3 en
 // 👇 1
 module.exports = async () => {
   // Create a database connection
-  initializeLogger(config.get('log.level'), config.get('log.disabled')); // 👈 2
+  // 👇 2
+  initializeLogger({
+    level: config.get('log.level'),
+    disabled: config.get('log.disabled'),
+  });
   await initializeData(); // 👈 3
 
   // Insert a test user with password 12345678
