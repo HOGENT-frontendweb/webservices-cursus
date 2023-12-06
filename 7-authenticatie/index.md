@@ -973,7 +973,7 @@ module.exports = {
 
 **Hoe gebruiken we deze middlewares nu?**
 
-Pas `src/rest/user/js` als volgt aan:
+Pas `src/rest/user.js` als volgt aan:
 
 ```js
 const { requireAuthentication, makeRequireRole } = require('../core/auth'); // 👈 2
