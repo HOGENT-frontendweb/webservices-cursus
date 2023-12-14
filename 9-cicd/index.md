@@ -219,19 +219,19 @@ Merk op: we maken geen script voor ons commando in productie. Soms worden foutco
 
 ![Render back-end settings part 2](./images/9_11_backend_settings_part_2.png ':size=80%')
 
-Klik op "Advanced" en vul de nodige environment variabelen in. Check je mail voor de databank URL en de nodige credentials. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
+Vul onder de instance types de nodige environment variabelen in. Check je mail voor de databank URL en de nodige credentials. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
 
 > Hint: voor de variabele `AUTH_JWT_SECRET` kan je een random string gebruiken. Klik op "Generate" om een random string te laten genereren door Render.
 
-Optioneel kan je een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit /api/health/ping.
-
-Klik vervolgens op "Create Web Service" en wacht geduldig af (het gratis plan kan trager zijn).
-
 ![Render back-end settings part 3](./images/9_12_backend_settings_part_3.png ':size=80%')
 
-Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
+Optioneel kan je een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit /api/health/ping.
 
-![Back-end is online](./images/9_13_backend_online.png ':size=80%')
+![Render back-end settings part 4](./images/9_13_backend_settings_part_4.png ':size=80%')
+
+Klik vervolgens op "Create Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
+
+![Back-end is online](./images/9_14_backend_online.png ':size=80%')
 
 **Lees eerst de logs alvorens de lectoren te contacteren!** Krijg je het niet werkende? Maak een issue op jouw repository en tag jouw lector. Voeg een kopie van je logs toe, anders kunnen we niet helpen.
 
@@ -245,7 +245,7 @@ Het is tijd om onze frontend online te zetten. Onze frontend is (na het builden)
 
 Open het Render dashboard en klik rechtsboven op "New" en "Static Site".
 
-![Render new web service](./images/9_14_new_static_site.png ':size=80%')
+![Render new web service](./images/9_15_new_static_site.png ':size=80%')
 
 > **Let op!** Sla de volgende twee stappen over als je de back-end al online hebt gezet.
 
@@ -261,29 +261,29 @@ Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke reposito
 
 Zoek nu jouw **eigen** frontend repository op en klik op "Connect"
 
-![Render search front-end repo](./images/9_15_search_frontend_repo.png ':size=80%')
+![Render search front-end repo](./images/9_16_search_frontend_repo.png ':size=80%')
 
 Kies een unieke naam voor je statische website (hint: je repository-naam is uniek). Vul `dist` in bij de "Publish directory". De rest zou normaal correct ingevuld moeten zijn, controleer dit voor jouw situatie.
 
 Merk op: we gebruiken `yarn; yarn build` als build commando. We installeren dus eerst onze dependencies en bouwen vervolgens onze applicatie.
 
-![Render front-end settings part 1](./images/9_16_frontend_settings_part_1.png ':size=80%')
+![Render front-end settings part 1](./images/9_17_frontend_settings_part_1.png ':size=80%')
 
 We moeten onze frontend nog vertellen waar onze backend draait. Dit doen we door een environment variabele in te stellen. Klik op "Advanced" en vul de nodige environment variable in. De URL van je backend vind je op het Render dashboard van jouw backend. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie.
 
 Klik vervolgens op "Create Static Site" en wacht geduldig af (het gratis plan kan trager zijn).
 
-![Render front-end settings part 2](./images/9_17_frontend_settings_part_2.png ':size=80%')
+![Render front-end settings part 2](./images/9_18_frontend_settings_part_2.png ':size=80%')
 
 Als alles goed is gegaan, zou je nu een werkende frontend moeten hebben. De URL van jouw frontend vind je linksboven.
 
-![Front-end is online](./images/9_18_frontend_online.png ':size=80%')
+![Front-end is online](./images/9_19_frontend_online.png ':size=80%')
 
 ### CORS probleem
 
 Je kan nu alvast naar jouw frontend gaan maar je zal merken dat er nog een probleem is - open de console. Je krijgt een CORS error, dit moeten we gaan fixen in de backend!
 
-![CORS error](./images/9_19_frontend_cors.png ':size=80%')
+![CORS error](./images/9_20_frontend_cors.png ':size=80%')
 
 CORS kan je enkel oplossen door in de backend de juiste headers te zetten. We hadden reeds ons CORS package geconfigureerd en moeten enkel de URL aanpassen in het bestand `config/production.js`. Vervang een reeds ingevulde URL door jouw eigen frontend URL.
 
@@ -306,11 +306,11 @@ Commit en push deze wijziging. Wacht tot de backend opnieuw online is en herlaad
 
 Probeer nu op jouw frontend rechtstreeks naar een URL verschillend van `/` te gaan. In ons voorbeeld gaan we naar `/transactions`. Je zal merken dat je een 404 krijgt. Dit moeten we oplossen in de frontend!
 
-![404 error](./images/9_20_frontend_not_found.png ':size=80%')
+![404 error](./images/9_21_frontend_not_found.png ':size=80%')
 
 Ga naar het Render dashboard van jouw frontend en klik op "Redirects/Rewrites". Voeg een nieuwe Rewrite-regel toe zoals op onderstaande afbeelding. Klik vervolgens op "Save Changes". Je kan meteen testen of het werkt! Deze regel zorgt ervoor dat alle requests naar de frontend die niet naar / gaan, als antwoord de index.html van de frontend krijgen. [Lees meer over het verschil tussen redirects en rewrites](https://render.com/docs/redirects-rewrites).
 
-![Front-end rewrite](./images/9_21_frontend_rewrite.png ':size=80%')
+![Front-end rewrite](./images/9_22_frontend_rewrite.png ':size=80%')
 
 ## Hosting remarks
 
