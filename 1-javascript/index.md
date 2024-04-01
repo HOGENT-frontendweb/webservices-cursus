@@ -633,3 +633,4 @@ Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en 
 - [100+ JavaScript Concepts you Need to Know (Fireship)](https://www.youtube.com/watch?v=lkIFF4maKMU)
 - [JavaScript for the Haters (Fireship)](https://www.youtube.com/watch?v=aXOChLn5ZdQ)
 - [JS Is Weird](https://jsisweird.com/)
+- [JavaScript Visualized: Promise Execution](https://lydiahallie.framer.website/blog/promise-execution)
