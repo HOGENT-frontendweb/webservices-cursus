@@ -71,7 +71,7 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 - Het ingevulde dossier, als PDF ingediend op Chamilo
 - Een ingevulde rubrics (evaluatiekaart) die je kan vinden op Chamilo, en ook ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
-  - De demo mag maximaal 15 minuten duren
+  - De demo mag maximaal 15 minuten duren (incl. demo Front-end Web Development)
   - De webcam moet aanstaan tijdens de demo
   - Je deelt de demo via Panopto met jouw lector(en)
   - Dit is geen commerciële presentatie, maar een technische demo
