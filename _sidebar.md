@@ -8,7 +8,7 @@
 
 - [0. Algemene info](./0-intro/situering.md)
 - [0. Software](./0-intro/software.md)
-- [1. JavaScript (WIP)](./1-javascript/index.md)
+- [1. TypeScript (WIP)](./1-typescript/index.md)
 - [2. REST API intro (WIP](./2-REST_api_intro/index.md)
 - [3. REST API bouwen (WIP](./3-REST_api_bouwen/index.md)
 - [4. Datalaag en CRUD (WIP](./4-datalaag/index.md)

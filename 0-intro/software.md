@@ -1,19 +1,49 @@
-# Software
+# Software <!-- omit in toc -->
 
-Voor dit olod gaan we ervan uit dat je volgende **software installeert en configureert voor de eerste les**:
+Voor dit olod gaan we ervan uit dat je onderstaande **software installeert en configureert voor de eerste les**. Tijdens de les wordt geen tijd meer voorzien om dit te doen, dus zorg ervoor dat je dit op voorhand in orde brengt. Indien je problemen ondervindt, kan je deze melden via een issue op je eigen repository.
 
-- [Software](#software)
-  - [NodeJS](#nodejs)
-  - [Yarn](#yarn)
-  - [Visual Studio Code](#visual-studio-code)
-    - [Visual Studio Code: plugins](#visual-studio-code-plugins)
-    - [Configuratie VS Code](#configuratie-vs-code)
-    - [Fira Code lettertype](#fira-code-lettertype)
-  - [Postman](#postman)
+- [Git](#git)
+- [Node.js](#nodejs)
+- [Yarn](#yarn)
+- [Visual Studio Code](#visual-studio-code)
+- [Postman](#postman)
 
-## NodeJS
+## Git
 
-Installeer NodeJS (**minimaal versie 20.6.0**) via een package manager:
+Installeer Git via een package manager:
+
+- Windows: `choco install git`
+- macOS: `brew install git`
+- Linux: [distro afhankelijk](https://git-scm.com/download/linux)
+
+### Configuratie Git <!-- omit in toc -->
+
+Open een terminal (of bv. Git Bash op Windows) en voer onderstaande commando's uit. Je bent natuurlijk vrij om deze instellingen aan te passen naar jouw voorkeur.
+
+```bash
+git config --global core.autocrlf true # <- enkel op Windows
+git config --global core.autocrlf input # <- enkel op macOS en Linux
+git config --global core.ignorecase false
+
+git config --global init.defaultBranch main
+
+git config --global pager.branch false
+git config --global pager.log false
+
+git config --global pull.ff only
+git config --global pull.rebase true
+
+git config --global push.default simple
+
+git config --global user.name "Voornaam Achternaam"
+git config --global user.email "Jouw e-mailadres"
+```
+
+Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) om een SSH-key toe te voegen aan je GitHub-account. Dit is o.a. nodig om te kunnen pushen naar je repository.
+
+## Node.js
+
+Installeer Node.js (**minimaal versie 20.6.0**) via een package manager:
 
 - Windows: `choco install nodejs`
 - macOS: `brew install node`
@@ -21,7 +51,7 @@ Installeer NodeJS (**minimaal versie 20.6.0**) via een package manager:
 
 Of kies voor een manuele installatie door **minimaal v20.6.0** te downloaden vanaf de website: <https://nodejs.org/en/>.
 
-Check na de installatie of NodeJS correct geïnstalleerd is door volgend commando uit te voeren:
+Check na de installatie of Node.js correct geïnstalleerd is door volgend commando uit te voeren:
 
 ```bash
 $ node --version
@@ -68,7 +98,7 @@ Installeer Visual Studio Code via een package manager:
 
 Of kies voor een manuele installatie door de laatste versie te downloaden vanaf de website: <https://code.visualstudio.com/download>.
 
-### Visual Studio Code: plugins
+### Visual Studio Code: plugins <!-- omit in toc -->
 
 Een aantal **verplichte** plugins voor VS Code:
 
@@ -85,9 +115,7 @@ Een aantal optionele, maar toch handige plugins:
 - [TODO Highlight](https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight)
 - [vscode-twoslash-queries](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-twoslash-queries)
 
-Talloze andere plugins, thema's... vind je bijvoorbeeld op <https://viatsko.github.io/awesome-vscode/>.
-
-### Configuratie VS Code
+### Configuratie VS Code <!-- omit in toc -->
 
 Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. De eenvoudigste manier is om dit via de JSON-interface te doen:
 
@@ -126,7 +154,7 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 
 Een thema kan je uiteraard zelf kiezen, maar [One Dark Pro](https://marketplace.visualstudio.com/items?itemName=zhuangtongfa.Material-theme) is wel een overzichtelijk thema.
 
-### Fira Code lettertype
+### Fira Code lettertype <!-- omit in toc -->
 
 Fira Code is een gratis monospace lettertype met speciale karakters voor developers. Uiteraard is de keuze aan jou om dit te installeren.
 

@@ -62,7 +62,7 @@ Een tweede optie is om de queries dynamisch te laten opbouwen door een bepaald f
 
 Afhankelijk van het gekozen framework zijn relaties al dan niet ondersteund. Echter blijft de ondersteuning beperkt aangezien deze frameworks focussen op het bouwen van queries en niet op het eenvoudig maken van bepaalde OO-concepten in databanken. Vaak moet je dus zelf nog je relaties (en bijbehorende referentiële integriteit) afhandelen om een consistente databank te hebben.
 
-Een heel bekende querybuilder voor NodeJS is [knex.js](https://www.npmjs.com/package/knex). Het biedt een eenvoudige interface m.b.v. het [builder patroon](https://refactoring.guru/design-patterns/builder) en heeft native ondersteuning voor async/await.
+Een heel bekende querybuilder voor Node.js is [knex.js](https://www.npmjs.com/package/knex). Het biedt een eenvoudige interface m.b.v. het [builder patroon](https://refactoring.guru/design-patterns/builder) en heeft native ondersteuning voor async/await.
 
 Om een meer OO-aanpak te krijgen, kan je gebruik maken van [objection.js](https://www.npmjs.com/package/objection). Objection laat je toe om eenvoudig en automatisch relaties op te halen. Er is ook ondersteuning voor CUD-operaties voor relaties, maar de documentatie raadt af om deze intensief te gebruiken.
 
@@ -779,7 +779,7 @@ const getAllPlaces = async (ctx) => {
 // ...
 ```
 
-### Repository in NodeJS
+### Repository in Node.js
 
 Er is geen gouden graal, dit is slechts een voorbeeldaanpak. We hebben nu volgende mappenstructuur in de map `src`:
 
