@@ -10,7 +10,7 @@ Indien je in het keuzepakket `Development` zit, dan volg je waarschijnlijk Front
 
 ## Wat gaan we doen?
 
-Concreet gaan we een back-end maken met JavaScript. Er zijn ontzettend veel frameworks en libraries om een back-end te maken, elk met hun eigen voor- en nadelen.
+Concreet maken we een back-end met JavaScript, meer specifiek TypeScript. Er zijn ontzettend veel frameworks en libraries om een back-end te maken, elk met hun eigen voor- en nadelen.
 
 Wij hebben gekozen voor Koa. Waarom? Het is van de makers van het populaire Express. Jammer genoeg wachten we al jaren op versie 5 van Express en heeft die nog steeds geen native ondersteuning voor async/await. Koa heeft dit wel en bevat standaard niks. Daarom is dit een goeie library om met niets te starten en enkel de nodige dingen toe te voegen.
 
@@ -18,15 +18,15 @@ Wij hebben gekozen voor Koa. Waarom? Het is van de makers van het populaire Expr
 
 Programmeren leer je enkel door het te doen, niet door onze cursus te lezen. Je zal bijgevolg merken dat in het cursusmateriaal enkel het absolute minimum staat.
 
-Voor dit olod is er een examenopdracht: [opdracht op Chamilo](https://chamilo.hogent.be/index.php?go=CourseViewer&application=Chamilo%5CApplication%5CWeblcms&course=58946&tool=Document&browser=Table&tool_action=Viewer&publication=2201044). Kort gezegd moet je een NodeJS back-end maken tegen week 13. De voorwaarden van deze back-end staan duidelijk in de opdracht. De bijbehorende front-end maak je in het olod Front-end Web Development (indien van toepassing).
+> TODO: links naar Chamilo updaten
 
-Het examen van dit olod is mondeling. Je doet een demo van je applicatie. Dit is geen commerciële presentatie maar simpelweg tonen wat de app kan (en/of wat niet). Daarna beantwoord je enkele vragen die polsen naar je kennis van NodeJS.
+Voor dit olod is er een examenopdracht: [opdracht op Chamilo](https://chamilo.hogent.be/index.php?go=CourseViewer&application=Chamilo%5CApplication%5CWeblcms&course=58946&tool=Document&browser=Table&tool_action=Viewer&publication=2201044). Kort gezegd moet je een Node.js back-end maken tegen week 13. De voorwaarden van deze back-end en de examenvorm staan duidelijk in de opdracht. De bijbehorende front-end maak je in het olod Front-end Web Development (indien van toepassing).
 
 De Chamilo-cursus vind je [hier](https://chamilo.hogent.be/index.php?application=Chamilo%5CApplication%5CWeblcms&go=CourseViewer&course=58946). Hierin komen alle belangrijke aankondigingen, een link naar de cursus en een uploadmodule voor de examenopdracht. Op de cursus zal je ook een link naar de GitHub-classroom zien verschijnen. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.
 
 ### Deadline
 
-> Week 13: vrijdag 22 december 2023 om 23u59
+> Week 13: vrijdag 20 december 2024 om 23u59
 
 Je weet de deadline, plan je werk goed in! Wacht niet tot de laatste paar weken om te starten, dan zal je gegarandeerd in tijdsnood komen. Tijdens de lessen is ook voldoende tijd om aan de applicatie te werken, maak hier gebruik van!
 
@@ -45,17 +45,19 @@ Naar goeie traditie schrijven we hier enkele voorbeelden van jullie voorgangers.
 
 Het cursusmateriaal wordt op GitHub gehost: <https://hogent-web.github.io/webservices-cursus>.
 
-Er is een voorbeeldapplicatie (stap per stap opgebouwd, zoals in de cursus): <https://github.com/hogent-web/webservices-budget>
+Er is een voorbeeldapplicatie (stap per stap opgebouwd, zoals in de cursus): <https://github.com/hogent-web/webservices-budget>.
 
-De bijhorende front-end is te vinden op: <https://github.com/hogent-web/frontendweb-budget>
+De bijhorende front-end is te vinden op: <https://github.com/hogent-web/frontendweb-budget>.
 
-Het is de eerste keer dat we met een documentatie-stijl cursus werken voor dit olod, er wordt dus nog aan gesleuteld. Grotendeels worden de slides van vorig jaar hergebruikt in afwachting van een hoofdstuk in deze documentatie.
-
-Er moeten ook nog een paar kleine en grote aanpassingen gebeuren aan de cursusinhoud. Elk hoofdstuk met het label `WIP` is nog niet volledig afgewerkt. De inhoud van deze hoofdstukken kan dus nog veranderen.
+Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stelselmatig omgevormd naar TypeScript. Het merendeel van de hoofdstukken is al omgezet, maar nog niet alles. We geven duidelijk aan wanneer een hoofdstuk nog niet omgezet is (`WIP` naast de titel). Wees dus niet verrast als een hoofdstuk nog in JavaScript is of er plots helemaal anders uitziet.
 
 > Suggesties voor verbeteringen of aanpassingen van schrijffouten zijn altijd welkom! Maak hiervoor een issue of pull request op de GitHub-repository van de cursus: <https://github.com/hogent-web/webservices-cursus>.
 
 ## Planning
+
+> TODO: planning updaten
+
+Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 
 | Week    | Inhoud                                        |
 | ------- | --------------------------------------------- |

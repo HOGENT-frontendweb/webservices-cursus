@@ -36,6 +36,14 @@ Installeer `yarn` als alternatieve package manager voor `npm`:
 npm install -g yarn
 ```
 
+Schakel vervolgens [Corepack](https://nodejs.org/api/corepack.html) in:
+
+```bash
+corepack enable
+```
+
+Corepack is een package manager die de installatie van `yarn` en andere packages versnelt. Het kan automatisch de versie van `yarn` installeren die in het `package.json`-bestand staat. Wij werken met Yarn v4, Corepack is dus een vereiste.
+
 Test of `yarn` correct geïnstalleerd is en kan gebruikt worden:
 
 ```bash
