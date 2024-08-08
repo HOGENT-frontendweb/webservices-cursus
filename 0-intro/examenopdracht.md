@@ -45,6 +45,8 @@ Dien enkel een PDF in op Chamilo, er zijn genoeg plugins voor VS Code om Markdow
 
 ## 4. Voorbeelden van extra’s
 
+Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox](https://nodejstoolbox.com/). Een aantal veelgebruikte extra's zijn:
+
 - Ander ORM voor de databank
 - Ander type databank (document based, column oriënted…)
   - Let op: niet elk project is hiervoor geschikt
