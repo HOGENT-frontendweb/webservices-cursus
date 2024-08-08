@@ -48,8 +48,8 @@
 }
 
 iframe {
-  width: 100%;
-  border: 1px dashed var(--mono-shade1);
+  display: block;
+  margin: 0 auto !important;
 }
 
 img {
