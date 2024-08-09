@@ -184,3 +184,5 @@ Installeer Postman via een package manager:
 - Windows: `choco install postman`
 - macOS: `brew install --cask postman`
 - Linux: [distro afhankelijk](https://www.postman.com/downloads/)
+
+Open Postman en maak een account aan. Je kan er natuurlijk ook voor kiezen om eenvoudigweg met Google aan te melden.
