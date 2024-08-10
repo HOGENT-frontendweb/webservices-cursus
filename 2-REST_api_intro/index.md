@@ -423,24 +423,26 @@ Lees ook de [REST API Design Best Practices for Sub and Nested Resources](https:
 
 We willen natuurlijk niet gewoon bestaande API's aanspreken maar zelf zo'n API server maken. Een web server is op zich geen magie. Het is gewoon een programma dat luistert op een bepaalde poort, HTTP requests parset en beschikbaar stelt. Aangezien HTTP requests altijd hetzelfde zijn, schrijft niemand compleet van nul een webserver (behalve als interessante oefening eens). Je kan in elke programmeertaal een server schrijven, wij kiezen JavaScript en dus [Node.js](https://nodejs.org/en).
 
+> Tegenwoordig bestaan ook andere JavaScript runtimes zoals [Deno](https://deno.land/) en [Bun](https://bun.sh/), maar Node.js is nog steeds [de meest gebruikte](https://2023.stateofjs.com/en-US/other-tools/#runtimes).
+
 ### Node.js
 
-**Node.js** is "Server side JavaScript", het kwam uit in 2009. Het is een single-threaded, open source, platformonafhankelijke runtime-omgeving gebouwd bovenop v8, de JavaScript engine van Chrome (werd open source in 2008). Meer info op <https://kinsta.com/nl/kennisbank/wat-is-node-js/>.
+**Node.js** is server-side JavaScript, het kwam uit in 2009. Het is een single-threaded, open source, platformonafhankelijke runtime-omgeving gebouwd bovenop v8, de JavaScript engine van Chrome (werd open source in 2008). Meer info op <https://kinsta.com/nl/kennisbank/wat-is-node-js/>.
 
 **NPM** is het package ecosysteem van Node.js. Het is het grootste ecosysteem van alle open source bibliotheken ter wereld, met meer dan 1 miljoen pakketten en het groeit nog steeds. NPM is gratis te gebruiken en duizenden open source ontwikkelaars dragen er dagelijks aan bij.
 
-Voor het bouwen van web API's wordt er meestal een framework gebruikt en geen 'naakte' Node.js. Express is waarschijnlijk de meest gekende. Wij gebruiken in deze cursus [Koa](https://koajs.com/), het nieuwe hippe framework van hetzelfde team achter Express.
+Voor het bouwen van web API's wordt er meestal een framework gebruikt en geen 'naakte' Node.js. Express is waarschijnlijk de meest gekende en meest gebruikte, maar krijgt nog weinig tot geen updates. Wij gebruiken in deze cursus [Koa](https://koajs.com/), het nieuwe hippe framework van hetzelfde team achter Express.
 
 ## Koa
 
-We maken eerst een nieuw project aan. Maak een nieuwe map aan voor de web service en ga naar deze map.
+Allereerst maken we een nieuw project aan. Maak een nieuwe map aan en ga naar deze map.
 
 ```bash
 mkdir webservices-budget
 cd webservices-budget
 ```
 
-Vervolgens initialiseren we een nieuw Yarn project. Je bent vrij om te kiezen voor alternatieven zoals [npm](https://www.npmjs.com/package/npm) of [pnpm](https://pnpm.io/), maar we gebruiken hier [Yarn](https://yarnpkg.com/).
+Vervolgens initialiseren we een nieuw Yarn project. Je bent vrij om te kiezen voor alternatieven zoals [npm](https://www.npmjs.com/package/npm) of [pnpm](https://pnpm.io/), maar we gebruiken hier [Yarn](https://yarnpkg.com/). [Yarn](https://yarnpkg.com/) is het programma dat alle dependencies zal installeren, een andere misschien iets bekendere is [npm](https://www.npmjs.com/package/npm). Ze doen beide hetzelfde en zijn inwisselbaar maar de ene keer `yarn` gebruiken en de andere keer `npm` is dan weer geen goed idee. Ze kunnen andere versies van packages cachen e.d. en dan kan je rare fouten tegenkomen.
 
 ```bash
 yarn init
@@ -451,21 +453,29 @@ Beantwoord alle vragen:
 - name: webservices-budget (of een andere naam in het geval van je eigen project)
 - version: 1.0.0
 - description: Demo application for the course Web Services.
-- entry point: index.js
-- repository url: mag je leeg laten
+- entry point: index.**t**s
+- repository url: mag je leeg laten, mag ook een link naar je GitHub repository zijn in het geval van je eigen project
 - author: VOORNAAM NAAM &lt;EMAIL&gt;
 - license: MIT
 - private: true
 
-Vervolgens installeer je Koa.
+Vervolgens kies je de meeste recente versie van Yarn (v4 op dit moment).
+
+```bash
+yarn set version berry
+```
+
+Vervolgens maken we een `.yarnrc.yml` bestand aan in de root van je project. Dit bestand bevat de configuratie voor Yarn 2. In dit bestand zetten we de `nodeLinker` op `node-modules`. Dit zorgt ervoor dat Yarn 2 de packages installeert in de `node_modules` map. Er zjn nog andere opties, maar deze is de meest gebruikte en de meest compatibel met bestaande projecten. Voeg volgende lijn toe aan `.yarnrc.yml`:
+
+```yaml
+nodeLinker: node-modules
+```
+
+Ten laatste installeer je Koa.
 
 ```bash
 yarn add koa
 ```
-
-### yarn
-
-[yarn](https://yarnpkg.com/) is het programma dat alle dependencies zal installeren, een andere misschien iets bekendere is [npm](https://www.npmjs.com/package/npm). Ze doen beide hetzelfde en zijn inwisselbaar maar de ene keer `yarn` gebruiken en de andere keer `npm` is dan weer geen goed idee. Ze kunnen andere versies van packages cachen e.d. en dan kan je rare fouten tegenkomen.
 
 ### package.json
 
@@ -475,13 +485,22 @@ De [package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) b
 
 De `package.json` bevat enkele properties:
 
+- `name`: de naam van het project
+- `version`: de versie van het project
+- `description`: een korte beschrijving van het project
+- `main`: het entry point van de applicatie
+- `repository`: de URL van de git repository
+- `author`: de auteur van de applicatie
+- `license`: de licentie van de applicatie
+- `private`: of de applicatie publiek is of niet, npm zal bv. niet toelaten om een private package te publiceren
 - `dependencies`: de packages waarvan deze applicatie gebruik maakt
 - `devDependencies`: packages enkel nodig in development (en dus niet in productie)
 - `scripts`: laten toe om een soort van shortcuts te maken voor scripts (bv. de applicatie starten, testen, builden voor productie, etc.)
+- `packageManager`: de package manager die gebruikt wordt (in dit geval Yarn)
 
 Met een simpele `yarn install` installeren we meteen een identieke omgeving (met zowel `dependencies` als `devDependencies`) en dat maakt het handiger om in een team te werken (`yarn install --prod` installeert enkel de `dependencies`).
 
-Het verschil tussen `dependencies` en `devDependencies` is het moment wanneer ze gebruikt worden. De `dependencies` zijn nodig in productie, m.a.w. de applicatie kan niet werken zonder deze packages. De `devDependencies` zijn enkel nodig om bv. het leven van de developer makkelijker te maken (types in TypeScript, linting, etc.) of bevatten packages die enkel gebruikt worden *at build time*, of dus wanneer de applicatie (door webpack) omgevormd wordt tot iets wat browsers begrijpen.
+Het verschil tussen `dependencies` en `devDependencies` is het moment wanneer ze gebruikt worden. De `dependencies` zijn nodig in productie, m.a.w. de applicatie kan niet werken zonder deze packages. De `devDependencies` zijn enkel nodig om bv. het leven van de developer makkelijker te maken (types in TypeScript, linting, etc.) of bevatten packages die enkel gebruikt worden *at build time*, of dus wanneer de applicatie (bv. door webpack) omgevormd wordt tot iets wat browsers begrijpen.
 
 Dependencies maken gebruik van [semantic versioning](https://semver.org/) (lees gerust eens door de specificatie). Kort gezegd houdt dit in dat elk versienummer bestaat uit drie delen: `MAJOR.MINOR.PATCH`, elke deel wordt met één verhoogd in volgende gevallen:
 
@@ -503,11 +522,13 @@ We hebben in bovenstaand voorbeeld een start-script toegevoegd dat je kan gebrui
 
 Er zijn nog heel wat andere opties voor de `package.json`. Je vindt alles op <https://docs.npmjs.com/cli/v10/configuring-npm/package-json>.
 
-### yarn.lock
+### yarn.lock en .yarn map
 
 Wanneer je een package installeert, zal yarn een `yarn.lock` bestand aanmaken. Dit bestand bevat de exacte versies van de packages die geïnstalleerd zijn. Dit bestand moet je zeker mee opnemen in je git repository. Dit zorgt ervoor dat iedereen exact dezelfde versies van de packages gebruikt.
 
 Dit bestand vermijdt versieconflicten aangezien in de `package.json` niet altijd de exacte versie staat maar een bepaalde syntax die aangeeft welke versies toegelaten zijn (zie vorige sectie).
+
+Yarn zal ook een `.yarn` map aanmaken. Deze map bevat de geïnstalleerde versie van Yarn en wordt door [Corepack](https://nodejs.org/api/corepack.html) gebruikt om de packages te installeren. Deze map moet je niet opnemen in je git repository.
 
 ### .gitignore
 
@@ -535,9 +556,11 @@ app.listen(9000); // 👈 2
 ```
 
 1. We importeren Koa en initialiseren een Koa object, i.e. een webserver.
+   - Je hoeft deze syntax van importeren niet te onthouden, later schakelen we over naar TypeScript.
 2. We laten de applicatie luisteren op poort 9000.
 3. We geven als body de string "Hello World" terug (voor elke request).
-4. Dit kunnen we testen door `node index.js` uit te voeren en naar <http://localhost:9000> te surfen.
+4. Dit kunnen we testen door `node index.js` uit te voeren in een terminal in deze map. Surf vervolgens naar <http://localhost:9000>.
+   - Het is perfect normaal als je geen uitvoer krijgt in de terminal, dat komt later.
    - Mocht je een conflict krijgen op poort 9000, bv. door een andere applicatie die op die poort luistert, kan je de poort aanpassen in de code en opnieuw uitvoeren. Dit geeft telkens de error code `EADDRINUSE` (Address already in use) in de terminal.
 
 ## Middleware
@@ -553,6 +576,7 @@ Pas `index.js` aan.
 ```js
 // index.js
 const Koa = require('koa');
+
 const app = new Koa();
 
 app.use(async (ctx, next) => { // 👈 1 en 2
@@ -579,7 +603,7 @@ Onze server maken is nu zo'n heleboel middlewares installeren en zelf schrijven 
 
 ### Middlewares in Koa
 
-Middlewares in Koa zijn een beetje specialer dan in Node.js of Express bijvoorbeeld. In Koa is het mogelijk om tweemaal in elke middleware te komen:
+Middlewares in Koa zijn een beetje specialer dan in bijvoorbeeld Node.js of Express. In Koa is het mogelijk om tweemaal in elke middleware te komen:
 
 1. eens vóór de aanroep van `next()`
 2. én eens ná de aanroep van `next()`
@@ -588,7 +612,8 @@ Dit is wat men het **onion model** noemt:
 
 ![Onion model](images/onion-koa.jpg)
 
-Het request komt binnen en alle middlewares worden in volgorde van definitie uitgevoerd. Elk van deze middlewares roept vervolgens `next()` aan om de volgende middleware in rij uit te voeren. Uiteindelijk komt men ooit aan de laatste middleware en dan keert Koa terug in omgekeerde volgorde doorheen alle middlewares.
+Het request komt binnen en alle middlewares worden in volgorde van definitie uitgevoerd. Elk van deze middlewares roept vervolgens `next()` aan om de volgende middleware in rij uit te voeren. Uiteindelijk komt men ooit aan de laatste middleware en dan keert Koa terug in omgekeerde volgorde doorheen alle middlewares. Dit is standaardgedrag van Promises in JavaScript, dus eigenlijk doet Koa hier niets speciaals voor.
+
 Het is dus eenvoudig om iets voor en na `next()` uit te voeren:
 
 ```js
@@ -604,6 +629,70 @@ Hierbij is de `await` heel belangrijk! Als je deze vergeet, zal de code achter `
 Wil je niets meer doen in de middleware, dan doe je beter `return next()`. Deze middleware zal dan automatisch overgeslagen worden.
 
 Het mooie aan dit geheel is dat Koa hiervoor niets speciaal hoeft te doen: dit is het standaardgedrag van Promises.
+
+## TypeScript
+
+Nu is het tijd om over te schakelen naar TypeScript. Daarvoor moeten we eerst een aantal packages installeren als dev dependencies. We hebben deze packages enkel nodig in development, voor productie wordt TypeScript omgezet naar JavaScript.
+
+```bash
+yarn add --dev typescript tsx @types/node
+```
+
+- [`typescript`](https://www.npmjs.com/package/typescript): de TypeScript transpiler
+- [`tsx`](https://www.npmjs.com/package/tsx): TypeScript runtime
+  - Dit is nodig om eenvoudig TypeScript te kunnen uitvoeren zonder het telkens te moeten vertalen naar JavaScript.
+  - Vroeger werd [`ts-node`](https://www.npmjs.com/package/ts-node) gebruikt, maar [`tsx`](https://www.npmjs.com/package/tsx) is sneller en eenvoudiger.
+- [`@types/node`](https://www.npmjs.com/package/@types/node): TypeScript definities voor Node.js
+  - Dit is nodig om TypeScript te laten weten wat er allemaal in Node.js zit.
+  - Later zal duidelijk worden wanneer je wel en niet een `@types` package nodig hebt.
+
+Vervolgens converteren we `index.js` naar `index.ts`, wijzig de extensie van het bestand en pas de code aan.
+
+```ts
+// index.ts
+import Koa from 'koa'; // 👈 1
+
+const app = new Koa();
+
+app.use(async (ctx) => {
+  ctx.body = 'Hello World from TypeScript'; // 👈 2
+});
+
+app.listen(9000);
+```
+
+1. Een package importeren in TypeScript gebeurt met `import` in plaats van `require`. Deze syntax is intuïtiever en is de standaard in moderne JavaScript (= ES modules).
+2. Voor de duidelijk passen we onze string aan naar "Hello World from TypeScript".
+
+Pas ook het `start` script in `package.json` aan. Het handige aan `tsx` is dat de argumenten van het commando identiek zijn aan die van het `node` commando, dat is lekker makkelijk.
+
+```json
+{
+  "scripts": {
+    "start": "tsx index.ts"
+  }
+}
+```
+
+Stop de web server, indien deze nog draait, en start deze opnieuw met `yarn start`. Ga naar <http://localhost:9000> en je zou nog steeds "Hello World from TypeScript" moeten zien.
+
+## Types
+
+Je hebt misschien al een info-bericht gekregen in VS Code (als je de Error Lens extensie gebruikt). Zo niet, hover eens met je muis over `'koa'` in de import statement. Je zou een tooltip moeten zien met de melding "Could not find a declaration file for module 'koa'".
+
+Dit komt omdat het `koa` package geen types voorziet. Dit is geen probleem, maar het is wel handig om types te hebben. Gelukkig zijn er voor de meeste packages types beschikbaar op [DefinitelyTyped](https://definitelytyped.org/). Tegenwoordig daalt wel het aantal packages waarvoor je dit soort packages moet installeren, maar met oudere packages kan het nog wel eens voorkomen (lees: packages van voor de populariteit van TypeScript).
+
+Deze types kan je installeren met:
+
+```bash
+yarn add --dev @types/koa
+```
+
+Nu zou de melding in VS Code verdwenen moeten zijn. Als je nu hovert over `ctx`, zou je ook een tooltip moeten zien met het type van `ctx`. Je kan altijd eens Ctrl-klikken op de `use`-functie om eens te kijken naar de definitie van deze functie en diens parameters.
+
+<!-- TODO: yarn tsconfig.json maken -->
+<!-- TODO: yarn build -->
+<!-- TODO: yarn start:dev -->
 
 ## Nodemon
 
