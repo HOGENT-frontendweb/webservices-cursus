@@ -871,6 +871,8 @@ app.listen(9000, () => {
 
 Voor nu volstaat dit, maar in het volgende hoofdstuk zullen we de logger nog uitbreiden met bv. een file transport in test modus, een aangepast formaat voor de logs, etc.
 
+l> ws oplossing 0e38b85 les2
+
 ## Oefening - Je eigen project
 
 Vorige les heb je (normaal gezien) nagedacht over het onderwerp van de examenopdracht. Daarop gaan we nu verder bouwen.
