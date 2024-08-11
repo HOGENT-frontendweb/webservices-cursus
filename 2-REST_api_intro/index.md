@@ -690,6 +690,8 @@ yarn add --dev @types/koa
 
 Nu zou de melding in VS Code verdwenen moeten zijn. Als je nu hovert over `ctx`, zou je ook een tooltip moeten zien met het type van `ctx`. Je kan altijd eens Ctrl-klikken op de `use`-functie om eens te kijken naar de definitie van deze functie en diens parameters.
 
+## TypeScript configuratie
+
 <!-- TODO: yarn tsconfig.json maken -->
 <!-- TODO: yarn build -->
 <!-- TODO: yarn start:dev -->
