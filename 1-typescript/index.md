@@ -83,7 +83,7 @@ Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](./0
 
 Maak een nieuwe GitHub repository aan via de GitHub classroom link in de introductie van de Chamilo-cursus. Clone jouw GitHub repository uit de GitHub classroom:
 
-```bash
+```terminal
 git clone <JOUW_GIT_REPOSITORY_URL>
 ```
 
@@ -99,7 +99,7 @@ Vul alvast de `README.md` en `dossier.md` aan voor zover mogelijk:
 
 Commit vervolgens deze wijzigingen:
 
-```bash
+```terminal
 git add .
 git commit -m "✨ Initial commit ✨"
 git push
@@ -120,8 +120,6 @@ Als je al ervaring hebt met TypeScript, kan je de oefeningen op deze website pro
 Vervolgens loont het de moeite om een aantal JavaScript drill-oefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScript-syntax en -functionaliteiten.
 
 Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en lees de instructies in de README. De oplossingen zijn te vinden op de branch [`solution`](https://github.com/HOGENT-Web/webservices-ch1-exercise/tree/solution).
-
-> TODO: TS exercises
 
 ## Must read/watch
 
