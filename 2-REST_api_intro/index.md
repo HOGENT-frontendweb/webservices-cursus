@@ -437,14 +437,14 @@ Voor het bouwen van web API's wordt er meestal een framework gebruikt en geen 'n
 
 Allereerst maken we een nieuw project aan. Maak een nieuwe map aan en ga naar deze map.
 
-```bash
+```terminal
 mkdir webservices-budget
 cd webservices-budget
 ```
 
 Vervolgens initialiseren we een nieuw Yarn project. Je bent vrij om te kiezen voor alternatieven zoals [npm](https://www.npmjs.com/package/npm) of [pnpm](https://pnpm.io/), maar we gebruiken hier [Yarn](https://yarnpkg.com/). [Yarn](https://yarnpkg.com/) is het programma dat alle dependencies zal installeren, een andere misschien iets bekendere is [npm](https://www.npmjs.com/package/npm). Ze doen beide hetzelfde en zijn inwisselbaar maar de ene keer `yarn` gebruiken en de andere keer `npm` is dan weer geen goed idee. Ze kunnen andere versies van packages cachen e.d. en dan kan je rare fouten tegenkomen.
 
-```bash
+```terminal
 yarn init
 ```
 
@@ -461,7 +461,7 @@ Beantwoord alle vragen:
 
 Vervolgens kies je de meeste recente versie van Yarn (v4 op dit moment).
 
-```bash
+```terminal
 yarn set version berry
 ```
 
@@ -473,7 +473,7 @@ nodeLinker: node-modules
 
 Ten laatste installeer je Koa.
 
-```bash
+```terminal
 yarn add koa
 ```
 
@@ -634,7 +634,7 @@ Het mooie aan dit geheel is dat Koa hiervoor niets speciaal hoeft te doen: dit i
 
 Nu is het tijd om over te schakelen naar TypeScript. Daarvoor moeten we eerst een aantal packages installeren als dev dependencies. We hebben deze packages enkel nodig in development, voor productie wordt TypeScript omgezet naar JavaScript.
 
-```bash
+```terminal
 yarn add --dev typescript tsx @types/node
 ```
 
@@ -684,7 +684,7 @@ Dit komt omdat het `koa` package geen types voorziet. Dit is geen probleem, maar
 
 Deze types kan je installeren met:
 
-```bash
+```terminal
 yarn add --dev @types/koa
 ```
 
@@ -821,7 +821,7 @@ Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet i
 
 Er bestaan gelukkig veel degelijke third party log libraries, we gebruiken [Winston](https://github.com/winstonjs/) in deze cursus. We installeren deze met:
 
-```bash
+```terminal
 yarn add winston
 ```
 
