@@ -676,7 +676,7 @@ Pas ook het `start` script in `package.json` aan. Het handige aan `tsx` is dat d
 
 Stop de web server, indien deze nog draait, en start deze opnieuw met `yarn start`. Ga naar <http://localhost:9000> en je zou nog steeds "Hello World from TypeScript" moeten zien.
 
-## Types
+### Types
 
 Je hebt misschien al een info-bericht gekregen in VS Code (als je de Error Lens extensie gebruikt). Zo niet, hover eens met je muis over `'koa'` in de import statement. Je zou een tooltip moeten zien met de melding "Could not find a declaration file for module 'koa'".
 
@@ -690,35 +690,84 @@ yarn add --dev @types/koa
 
 Nu zou de melding in VS Code verdwenen moeten zijn. Als je nu hovert over `ctx`, zou je ook een tooltip moeten zien met het type van `ctx`. Je kan altijd eens Ctrl-klikken op de `use`-functie om eens te kijken naar de definitie van deze functie en diens parameters.
 
-## TypeScript configuratie
+### Configuratie
 
-<!-- TODO: yarn tsconfig.json maken -->
-<!-- TODO: yarn build -->
-<!-- TODO: yarn start:dev -->
+Om TypeScript in te stellen, hebben we een `tsconfig.json` nodig. Dit bestand bevat de configuratie voor de TypeScript transpiler. Hiermee kan je bijvoorbeeld instellen hoe strikt TypeScript moet checken op types.
 
-## Nodemon
+Maak een nieuw `tsconfig.json` bestand met het commando `yarn tsc --init` en bekijk de mogelijke opties.
 
-Een live draaiende server herstart in principe natuurlijk nooit, maar tijdens het ontwikkelen is het wel onhandig om altijd manueel de server te moeten stoppen en herstarten telkens we iets willen zien of testen. Daarom maken we gebruik van
-[Nodemon](https://www.npmjs.com/package/nodemon). Nodemon houdt een map in de gaten en herstart de server telkens er een bestand wijzigt.
+Wij hebben een goede start voor het `tsconfig.json` samengesteld. Vervang de inhoud van het `tsconfig.json` bestand door onderstaande code. Typisch ga je steeds van hetzelfde basisbestand vertrekken en dit aanpassen naargelang je project. Meestal is de configuratie binnen bv. een bedrijf identiek, of heb je als developer een eigen configuratie die je steeds hergebruikt.
 
-Installeer nodemon in de map van je project:
+![tsconfig.json](examples/tsconfig.json ':include :type=code')
 
-```bash
-yarn add nodemon --dev
-```
+De belangrijkste basis `compilerOptions` zijn:
 
-De optie `--dev` zorgt ervoor dat het package als dev dependency geïnstalleerd wordt. Pas het `start` script als volgt aan:
+- `target`: de versie van JavaScript die de transpiler moet genereren
+- `module`: het module systeem dat gebruikt wordt (voor imports en exports)
+- `resolveJsonModule`: of JSON files als modules gezien moeten worden (of je dus JSON kan importeren)
+- `outDir`: de map waar de gegenereerde JavaScript bestanden terecht komen
+- `removeComments`: of comments verwijderd moeten worden in de gegenereerde JavaScript bestanden
+- `newline`: welke newline character gebruikt moet worden in de gegenereerde JavaScript bestanden
+- `noEmitOnError`: of er geen JavaScript gegenereerd moet worden als er errors zijn
+- `esModuleInterop`: of ES modules en CommonJS modules gemixt mogen worden, zorgt voor betere compatibiliteit met bestaande CommonJS modules
+- `forceConsistentCasingInFileNames`: of de bestandsnamen consistent moeten zijn (case sensitive)
+
+Daarnaat heb je nog een heleboel andere `compilerOptions` specifiek gericht op het typeren van je code:
+
+- `strict`: of alle strictness opties aan moeten staan, dit is een shortcut voor alle onderstaande opties
+  - `noImplicitAny`: verbied dat variabelen impliciet van het type `any` zijn, en dus geen duidelijk type hebben
+  - `noImplicitThis`: idem maar voor `this`
+  - `alwaysStrict`: print `"use strict"` in elke JavaScript module
+  - `strictBindCallApply`: zorgt ervoor dat de `bind`, `call` en `apply` methodes van functies correct getypeerd zijn
+  - `strictNullChecks`: zorgt ervoor dat `null` en `undefined` niet toegewezen kunnen worden aan een variabele zonder expliciet te zeggen dat dit mag
+  - `strictFunctionTypes`: zorgt ervoor dat functieparameters dieper gecontroleerd worden
+  - `strictPropertyInitialization`: zorgt ervoor dat alle properties van een klasse geïnitialiseerd zijn in de constructor
+  - `useUnknownInCatchVariables`: zorgt ervoor dat de catch variabele van een `try-catch` blok van het type `unknown` is, hierdoor moet je expliciet het type error checken voor je die kan afhandelen
+- `noUnusedLocals`: of variabelen die niet gebruikt worden een error moeten geven
+- `noUnusedParameters`: idem maar voor parameters
+- `exactOptionalPropertyTypes`: definieert of je `undefined` moet toelaten als waarde voor optionele properties
+- `noImplicitReturns`: of elke code branch een return statement moet hebben
+- `noFallthroughCasesInSwitch`: of je `break` moet gebruiken in een `switch` statement
+- `noUncheckedIndexedAccess`: zorgt ervoor dat je niet zomaar een key kan gebruiken op een object zonder expliciet te zeggen dat deze key in het object zit
+- `noImplicitOverride`: of je expliciet moet aangeven dat je een methode overschrijft
+
+Je ziet dat we heel wat opties voor types ingeschakeld hebben. Dit is een goede gewoonte, zo ben je zeker dat je code correct is en je geen onverwachte bugs tegenkomt. Natuurlijk is het zeer eenvoudig om alle opties uit te schakelen, maar dan verlies je de voordelen van TypeScript. Wees dus niet bang om TypeScript streng te maken. Lees de foutmeldingen over types en probeer ze op te lossen, zo leer je het snelst.
+
+In de `tsconfig.json` zie je ook een `include` en `exclude` property. Hiermee kan je aangeven welke bestanden wel en niet getranspileerd moeten worden. In dit geval willen alle `.ts` bestanden in eender welke map getranspileerd worden, behalve de `__tests__` map. De laatste map bevat testbestanden die we niet nodig hebben in productie. Die heb je enkel nodig tijdens het ontwikkelen of in een CI/CD pipeline (zie verder).
+
+### Project builden
+
+Nu we TypeScript geïnstalleerd hebben en een `tsconfig.json` hebben, kunnen we onze code transpilen naar JavaScript. Dit doen we met het `tsc` commando. Voor het gemak slaan we dit commando op in een script in `package.json`. Zo hoef je niet te onthouden met welk exact commando je de code moet transpilen.
 
 ```json
-// package.json
 {
   "scripts": {
-    "start": "nodemon index.js"
+    "build": "tsc"
   }
 }
 ```
 
-Voer `yarn start` uit, wijzig de string "Hello world" en kijk hoe je de server niet meer dient te herstarten (eventueel wel je pagina herladen...).
+Voer `yarn build` uit in de terminal. Je zou nu een `index.js` bestand moeten zien in de `build` map. Vergelijk de inhoud van dit bestand met de inhoud van `index.ts`. Je ziet heel wat extra code die TypeScript toevoegt om ervoor te zorgen dat je code correct werkt in de gekozen versie van JavaScript (`es2022` in ons geval). In de [GitHub wiki van  TypeScript repository](https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping) vind je de aangewezen configuratie voor een bepaalde Node.js versie.
+
+Voeg zeker de `build` map toe aan je `.gitignore` bestand. Deze map bevat gegenereerde bestanden en moet niet in je git repository terecht komen.
+
+### Project starten in development
+
+Wanneer je nu een wijziging maakt aan de code, zal je steeds het `yarn start` commando moeten stoppen en opnieuw moeten uitvoeren. Dit is niet handig, daarom maken we gebruik van een ingebouwde watch functionaliteit van `tsx`.
+
+Daarnaast is het een goede gewoonte om alle code in een `src` map te plaatsen. Dit maakt het duidelijk waar de broncode staat en waar de gegenereerde code staat. Maak een `src` map aan en verplaats `index.ts` naar deze map.
+
+Pas vervolgens het `start` script aan naar `start:dev` in de `package.json`:
+
+```json
+{
+  "scripts": {
+    "start:dev": "tsx watch src/index.ts"
+  }
+}
+```
+
+Wanneer je `yarn start:dev` uitvoert in de terminal, zou je terug de "Hello World from TypeScript" boodschap moeten zien wanneer je naar <http://localhost:9000> surft. Wanneer je nu deze string aanpast in `src/index.ts`, zal je in de terminal zien dat de server herstart wordt en zal je de nieuwe boodschap zien in de browser.
 
 ## Winston
 
