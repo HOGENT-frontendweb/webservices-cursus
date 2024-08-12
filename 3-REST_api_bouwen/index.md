@@ -1,37 +1,79 @@
 # REST API bouwen
 
-> **Startpunt voorbeeldapplicatie**
->
-> ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
-> cd webservices-budget
-> git checkout -b les3 625fb6a
-> yarn install
-> yarn start
-> ```
+l> ws start 0e38b85 les2
 
 ## De budget app
 
-In de olods Front-end Web Development en Web Services maken we een budgetapplicatie. Deze applicatie bestaat uit een front-end en back-end. De front-end is een SPA (Single Page Application) die we maken met React. De back-end is een REST API die we maken met Node.js en Koa. In deze les beginnen we met het bouwen van de REST API.
+In de olods Front-end Web Development en Web Services maken we een budgetapplicatie. Deze applicatie bestaat uit een front-end en back-end. De front-end is een Single Page Application (SPA) in React, de back-end is een REST API in Node.js m.b.v. Koa. In deze les beginnen we met het bouwen van de REST API.
 
 De applicatie die we gaan maken bevat volgende pagina's
 
-- De transactions pagina: een overzicht van alle transacties
+<!-- tabs:start -->
+
+### **Transactions pagina**
+
+Deze pagina geeft een overzicht van alle transacties van alle gebruikers. Later toont deze enkel de transacties van de ingelogde gebruiker.
 
    ![Transactions pagina](./images/transactions.png)
 
-- De places pagina: een overzicht van alle plaatsen waar je transacties kan doen
+### **Places pagina**
+
+Deze pagina toont een overzicht van alle plaatsen waar je transacties kan doen.
 
    ![Places pagina](./images/places.png)
 
-- De add/edit transaction pagina: een pagina om een nieuwe transactie toe te voegen of een bestaande aan te passen
+### **Add/edit transaction pagina**
+
+De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaande aan te passen.
 
    ![Add/edit transaction pagina](./images/add-transaction.png)
 
+<!-- tabs:end -->
+
 ### Oefening 1 - De budget app
 
-- Maak het ERD
+- Maak het ERD.
 - Welke endpoints moeten we voorzien?
+
+<!-- markdownlint-disable-next-line -->
++ Oplossing +
+
+  Het ERD ziet er als volgt uit:
+
+  ![Budget app ERD](./images/budget_erd.svg)
+
+  De endpoints die we moeten voorzien zijn:
+
+  <!-- markdownlint-disable-next-line -->
+  **Transactions**
+
+  - `GET /api/transactions`: alle transacties opvragen
+  - `GET /api/transactions/:id`: een specifieke transactie opvragen
+  - `POST /api/transactions`: een nieuwe transactie aanmaken
+  - `PUT /api/transactions/:id`: een transactie aanpassen
+  - `DELETE /api/transactions/:id`: een transactie verwijderen
+
+  **Places**
+
+  - `GET /api/places`: alle plaatsen opvragen
+  - `GET /api/places/:id`: een specifieke plaats opvragen
+  - `POST /api/places`: een nieuwe plaats aanmaken
+  - `PUT /api/places/:id`: een plaats aanpassen
+  - `DELETE /api/places/:id`: een plaats verwijderen
+  - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
+
+  **Users**
+
+  - `GET /api/users`: alle gebruikers opvragen
+  - `GET /api/users/:id`: een specifieke gebruiker opvragen
+  - `POST /api/users`: een nieuwe gebruiker aanmaken
+  - `PUT /api/users/:id`: een gebruiker aanpassen
+  - `DELETE /api/users/:id`: een gebruiker verwijderen
+  - `GET /api/users/:id/transactions`: transacties van een specifieke gebruiker opvragen
+
+  Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `GET /api/places/:id` of `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
+
+  !> Kijk goed hoe de twee geneste routes gedefineerd zijn (`GET /api/places/:id/transactions` en `GET /api/users/:id/transactions`)! Hiertegen worden heel wat fouten gemaakt.
 
 ## Configuratie
 

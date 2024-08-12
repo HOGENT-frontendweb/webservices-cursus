@@ -311,7 +311,8 @@ Onderstaand ERD zou een oplossing zijn voor onze receptenapplicatie, vol met bov
 
 ![Oplossing met FME](https://kroki.io/erd/svg/eNqLDkpNzixIjeXSykvMTeXiivbMSy9KTclMzSuBiSXm5pfmlXCV5mWWAOVDi1OLgDKZKVxpmUXFJX4gFTmJUEZiSkpRanExFxdIlYKhrq6WAsR8LggFEUJYAVGnhaQOAI2aLp8=)
 
-- Broncode +
+<!-- markdownlint-disable-next-line -->
++ Broncode +
 
   Onderstaande code werd hiervoor gebruikt:
 
@@ -343,7 +344,8 @@ Een mogelijke oplossing ziet eruit als volgt:
 
 ![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjEOwjAMRXefonOqDL0CTF0YQEwVQ2g-KFKTVI6DxO1pSAWZ_GU9P__pjNmtuJFyloLxoH5mGIE9vImmMTwZ1iFIQxgfcxDKwQn1_L0f7QZfE7hiD8dJToVdzB6SMCAUsr-DaY1JzHKMFjQ7KZ8u5gX7K9PnzbVJVeMv-m7QWnUVozrq6l-04RonNblTWg-75AMGd1SG)
 
-- Broncode +
+<!-- markdownlint-disable-next-line -->
++ Broncode +
 
   Onderstaande code werd gebruikt voor de oplossing:
 

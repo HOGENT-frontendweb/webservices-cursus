@@ -1,4 +1,4 @@
-const MATCHER = /l\>\s+(ws|fe)\s+(starter|oplossing)\s+([0-9a-fA-F]{7})\s+(.+)/gm;
+const MATCHER = /l\>\s+(ws|fe)\s+(start|oplossing)\s+([0-9a-fA-F]{7})\s+(.+)/gm;
 
 const githubLinks = new Map([
   ['ws', 'https://github.com/HOGENT-Web/webservices-budget.git'],
@@ -25,7 +25,7 @@ function getFolderName(course) {
 }
 
 function getHeader(type) {
-  if (type === 'starter') {
+  if (type === 'start') {
     return 'Startpunt voorbeeldapplicatie';
   }
   if (type === 'oplossing') {
@@ -52,14 +52,12 @@ yarn start
   function gh_links(hook) {
     hook.beforeEach(function (md) {
       return md.replace(MATCHER, (_, course, type, commit, branchname) => {
-        const output = makeOutput({
+        return makeOutput({
           course,
           type,
           commit,
           branchname,
         });
-        console.log(output);
-        return output;
       });
     });
   }
