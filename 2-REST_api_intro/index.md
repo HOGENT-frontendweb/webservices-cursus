@@ -597,7 +597,8 @@ app.listen(9000);
 
 1. Via `app.use` kan je een middleware installeren in de applicatie. De meegegeven functie is wat men de middleware noemt.
 2. De middleware-functie heeft twee parameters: `ctx` en `next`. `ctx` is het context object, dat alle info bevat over de request en de response. `next` is een functie die de volgende middleware in de ketting aanspreekt.
-3. We kunnen bijvoorbeeld het context object eens loggen nadat we de body gezet hebben. Stop het vorige commando in de terminal en voer opnieuw `node index.js` uit. Ga naar de browser en refresh om het resultaat te zien.
+3. We kunnen bijvoorbeeld het context object eens loggen nadat we de body gezet hebben. Stop het vorige commando in de terminal en voer opnieuw `node index.js` uit. Ga naar de browser en refresh om het resultaat te zien in de terminal.
+   - Nadien kan je deze middleware terug verwijderen, we hebben deze enkel toegevoegd om te tonen hoe de `next`-functie werkt.
 
 Koa doet heel wat werk voor ons doet, zoals bv. het request omzetten naar een geparsed object met alle info.
 

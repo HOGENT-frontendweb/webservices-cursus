@@ -77,23 +77,18 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
 
 ## Configuratie
 
-Voor we aan de API beginnen, moeten we onze server beter configureerbaar maken. Typisch wil je verschillende instellingen al naargelang je in een development, productie of test omgeving bent. Hiermee bedoelen we instellingen zoals databanklocatie, databanklogin, op welke poort de server luistert, logging niveau, enzovoort.
+Voor we aan de API beginnen, moeten we onze server beter configureerbaar maken. Typisch wil je verschillende instellingen al naargelang je in een development, productie of test omgeving bent. Hiermee bedoelen we instellingen zoals databankgegevens (locatie, poort, gebruikersnaam, wachtwoord..), op welke poort de server luistert, logging niveau, enzovoort.
 
-De configuratie doen we liefst op 1 plaats. In `app.js` verwijzen we bv. naar poort 9000, dit zetten we best niet in code. In de logger staat het level op `info`, maar dit willen we enkel in productie - in development willen we level `debug`.
+De configuratie doen we liefst op 1 plaats. In `src/index.ts` verwijzen we bv. naar poort 9000, dit zetten we best niet in code. In `src/core/logging.ts` staat het level op `info`, maar dit willen we enkel in productie - in development willen we level `debug`.
 
-Eerst installeren we 2 packages: [config](https://www.npmjs.com/package/config) en [env-cmd](https://www.npmjs.com/package/env-cmd).
+Eerst installeren het [config](https://www.npmjs.com/package/config) en de bijhorende types. Dit package laat toe om eenvoudig configuratie te switchen op basis van de environment variabele `NODE_ENV`.
 
-```bash
+```terminal
 yarn add config
-yarn add env-cmd --dev
+yarn add --dev @types/config
 ```
 
-- **config** laat toe om eenvoudig configuratie te switchen op basis van de environment variabele `NODE_ENV`.
-- **env-cmd** laat toe om een programma te draaien waar de environment variabelen uit een bestand gehaald worden.
-  - Merk op dat we dit toevoegen aan de `devDependencies` omdat we dit enkel nodig hebben tijdens development. In productie zullen we de environment variabelen op een andere manier meegeven (zie later).
-  - Node.js heeft recent een [ingebouwde manier gekregen om environment variabelen in te stellen](https://nodejs.org/en/blog/release/v20.6.0). Echter is het wel een beetje een gedoe om dat te gebruiken in combinatie met nodemon en jest aangezien je de bestandsnaam van het `.env` bestand aan het `node` commando moet meegeven. Daarom gebruiken we voorlopig nog `env-cmd`. Experimenteer gerust met de ingebouwde manier in je eigen project.
-
-Het package `config` vereist dat de `NODE_ENV` environment variabele gedefinieerd is. Deze stel je typisch in op 'development', 'production'... De library zoekt in de `config` map naar een bestand met die naam (bv. `config/development.js`).
+Het package `config` vereist dat de `NODE_ENV` environment variabele gedefinieerd is. Deze stel je typisch in op bv. 'development' of 'production'. De library zoekt in de `config` map naar een bestand met de naam uit `NODE_ENV` (bv. `config/development.js`).
 
 Eventueel kan je een extra bestand `config/custom-environment-variables.js` definiëren. Dit bestand bevat mappings om andere environment variabelen ook via de config in de app te laden. Dit maakt het eenvoudig om configuratie tijdelijk aan te passen zonder dat je het specifieke configuratiebestand moet aanpassen.
 
@@ -105,44 +100,21 @@ NODE_ENV=production
 
 Dit `.env` bestand zal niet in GitHub komen door onze `.gitignore` (en dat is de bedoeling!). Dus het is ook de ideale plaats om 'geheimen' (API keys, JWT secrets...) in op te nemen, later meer hierover.
 
-We passen onze nodemon-configuratie aan zodat het `.env` bestand ingelezen wordt. Daarnaast voegen we ook nog wat andere configuratie toe, zoek zelf uit wat deze doet. Voeg onderstaand fragment toe aan de `package.json` (de buitenste accolades kopieer je niet mee):
-
-```json
-{
-  "nodemonConfig": {
-    "signal": "SIGTERM",
-    "ignore": [
-      "node_modules/*",
-      ".vscode/*"
-    ],
-    "delay": "80",
-    "watch": [
-      "config",
-      "src",
-      "index.js"
-    ],
-    "ext": "js,json",
-    "legacyWatch": true,
-    "exec": "node --inspect=0.0.0.0:9001 --trace-warnings index.js"
-  }
-}
-```
-
-Pas ook het `start` script aan:
+We passen ons `start:dev` script in de `package.json` aan zodat het `.env` bestand ingelezen wordt. Node.js heeft [sinds v20.6.0](https://nodejs.org/en/blog/release/v20.6.0) ondersteuning voor `.env` bestanden, je kan ze inlezen met de `--env-file` optie.
 
 ```json
 {
   "scripts": {
-    "start": "env-cmd nodemon"
+    "start:dev": "tsx watch --env-file .env --inspect=0.0.0.0:9001 src/index.ts",
   }
 }
 ```
 
-We definiëren een paar log configuratievariabelen zodat we iets kunnen testen. Maak hiervoor `config/development.js`
+We definiëren een paar log configuratievariabelen zodat we iets kunnen testen. Maak hiervoor `config/development.ts`
 aan met volgende inhoud
 
-```js
-module.exports = {
+```ts
+export default {
   log: {
     level: 'silly',
     disabled: false,
@@ -152,8 +124,8 @@ module.exports = {
 
 Doe hetzelfde voor productie, nl. in `config/production.js`, met net iets andere waarden natuurlijk, anders zien we het verschil niet.
 
-```js
-module.exports = {
+```ts
+export default {
   log: {
     level: 'info',
     disabled: false,
@@ -161,62 +133,62 @@ module.exports = {
 };
 ```
 
-Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. Pas `src/index.js` aan:
+We gebruiken `export default` om een object te exporteren uit het bestand. Het `default` keyword zorgt ervoor dat je het object kan importeren zonder accolades, bv. `import config from 'config/development'`. Automatisch kiest TypeScript de default export als je `import` zonder accolades gebruikt. Het `config` package verplicht om de configuratiebestanden te exporteren als een object in de default export.
 
-```js
-const Koa = require('koa');
-const config = require('config'); // 👈 1
+Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. Pas `src/core/logging.ts` aan:
 
-const NODE_ENV = process.env.NODE_ENV; // 👈 5
-const LOG_LEVEL = config.get('log.level'); // 👈 2
-const LOG_DISABLED = config.get('log.disabled'); // 👈 2
+```ts
+// src/core/logging.ts
+import winston from 'winston';
+import config from 'config'; // 👈 1
 
-console.log(`log level ${LOG_LEVEL}, logs enabled: ${LOG_DISABLED !== true}`); // 👈 3
+const NODE_ENV = process.env.NODE_ENV; // 👈 4
+const LOG_LEVEL = config.get<string>('log.level'); // 👈 2
+const LOG_DISABLED = config.get<boolean>('log.disabled'); // 👈 2
 
-const app = new Koa();
+console.log(`node env: ${NODE_ENV}, log level ${LOG_LEVEL}, logs enabled: ${LOG_DISABLED !== true}`); // 👈 7
 
-const logger = winston.createLogger({
-  level: LOG_LEVEL, // 👈 4
+const rootLogger: winston.Logger = winston.createLogger({
+  level: LOG_LEVEL, // 👈 3
   format: winston.format.simple(),
-  transports: [
-    new winston.transports.Console({ silent: LOG_DISABLED }) // 👈 4
-  ]
+  transports: [new winston.transports.Console({ silent: LOG_DISABLED })], // 👈 3
 });
 
-app.use(async (ctx, next) => {
-  ctx.body = 'Hello world';
-});
-
-app.listen(9000, () => {
-  logger.info('🚀 Server listening on http://localhost:9000');
-});
+export const getLogger = () => {
+  return rootLogger;
+};
 ```
 
 1. We vragen het config object op
-2. Alle gedefinieerde configuratievariabelen zijn beschikbaar via een `.get()`. Je kan een syntax met punten gebruiken om dieper in de structuur te gaan, bv. `log.level`.
-3. Start de app en controleer dat alles werkt. We moeten dus 'info' zien, want `NODE_ENV` is gelijk aan 'production'.
-4. Pas ook de hardgecodeerde waarden aan, zodat we de config gebruiken.
-5. Je kan de environment variabelen ook expliciet opvragen, via de `process.env`. Dat is natuurlijk een beetje onhandig, je moet weten welke config via de environment binnen komt, en welke via de config files. En wat als iets in beide gedefinieerd is?
+2. Alle gedefinieerde configuratievariabelen zijn beschikbaar via een `.get()`. Je kan een syntax met punten gebruiken om dieper in de structuur te gaan, bv. `log.level` om het property `level` binnen het object `log` op te vragen.
+   - Let op dat je de types meegeeft tussen de `<>` haakjes. Dit zijn generieke types, je kan ze zien als een soort van argumenten die je meegeeft aan een functie. In dit geval geef je het type van de waarde die je verwacht terug te krijgen mee. TypeScript zorgt er vervolgens voor dat de returnwaarde van `config.get` van dat type is.
+   - Als je bv. `config.get('log.level')` zou schrijven, zou TypeScript klagen bij het instellen van het `level` dat het type van de variabele `LOG_LEVEL` niet overeenkomt met het type dat de optie `level` verwacht. Probeer dit eens uit.
+3. Pas ook de hardgecodeerde waarden aan, zodat we de config gebruiken. We schakelen de logging uit als `log.disabled` de waarde `true` heeft.
+4. Je kan de environment variabelen ook expliciet opvragen, via de `process.env`. Dat is natuurlijk een beetje onhandig, je moet weten welke configuratie via het environment binnenkomt, en welke via de configuratiebestanden. En wat als iets in beide gedefinieerd is? Het is beter om alles via de configuratie te laten lopen, dit lossen we op in de volgende stap.
+5. Start de app en controleer dat alles werkt. We moeten dus 'info' zien, want `NODE_ENV` is gelijk aan 'production'.
+6. Pas de waarde van `NODE_ENV` aan in je `.env` bestand aan naar `development` en start de app opnieuw. Je zou nu 'development' moeten zien.
+7. Verwijder de `console.log` als alles werkt, deze hebben we enkel gebruikt om te testen.
 
-Gelukkig heeft `config` een manier om environment variabelen mee in te lezen in de configuratie zodat we alles kunnen opvragen via `config.get()`. Op die manier staat **alle configuratie centraal**, dit is een best practice! Maak een bestand binnen de `config` map met de naam `custom-environment-variables.js`. Zet daarin volgende inhoud:
+Gelukkig heeft `config` een manier om environment variabelen mee in te lezen in de configuratie zodat we alles kunnen opvragen via `config.get()`. Op die manier staat **alle configuratie centraal**, dit is een best practice! Maak een bestand binnen de `config` map met de naam `custom-environment-variables.ts`. Let op de schrijfwijze, een schrijffout zal ervoor zorgen dat het niet werkt.
 
-```js
-module.exports = {
+Zet daarin volgende inhoud:
+
+```ts
+export default {
   env: 'NODE_ENV',
 };
 ```
 
-In dit bestand definieer je welke configuratievariabelen gedefinieerd worden door welke environment variabele. Dus `config.get('env')` krijgt de waarde van `process.env.NODE_ENV`. Als iets zowel binnen een configuratiebestand gedefinieerd is als via een environment variabele, zal de environment variabele gebruikt worden. Environment variabelen overschrijven dus steeds de configuratiebestanden.
+In dit bestand definieer je welke configuratievariabelen gedefinieerd worden door welke environment variabele. In dit voorbeeld krijgt `config.get('env')` de waarde van `process.env.NODE_ENV`. Als iets zowel binnen een configuratiebestand gedefinieerd is als via een environment variabele, zal de environment variabele gebruikt worden. Environment variabelen overschrijven dus steeds de configuratiebestanden. Dit zal zeer handig zijn voor bv. geheime sleutels die je niet in je code wil hebben.
 
-Dus we kunnen de `process.env` vervangen door een `config.get(...)`
+Dus we kunnen de `process.env` vervangen door een `config.get(...)`:
 
-```js
-const Koa = require('koa');
-const config = require('config');
+```ts
+// src/core/logging.ts
+import winston from 'winston';
+import config from 'config';
 
-const NODE_ENV = config.get('env'); // 👈
-const LOG_LEVEL = config.get('log.level');
-const LOG_DISABLED = config.get('log.disabled');
+const NODE_ENV = config.get<string>('env'); // 👈
 
 // ...
 ```
@@ -226,20 +198,23 @@ const LOG_DISABLED = config.get('log.disabled');
 Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor transacties, d.w.z.:
 
 - `GET /api/transactions`: alle transacties opvragen
-- `GET /api/transactions/(id)`: een specifieke transactie opvragen
+- `GET /api/transactions/:id`: een specifieke transactie opvragen
 - `POST /api/transactions`: een nieuwe transactie aanmaken
-- `PUT /api/transactions/(id)`: een transactie aanpassen
-- `DELETE /api/transactions/(id)`: een transactie verwijderen
+- `PUT /api/transactions/:id`: een transactie aanpassen
+- `DELETE /api/transactions/:id`: een transactie verwijderen
 
-Binnen onze middlewarefuncties bevat de context alle info over het request zoals die bij onze server toekomt.
+Binnen onze middlewarefuncties bevat de context alle informatie over het request zoals die bij onze server toekomt.
 
 Voeg onderstaande code toe aan `index.js`:
 
-```js
-app.use(async (ctx, next) => {
-  logger.info(JSON.stringify(ctx.request));
-  return next();
+```ts
+// ...
+app.use(async (ctx) => {
+  getLogger().info(JSON.stringify(ctx.request));
+  ctx.body = 'Hello World from TypeScript';
 });
+
+// ...
 ```
 
 Start de server en voer een request uit naar `http://localhost:9000` (bv. via Postman). Je zou volgende output moeten zien:
@@ -248,10 +223,10 @@ Start de server en voer een request uit naar `http://localhost:9000` (bv. via Po
 info: {"method":"GET","url":"/","header":{"host":"localhost:9000", ... }}
 ```
 
-Het request object bevat alle info over het request, zoals de HTTP methode, de URL, de headers, de body, enzovoort. Je kan dus eigenlijk controleren welk request binnenkomt en op basis daarvan een response sturen. Pas de middleware als volgt aan:
+Het request object bevat alle informatie over het request, zoals de HTTP methode, de URL, de headers, de body... Je kan dus eigenlijk controleren welk request binnenkomt en op basis daarvan een response sturen. Pas de middleware als volgt aan:
 
-```js
-app.use(async (ctx, next) => {
+```ts
+app.use(async (ctx) => {
   logger.info(JSON.stringify(ctx.request));
   if (
     ctx.request.method === 'GET' && // 👈 1
@@ -259,17 +234,16 @@ app.use(async (ctx, next) => {
   ) {
     ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 2
   } else {
-    ctx.body = 'Hello world'; // 👈 3
+    ctx.body = 'Hello World from TypeScript'; // 👈 3
   }
-  return next();
 });
 ```
 
 1. Identificeer op basis van de method en URL de juiste actie.
 2. Geef de data in de body mee, zodat de gebruiker een lijst van transacties krijgt.
-3. We laten de'Hello world' staan voor alle andere requests. Zorg ervoor dat de andere middleware die 'Hello world' teruggeeft weg is.
+3. We laten de 'Hello World from TypeScript' staan voor alle andere requests.
 
-Probeer dit uit door een request te versturen naar `http://localhost:9000/api/transactions` (bv. via Postman). Je zou de lijst van transacties moeten zien.
+Probeer dit uit door een request te versturen naar <http://localhost:9000/api/transactions> (bv. via Postman). Je zou de lijst van transacties moeten zien.
 
 ## Router
 
