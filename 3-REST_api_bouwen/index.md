@@ -247,112 +247,88 @@ Probeer dit uit door een request te versturen naar <http://localhost:9000/api/tr
 
 ## Router
 
-Je zou op deze manier een hele server kunnen opbouwen maar je voelt al dat veel werk altijd hetzelfde zal zijn. Voor zo'n simpele GET request valt het mee, maar wat als je ook de body/headers moet parsen, authenticatie moet afhandelen... Dus, zoals zo vaak, een goede library is het halve werk. Bij programmeren anno 2023 is het vaak belangrijker om een goede library te kennen/kunnen vinden dan algoritmes uit te denken en te implementeren.
+Je zou op deze manier een hele server kunnen bouwen maar je voelt al dat veel werk altijd hetzelfde zal zijn. Voor zo'n simpele GET request valt het mee, maar wat als je ook de body/headers moet parsen, authenticatie moet afhandelen... Dus, zoals zo vaak, een goede library is het halve werk. Bij programmeren anno 2023 is het vaak belangrijker om een goede library te kennen/kunnen vinden dan algoritmes uit te denken en te implementeren.
 
-We voegen [@koa/router](https://www.npmjs.com/package/koa-router) en [koa-bodyparser](https://www.npmjs.com/package/koa-body-parser) toe om requests makkelijker af te handelen.
+We voegen [@koa/router](https://www.npmjs.com/package/koa-router) [koa-bodyparser](https://www.npmjs.com/package/koa-body-parser), en hun types toe om requests makkelijker af te handelen.
 
-```bash
-yarn add @koa/router
-yarn add koa-bodyparser
+```terminal
+yarn add @koa/router koa-bodyparser
+yarn add --dev @types/koa__router @types/koa-bodyparser
 ```
 
-- **koa-bodyparser** is een middleware dat we moeten toevoegen voor Koa bij onze routes aankomt. Het zal de request body parsen voor ons.
-- **@koa/router** is ook een middleware en zal de routing op zich nemen. M.a.w. het zal de juiste code uitvoeren als bv. een `POST /api/transactions` toekomt op de server.
+- **koa-bodyparser** is een middleware die we moeten toevoegen voor Koa bij onze routes aankomt. Het zal de request body parsen voor ons. Het heeft ondersteuning voor JSON, form en text bodies.
+- **@koa/router** is ook een middleware en zal de routing op zich nemen. Met andere woorden het zal de juiste code uitvoeren als bv. een `POST /api/transactions` toekomt op de server.
+  - Het package voor de types is `@types/koa__router` (let op de dubbele underscore). De dubbele underscore is nodig aangezien je maar één / in een package naam mag hebben.
 
 We voegen alvast de bodyparser toe.
 
-```js
-const Koa = require('koa');
-const config = require('config');
-const bodyParser = require('koa-bodyparser'); // 👈 1
-
-//...winston
+```ts
+// src/index.ts
+import Koa from 'koa';
+import bodyParser from 'koa-bodyparser' // 👈 1
+import { getLogger } from './core/logging';
 
 const app = new Koa();
 
 app.use(bodyParser()); // 👈 2
 
-app.use(async (ctx, next) => {
-  logger.info(JSON.stringify(ctx.request));
-  logger.info(JSON.stringify(ctx.request.body)); // 👈 3
-  if (ctx.request.method === 'GET' && ctx.request.url === '/api/transactions') {
+app.use(async (ctx) => {
+  getLogger().info(JSON.stringify(ctx.request));
+  getLogger().info(JSON.stringify(ctx.request.body)); // 👈 3
+  if (
+    ctx.request.method === 'GET' &&
+    ctx.request.url === '/api/transactions'
+  ) {
     ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]';
   } else {
-    ctx.body = 'Goodbye world';
+    ctx.body = 'Hello World from TypeScript';
   }
-  return next();
 });
 
 app.listen(9000, () => {
-  logger.info('🚀 Server listening on http://localhost:9000');
+  getLogger().info('🚀 Server listening on http://127.0.0.1:9000');
 });
 ```
 
 1. Importeer de bodyparser.
-2. Geef deze mee aan het Koa object. Doe dit vóór je eigen middlewarefuncties, anders zijn ze nog niet uitgevoerd (en in dit geval de body dus nog niet geparsed).
+2. Geef deze mee aan het Koa object. Doe dit vóór je eigen middlewarefuncties, anders is deze nog niet uitgevoerd (en in dit geval zal de body dus nog niet geparsed).
 3. Log de request body.
-4. Je kan dit snel testen door een POST request -met body- via Postman te sturen. Open postman en doe een POST naar `http://localhost:9000/api/transactions` en geef als JSON body `{ "message": "Hello world" }` in en voer uit. Verwijder dan eens de bodyparser middleware en bekijk dan het resultaat van de POST. Je kan de middleware eens uitschakelen om het verschil te zien.
+4. Je kan dit snel testen door een POST request -met body- via Postman te sturen. Open postman en doe een POST naar <http://localhost:9000/api/transactions> en geef als JSON body `{ "message": "Hello world" }` in en voer uit. Verwijder dan eens de bodyparser middleware en bekijk dan het resultaat van de POST. Je kan de middleware eens uitschakelen om het verschil te zien.
 
 We willen nu ook gebruik maken van de router.
 
-```js
-const Koa = require('koa');
-const Router = require('@koa/router'); // 👈 1
+```ts
+import Koa from 'koa';
+import bodyParser from 'koa-bodyparser'
+import Router from '@koa/router'; // 👈 1
+import { getLogger } from './core/logging';
+
+const app = new Koa();
+
+app.use(bodyParser());
 
 const router = new Router(); // 👈 2
 
-router.get('/api/transactions', async (ctx) => { // 👈 4
-  ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 5
+// 👇 3
+router.get('/api/transactions', async (ctx) => {
+  ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 4
 });
 
-app.use(router.routes()) // 👈 3
-   .use(router.allowedMethods()); // 👈 3
+app.use(router.routes()) // 👈 4
+   .use(router.allowedMethods()); // 👈 4
+
+app.listen(9000, () => {
+  getLogger().info('🚀 Server listening on http://127.0.0.1:9000');
+});
 ```
 
 1. Verwijder ons manueel gepruts en importeer de Koa Router.
 2. Dan creëren we een instantie van deze router.
-3. Om te zorgen dat onze app alle routes gebruikt voegen we `routes()` en `allowedMethods()` toe als middlewares.
+3. Daarna kunnen we routes definiëren, elke route is een 'werkwoord' met een path op ons router object. Dus je kan `router.get`, `router.put`... gebruiken. Na het path geef je de middlewares die uitgevoerd moeten worden bij dit request. In ons geval is dit slechts één middleware, maar meerdere kunnen zeker (denk aan authenticatie, validatie...).
+4. We zorgen ervoor dat de response body ingesteld wordt. De overige code van onze middleware van daarnet mag weg.
+5. Om te zorgen dat onze app alle routes gebruikt voegen we `routes()` en `allowedMethods()` toe als middlewares.
    - `routes()` zorgt voor de routing.
    - `allowedMethods()` zorgt voor een HTTP 405 indien een HTTP method niet toegelaten is, en antwoordt op OPTIONS requests met een `Allow` header.
-4. Daarna kunnen we routes definiëren, elke route is een 'werkwoord' met een path op ons router object. Dus je kan `router.get`, `router.put`... gebruiken. Na het path geef je de middlewares die uitgevoerd moeten worden bij dit request. In ons geval is dit slechts één middleware, maar meerdere kunnen zeker (denk aan authenticatie, validatie...).
-5. Uiteindelijk zorgen we dan dat de return waarde ingesteld wordt. De logger van de request is niet meer nodig, die mag weg.
-
-## Debugging
-
-Een applicatie ontwikkelen zonder eens te moeten debuggen is een utopie, ook in Node.js.
-
-Net zoals in vanilla JavaScript kan je hier gebruik maken van o.a. `console.log`, maar op die manier debuggen is tijdrovend en lastig. Het zou handig zijn als we in VS Code konden debuggen... Uiteraard kan dit ook!
-
-Maak een bestand `launch.json` aan in de `.vscode` map (of zoek via F1 naar "Debug: Add configuration" en selecteer Node.js) en voeg volgende configuratie toe:
-
-```json
-{
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "attach",
-      "name": "Attach to server",
-      "port": 9001,
-      "address": "localhost",
-      "restart": true,
-      "timeout": 10000
-    }
-  ]
-}
-```
-
-Dit zorgt ervoor dat VS Code de debugger zal koppelen aan <localhost:9001>. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
-
-Alvorens je aan het debuggen gaat, check of jouw start-commando de optie `--inspect=0.0.0.0:9001` bevat. Indien je onze uitgebreide nodemon configuratie gebruikt, is dit al het geval.
-
-Start je applicatie. Dan kan je in VS Code debugger starten door op het play-icoontje (naast 'Attach to server') te klikken in de debug tab:
-
-![Start VS Code debuggen](images/debugging-in-vscode.png)
-
-Voeg breakpoints toe door op de lijnnummers te klikken. De debugger zal nu stoppen op deze lijn wanneer deze uitgevoerd wordt (doordat je bv. een request uitvoert in Postman). **Test dit uit!**
-
-Je kan ook `--inspect-brk` toevoegen aan het start-commando zodat de debugger automatisch stopt bij de eerste lijn van je applicatie. Dit is handig als je bv. het configureren van je app wil checken aangezien de applicatie al opgestart zal zijn wanneer de debugger pas koppelt. Let op dat je deze optie niet altijd laat staan in het commando aangezien de applicatie dan nooit zal starten zonder dat er een debugger gekoppeld is.
 
 ## Mappenstructuur
 
@@ -361,28 +337,12 @@ In wat volgt gaan we de code wat herstructureren zodat we een mooie gelaagde app
 - **data**: beheert onze data (momenteel in-memory maar later in een databank)
 - **service**: de business logica
 
-Maak een nieuwe map `src` en verplaats de `index.js` hier naartoe. Pas de `package.json` aan zodat de `main` property naar `src/index.js` verwijst, update ook het `exec` script van de `nodemonConfig`.
-
-```json
-{
-  "main": "src/index.js",
-  "nodemonConfig": {
-    "watch": [
-      "config",
-      "src",
-    ],
-    "exec": "node --inspect=0.0.0.0:9001 --trace-warnings src/index.js",
-    // ...
-  },
-}
-```
-
 ### Datalaag
 
 Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.js`, in een nieuwe `data` map.
 
-```js
-let PLACES = [
+```ts
+export const PLACES = [
   {
     id: 1,
     name: 'Dranken Geers',
@@ -400,7 +360,7 @@ let PLACES = [
   },
 ];
 
-let TRANSACTIONS = [
+export const TRANSACTIONS = [
   {
     id: 1,
     amount: -2000,
@@ -441,47 +401,38 @@ let TRANSACTIONS = [
     },
   },
 ];
-
-module.exports = { TRANSACTIONS, PLACES };
 ```
 
-We houden hier voorlopig een variabele bij met onze transacties en places. Deze moeten uiteindelijk in de databank terechtkomen.
+We houden hier voorlopig een variabele bij met onze transactions en places. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies of klassen beschikbaar te maken voor andere bestanden. In dit geval maken we de variabelen `PLACES` en `TRANSACTIONS` beschikbaar voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
 
-Als we ook de transacties willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Ook aan de places voegen we een uniek id toe. Bij toevoegen van transacties/places moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de transactie/place te zoeken en aan te passen.
+Als we ook de transactions willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Ook aan de places voegen we een uniek id toe. Bij toevoegen van transactions/places moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de transaction/place te zoeken en aan te passen.
 
 ### Servicelaag
 
-We creëren een nieuw bestand `transaction.js`, in een nieuwe `service` map. Voorlopig hebben we enkel de functie `getAll()` nodig, de rest implementeren we later. Maar opdat alles uitvoerbaar zou zijn, gaan we ze alle functies declareren en een error laten gooien als ze gebruikt worden.
+We creëren een nieuw bestand `transaction.ts`, in een nieuwe `service` map. Voorlopig hebben we enkel de functie `getAll()` nodig, de rest implementeren we later. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden. Voor de functies `create` en `updateById` geven we een object mee met de nodige data. Voor de eenvoud gebruiken we nu `any` als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
 
-```js
-let { TRANSACTIONS, PLACES } = require('../data/mock_data');
+```ts
+// src/service/transaction.ts
+import { TRANSACTIONS, PLACES } from '../data/mock_data';
 
-const getAll = () => {
+export const getAll = () => {
   return { items: TRANSACTIONS, count: TRANSACTIONS.length };
 };
 
-const getById = (id) => {
+export const getById = (id: string) => {
   throw new Error('Not implemented yet!');
 };
 
-const create = ({ amount, date, placeId, user }) => {
+export const create = ({ amount, date, placeId, user }: any) => {
   throw new Error('Not implemented yet!');
 };
 
-const updateById = (id, { amount, date, placeId, user }) => {
+export const updateById = (id: string, { amount, date, placeId, user }: any) => {
   throw new Error('Not implemented yet!');
 };
 
-const deleteById = (id) => {
+export const deleteById = (id: string) => {
   throw new Error('Not implemented yet!');
-};
-
-module.exports = {
-  getAll,
-  getById,
-  create,
-  updateById,
-  deleteById,
 };
 ```
 
@@ -490,37 +441,40 @@ Let al op de signatuur van de `create` en `updateById` functies. Als we data nod
 De route aanpassen is nu niet veel werk. Pas aan in de `index.js`:
 
 ```js
-const Koa = require('koa');
-const winston = require('winston');
-const bodyParser = require('koa-bodyparser');
-const Router = require('@koa/router');
-const transactionService = require('./service/transaction'); // 👈 1
+import Koa from 'koa';
+import bodyParser from 'koa-bodyparser'
+import Router from '@koa/router';
+import { getLogger } from './core/logging';
+import * as transactionService from './service/transaction'; // 👈 1
 
 // ...
 
+// 👇 2
 router.get('/api/transactions', async (ctx) => {
-  // ctx.body = ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 2
-  ctx.body = transactionService.getAll(); // 👈 2
+  ctx.body = transactionService.getAll();
 });
-
-app.use(router.routes())
-   .use(router.allowedMethods());
 
 // ...
 ```
 
-1. We importeren de service.
+1. We importeren de service. We gebruiken hier `import *` om alle exports van de module te importeren in één object. Dit is een handige manier om niet steeds opnieuw een functie te moeten importeren als je een nieuwe functie nodig hebt uit hetzelfde bestand.
 2. En vervangen de hardgecodeerde data door een `getAll()` aanroep, that's it!
 
 ### Oefening 2 - Je eigen project
 
 Doe nu hetzelfde in je eigen project:
 
-- Installeer alle packages.
-- Importeer alle packages.
+- Installeer alle packages:
+  - `config`
+  - `koa-router`
+  - `koa-bodyparser`
+  - `@types/config`
+  - `@types/koa__router`
+  - `@types/koa-bodyparser`
+- Zorg dat je de configuratie kan lezen.
 - Gebruiker de bodyparser en test uit.
 - Maak een GET route aan voor het opvragen van alle resources (van een entiteit naar keuze) en test uit.
-- Zorg voor een degelijke mappenstructuur.
+- Zorg voor een degelijke mappenstructuur met mock data en een service laag.
 
 ## De POST route
 

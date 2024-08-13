@@ -635,7 +635,7 @@ Het mooie aan dit geheel is dat Koa hiervoor niets speciaal hoeft te doen: dit i
 
 ## TypeScript
 
-Nu is het tijd om over te schakelen naar TypeScript. Daarvoor moeten we eerst een aantal packages installeren als dev dependencies. We hebben deze packages enkel nodig in development, voor productie wordt TypeScript omgezet naar JavaScript.
+Nu is het tijd om over te schakelen naar TypeScript. Daarvoor moeten we eerst een aantal packages installeren als dev dependencies (zie `--dev` optie). We hebben deze packages enkel nodig in development, voor productie wordt TypeScript omgezet naar JavaScript.
 
 ```terminal
 yarn add --dev typescript tsx @types/node
@@ -690,6 +690,8 @@ Deze types kan je installeren met:
 ```terminal
 yarn add --dev @types/koa
 ```
+
+Herinner je: types hebben we enkel nodig in development. Daarom installeren we deze als dev dependency m.b.v. de `--dev` optie.
 
 Nu zou de melding in VS Code verdwenen moeten zijn. Als je nu hovert over `ctx`, zou je ook een tooltip moeten zien met het type van `ctx`. Je kan altijd eens Ctrl-klikken op de `use`-functie om eens te kijken naar de definitie van deze functie en diens parameters.
 
@@ -815,6 +817,8 @@ Vervolgens zal je in de terminal zien dat de debugger verbonden is en kan je bre
 Voeg breakpoints toe door op de lijnnummers te klikken. De debugger zal nu stoppen op deze lijn wanneer deze uitgevoerd wordt (doordat je bv. een request uitvoert in Postman). Je kan een breakpoint zetten op de lijn `ctx.body = 'Hello World from TypeScript';` en zien dat de debugger stopt op deze lijn als je naar <http://localhost:9000> surft.  Bovenaan krijg je een paar knoppen die je zou moeten herkennen van bv. Eclipse of IntelliJ IDEA.
 
 ![Breakpoint](images/breakpoint.png)
+
+Je kan ook `--inspect-brk` toevoegen aan het start-commando zodat de debugger automatisch stopt bij de eerste lijn van je applicatie. Dit is handig als je bv. het configureren van je app wil checken aangezien de applicatie al opgestart zal zijn wanneer de debugger pas koppelt. Let op dat je deze optie niet altijd laat staan in het commando aangezien de applicatie dan nooit zal starten zonder dat er een debugger gekoppeld is.
 
 ## Logging
 
