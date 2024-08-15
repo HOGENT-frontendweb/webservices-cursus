@@ -937,26 +937,16 @@ app.use(koaCors({
     if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) { // 👈 5
       return ctx.request.header.origin!;
     }
-    // 👇 6
     // Not a valid domain at this point, let's return the first valid as we should return a string
-    const {
-      header: {
-        referer, 'user-agent': userAgent,
-      },
-      ip,
-    } = ctx.request;
-    getLogger().warn(
-      `An illegal cross-origin request from ${ip} was referred from ${referer} with User-Agent ${userAgent}`,
-    );
-    return CORS_ORIGINS[0] || ''; // 👈 7
+    return CORS_ORIGINS[0] || ''; // 👈 6
   },
-  // 👇 8
+  // 👇 7
   allowHeaders: [
     'Accept',
     'Content-Type',
     'Authorization',
   ],
-  maxAge: CORS_MAX_AGE, // 👈 9
+  maxAge: CORS_MAX_AGE, // 👈 8
 }));
 
 app.use(bodyParser());
@@ -969,14 +959,69 @@ app.use(bodyParser());
 3. Definieer de CORS middleware.
 4. `origin`: gebruik een functie om te checken of het request origin in onze array voorkomt. Door een functie te gebruiken, kan je meerdere domeinen toelaten. Je mag nl. maar één domein of string teruggeven in de CORS header `Access-Control-Allow-Origin`.
 5. We controleren of het request origin in onze array voorkomt. Indien ja, dan geven we het request origin terug (dit is toch geldig).
-6. Indien het niet in de array voorkomt, loggen we een waarschuwing met de nodige informatie.
-7. We moeten iets teruggeven, maar het request origin is ongeldig. Daarom geven we het eerste toegelaten domein terug, de browser zal hierna melden dat requests naar onze server niet toegelaten zijn.
-8. Indien niet, loggen we een waarschuwing met de nodige informatie en geven we het eerste toegelaten domein terug.
-9. `allowHeaders`: de toegelaten headers in het request.
-10. `maxAge`: de maximum cache leeftijd (voor browsers).
-
-l> ws oplossing 350a807 les3-opl
+6. We moeten iets teruggeven indien het niet in de array voorkomt. Het request origin is ongeldig en we mogen dit absoluut niet teruggeven. Daarom geven we het eerste toegelaten domein terug, of een lege string als er geen toegelaten domeinen zijn.
+7. `allowHeaders`: de toegelaten headers in het request.
+8. `maxAge`: de maximum cache leeftijd (voor browsers).
 
 ### Oefening 6 - Je eigen project
 
 Voeg CORS toe aan je eigen project.
+
+## Geneste routes
+
+In het vorige hoofdstuk hebben een voorbeeld uitgewerkt voor een recepten API waarbij een veelgemaakte fout was dat subroutes niet correct gedefinieerd worden. Hier geven we een praktisch voorbeeld van zo'n geneste route in onze budget app.
+
+Elke transactie heeft een plaats waar deze gebeurd is. We willen nu alle transacties van een bepaalde plaats opvragen. Welke URL gebruiken we hiervoor?
+
+<!-- markdownlint-disable-next-line -->
++ Antwoord +
+
+  We gebruiken `/api/places/:id/transactions`. Hierbij is `:id` de id van de plaats.
+
+  Heel vaak wordt dit verkeerd geïmplementeerd zoals bv. `/api/transactions/place/:id`. Dit is niet correct omdat we hier geen duidelijk pad volgen. We willen alle transacties van een plaats opvragen, dus is het logischer om eerst de plaats op te geven en dan de transacties van die plaats op te vragen.
+
+We definiëren een nieuwe functie in `src/service/transaction.ts`:
+
+```ts
+// src/service/transaction.ts
+// ...
+export const getTransactionsByPlaceId = async (placeId: number) => {
+  const items = TRANSACTIONS.filter((t) => t.place.id === placeId);
+  return {
+    items,
+    count: items.length,
+  };
+};
+```
+
+Deze functie filtert alle transacties op basis van de plaats id en geeft deze terug. Vervolgens maken we een nieuwe router aan in `src/rest/place.ts`:
+
+```ts
+import Router from '@koa/router';
+import * as transactionService from '../service/transaction';
+import { Context } from 'koa';
+
+const getTransactionsByPlaceId = async (ctx: Context) => {
+  const transactions = await transactionService.getTransactionsByPlaceId(Number(ctx.params.id));
+  ctx.body = transactions;
+};
+
+export default (parent: Router) => {
+  const router = new Router({
+    prefix: '/places',
+  });
+
+  router.get('/:id/transactions', getTransactionsByPlaceId);
+
+  parent.use(router.routes())
+     .use(router.allowedMethods());
+};
+```
+
+Hierin definiëren we onze geneste route. Vergeet niet deze router te installeren in `src/rest/index.ts`.
+
+### Oefening 7 - Je eigen project
+
+Werk de routes van de entiteiten in je eigen project uit. Zorg ervoor dat je geneste routes correct definieert. Werk voorlopig met mock data.
+
+l> ws oplossing 23e3cde les3-opl
