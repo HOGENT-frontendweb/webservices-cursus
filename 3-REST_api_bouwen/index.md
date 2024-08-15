@@ -1,6 +1,6 @@
 # REST API bouwen
 
-l> ws start 0e38b85 les2
+l> ws start 0e38b85 les3
 
 ## De budget app
 
@@ -139,10 +139,11 @@ Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. Pas `src/co
 
 ```ts
 // src/core/logging.ts
+import { env } from 'node:process'; // 👈 4
 import winston from 'winston';
 import config from 'config'; // 👈 1
 
-const NODE_ENV = process.env.NODE_ENV; // 👈 4
+const NODE_ENV = env['NODE_ENV']; // 👈 4
 const LOG_LEVEL = config.get<string>('log.level'); // 👈 2
 const LOG_DISABLED = config.get<boolean>('log.disabled'); // 👈 2
 
@@ -164,7 +165,10 @@ export const getLogger = () => {
    - Let op dat je de types meegeeft tussen de `<>` haakjes. Dit zijn generieke types, je kan ze zien als een soort van argumenten die je meegeeft aan een functie. In dit geval geef je het type van de waarde die je verwacht terug te krijgen mee. TypeScript zorgt er vervolgens voor dat de returnwaarde van `config.get` van dat type is.
    - Als je bv. `config.get('log.level')` zou schrijven, zou TypeScript klagen bij het instellen van het `level` dat het type van de variabele `LOG_LEVEL` niet overeenkomt met het type dat de optie `level` verwacht. Probeer dit eens uit.
 3. Pas ook de hardgecodeerde waarden aan, zodat we de config gebruiken. We schakelen de logging uit als `log.disabled` de waarde `true` heeft.
-4. Je kan de environment variabelen ook expliciet opvragen, via de `process.env`. Dat is natuurlijk een beetje onhandig, je moet weten welke configuratie via het environment binnenkomt, en welke via de configuratiebestanden. En wat als iets in beide gedefinieerd is? Het is beter om alles via de configuratie te laten lopen, dit lossen we op in de volgende stap.
+4. Je kan de environment variabelen ook expliciet opvragen, via het `env` uit `node:process`.
+   - `node:process` is een ingebouwde module om informatie op te vragen over het proces, zoals de omgevingsvariabelen via `env`.
+   - `env` is een object met alle omgevingsvariabelen. Omdat je niet weet wat in het object zit, kan je de waarde opvragen via de key, bv. `env['NODE_ENV']`.
+   - Dat is natuurlijk een beetje onhandig, je moet weten welke configuratie via het environment binnenkomt, en welke via de configuratiebestanden. En wat als iets in beide gedefinieerd is? Het is beter om alles via de configuratie te laten lopen, dit lossen we op in de volgende stap.
 5. Start de app en controleer dat alles werkt. We moeten dus 'info' zien, want `NODE_ENV` is gelijk aan 'production'.
 6. Pas de waarde van `NODE_ENV` aan in je `.env` bestand aan naar `development` en start de app opnieuw. Je zou nu 'development' moeten zien.
 7. Verwijder de `console.log` als alles werkt, deze hebben we enkel gebruikt om te testen.
@@ -179,9 +183,9 @@ export default {
 };
 ```
 
-In dit bestand definieer je welke configuratievariabelen gedefinieerd worden door welke environment variabele. In dit voorbeeld krijgt `config.get('env')` de waarde van `process.env.NODE_ENV`. Als iets zowel binnen een configuratiebestand gedefinieerd is als via een environment variabele, zal de environment variabele gebruikt worden. Environment variabelen overschrijven dus steeds de configuratiebestanden. Dit zal zeer handig zijn voor bv. geheime sleutels die je niet in je code wil hebben.
+In dit bestand definieer je welke configuratievariabelen gedefinieerd worden door welke environment variabele. In dit voorbeeld krijgt `config.get('env')` de waarde van `env['NODE_ENV']`. Als iets zowel binnen een configuratiebestand gedefinieerd is als via een environment variabele, zal de environment variabele gebruikt worden. Environment variabelen overschrijven dus steeds de configuratiebestanden. Dit zal zeer handig zijn voor bv. geheime sleutels die je niet in je code wil hebben.
 
-Dus we kunnen de `process.env` vervangen door een `config.get(...)`:
+Dus we kunnen de `env['NODE_ENV']` vervangen door een `config.get(...)`:
 
 ```ts
 // src/core/logging.ts
@@ -419,7 +423,7 @@ export const getAll = () => {
   return { items: TRANSACTIONS, count: TRANSACTIONS.length };
 };
 
-export const getById = (id: string) => {
+export const getById = (id: number) => {
   throw new Error('Not implemented yet!');
 };
 
@@ -427,11 +431,11 @@ export const create = ({ amount, date, placeId, user }: any) => {
   throw new Error('Not implemented yet!');
 };
 
-export const updateById = (id: string, { amount, date, placeId, user }: any) => {
+export const updateById = (id: number, { amount, date, placeId, user }: any) => {
   throw new Error('Not implemented yet!');
 };
 
-export const deleteById = (id: string) => {
+export const deleteById = (id: number) => {
   throw new Error('Not implemented yet!');
 };
 ```
@@ -480,15 +484,8 @@ Doe nu hetzelfde in je eigen project:
 
 De POST route om een nieuwe transactie toe te voegen is zeer gelijkaardig.
 
-```js
-const Koa = require('koa');
-const Router = require('@koa/router');
-const transactionService = require('./service/transaction');
-
-router.get('/api/transactions', async (ctx) => {
-  ctx.body = transactionService.getAll();
-});
-
+```ts
+// src/index.ts
 router.post('/api/transactions', async (ctx) => { // 👈 1
   const newTransaction = transactionService.create({
     ...ctx.request.body, // 👈 2
@@ -502,49 +499,43 @@ app.use(router.routes())
    .use(router.allowedMethods());
 ```
 
-1. Voeg de POST route toe.
+1. Voeg de POST route toe. We negeren even de foutmeldingen die TypeScript geeft, die lossen we later op.
 2. Roep de `create` functie van de service aan. We destructuren de `request.body` (waarin de transaction als JSON verwacht wordt) om onze datum alvast om te zetten naar een `Date` type, en de `placeId` naar een `Number` type. In het hoofdstuk rond validatie volgt hiervoor een betere oplossing!
-3. Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bv. bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
+3. Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
 
 Dan moeten we nog onze `create` implementeren in de servicelaag.
 
-```js
-//...
-const create = ({ amount, date, placeId, user }) => {
+```ts
+// src/service/transaction.ts
+export const create = ({ amount, date, placeId, user }: any) => {
   // 👇 1
-  let existingPlace;
-  if (placeId) {
-    existingPlace = PLACES.find((place) => place.id === placeId);
+  const existingPlace = PLACES.find((place) => place.id === placeId);
 
-    if (!existingPlace) {
-      throw new Error(`There is no place with id ${placeId}.`);
-    }
+  // 👇 1
+  if (!existingPlace) {
+    throw new Error(`There is no place with id ${placeId}.`);
   }
 
   // 👇 2
-  if (typeof user === 'string') {
-    user = { id: Math.floor(Math.random() * 100000), name: user };
-  }
   const maxId = Math.max(...TRANSACTIONS.map((i) => i.id));
 
-  // 👇 3
   const newTransaction = {
-    id: maxId + 1,
+    id: maxId + 1, // 👈 2
     amount,
     date: date.toISOString(),
     place: existingPlace,
-    user,
+    user: { id: Math.floor(Math.random() * 100000), name: user }, // 👈 3
   };
   TRANSACTIONS.push(newTransaction); // 👈 4
-  return newTransaction;
+  return newTransaction; // 👈 5
 };
-//...
 ```
 
 1. We halen de place met bijhorend id op. Indien niet gevonden, gooien we voorlopig een fout.
-2. In de definitieve applicatie is de user de aangemelde gebruiker. Momenteel geven we een string door en maken we de gebruiker aan. Een gebruiker heeft een uniek id. We dienen een uniek id te genereren en maken hiervoor gebruik van `Math.random` (later zullen we dit degelijker implementeren).
-3. We voegen gewoon een nieuw element aan onze TRANSACTIONS array toe, weliswaar met een uniek id. Dan creëren we onze transactie, met het id erbij en voegen ze toe aan onze array.
-4. We geven deze nieuw toegevoegde transactie weer terug.
+2. We genereren een nieuw id voor onze transactie door het hoogste id te zoeken en er 1 bij op te tellen.
+3. In de definitieve applicatie is de user de aangemelde gebruiker. Momenteel geven we een string door en maken we de gebruiker aan. Een gebruiker heeft een uniek id. We dienen een uniek id te genereren en maken hiervoor gebruik van `Math.random` (later zullen we dit degelijker implementeren).
+4. We voegen gewoon een nieuw element aan onze TRANSACTIONS array toe, weliswaar met een uniek id. Dan creëren we onze transactie, met het id erbij en voegen ze toe aan onze array.
+5. We geven deze nieuwe transactie terug.
 
 Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 
@@ -557,66 +548,75 @@ Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 }
 ```
 
+Je zou de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/api/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart. Dit wordt opgelost in een volgend hoofdstuk.
+
 ### Oefening 3 - Je eigen project
 
-Maak een create route aan in je project en test uit
+Maak een create route aan in je project en test uit.
 
 ## Routes met een parameter
 
-Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/transactions/15`, `/api/transactions/43`... om een transactie met een bepaald id op te vragen.
+Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/transactions/15` of `/api/transactions/43` om een transactie met een bepaald id op te vragen.
 
 In @koa/router doen we dit door `:naam_van_de_parameter` in de URL op te nemen. De variabele is dan beschikbaar in `ctx.params.naam_van_de_parameter`. Merk op dat een URL nooit een ":" kan bevatten, behalve die in `http://`. Dus er kan nooit dubbelzinnigheid optreden of het ":" deel uitmaakt van de URL of een parameter aankondigt.
 
 We willen dus een transactie kunnen opvragen op basis van zijn id, via bv. `/api/transactions/15`.
 
-Voeg in `src/index.js` een nieuwe route toe:
+Voeg een nieuwe route toe:
 
-```js
-router.get('/api/transactions', async (ctx) => {
-  // ...
-});
-
-router.post('/api/transactions', async (ctx) => {
-  // ...
-});
-
+```ts
+// src/index.ts
 router.get('/api/transactions/:id', async (ctx) => { // 👈 1
   ctx.body = transactionService.getById(Number(ctx.params.id)); // 👈 2
 });
 ```
 
-1. We doen dit door opnieuw een GET request te definiëren, maar nu met een :id parameter erbij.
+1. We doen dit door opnieuw een GET request te definiëren, maar nu met een `:id` parameter erbij.
 2. Wat er in de URL stond op die plaats kan je terugvinden in `ctx.params.id`. Dat id gebruiken we vervolgens om onze `getById` aan te spreken. We moeten de parameter omzetten naar een getal aangezien de URL een string is, zo is ook de parameter een string. In het hoofdstuk rond validatie volgt hiervoor een betere oplossing!
+   - Negeer opnieuw een eventuele foutmelding van TypeScript.
 
 In de servicelaag implementeer je de `getById` functie:
 
-```js
-const getById = (id) => {
+```ts
+// src/service/transaction.ts
+export const getById = (id: number) => {
   return TRANSACTIONS.find((t) => t.id === id);
 };
 ```
 
+Test opnieuw via Postman. Doe een GET request naar <http://localhost:9000/api/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 204 response (No Content) of dus een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+
 ### Oefening 4 - Je eigen project
 
 - Implementeer in je project een "get by id" endpoint en de bijhorende `getById` in de servicelaag en test uit.
-- Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties.
+- Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
+  - `PUT /api/transactions/:id`:
+    - een transactie aanpassen
+    - geeft de aangepaste transactie terug
+  - `DELETE /api/transactions/:id`:
+    - een transactie verwijderen
+    - geeft niets terug: `ctx.body` moet je dus niet invullen
+    - vul de status in: `ctx.status = 204` - anders krijg je een 404 (Not Found) als antwoord
 - Extra (voor de ervaren JavaScript'ers): maak alle servicefuncties async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
 
 ## Time to refactor
 
 ### De REST-laag
 
-Alle endpoints in één bestand plaatsen voldoet niet aan de best practices. We voorzien een aparte REST-laag voor het ontvangen van de requests. Hiervoor voorzien we een map `rest`. Maak het bestand `transaction.js` aan. Dit bevat de endpoints voor onze transacties. We voorzien een functie voor elk van de endpoints en definiëren vervolgens de routes in één functie die we exporteren. Deze laatste functie krijgt een router mee als parameter. In deze functie hangen we onze transactions-router aan de meegegeven router. Hier maken we gebruik van geneste routers. Dit is een manier om onze routes te groeperen. We kunnen dan bv. een prefix meegeven aan de router. Dit prefix wordt dan voor elke route geplaatst. We kunnen hiermee ook een middleware meegeven die dan voor elke route uitgevoerd wordt (bv. authenticatie - maar zie later).
+Alle endpoints in één bestand plaatsen voldoet niet aan de best practices. We voorzien een aparte REST-laag voor het ontvangen van de requests. Hiervoor voorzien we een map `rest`. Maak het bestand `transaction.ts` aan. Dit bevat de endpoints voor onze transacties. We voorzien een functie voor elk van de endpoints en definiëren vervolgens de routes in één functie die we exporteren. Deze laatste functie krijgt een router mee als parameter. In deze functie hangen we onze transactions-router aan de meegegeven router. Hier maken we gebruik van geneste routers. Dit is een manier om onze routes te groeperen. We kunnen dan bv. een prefix meegeven aan de router. Deze prefix wordt dan voor elke route geplaatst. We kunnen hieraan ook een of meerdere middlewares meegeven die dan voor elke route uitgevoerd worden (bv. authenticatie - maar zie later).
 
-```js
-const Router = require('@koa/router');
-const transactionService = require('../service/transaction');
+We typeren `ctx` als `Context` en `parent` als `Router`, beide types uit Koa. Zo krijgen we betere intellisense en foutmeldingen. Later zullen we de andere types ook verfijnen zodat die foutmeldingen ook verdwijnen.
 
-const getAllTransactions = async (ctx) => {
+```ts
+import Router from '@koa/router';
+import * as transactionService from '../service/transaction';
+import Application, { Context } from 'koa';
+
+const getAllTransactions = async (ctx: Context) => {
   ctx.body = transactionService.getAll();
 };
 
-const createTransaction = async (ctx) => {
+const createTransaction = async (ctx: Context) => {
   const newTransaction = transactionService.create({
     ...ctx.request.body,
     placeId: Number(ctx.request.body.placeId),
@@ -625,11 +625,11 @@ const createTransaction = async (ctx) => {
   ctx.body = newTransaction;
 };
 
-const getTransactionById = async (ctx) => {
+const getTransactionById = async (ctx: Context) => {
   ctx.body = transactionService.getById(Number(ctx.params.id));
 };
 
-const updateTransaction = async (ctx) => {
+const updateTransaction = async (ctx: Context) => {
   ctx.body = transactionService.updateById(Number(ctx.params.id), {
     ...ctx.request.body,
     placeId: Number(ctx.request.body.placeId),
@@ -637,17 +637,12 @@ const updateTransaction = async (ctx) => {
   });
 };
 
-const deleteTransaction = async (ctx) => {
+const deleteTransaction = async (ctx: Context) => {
   transactionService.deleteById(Number(ctx.params.id));
   ctx.status = 204;
 };
 
-/**
- * Install transaction routes in the given router.
- *
- * @param {Router} app - The parent router.
- */
-module.exports = (app) => {
+export default (parent: Router) => {
   const router = new Router({
     prefix: '/transactions',
   });
@@ -663,18 +658,15 @@ module.exports = (app) => {
 };
 ```
 
-Voeg een bestand `index.js` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor).
+Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter.
 
-```js
-const Router = require('@koa/router');
-const installTransactionRouter = require('./transaction');
+```ts
+import Application from "koa";
 
-/**
- * Install all routes in the given Koa application.
- *
- * @param {Koa} app - The Koa application.
- */
-module.exports = (app) => {
+import Router from '@koa/router';
+import installTransactionRouter from './transaction';
+
+export default (app: Application) => {
   const router = new Router({
     prefix: '/api',
   });
@@ -686,12 +678,12 @@ module.exports = (app) => {
 };
 ```
 
-Verwijder nu alle code omtrent routing uit `src/index.js` en installeer de routes via de geëxporteerde functie uit het `rest/index.js` bestand.
+Verwijder nu alle code omtrent routing uit `src/index.ts` en installeer de routes via de geëxporteerde functie uit het `rest/index.js` bestand.
 
 ```js
 // andere imports...
 // Verwijder de @koa/router en service import 👈 1
-const installRest = require('./rest'); // 👈 2
+import installRest from './rest'; // 👈 2
 
 //...
 
@@ -710,7 +702,7 @@ app.listen(9000, () => {
 });
 ```
 
-1. Verwijder alle code omtrent routing, ook de imports.
+1. Verwijder alle code omtrent routing, ook de imports. Doordat we een `export default` gebruiken, kunnen we de functie importeren zoals we willen en zonder accolades.
 2. Installeer dan de app router via de zonet gedefinieerde functie.
 
 Test uit en controleer of alles nog werkt.
@@ -724,184 +716,159 @@ We voorzien 2 endpoints:
 - `/api/health/ping` : retourneert pong als de server actief is
 - `/api/health/version` : retourneert info over de versie van de web service
 
-Creëer een `health.js` bestand in de `service` map dat 2 functies bevat:
+Creëer een `health.ts` bestand in de `service` map dat 2 functies bevat:
 
-- `ping` : retourneert pong
-- `getVersion` : retourneert info over de versie van de webservice
-
-```js
-const packageJson = require('../../package.json');
+```ts
+import config from 'config';
+import packageJson from '../../package.json';
 
 /**
  * Check if the server is healthy. Can be extended
  * with database connection check, etc.
  */
-const ping = () => ({ pong: true });
+export const ping = () => ({ pong: true }); // 👈 1
 
 /**
  * Get the running server's information.
  */
-const getVersion = () => ({
-  env: process.env.NODE_ENV,
+export const getVersion = () => ({ // 👈 2
+  env: config.get<string>('env'),
   version: packageJson.version,
   name: packageJson.name,
 });
-
-module.exports = {
-  ping,
-  getVersion,
-};
 ```
 
-In de `rest` map maak je een nieuw bestand `health.js` aan. Dit bevat de 2 endpoints:
+1. `ping` : retourneert een object met een property `pong` gelijk aan `true`
+2. `getVersion` : retourneert info over de versie van de web service
+   - We halen de `env` uit de configuratie en de versie en naam van de web service uit het `package.json` bestand.
 
-```js
-const Router = require('@koa/router');
-const healthService = require('../service/health');
+In de `rest` map maak je een nieuw bestand `health.ts` aan. Dit bevat de 2 endpoints:
 
-const ping = async (ctx) => {
+```ts
+import Router from '@koa/router';
+import * as healthService from '../service/health';
+import { Context } from 'koa';
+
+const ping = async (ctx: Context) => {
   ctx.status = 200;
   ctx.body = healthService.ping();
 };
 
-const getVersion = async (ctx) => {
+const getVersion = async (ctx: Context) => {
   ctx.status = 200;
   ctx.body = healthService.getVersion();
 };
 
-/**
- * Install health routes in the given router.
- *
- * @param {Router} app - The parent router.
- */
-module.exports = function installHealthRoutes(app) {
-  const router = new Router({
-    prefix: '/health',
-  });
+export default function installPlacesRoutes(parent: Router) {
+  const router = new Router({ prefix: '/health' });
 
   router.get('/ping', ping);
   router.get('/version', getVersion);
 
-  app.use(router.routes()).use(router.allowedMethods());
+  parent
+    .use(router.routes())
+    .use(router.allowedMethods());
 };
 ```
 
-Pas `src/rest/index.js` aan zodat de health routes ook geïnstalleerd worden.
+Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden.
 
 ### Logging
 
 Lees [Best practices for logging](https://betterstack.com/community/guides/logging/nodejs-logging-best-practices/).
 
-Als laatste refactoring gaan we onze logger in een aparte module plaatsen. Maak een bestand `logging.js` aan in een nieuwe map `core`. Voeg hierin onderstaande code toe. Bekijk de code en probeer zelf te achterhalen wat er gebeurt.
+Als laatste refactoring gaan we onze logger een beetje uitbreiden. Pas het bestand `logging.ts` aan in een nieuwe map `core`. Voeg hierin onderstaande code toe. Bekijk de code en probeer zelf te achterhalen wat er gebeurt (een uitleg vind je verborgen onder de code).
 
-```js
-const winston = require('winston');
-const { combine, timestamp, colorize, printf } = winston.format;
+```ts
+import config from 'config';
+import winston from 'winston';
+const {
+  combine, timestamp, colorize, printf,
+} = winston.format;
 
-let rootLogger;
+const NODE_ENV = config.get<string>('env');
+const LOG_LEVEL = config.get<string>('log.level');
+const LOG_DISABLED = config.get<boolean>('log.disabled');
 
-/**
- * Get the root logger.
- */
-const getLogger = () => {
-  if (!rootLogger) {
-    throw new Error('You must first initialize the logger');
-  }
-
-  return rootLogger;
-};
-
-/**
- * Define the logging format. We output a timestamp, context (name), level, message and the stacktrace in case of an error
- */
+// 👇 1
 const loggerFormat = () => {
+  // 👇 2
   const formatMessage = ({
-    level,
-    message,
-    timestamp,
-    name = 'server',
-    ...rest
-  }) =>
-    `${timestamp} | ${name} | ${level} | ${message} | ${JSON.stringify(rest)}`;
+    level, message, timestamp, ...rest
+  }: winston.Logform.TransformableInfo) => {
+    return `${timestamp} | ${level} | ${message} | ${JSON.stringify(rest)}`;
+  };
 
-  const formatError = ({ error: { stack }, ...rest }) =>
-    `${formatMessage(rest)}\n\n${stack}\n`;
-  const format = (info) =>
-    info.error instanceof Error ? formatError(info) : formatMessage(info);
-  return combine(colorize(), timestamp(), printf(format));
+  // 👇 3
+  const formatError = ({
+    error: { stack }, ...rest
+  }: winston.Logform.TransformableInfo) => `${formatMessage(rest)}\n\n${stack}\n`;
+
+  // 👇 4
+  const format = (info: winston.Logform.TransformableInfo) => {
+    if (info?.['error'] instanceof Error) { // 👈 5
+      return formatError(info);
+    }
+
+    return formatMessage(info); // 👈 6
+  };
+
+  return combine(
+    colorize(), timestamp(), printf(format),
+  );
 };
 
-/**
- * Initialize the root logger.
- *
- * @param {object} options - The options.
- * @param {string} options.level - The log level.
- * @param {boolean} options.disabled - Disable all logging.
- * @param {object} options.defaultMeta - Default metadata to show.
- */
-const initializeLogger = ({
-  level,
-  disabled = false,
-  defaultMeta = {}
-}) => {
-  rootLogger = winston.createLogger({
-    level,
-    format: loggerFormat(),
-    defaultMeta,
-    transports: [
-      new winston.transports.Console({
-        silent: disabled,
-      }),
-    ],
-  });
+// 👇 7
+const rootLogger: winston.Logger = winston.createLogger({
+  level: LOG_LEVEL,
+  format: loggerFormat(),
+  defaultMeta: { env: NODE_ENV },
+  transports: NODE_ENV === 'testing' ? [
+    new winston.transports.File({
+      filename: 'test.log',
+      silent: LOG_DISABLED,
+    }),
+  ] : [
+    new winston.transports.Console({ silent: LOG_DISABLED }),
+  ],
+});
 
+export const getLogger = () => {
   return rootLogger;
 };
-
-module.exports = {
-  initializeLogger,
-  getLogger,
-};
 ```
 
-Pas `src\index.js` aan zodat de logger geïnitialiseerd wordt, en zodat we hiervan gebruik maken:
+<!-- markdownlint-disable-next-line -->
++ Uitleg +
 
-```js
-//  andere imports...
-const config = require('config');
-const { initializeLogger, getLogger } = require('./core/logging');
+1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
+2. We definiëren binnen deze functie een functie voor het printen van logberichten die geen foutmelding bevatten.
+3. En een functie voor het printen van logberichten die wel een foutmelding bevatten.
+4. De volgende functie bepaalt welke van de vorige 2 functies gebruikt wordt, afhankelijk van de aanwezigheid van een foutmelding in het logbericht.
+   - We gebruiken in alle bovenstaande functies het type `winston.Logform.TransformableInfo` van `winston`. Dit is een interface die ons vertelt wat we allemaal standaard meekrijgen als informatie bij een logbericht.
+5. We checken binnen deze functie met optionele chaining of er een `error` property is in het logbericht. Als dit het geval is, gebruiken we de functie voor het printen van logberichten met foutmelding.
+6. Anders gebruiken we de functie voor het printen van logberichten zonder foutmelding.
+7. We breiden onze root logger ook wat uit met:
+   - Ons eigen formaat.
+   - De default meta informatie, die wordt toegevoegd aan elk logbericht. We voegen hier de `env` aan toe.
+   - We voorzien 2 transports:
+     - Een file transport voor de testomgeving. We schrijven de logs weg naar een bestand `test.log` omdat onze logs anders tussen de uitvoer van de testen komt. Later zal je zien waarom dit handig is.
+     - Een console transport voor alle andere omgevingen.
+     - We zetten de logging in beide gevallen uit als dit geconfigureerd is.
 
-const NODE_ENV = config.get('env');
-const LOG_LEVEL = config.get('log.level');
-const LOG_DISABLED = config.get('log.disabled');
-
-// app aanmaken, enz.
-
-// ... (verwijder de vorige code van de logger)
-
-initializeLogger({
-  level: LOG_LEVEL,
-  disabled: LOG_DISABLED,
-  defaultMeta: {
-    NODE_ENV,
-  },
-});
-
-const app = new Koa();
-// ...
-
-app.listen(9000, () => {
-  getLogger().info('🚀 Server listening on http://localhost:9000');
-});
-```
-
-Pas `src/service/transaction.js` aan zodat de error van een niet gevonden place gelogd wordt i.p.v. gegooid. In een latere fase zullen we wel een mooi response voorzien.
+Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 
 ### Oefening 5 - Je eigen project
 
-Doe dezelfde refactoring in je eigen project.
+Doe dezelfde refactoring in je eigen project:
+
+- REST laag toevoegen
+- Health checks toevoegen
+- Logging uitbreiden
 
 ## CORS
+
+?> Als geen Front-end Web Development volgt, is dit onderdeel niet vereist. Als je natuurlijk later een eigen front-end wil koppelen aan je back-end, is dit wel vereist.
 
 Als je vanuit een front-end een HTTP request stuurt naar een ander domein dan krijg je volgende fout:
 
@@ -915,24 +882,24 @@ CORS is een HTTP-functie waarmee een webapplicatie, die wordt uitgevoerd onder �
 
 Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aanvragen:
 
-1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. De eerste aanvraag is vereist, tenzij de aanvraagmethode een eenvoudige methode is, dat wil zeggen GET, HEAD of POST. Dit heet het preflight request.
+1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. Dit heet het preflight request.
 2. De werkelijke aanvraag, gemaakt op de gewenste resource.
 
-Voeg het CORS package toe:
+Voeg het CORS package en de bijbehorende types toe:
 
-```bash
+```terminal
 yarn add @koa/cors
+yarn add --dev @types/koa__cors
 ```
 
-@koa/cors` handelt het hele CORS-verhaal voor ons af (zoals bv. preflight request).
+`@koa/cors` handelt het hele CORS-verhaal voor ons af, zoals bv. preflight request.
 
-Voeg wat configuratie toe in `config/development.js` en `config/production.js`:
+Voeg wat configuratie toe in `config/development.ts` en `config/production.ts`:
 
-```js
-module.exports = {
+```ts
+export default {
   log: {
-    level: 'silly',
-    disabled: false,
+    // ...
   },
   cors: { // 👈 1
     origins: ['http://localhost:5173'], // 👈 2
@@ -941,50 +908,74 @@ module.exports = {
 };
 ```
 
-1. Pas de config aan voor development en production, voeg de cors settings toe.
+1. Pas de config aan voor development en production, voeg de CORS settings toe.
 2. `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
+   - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
+   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat losen we op in het hoofdstuk rond CI/CD.
 3. `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u).
 
-Installeer nu de CORS middleware in `src/index.js`:
+Installeer nu de CORS middleware in `src/index.ts`:
 
-```js
+```ts
 // ...
-const koaCors = require('@koa/cors'); // 👈 1
+// 👇 1
+import config from 'config';
+import koaCors from '@koa/cors';
 
-//..
-const CORS_ORIGINS = config.get('cors.origins'); // 👈 2
-const CORS_MAX_AGE = config.get('cors.maxAge'); // 👈 2
+// ...
+const CORS_ORIGINS = config.get<string[]>('cors.origins'); // 👈 2
+const CORS_MAX_AGE = config.get<number>('cors.maxAge'); // 👈 2
 
 // ...
 
 const app = new Koa();
 
 // 👇 3
-app.use(
-  koaCors({
-    origin: (ctx) => { // 👈 4
-      if (CORS_ORIGINS.indexOf(ctx.request.header.origin) !== -1) {
-        return ctx.request.header.origin;
-      }
-      // Not a valid domain at this point, let's return the first valid as we should return a string
-      return CORS_ORIGINS[0];
-    },
-    allowHeaders: ['Accept', 'Content-Type', 'Authorization'], // 👈 5
-    maxAge: CORS_MAX_AGE, // 👈 6
-  })
-);
+app.use(koaCors({
+  // 👇 4
+  origin: (ctx) => {
+    if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) { // 👈 5
+      return ctx.request.header.origin!;
+    }
+    // 👇 6
+    // Not a valid domain at this point, let's return the first valid as we should return a string
+    const {
+      header: {
+        referer, 'user-agent': userAgent,
+      },
+      ip,
+    } = ctx.request;
+    getLogger().warn(
+      `An illegal cross-origin request from ${ip} was referred from ${referer} with User-Agent ${userAgent}`,
+    );
+    return CORS_ORIGINS[0] || ''; // 👈 7
+  },
+  // 👇 8
+  allowHeaders: [
+    'Accept',
+    'Content-Type',
+    'Authorization',
+  ],
+  maxAge: CORS_MAX_AGE, // 👈 9
+}));
 
 app.use(bodyParser());
 
 // ...
 ```
 
-1. Importeer CORS.
+1. Importeer CORS en de configuratie.
 2. Haal de configuratievariabelen op.
 3. Definieer de CORS middleware.
-4. `origin`: gebruik een functie om te checken of het request origin in onze array voorkomt. Door een functie te gebruiken, kan je meerdere domeinen toelaten.
-5. `allowHeaders`: de toegelaten headers in het request.
-6. `maxAge`: geef de maximum cache leeftijd door.
+4. `origin`: gebruik een functie om te checken of het request origin in onze array voorkomt. Door een functie te gebruiken, kan je meerdere domeinen toelaten. Je mag nl. maar één domein of string teruggeven in de CORS header `Access-Control-Allow-Origin`.
+5. We controleren of het request origin in onze array voorkomt. Indien ja, dan geven we het request origin terug (dit is toch geldig).
+6. Indien het niet in de array voorkomt, loggen we een waarschuwing met de nodige informatie.
+7. We moeten iets teruggeven, maar het request origin is ongeldig. Daarom geven we het eerste toegelaten domein terug, de browser zal hierna melden dat requests naar onze server niet toegelaten zijn.
+8. Indien niet, loggen we een waarschuwing met de nodige informatie en geven we het eerste toegelaten domein terug.
+9. `allowHeaders`: de toegelaten headers in het request.
+10. `maxAge`: de maximum cache leeftijd (voor browsers).
+
+l> ws oplossing 350a807 les3-opl
 
 ### Oefening 6 - Je eigen project
 
