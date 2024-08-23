@@ -49,9 +49,9 @@ Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox
 
 - Ander ORM voor de databank
 - Ander type databank (document based, column oriënted…)
-  - Let op: niet elk project is hiervoor geschikt
+  - Let op: niet elk project is hiervoor geschikt!
 - Ander web framework (Express, Fastify, NestJS...)
-  - Let op: nog steeds met het toepassen van de nodige best practices, aangepast aan het framework
+  - Let op: nog steeds met het toepassen van de nodige best practices, aangepast aan het framework! We merken vaak dat studenten die afwijken op dit punt, ook de best practices vergeten (door online tutorials) waardoor het project niet voldoet aan meerdere minimumvereisten.
 - Ander package voor API documentation
 - Package voor invoervalidatie
 - Real time toepassing (sockets...)
