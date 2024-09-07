@@ -113,4 +113,3 @@ type FullName = Pick<Person, 'firstName' | 'lastName'>;
 ```
 
 TypeScript heeft nog ontzettend veel mogelijkheden om types te manipuleren, maar dit valt buiten de scope van deze cursus. Je kan alles vinden in de [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/2/types-from-types.html).
-

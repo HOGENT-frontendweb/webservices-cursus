@@ -53,6 +53,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
   - `PUT /api/transactions/:id`: een transactie aanpassen
   - `DELETE /api/transactions/:id`: een transactie verwijderen
 
+  <!-- markdownlint-disable-next-line -->
   **Places**
 
   - `GET /api/places`: alle plaatsen opvragen
@@ -62,6 +63,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
   - `DELETE /api/places/:id`: een plaats verwijderen
   - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
 
+  <!-- markdownlint-disable-next-line -->
   **Users**
 
   - `GET /api/users`: alle gebruikers opvragen
