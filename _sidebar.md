@@ -1,6 +1,6 @@
 <!-- markdownlint-disable first-line-h1 -->
 
-![logo](../images/HOGENT_Logo.png ':size=33% :ignore')
+![logo](/images/HOGENT_Logo.png ':size=33% :ignore')
 
 <small>
   Dit academiejaar wordt de cursus van dit olod stelselmatig omgevormd naar TypeScript. Alle hoofdstukken zullen dus sterk aangepast worden t.o.v. vorig jaar. Deze niet-afgewerkte hoofdstukken worden aangeduid met een "Work In Progress" label: WIP. Deze zullen zeker nog wijzigen, het is dus niet de bedoeling dat je deze hoofdstukken reeds doorneemt.
