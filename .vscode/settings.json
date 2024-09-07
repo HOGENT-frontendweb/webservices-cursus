@@ -13,6 +13,7 @@
     "databankconnectie",
     "databanklocatie",
     "databanklogin",
+    "databanknaam",
     "databankontwerp",
     "databankschema",
     "databankserver",
@@ -21,6 +22,7 @@
     "distro",
     "geauthenticeerd",
     "geëncodeerd",
+    "geëscaped",
     "geparsed",
     "hardgecodeerde",
     "helperfunctie",
@@ -68,6 +70,7 @@
     "testjwt",
     "testpw",
     "twoslash",
+    "YYYYMMDDHH",
     "Zakas",
   ]
 }

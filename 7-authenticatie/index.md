@@ -82,6 +82,182 @@ Het token uit het voorbeeld bevat volgende payload:
 
 De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen met een _secret_ om zo de payload te ondertekenen. Het is niet meer dan een handtekening die aangeeft of de payload gewijzigd is. Als iemand de payload wijzigt, zal de signature anders zijn en wordt de token ongeldig beschouwd.
 
+### Helpers voor JWT's
+
+We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) om JWT's te ondertekenen en verifiëren:
+
+```bash
+yarn add jsonwebtoken
+```
+
+We voegen wat configuratie toe voor jsonwebtoken in `config/development.js`, `config/production.js` en `config/test.js`:
+
+<!-- cSpell: disable -->
+```js
+module.exports = {
+  auth: {
+    jwt: {
+      secret: 'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
+      expirationInterval: 60 * 60 * 1000, // ms (1 hour)
+      issuer: 'budget.hogent.be',
+      audience: 'budget.hogent.be',
+    },
+  },
+};
+```
+<!-- cSpell: enable -->
+
+- `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
+- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
+- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
+
+We definiëren een module met een aantal helpers om een JWT te maken/controleren in `src/core/jwt.js`:
+
+```js
+const config = require('config'); // 👈 1
+const jwt = require('jsonwebtoken'); // 👈 2
+const { getLogger } = require('./logging'); // 👈 6
+
+const JWT_AUDIENCE = config.get('auth.jwt.audience'); // 👈 1
+const JWT_SECRET = config.get('auth.jwt.secret'); // 👈 1
+const JWT_ISSUER = config.get('auth.jwt.issuer'); // 👈 1
+const JWT_EXPIRATION_INTERVAL = config.get('auth.jwt.expirationInterval'); // 👈 1
+
+// 👇 3
+const generateJWT = (user) => {
+  // 👇 4
+  const tokenData = {
+    roles: user.roles,
+  };
+
+  // 👇 5
+  const signOptions = {
+    expiresIn: Math.floor(JWT_EXPIRATION_INTERVAL / 1000),
+    audience: JWT_AUDIENCE,
+    issuer: JWT_ISSUER,
+    subject: `${user.id}`,
+  };
+
+  // 👇 6
+  return new Promise((resolve, reject) => {
+    jwt.sign(tokenData, JWT_SECRET, signOptions, (err, token) => {
+      if (err) {
+        getLogger().error('Error while signing new token:', err.message);
+        return reject(err);
+      }
+      return resolve(token);
+    });
+  });
+};
+
+// 👇 7
+const verifyJWT = (authToken) => {
+  // 👇 8
+  const verifyOptions = {
+    audience: JWT_AUDIENCE,
+    issuer: JWT_ISSUER,
+    subject: 'auth',
+  };
+
+  // 👇 9
+  return new Promise((resolve, reject) => {
+    jwt.verify(authToken, JWT_SECRET, verifyOptions, (err, decodedToken) => {
+      if (err || !decodedToken) {
+        getLogger().error('Error while verifying token:', err.message);
+        return reject(err || new Error('Token could not be parsed'));
+      }
+      return resolve(decodedToken);
+    });
+  });
+};
+
+// 👇 10
+module.exports = {
+  generateJWT,
+  verifyJWT,
+};
+```
+
+1. Importeer alle gedefinieerde configuratie.
+2. Importeer het `jsonwebtoken` package.
+3. Definieer een helper `generateJWT` om een JWT te maken, deze krijgt een gebruiker mee als argument.
+4. We geven de `roles` als JWT payload, je moet deze verplicht apart definiëren
+5. Daarnaast definiëren we enkele properties nodig voor het ondertekenen van de JWT:
+
+   - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` staat in seconden en onze configuratie rekent met milliseconden, daarom moeten we dit omvormen.
+   - `audience`: welke servers de token mogen accepteren.
+   - `issuer`: welke server(s) de token uitgeven.
+   - `subject`: voor wie deze token dient (bv. het id van de gebruiker), dit moet een string zijn.
+
+6. We retourneren een `Promise` die zal resolven als de JWT ondertekend is. We moeten de `sign`-functie wrappen in een `Promise` aangezien deze werkt o.b.v. callbacks om asynchroon te zijn. Maar dit werkt niet makkelijk. De `sign`-functie neemt de JWT payload (`tokenData`), het secret en de sign opties als argument en als laatste argument verwacht deze een callback die opgeroepen zal worden als de token ondertekend is of als er iets fout liep. In deze callback resolven of rejecten we de `Promise` indien nodig.
+7. We definiëren nog een tweede helper `verifyJWT` (in `src/core/jwt.js`) die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
+
+   - JWT is verlopen
+   - Er is geprutst aan de payload
+   - JWT is niet bedoeld voor deze server
+   - ...
+
+8. We geven opnieuw de informatie mee die we verwachten in de token.
+9. Omdat `jwt.verify` ook met een callback werkt, moeten we deze wrappen in een Promise. `jwt.verify` verwacht de JWT, het secret en de opties als argumenten. Als laatste argument volgt een callback die opgeroepen zal worden als de token gecontroleerd is. In deze callback resolven of rejecten we de `Promise` indien nodig.
+10. Exporteer de twee helpers.
+
+Kopieer onderstaande code in een `src/testjwt.js` bestand en test zelf of jouw code werkt! Je kan dit script uitvoeren d.m.v. `node src/testjwt.js`
+
+```js
+process.env.NODE_CONFIG = JSON.stringify({
+  env: 'development',
+});
+
+const { generateJWT, verifyJWT } = require('./core/jwt');
+
+function messWithPayload(jwt) {
+  const [header, payload, signature] = jwt.split('.');
+  const parsedPayload = JSON.parse(
+    Buffer.from(payload, 'base64url').toString(),
+  );
+
+  // make me admin please ^^
+  parsedPayload.roles.push('admin');
+
+  const newPayload = Buffer.from(
+    JSON.stringify(parsedPayload),
+    'ascii',
+  ).toString('base64url');
+  return [header, newPayload, signature].join('.');
+}
+
+async function main() {
+  const fakeUser = {
+    id: 1,
+    firstName: 'Thomas',
+    lastName: 'Aelbrecht',
+    email: 'thomas.aelbrecht@hogent.be',
+    roles: ['user'],
+  };
+
+  const jwt = await generateJWT(fakeUser);
+  // copy and paste the JWT in the textfield on https://jwt.io
+  // inspect the content
+  console.log('The JWT:', jwt);
+
+  let valid = await verifyJWT(jwt);
+  console.log('This JWT is', valid ? 'valid' : 'incorrect');
+
+  // Let's mess with the payload
+  const messedUpJwt = messWithPayload(jwt);
+  console.log('Messed up JWT:', messedUpJwt);
+
+  try {
+    console.log('Verifying this JWT will throw an error:');
+    valid = await verifyJWT(messedUpJwt);
+  } catch (err) {
+    console.log('We expected an error:', err.message);
+  }
+}
+
+main();
+```
+
 ## Wachtwoorden opslaan
 
 We moeten onze wachtwoorden opslaan in de databank. We doen dit uiteraard niet in plain text. We **hashen** de wachtwoorden met [argon2](https://github.com/P-H-C/phc-winner-argon2). Dit is een van de nieuwste en beste hashing algoritmes voor o.a. wachtwoorden.
@@ -94,7 +270,7 @@ Een hashing algoritme is een one-way algoritme. Het neemt een input en vormt dez
 
 Sommige hashing algoritmes gebruiken een **salt**. Dit is een willekeurig string (met vaste lengte) en wordt gebruikt om een verschillende hash te genereren bij een identieke input. Dus: hetzelfde wachtwoord hashen met een andere salt, geeft een andere hash. Dit maakt bv. [dictionary attacks](https://www.sciencedirect.com/topics/computer-science/dictionary-attack) moeilijker.
 
-### Voorbeeld: helpers voor hashing
+### Helpers voor hashing
 
 We gebruiken het package `argon2` om het argon2 algoritme te gebruiken in Node.js:
 
@@ -118,7 +294,7 @@ module.exports = {
 ```
 
 - `saltLength`: we kiezen een salt van 16 bytes (128 bits)
-- `hasLength`: onze hash moet 32 bytes groot zijn (256 bits)
+- `hashLength`: onze hash moet 32 bytes groot zijn (256 bits)
 - `timeCost`: we laten het hashing algoritme 6 iteraties uitvoeren
 - `memoryCost`: elke thread van het algoritme mag 128MiB gebruiken
 
@@ -174,14 +350,16 @@ module.exports = {
 4. De argon2 library exporteert een `hash`-functie om een gegeven string te hashen. Het verwacht de string als eerste argument en wat opties als tweede argument. We geven onze configuratie mee aan de juiste optie. We kiezen de `argon2id` versie van het algoritme (resistent tegen GPU en tradeoff attacks).
 5. De argon2 library exporteert een `verify`-functie om te checken of een gegeven string dezelfde hash oplevert. We geven opnieuw alle configuratie mee.
 
-### DIY: helpers voor hashing
-
 Kopieer deze code in een `src/testpw.js` bestand en test zelf of jouw code werkt! Speel een beetje met de configuratie en bekijk de invloed op de uitvoeringstijd van het algoritme.
 
 Je kan onderstaande code uitvoeren m.b.v. `node src/testpw.js`.
 
 <!-- cSpell: disable -->
 ```js
+process.env.NODE_CONFIG = JSON.stringify({
+  env: 'development',
+});
+
 const { hashPassword, verifyPassword } = require('./core/password');
 
 async function main() {
@@ -210,7 +388,7 @@ main();
 ```
 <!-- cSpell: enable -->
 
-## Voorbeeld: wachtwoord opslaan
+### Wachtwoord opslaan in de databank
 
 Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe **migratie** in `src/data/migrations/202309191630_addAuthInfoToUserTable.js`:
 
@@ -367,181 +545,7 @@ const register = async ({
   yarn start
   ```
 
-## Voorbeeld: helpers voor JWT
-
-We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) om JWT's te ondertekenen en verifiëren:
-
-```bash
-yarn add jsonwebtoken
-```
-
-We voegen wat configuratie toe voor jsonwebtoken in `config/development.js`, `config/production.js` en `config/test.js`:
-
-<!-- cSpell: disable -->
-```js
-module.exports = {
-  auth: {
-    jwt: {
-      secret: 'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
-      expirationInterval: 60 * 60 * 1000, // ms (1 hour)
-      issuer: 'budget.hogent.be',
-      audience: 'budget.hogent.be',
-    },
-  },
-};
-```
-<!-- cSpell: enable -->
-
-- `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
-- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
-- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
-
-We definiëren een module met een aantal helpers om een JWT te maken/controleren in `src/core/jwt.js`:
-
-```js
-const config = require('config'); // 👈 1
-const jwt = require('jsonwebtoken'); // 👈 2
-
-const JWT_AUDIENCE = config.get('auth.jwt.audience'); // 👈 1
-const JWT_SECRET = config.get('auth.jwt.secret'); // 👈 1
-const JWT_ISSUER = config.get('auth.jwt.issuer'); // 👈 1
-const JWT_EXPIRATION_INTERVAL = config.get('auth.jwt.expirationInterval'); // 👈 1
-
-// 👇 3
-const generateJWT = (user) => {
-  // 👇 4
-  const tokenData = {
-    userId: user.id,
-    roles: user.roles,
-  };
-
-  // 👇 5
-  const signOptions = {
-    expiresIn: Math.floor(JWT_EXPIRATION_INTERVAL / 1000),
-    audience: JWT_AUDIENCE,
-    issuer: JWT_ISSUER,
-    subject: 'auth',
-  };
-
-  // 👇 6
-  return new Promise((resolve, reject) => {
-    jwt.sign(tokenData, JWT_SECRET, signOptions, (err, token) => {
-      if (err) {
-        console.log('Error while signing new token:', err.message);
-        return reject(err);
-      }
-      return resolve(token);
-    });
-  });
-};
-
-module.exports = { // 👈 3
-  generateJWT,
-};
-```
-
-1. Importeer alle gedefinieerde configuratie.
-2. Importeer het `jsonwebtoken` package.
-3. Definieer een helper `generateJWT` om een JWT te maken, deze krijgt een gebruiker mee als argument.
-4. We geven deze twee properties mee als JWT payload. Je moet deze verplicht apart definiëren
-5. Daarnaast definiëren we enkele properties nodig voor het ondertekenen van de JWT:
-
-   - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` staat in seconden en onze configuratie rekent met milliseconden, daarom moeten we dit omvormen.
-   - `audience`: welke servers de token mogen accepteren.
-   - `issuer`: welke server(s) de token uitgeven.
-   - `subject`: waarvoor deze token dient, in dit geval voor authenticatie (auth).
-
-6. We retourneren een `Promise` die zal resolven als de JWT ondertekend is. We moeten de `sign`-functie wrappen in een `Promise` aangezien deze werkt o.b.v. callbacks om asynchroon te zijn. Maar dit werkt niet makkelijk. De `sign`-functie neemt de JWT payload (`tokenData`), het secret en de sign opties als argument en als laatste argument verwacht deze een callback die opgeroepen zal worden als de token ondertekend is of als er iets fout liep. In deze callback resolven of rejecten we de `Promise` indien nodig.
-
-We definiëren nog een tweede helper `verifyJWT` (in `src/core/jwt.js`) die een gegeven JWT zal controleren op geldigheid. Mogelijke problemen:
-
-- JWT is verlopen
-- Er is geprutst aan de payload
-- JWT is niet bedoeld voor deze server
-- ...
-
-```js
-// ...
-const verifyJWT = (authToken) => {
-  // 👇 1
-  const verifyOptions = {
-    audience: JWT_AUDIENCE,
-    issuer: JWT_ISSUER,
-    subject: 'auth',
-  };
-
-  // 👇 2
-  return new Promise((resolve, reject) => {
-    jwt.verify(authToken, JWT_SECRET, verifyOptions, (err, decodedToken) => {
-      if (err || !decodedToken) {
-        console.log('Error while verifying token:', err.message);
-        return reject(err || new Error('Token could not be parsed'));
-      }
-      return resolve(decodedToken);
-    });
-  });
-};
-
-module.exports = {
-  generateJWT,
-  verifyJWT, // 👈 3
-};
-```
-
-1. We geven opnieuw de informatie mee die we verwachten in de token.
-2. Omdat `jwt.verify` ook met een callback werkt, moeten we deze wrappen in een Promise. `jwt.verify` verwacht de JWT, het secret en de opties als argumenten. Als laatste argument volgt een callback die opgeroepen zal worden als de token gecontroleerd is. In deze callback resolven of rejecten we de `Promise` indien nodig.
-3. We exporteren deze helper.
-
-Kopieer onderstaande code in een `src/testjwt.js` bestand en test zelf of jouw code werkt! Je kan dit script uitvoeren d.m.v. `node src/testjwt.js`
-
-```js
-const { generateJWT, verifyJWT } = require('./core/jwt');
-
-function messWithPayload(jwt) {
-  const [header, payload, signature] = jwt.split('.');
-  const parsedPayload = JSON.parse(
-    Buffer.from(payload, 'base64url').toString()
-  );
-
-  // make me admin please ^^
-  parsedPayload.roles.push('admin');
-
-  const newPayload = Buffer.from(
-    JSON.stringify(parsedPayload),
-    'ascii'
-  ).toString('base64url');
-  return [header, newPayload, signature].join('.');
-}
-
-async function main() {
-  const fakeUser = {
-    id: 1,
-    firstName: 'Thomas',
-    lastName: 'Aelbrecht',
-    email: 'thomas.aelbrecht@hogent.be',
-    roles: ['user'],
-  };
-
-  const jwt = await generateJWT(fakeUser);
-  // copy and paste the JWT in the textfield on https://jwt.io
-  // inspect the content
-  console.log('The JWT:', jwt);
-
-  let valid = await verifyJWT(jwt);
-  console.log('This JWT is', valid ? 'valid' : 'incorrect');
-
-  // Let's mess with the payload
-  const messedUpJwt = messWithPayload(jwt);
-  console.log('Messed up JWT:', messedUpJwt);
-
-  console.log('Verifying this JWT will throw an error:');
-  valid = await verifyJWT(messedUpJwt);
-}
-
-main();
-```
-
-## Voorbeeld: aanmelden
+## Aanmelden
 
 We definiëren alle rollen in onze applicatie in een constant object. Zo is het eenvoudig om ze te wijzigen indien nodig. Voeg onderstaande code toe aan `src/core/roles.js`
 
@@ -786,7 +790,7 @@ Pas ook de overige functies aan:
 - `register` retourneert enkel het token en de publieke user data
 - `getAll` en `getById` mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!)
 
-## Voorbeeld: registreren
+## Registreren
 
 We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.js` hebben we:
 
@@ -849,7 +853,7 @@ module.exports = function installUsersRoutes(app) {
 3. We voorzien ook een validatieschema voor de input.
 4. We geven deze functie mee aan de POST op `/register` en doen ook de invoervalidatie.
 
-## Voorbeeld: helpers voor authenticatie/autorisatie
+## Helpers voor authenticatie/autorisatie
 
 We definiëren een module `src/core/auth.js` die twee helpers exporteert. Beide helpers zijn middlewares voor Koa.
 
@@ -920,11 +924,11 @@ const checkAndParseSession = async (authHeader) => {
 
   const authToken = authHeader.substring(7); // 👈 3
   try {
-    const { roles, userId } = await verifyJWT(authToken); // 👈 5
+    const { roles, sub } = await verifyJWT(authToken); // 👈 5
 
 
     return {
-      userId,
+      userId: Number(sub),
       roles,
       authToken,
     }; // 👈 6
@@ -946,6 +950,7 @@ module.exports = {
 3. Vervolgens verwijderen we de "Bearer " van de token, zo hebben we enkel de JWT over.
 4. We wrappen alles in een try-catch om de fouten nog eens afzonderlijk te loggen. Alle fouten die gegooid worden, hebben te maken met de geldigheid van de JWT (verlopen, ongeldig signature...)
 5. We verifiëren de JWT. Als deze geldig is, dan krijgen we de payload van de token terug.
+   - Merk op: de `sub` property van de payload bevat de id van de gebruiker maar als string. We zetten deze om naar een getal.
 6. Als laatste retourneren we alle sessie-informatie, alsook de token.
 
 De laatste functie in de user service (`src/service/user.js`) zal checken of een gegeven rol in de array van rollen voorkomT. De array bevat alle rollen van de gebRuiker (uit de JWT payload gehaald).

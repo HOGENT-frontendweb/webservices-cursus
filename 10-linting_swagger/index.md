@@ -19,7 +19,7 @@ Linting is statische analyse van code, de code wordt dus geanalyseerd zonder ze 
 
 ### Linting: tools installeren
 
-Voeg de [ESLint extensie](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) toe aan VS Code. Installeer ESLint en een plugin in het project:
+Voeg, indien nog niet gedaan, de [ESLint extensie](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint) toe aan VS Code. Installeer ESLint en een plugin in het project:
 
 ```bash
 yarn add --dev eslint eslint-plugin-import

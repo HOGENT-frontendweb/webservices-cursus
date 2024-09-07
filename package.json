@@ -1,6 +1,6 @@
 {
   "name": "webservices-cursus",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "UNLICENSED",
   "scripts": {
     "start": "docsify serve ."
@@ -11,6 +11,7 @@
   "engines": {
     "npm": ">=9.8.0",
     "node": ">=20.6.0",
-    "yarn": ">=1.22.0"
-  }
+    "yarn": ">=4.4.0"
+  },
+  "packageManager": "yarn@4.4.0"
 }
