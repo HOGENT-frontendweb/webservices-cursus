@@ -1,10 +1,9 @@
 {
-  "name": "webservices-budget-2425",
+  "name": "webservices-budget",
   "version": "1.0.0",
   "description": "Demo application for the course Web Services.",
   "main": "index.ts",
-  "repository": "git@github.com:HOGENT-Web/webservices-budget-2425.git",
-  "author": "Thomas Aelbrecht <thomasaelbrecht@live.com>",
+  "repository": "git@github.com:HOGENT-frontendweb/webservices-budget.git",
   "license": "MIT",
   "private": true,
   "packageManager": "yarn@4.4.0",
