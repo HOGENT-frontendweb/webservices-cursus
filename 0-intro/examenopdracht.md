@@ -62,6 +62,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 - applicatie wijkt voldoende af van de voorbeeldapplicatie
 - alle testen slagen
 - kan de CRUD operaties voor 1 of meerdere entiteiten demonstreren
+- demo-video is volledig
 
 ## 3. Dossier vereisten
 
