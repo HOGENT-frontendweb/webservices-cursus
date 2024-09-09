@@ -45,10 +45,12 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 ### Algemeen
 
 - er is een minimum aan logging en configuratie voorzien
-- een aantal niet-triviale integratietesten (min. 1 entiteit in REST-laag >= 90% coverage)
+- een aantal niet-triviale én werkende integratietesten (min. 1 entiteit in REST-laag >= 90% coverage)
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
 - minstens één extra technologie die we niet gezien hebben in de les (zie [sectie 4](#4-voorbeelden-van-extras) voor voorbeelden)
 - maakt gebruik van de laatste ES-features (async/await, object destructuring, spread operator...)
+- de applicatie start zonder problemen op
+- de API draait online
 - duidelijke en volledige README.md
 - er werden voldoende (kleine) commits gemaakt
 - volledig en tijdig ingediend dossier (zie [sectie 3](#3-dossier-vereisten) voor de vereisten)
@@ -57,12 +59,13 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 ### Demo
 
-- een werkende REST API in NodeJS
-- API draait online
-- applicatie wijkt voldoende af van de voorbeeldapplicatie
+- de student toont een werkende REST API in NodeJS
+- de student overloopt de projectstructuur
+- de applicatie wijkt voldoende af van de voorbeeldapplicatie
+- de student kan de CRUD operaties voor 1 of meerdere entiteiten demonstreren
+- de student toont de implementatie/werking van de extra technologie
 - alle testen slagen
-- kan de CRUD operaties voor 1 of meerdere entiteiten demonstreren
-- demo-video is volledig
+- de student toont een stukje code waar die fier op is
 
 ## 3. Dossier vereisten
 
@@ -110,9 +113,10 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
     - Context van de applicatie (= wat doet de applicatie? wat is het doel?)
     - Projectstructuur overlopen (mappenstructuur, speciale ontwerpkeuzes...)
     - Demo van de applicatie (gebruik de online versie)
+      - Toon dat jouw front-end responsive is (indien van toepassing)
     - Demo van de extra technologie + werking/implementatie
     - Testen laten lopen
-    - Toon een stukje code waar je fier op bent en leg uit
+    - Toon een stukje code waar je fier op bent en leg uit (voor beide olods)
 
 **De deadline voor het portfolio is het einde van week 13 (vrijdag 20 december 2024, 23u59).**
 
