@@ -14,26 +14,54 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 ## 2. Minimumvereisten
 
-- Een werkende REST API in Node.js
-- Domeinlaag met een zekere complexiteit
-  - Minstens 2 een-op-veel of veel-op-veel relaties
-  - Als je het in één databanktabel kan voorstellen is het te simpel
-- Onderliggende databank
-- Best practices toepassen
-  - invoervalidatie
-  - degelijke foutboodschappen bij falende HTTP requests
-  - logging
-  - gelaagde applicatie
-  - ...
-- Meerdere routes met invoervalidatie
-- Degelijke autorisatie & authenticatie op alle routes
-- Gebruik de laatste ES-features (async/await, object destructuring, spread operator...) - dus geen callbacks, then/catch...
-- Regelmatige commits in git (één of een paar commits helemaal op het einde wordt niet aanvaard)
-- Een aantal niet triviale én werkende integratietesten, de routes van minstens één controller moeten minimaal 80% test coverage hebben
-- Correct ingevulde README met een degelijke opmaak in Markdown (zie [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet))
-- Een volledig en tijdig ingediend dossier (zie [sectie 3](#3-dossier-vereisten) voor de vereisten)
-- De API draait online
-- Minimum één extra technologie die we niet gezien hebben in de les (zie [sectie 4](#4-voorbeelden-van-extras) voor voorbeelden)
+### Datalaag
+
+- voldoende complex (meer dan één tabel, tabellen bevatten meerdere kolommen, 2 een-op-veel of veel-op-veel relaties naast de user tabel)
+- één module beheert de connectie + connectie wordt gesloten bij sluiten server
+- heeft migraties - indien van toepassing
+- heeft seeds
+
+### Repositorylaag
+
+- definieert één repository per entiteit - indien van toepassing
+- mapt OO-rijke data naar relationele tabellen en vice versa - indien van toepassing
+
+### Servicelaag met een zekere complexiteit
+
+- bevat alle domeinlogica
+- bevat geen services voor entiteiten die geen zin hebben zonder hun ouder (bv. tussentabellen)
+- bevat geen SQL-queries of databank-gerelateerde code
+
+### REST-laag
+
+- meerdere routes met invoervalidatie
+- meerdere entiteiten met alle CRUD-operaties
+- degelijke foutboodschappen
+- volgt de conventies van een RESTful API
+- bevat geen domeinlogica
+- geen API calls voor entiteiten die geen zin hebben zonder hun ouder (bv. tussentabellen)
+- degelijke authorisatie/authenticatie op alle routes
+
+### Algemeen
+
+- er is een minimum aan logging en configuratie voorzien
+- een aantal niet-triviale integratietesten (min. 1 entiteit in REST-laag >= 90% coverage)
+- node_modules, .env, productiecredentials... werden niet gepushed op GitHub
+- minstens één extra technologie die we niet gezien hebben in de les (zie [sectie 4](#4-voorbeelden-van-extras) voor voorbeelden)
+- maakt gebruik van de laatste ES-features (async/await, object destructuring, spread operator...)
+- duidelijke en volledige README.md
+- er werden voldoende (kleine) commits gemaakt
+- volledig en tijdig ingediend dossier (zie [sectie 3](#3-dossier-vereisten) voor de vereisten)
+
+!> Gebruik een degelijke opmaak in Markdown voor de README en het dossier! Zie [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) voor meer uitleg.
+
+### Demo
+
+- een werkende REST API in NodeJS
+- API draait online
+- applicatie wijkt voldoende af van de voorbeeldapplicatie
+- alle testen slagen
+- kan de CRUD operaties voor 1 of meerdere entiteiten demonstreren
 
 ## 3. Dossier vereisten
 
@@ -52,10 +80,10 @@ Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox
   - Let op: niet elk project is hiervoor geschikt!
 - Ander web framework (Express, Fastify, NestJS...)
   - Let op: nog steeds met het toepassen van de nodige best practices, aangepast aan het framework! We merken vaak dat studenten die afwijken op dit punt, ook de best practices vergeten (door online tutorials) waardoor het project niet voldoet aan meerdere minimumvereisten.
+  - Check bij jouw lector of het framework dat je wil gebruiken toegelaten is.
 - Ander package voor API documentation
 - Package voor invoervalidatie
 - Real time toepassing (sockets...)
-- API in TypeScript i.p.v. JavaScript
 - ... (eigen inbreng, verras ons)
 
 ## 5. Vragen
@@ -71,7 +99,7 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 - De code van je applicatie
   - Moet te vinden zijn in de GitHub classroom repository op de `main` branch
 - Het ingevulde dossier, als PDF ingediend op Chamilo
-- Een ingevulde rubrics (evaluatiekaart) die je kan vinden op Chamilo, en ook ingediend op Chamilo
+- Een ingevulde evaluatiekaart (zie Chamilo), ook ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
   - De demo mag maximaal 15 minuten duren (incl. demo Front-end Web Development)
   - De webcam moet aanstaan tijdens de demo
@@ -87,6 +115,6 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 
 **De deadline voor het portfolio is het einde van week 13 (vrijdag 20 december 2024, 23u59).**
 
-Alle code zal een jaar later (januari 2026) verwijderd worden uit de GitHub classroom. Als je je applicatie wenst te behouden, zorg dan dat je ook naar een privé repository pusht.
+Alle code zal voor de start van het volgend academiejaar verwijderd worden uit de GitHub classroom. Als je je applicatie wenst te behouden, zorg dan dat je deze tijdig naar een privé repository pusht.
 
 Veel succes!
