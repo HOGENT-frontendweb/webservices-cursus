@@ -48,6 +48,8 @@ jobs:
         uses: ./commit-verifier
 
   deploy:
+    # Skip if not on main branch
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
