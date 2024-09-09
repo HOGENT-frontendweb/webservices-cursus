@@ -25,10 +25,12 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 - definieert één repository per entiteit - indien van toepassing
 - mapt OO-rijke data naar relationele tabellen en vice versa - indien van toepassing
+- er worden kindrelaties opgevraagd (m.b.v. JOINs) - indien van toepassing
 
 ### Servicelaag met een zekere complexiteit
 
 - bevat alle domeinlogica
+- er worden kindrelaties opgevraagd (m.b.v. JOINs)
 - bevat geen services voor entiteiten die geen zin hebben zonder hun ouder (bv. tussentabellen)
 - bevat geen SQL-queries of databank-gerelateerde code
 
