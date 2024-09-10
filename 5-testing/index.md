@@ -10,6 +10,8 @@
 > yarn start
 > ```
 
+<!-- TODO: ESLint plugin voor jest toevoegen -->
+
 ## Soorten testen
 
 We onderscheiden 3 soorten testen:

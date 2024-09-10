@@ -1,6 +1,6 @@
 # REST API bouwen
 
-l> ws start 0e38b85 les3
+l> ws start 3166a61 les3
 
 ## De budget app
 
@@ -749,7 +749,7 @@ In de `rest` map maak je een nieuw bestand `health.ts` aan. Dit bevat de 2 endpo
 ```ts
 import Router from '@koa/router';
 import * as healthService from '../service/health';
-import { Context } from 'koa';
+import type { Context } from 'koa';
 
 const ping = async (ctx: Context) => {
   ctx.status = 200;
@@ -773,7 +773,7 @@ export default function installPlacesRoutes(parent: Router) {
 };
 ```
 
-Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden.
+Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden. Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
 
 ### Logging
 
@@ -1026,4 +1026,4 @@ Hierin definiëren we onze geneste route. Vergeet niet deze router te installere
 
 Werk de routes van de entiteiten in je eigen project uit. Zorg ervoor dat je geneste routes correct definieert. Werk voorlopig met mock data.
 
-l> ws oplossing 23e3cde les3-opl
+l> ws oplossing cd079f3 les3-opl
