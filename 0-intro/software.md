@@ -127,6 +127,7 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 
 ```json
 {
+  "files.eol": "\n",
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
