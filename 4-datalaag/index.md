@@ -1,14 +1,6 @@
 # Datalaag en CRUD
 
-> **Startpunt voorbeeldapplicatie**
->
-> ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
-> cd webservices-budget
-> git checkout -b les4 f6afd9b
-> yarn install
-> yarn start
-> ```
+l> ws start cd079f3 les4
 
 ## Gelaagde architectuur
 
@@ -21,7 +13,7 @@ De **gelaagde architectuur** is een veel gebruikte architectuur waarin code is o
 
 Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In Node.js heb je de keuze, er is geen verplichte structuur.
 
-Een alternatieve structuur, veel gebruikt bij microservices, is de [**hexagonale structuur**](https://medium.com/idealo-tech-blog/hexagonal-ports-adapters-architecture-e3617bcf00a0). Een mooie (maar complexe) implementatie in Node.js (en TypeScript) vind je hier: <https://github.com/jbreckmckye/node-typescript-architecture>.
+Een alternatieve structuur, veel gebruikt bij microservices, is de [**hexagonale structuur**](https://medium.com/idealo-tech-blog/hexagonal-ports-adapters-architecture-e3617bcf00a0). Een mooie (maar complexe) implementatie van deze structuur in Node.js (en TypeScript) vind je hier: <https://github.com/jbreckmckye/node-typescript-architecture>.
 
 Dit hoofdstuk focust op de twee onderste lagen: **data-** en **repositorylaag**.
 
@@ -32,7 +24,7 @@ De datalaag is een typische laag in de gelaagde architectuur voor het web. Het h
 - connectie opzetten, onderhouden en afsluiten indien nodig.
 - databank aanmaken en up-to-date houden (= migraties).
 - In development: seeden (= vullen) van de database met testdata.
-- CRUD-operaties: dit wordt vaak afgehandeld door een framework dat een soort repository-interface beschikbaar maakt, maar DIY kan ook.
+- CRUD-operaties: dit wordt vaak afgehandeld door een framework die een soort repository-interface beschikbaar maakt, maar DIY kan ook.
 
 Er zijn een aantal mogelijkheden om de datalaag te implementeren:
 
@@ -44,7 +36,7 @@ Er zijn een aantal mogelijkheden om de datalaag te implementeren:
 
 Dit is waarschijnlijk de eerste mogelijkheid die in je opkomt wanneer je data moet ophalen in een applicatie. Het is zeker geen slecht idee, in de juiste context. Het zelf schrijven van queries is altijd een mogelijkheid maar het geeft je meestal meer werk dan nodig is om de code te onderhouden of om bepaalde zaken te implementeren.
 
-In deze mogelijkheid schrijf je zelf queries in string-vorm (in JavaScript) die je vervolgens doorgeeft aan een bepaalde client die voor jou de query naar de databank zal sturen en je het antwoord teruggeeft. Deze queries kunnen placeholders bevatten voor bepaalde parameters (bv. WHERE-clauses of INSERT-queries). Hierbij handelt de client meestal SQL injection af. Gebruik je totaal geen client? Dan moet je zelf opletten voor SQL injection. Daarnaast geven deze clients vaak het pure resultaat terug zoals het van de query engine terugkwam, het is dus aan de developer om deze data te mappen naar het juiste formaat.
+In deze mogelijkheid schrijf je zelf queries in string-vorm (in JavaScript) die je vervolgens doorgeeft aan een bepaalde client die voor jou de query naar de databank zal sturen en je het antwoord teruggeeft. Deze queries kunnen placeholders bevatten voor bepaalde parameters (bv. `WHERE` clauses of `INSERT` queries). Hierbij handelt de client meestal SQL injection af. Gebruik je totaal geen client? Dan moet je zelf opletten voor SQL injection. Daarnaast geven deze clients vaak het pure resultaat terug zoals het van de query engine terugkwam, het is dus aan de developer om deze data te mappen naar het juiste formaat.
 
 Dit is een mogelijkheid die heel geschikt is voor een kleine applicatie die weinig speciaals vereist van de databank, typische een applicatie met weinig tot geen relaties en/of CUD-queries. Nee, dit is geen schrijffout: weinig tot geen Create, Update of Delete queries. Indien de applicatie meer relaties krijgt en complexere tabellen, wordt het al gauw moeilijk om zelf geschreven queries te onderhouden.
 
@@ -52,13 +44,13 @@ Dit is een mogelijkheid die heel geschikt is voor een kleine applicatie die wein
 
 - (grondige) kennis van SQL vereist
 - queries in string-vorm
-- je krijgt pure resultaten uit de databank terug (relaties zelf groeperen in aggregaten...)
+- je krijgt pure resultaten uit de databank terug (dus relaties zelf groeperen in aggregaten...)
 - ideaal voor kleine applicaties
-- bv. [mysql](https://www.npmjs.com/package/mysql),[pg](https://www.npmjs.com/package/pg), [mongodb](https://www.npmjs.com/package/mongodb), [redis](https://www.npmjs.com/package/redis):
+- bv. [mysql](https://www.npmjs.com/package/mysql),[pg](https://www.npmjs.com/package/pg), [mongodb](https://www.npmjs.com/package/mongodb), [redis](https://www.npmjs.com/package/redis)
 
 ### Datalaag: querybuilder
 
-Een tweede optie is om de queries dynamisch te laten opbouwen door een bepaald framework. Hierbij vermijd je dat je zelf queries moet schrijven en onderhouden, het framework zal dit voor jou afhandelen. Daarbij krijg je ook gratis en voor niets bescherming tegen SQL injection bij deze frameworks.
+Een tweede optie is om de queries dynamisch te laten opbouwen door een bepaald framework. Hierbij vermijd je dat je zelf queries moet schrijven en onderhouden, het framework zal dit voor jou afhandelen. Daarbij krijg je bij deze frameworks gratis en voor niets bescherming tegen SQL injection.
 
 Afhankelijk van het gekozen framework zijn relaties al dan niet ondersteund. Echter blijft de ondersteuning beperkt aangezien deze frameworks focussen op het bouwen van queries en niet op het eenvoudig maken van bepaalde OO-concepten in databanken. Vaak moet je dus zelf nog je relaties (en bijbehorende referentiële integriteit) afhandelen om een consistente databank te hebben.
 
@@ -79,7 +71,7 @@ Dit is de meest eenvoudige aanpak voor ontwikkelaars die geen of beperkte kennis
 
 Enige voorzichtigheid met ORMs is noodzakelijk aangezien deze niet altijd de meest optimale query genereren voor de data die opgehaald moet worden. Ook kan de interface van het gekozen framework sommige aspecten juist moeilijker maken dan simpelweg de query schrijven of dynamisch opbouwen.
 
-Het is dus belangrijk om te controleren of je effectief een ORM nodig hebt aangezien dit een redelijke complexiteit toevoegt aan je applicatie. Indien je bv. gebruik maakt van GraphQL is het overkill om een ORM te gaan gebruiken aangezien de gebruiker hierbij zelf kan kiezen welke data hij wel en niet ophaalt. Bij REST kan het dan weer een meerwaarde zijn. Het hangt sterk af van project tot project, denk hierbij bv. aan het aantal relaties of de moeilijkheid van de uitgevoerde queries.
+Het is dus belangrijk om te controleren of je effectief een ORM nodig hebt aangezien dit een redelijke complexiteit toevoegt aan je applicatie. Indien je bv. gebruik maakt van GraphQL is het overkill om een ORM te gaan gebruiken aangezien de gebruiker hierbij zelf kan kiezen welke data hij wel of niet ophaalt. Bij REST kan het dan weer een meerwaarde zijn. Het hangt sterk af van project tot project, denk hierbij bv. aan het aantal relaties of de moeilijkheid van de uitgevoerde queries.
 
 #### Samengevat
 
@@ -87,13 +79,13 @@ Het is dus belangrijk om te controleren of je effectief een ORM nodig hebt aange
 - eenvoudige interface om data op te vragen of weg te schrijven
 - diepgaande ondersteuning voor relaties
 - model definiëren kan complex zijn
-- bv. [Sequelize](https://www.npmjs.com/package/sequelize) of [Prisma](https://www.npmjs.com/package/prisma), [TypeORM (enkel voor TypeScript)](https://www.npmjs.com/package/typeorm), [Mongoose (enkel voor MongoDB)](https://www.npmjs.com/package/mongoose)
+- bv. [Sequelize](https://www.npmjs.com/package/sequelize), [Prisma](https://www.npmjs.com/package/prisma), [TypeORM (enkel voor TypeScript)](https://www.npmjs.com/package/typeorm), [Mongoose (enkel voor MongoDB)](https://www.npmjs.com/package/mongoose)
 
 ### Datalaag: wat kiezen we nu?
 
-Wij kiezen [knex.js](https://www.npmjs.com/package/knex) als querybuilder voor ons voorbeeld. Dit is prima voor wat we maar nodig hebben.
+Wij kiezen voor [Prisma](https://www.npmjs.com/package/prisma), een ORM met native ondersteuning voor TypeScript. In ons voorbeeld hebben we een aantal relaties die we eenvoudig willen opvragen en we hebben geen geavanceerde queries nodig. Prisma is dus een goede keuze voor ons project.
 
-Voel je vrij om voor het project bv. een ORM framework te gebruiken!
+Voel je vrij om voor het project bv. een querybuilder of een ander ORM framework te gebruiken! We raden niet aan om zelf queries te schrijven, tenzij je écht een goede reden hebt.
 
 ## Connectie met de databank
 
@@ -854,5 +846,7 @@ OF
 
 ## Mogelijke extra's voor de examenopdracht
 
-- Gebruik van een ORM framework.
+- Gebruik van een ander ORM framework of een querybuilder.
+  - We raden niet aan om zelf queries te schrijven, tenzij je écht een goede reden hebt
 - Gebruik van een mapper package in de repositorylaag.
+- Gebruik de [Node TypeScript Architecture](https://github.com/jbreckmckye/node-typescript-architecture).
