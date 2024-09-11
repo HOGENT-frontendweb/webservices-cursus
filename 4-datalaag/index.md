@@ -87,62 +87,344 @@ Wij kiezen voor [Prisma](https://www.npmjs.com/package/prisma), een ORM met nati
 
 Voel je vrij om voor het project bv. een querybuilder of een ander ORM framework te gebruiken! We raden niet aan om zelf queries te schrijven, tenzij je écht een goede reden hebt.
 
-## Connectie met de databank
+## Installatie Prisma
 
-We installeren allereerst knex en een MySQL client:
+?> Onze configuratie is gebaseerd op de officiële [Prisma documentatie](https://www.prisma.io/docs/getting-started/setup-prisma/start-from-scratch/relational-databases-typescript-postgresql). Echter hebben we deze aangepast zodat Prisma mooi in onze gelaagde structuur past. **Het is de bedoeling dat je externe modules altijd degelijk integreert in jouw projectstructuur, dus je hoeft niet noodzakelijk exact de documentatie te volgen.**
+
+We installeren allereerst Prisma en de Prisma client:
 
 ```bash
-yarn add knex
-yarn add mysql2
+yarn add prisma @prisma/client
 ```
 
-- [**knex**](https://www.npmjs.com/package/knex): een querybuilder en vormt onze interface naar de databank. Deze interface is generiek geschreven waardoor we nog een MySQL client moeten installeren, specifiek om onze MySQL databank aan te spreken.
-- [**mysql2**](https://www.npmjs.com/package/mysql2): een MySQL client voor Node.js, gefocust op performantie én met ondersteuning voor async/await.
+- [**prisma**](https://www.npmjs.com/package/prisma): CLI voor Prisma, waarmee je de Prisma client kan genereren en migraties kan uitvoeren.
+- [**@prisma/client**](https://www.npmjs.com/package/@prisma/client): de Prisma client, die de connectie met de databank afhandelt en waarmee je queries kan uitvoeren.
 
-### Databank configuratie
+### Databankschema definiëren
 
-Eerst moeten we onze configuratie uitbreiden met de gegevens van onze databank. Pas `config/development.js` als volgt aan:
+Allereerst moeten we een databankschema definiëren. We laten Prisma dit voor ons doen, we kiezen ook meteen voor MySQL als databank. We initialiseren Prisma met volgend commando:
 
-```js
-module.exports = {
-  // ...
-  database: {
-    client: 'mysql2',
-    host: 'localhost',
-    port: 3306,
-    name: 'budget',
-    username: 'root',
-    password: '',
-  },
-};
+```terminal
+yarn prisma init --datasource-provider mysql
 ```
 
-We splitsen deze zo klein mogelijk op om zoveel mogelijk vrijheid te hebben. Voorzie ook de nodige environment variables in `custom-environment-variables.js`:
+Als we aan `yarn` een commmando/script meegeven dat niet in `package.json` staat, zal `yarn` dit commando uitvoeren alsof het een CLI-commando is. Dit is handig voor packages die geen CLI-commando's hebben. CLI-commando's staan in de `node_modules/.bin` map. `yarn` zal deze automatisch vinden en uitvoeren.
 
-```js
-module.exports = {
-  // ...
-  database: {
-    client: 'DATABASE_CLIENT',
-    host: 'DATABASE_HOST',
-    port: 'DATABASE_PORT',
-    name: 'DATABASE_NAME',
-    username: 'DATABASE_USERNAME',
-    password: 'DATABASE_PASSWORD',
-  },
-};
+We merken echter dat Prisma ons schema buiten de `src` map plaatst. Dit is niet de bedoeling, we willen alles netjes in onze `src` map houden. We passen dit aan door de `prisma` property toe te voegen aan onze `package.json`:
+
+```json
+{
+  "prisma": {
+    "schema": "src/data/schema.prisma"
+  }
+}
 ```
 
-Eventueel kan je in jouw `.env` een gebruikersnaam en wachtwoord opgeven, zo hoef je dit niet in de configuratiebestanden te noteren:
+Vervolgens verplaatsen we `schema.prisma` naar `src/data/schema.prisma` en verwijderen we de `prisma` map. We bekijken de inhoud van `schema.prisma`:
+
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+```
+
+We zien dat Prisma een `datasource` en een `generator` definieert. De `datasource` bevat de connectiegegevens van de databank. Deze gegevens worden opgehaald uit de environment variabele `DATABASE_URL`. De `generator` definieert de codegenerator die Prisma zal gebruiken om de Prisma client te genereren, in dit geval de JavaScript client.
+
+Vervolgens creëren we het volledige databankschema voor onze budgetapplicatie in `src/data/schema.prisma`:
+
+```prisma
+// ...
+
+model Place {
+  @@map("places")             // Set the table name to "places"
+
+  id           Int            @id @default(autoincrement()) @db.UnsignedInt
+  name         String         @unique(map: "idx_place_name_unique") @db.VarChar(255)
+  rating       Int?           @db.UnsignedTinyInt
+  transactions Transaction[]
+}
+
+model Transaction {
+  @@map("transactions") // Set the table name to "transactions"
+
+  id       Int          @id @default(autoincrement()) @db.UnsignedInt
+  amount   Int
+  date     DateTime     @db.DateTime(0)
+  user_id  Int          @db.UnsignedInt
+  place_id Int          @db.UnsignedInt
+  place   Place         @relation(fields: [place_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transaction_place")
+  user    User          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transaction_user")
+}
+
+model User {
+  @@map("users")               // Set the table name to "users"
+
+  id            Int            @id @default(autoincrement()) @db.UnsignedInt
+  name          String         @db.VarChar(255)
+  transactions  Transaction[]
+}
+```
+
+Zoals je kan zien gebruikt Prisma een zeer leesbare syntaxx voor het databankschema. Lees zelf eens door het schema en probeer te achterhalen wat Prisma precies zal aanmaken in de databank. Meer informatie over het schema vind je in de [Prisma documentatie](https://www.prisma.io/docs/orm/prisma-schema/overview).
+
+Zoals je ziet definiëren we onze relaties ook in de schema, net alsof we objectgeoriënteerd aan het werk zijn. Prisma zal deze relaties automatisch voor ons afhandelen met bv. een tussentabel voor veel-op-veel relaties, enz.
+
+### Configuratie connectie
+
+Prisma voegde ook reeds variabele `DATABASE_URL` toe aan ons `.env` bestand aan in de root van ons project. We passen deze variabele aan zodat deze overeenkomt met onze databank:
 
 ```ini
-DATABASE_USERNAME=<jouw-username>
-DATABASE_PASSWORD=<jouw-wachtwoord>
+DATABASE_URL="mysql://<gebruikersnaam>:<wachtwoord>@localhost:3306/budget"
 ```
 
-> :exclamation: Voeg **NOOIT** de credentials van de productie-omgeving toe aan de configuratie. Voorzie die altijd via environment variables of via een ander veilig mechanisme.
+!> **Let op:** Het .env bestand mag nooit op GitHub komen! Als je de `.gitignore` uit [hoofdstuk 2](../2-REST_api_intro/index.md#gitignore) correct hebt ingesteld, zal dit bestand niet op GitHub komen.
 
-### Datalaag opbouwen
+## Migrations
+
+Vooraleer we queries kunnen uitvoeren op de databank, moeten we hierin eerst de nodige tabellen en relaties definiëren. Dit doen we met behulp van **migrations**. In sommige NoSQL databanken, zoals MongoDB, is dit niet nodig, maar in relationele databanken is dit een must.
+
+Migrations zijn een soort versiebeheersysteem voor de databank. Ze kijken op welke versie het databankschema zit en doen eventueel updates. Ze brengen het databankschema naar een nieuwere versie.
+
+Je kan ook wijzigingen ongedaan maken als er iets fout liep. Dit is zeer belangrijk bij databanken in productie! In development kan je simpelweg de databank droppen en opnieuw maken, dat is geen probleem. Echter is dit not done in productie.
+
+Het is wel belangrijk dat je let op de volgorde van uitvoeren van de migraties om geen problemen te krijgen met bv. foreign keys die nog niet zouden bestaan.
+
+![Migraties](./images/versioncontrol-xkcd.jpg ':size=70%')
+
+### Migrations in Prisma
+
+Prisma heeft een heleboel ingebouwde mechanismen om migraties automatisch uit te voeren. Het enige wat je moet doen is het schema aanpassen en vragen aan Prisma om een migratie te genereren. Prisma zal dan de nodige SQL genereren om de databank up-to-date te brengen.
+
+Wij hebben reeds ons schema gedefiniëerd. We kunnen nu een migratie genereren met volgend commando:
+
+```terminal
+yarn prisma migrate dev --name init
+```
+
+Hier maken we een nieuwe migratie aan met de naam `init`. Prisma zal de nodige SQL genereren en deze uitvoeren op de databank. We geven ook de optie `dev` mee, zo weet Prisma dat we in development werken. In development kan je veel meer doen dan in productie, bv. de hele databank droppen en opnieuw maken, in productie is uiteraard dit not done. Later wordt duidelijk hoe je de databank in productie kan updaten.
+
+Als we dit commando zonder de `--name` optie uitvoeren, dan voeren we alle bestaande migraties uit. Dit is handig als je bv. je project op een andere computer wil opzetten.
+
+!> Het is **not done** om migratiebestanden manueel aan te passen! Prisma zal de nodige SQL genereren voor jou. Indien je toch manueel een migratiebestand aanpast, kan Prisma niet meer garanderen dat de databank correct geüpdatet wordt. Dit kan leiden tot corrupte data of zelfs een corrupte databank. Als je een fout maakt, kan je de migratie altijd ongedaan maken en opnieuw genereren..
+
+Na dit commando zal Prisma een map `migrations` aanmaken in de `src/data` map, en zal de databank ook up-to-date zijn. In deze map vind je de gegenereerde SQL-bestanden. Deze bestanden bevatten de SQL die Prisma zonet uitgevoerd heeft op de databank. Je kan deze bestanden bekijken om te zien wat Prisma precies gedaan heeft, of in productie zal doen. Het `migration_lock.toml` bestand bevat het type databank en mag je **niet** aanpassen!
+
+Je merkt dat de naam van de migratie voorafgegaan wordt door een timestamp. Dit is om de volgorde van uitvoeren te garanderen. Prisma voert de migraties uit in alfabetische volgorde.
+
+Wanneer je de databank lokaal eens wil weggooien en opnieuw maken, kan je dit doen met volgend commando:
+
+```terminal
+yarn prisma migrate reset
+```
+
+Neem een kijkje in bv. MySQL Workbench en je zal een volledig afgewerkte `budget` databank zien. Mooi, niet?
+
+Het `migrate` commando zal ook altijd een nieuwe Prisma Client genereren. Dit is de interface die je gebruikt om queries uit te voeren op de databank. Deze client is gegenereerd op basis van het schema dat je hebt gedefinieerd in `schema.prisma`. Het opnieuw genereren is altijd nodig aangezien we nieuwe tabellen of relaties hebben toegevoegd en we de juiste IntelliSense willen via TypeScript.
+
+### Oefening 1 - Je eigen project
+
+1. Installeer Prisma.
+2. Genereer een Prisma schema.
+3. Definieer al een basis schema voor je eigen project.
+4. Genereer een eerste migratie.
+5. Controleer of de databank correct geüpdatet is.
+
+?> Het is niet erg als je nog geen idee hebt hoe het volledige schema eruit zal zien. Je kan altijd later nog migraties toevoegen. In principe kan je ook migraties weggooien en opnieuw maken tot zolang je niet in productie draait.
+
+## Seeds
+
+Met seeds kan je testdata toevoegen aan een databank. Dit wordt typisch enkel gebruikt in development, niet in testing of production. Let op dat je data in de juiste volgorde toevoegt! In ons geval moeten we eerst de plaatsen toevoegen vooraleer we transacties kunnen toevoegen.
+
+?> Mocht je in productie toch data willen toevoegen, zoals bv. een aantal categorieën van producten in een webshop, dan maak je hiervoor een migratie en geen seed.
+
+Indien je niet zelf de data wil genereren, kan je gebruik maken van het package [@faker-js/faker](https://github.com/faker-js/faker).
+
+### Seeds in Prisma
+
+Prisma heeft ook ondersteuning voor seeds. Deze seeds worden uitgevoerd na de migraties. We moeten enkel in de `package.json` aangeven hoe Prisma de seeds kan uitvoeren. We voegen een `seed` property toe aan de `prisma` property:
+
+```json
+{
+  "prisma": {
+    "schema": "src/data/schema.prisma",
+    "seed": "tsx ./src/data/seed.ts"
+  }
+}
+```
+
+In dit geval zeggen we dat het bestand `src/data/seed.ts` uitgevoerd moet worden door `tsx`. We maken dit bestand aan:
+
+```ts
+import { PrismaClient } from '@prisma/client'; // 👈 1
+
+const prisma = new PrismaClient(); // 👈 1
+
+// 👇 2
+async function main() {
+  // Seed users
+  // ==========
+  await prisma.user.createMany({
+    data: [
+      {
+        id: 1,
+        name: 'Thomas Aelbrecht',
+      },
+      {
+        id: 2,
+        name: 'Pieter Van Der Helst',
+      },
+      {
+        id: 3,
+        name: 'Karine Samyn',
+      },
+    ],
+  });
+
+  // Seed places
+  // ===========
+  await prisma.place.createMany({
+    data: [
+      {
+        id: 1,
+        name: 'Loon',
+        rating: 5,
+      },
+      {
+        id: 2,
+        name: 'Dranken Geers',
+        rating: 3,
+      },
+      {
+        id: 3,
+        name: 'Irish Pub',
+        rating: 4,
+      },
+    ],
+  });
+
+  // Seed transactions
+  // =================
+  await prisma.transaction.createMany({
+    data: [
+      // User Thomas
+      // ===========
+      {
+        id: 1,
+        user_id: 1,
+        place_id: 1,
+        amount: 3500,
+        date: new Date(2021, 4, 25, 19, 40),
+      },
+      {
+        id: 2,
+        user_id: 1,
+        place_id: 2,
+        amount: -220,
+        date: new Date(2021, 4, 8, 20, 0),
+      },
+      {
+        id: 3,
+        user_id: 1,
+        place_id: 3,
+        amount: -74,
+        date: new Date(2021, 4, 21, 14, 30),
+      },
+      // User Pieter
+      // ===========
+      {
+        id: 4,
+        user_id: 2,
+        place_id: 1,
+        amount: 4000,
+        date: new Date(2021, 4, 25, 19, 40),
+      },
+      {
+        id: 5,
+        user_id: 2,
+        place_id: 2,
+        amount: -220,
+        date: new Date(2021, 4, 9, 23, 0),
+      },
+      {
+        id: 6,
+        user_id: 2,
+        place_id: 3,
+        amount: -74,
+        date: new Date(2021, 4, 22, 12, 0),
+      },
+      // User Karine
+      // ===========
+      {
+        id: 7,
+        user_id: 3,
+        place_id: 1,
+        amount: 4000,
+        date: new Date(2021, 4, 25, 19, 40),
+      },
+      {
+        id: 8,
+        user_id: 3,
+        place_id: 2,
+        amount: -220,
+        date: new Date(2021, 4, 10, 10, 0),
+      },
+      {
+        id: 9,
+        user_id: 3,
+        place_id: 3,
+        amount: -74,
+        date: new Date(2021, 4, 19, 11, 30),
+      },
+    ],
+  });
+}
+
+// 👇 3
+main()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
+```
+
+1. We importeren de Prisma client en maken een instantie aan.
+2. We definieren een `main` functie die de seeding zal uitvoeren. We seeden eerst de gebruikers, dan de plaatsen en tenslotte de transacties.
+   - We maken hier gebruik van de Prisma client. Deze heeft één property per tabel, in dit geval `user`, `place` en `transaction`. Deze properties hebben methodes zoals `createMany` om meerdere records toe te voegen.
+3. We roepen de `main` functie aan en sluiten de connectie met de databank af na het uitvoeren van de seeding of bij een fout.
+
+Nu kunnen we onze seeds uitvoeren met volgend commando:
+
+```terminal
+yarn prisma db seed
+```
+
+### Opmerking over migrations en seeds uitvoeren
+
+Migrations en seeds moeten steeds vóór de start van de server uitgevoerd worden. Dat geeft een aantal mogelijkheden:
+
+- externe service die hiervoor zorgt
+- scripts die uitgevoerd worden voor de server start (voor `yarn start`)
+- de server doet het zelf
+
+Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om je migraties en seeds uit te voeren alvorens je de server start.
+
+?> **Tip:** documenteer duidelijk in de `README.md` hoe je de server start en welke stappen je moet ondernemen om de databank correct te initialiseren. *Dit is ook één van de minimumvereisten voor de examenopdracht (en wordt vaak verwaarloosd).*
+
+### Oefening 2 - Je eigen project
+
+1. Configuur seeding voor je eigen project.
+2. Maak seeds aan voor alle tabellen die je in de vorige oefening hebt gedefinieerd.
+
+## Datalaag opbouwen
 
 We maken een module voor onze datalaag. Maak in de map `data` een bestand`index.js` aan met volgende inhoud:
 
@@ -313,265 +595,6 @@ async function initializeData() {
 5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
 6. We maken een nieuwe connectie aan.
 7. We testen of de connectie goed functioneert.
-
-## Migrations
-
-Vooraleer we queries kunnen uitvoeren op de databank, moeten we hierin eerst de nodige tabellen en relaties definiëren. Dit doen we met behulp van **migrations**. In sommige NoSQL databanken, zoals MongoDB, is dit niet nodig, maar in relationele databanken is dit een must.
-
-Migrations zijn een soort version control voor de databank. Ze kijken op welke versie het databankschema zit en doen eventueel updates. Ze brengen het databankschema naar een nieuwere versie.
-
-Je kan ook wijzigingen ongedaan maken als er iets fout liep. Dit is zeer belangrijk bij databanken in productie! In development kan je simpelweg de databank droppen en opnieuw maken, dat is geen probleem. Echter is dit not done in productie.
-
-Het is wel belangrijk dat je let op de volgorde van uitvoeren van de migraties om geen problemen te krijgen met bv. foreign keys die nog niet zouden bestaan.
-
-![Migraties](./images/versioncontrol-xkcd.jpg ':size=70%')
-
-### Migrations: KnexJS
-
-KnexJS heeft [builtin migrations](https://knexjs.org/#Migrations). Je moet in de [configuratie](https://knexjs.org/#Installation-migrations) enkel aangeven waar de migrations staan.
-
-Migrations in KnexJS zijn JavaScript modules die twee functies exporteren:
-
-1. `up`: bevat de code die deze migratie uitvoert.
-2. `down`: bevat de code die de migratie ongedaan maakt.
-
-Er is één bestand per migratie. De bestandsnaam bevat een timestamp en een korte beschrijving van de migratie: `YYYYMMDDHHmm_description.js`, bv. `202309111840_createUserTable.js`. Door de timestamp vooraan kan je een bepaalde volgorde afdwingen. KnexJS voert de migraties uit in alfabetische volgorde.
-
-In onze budget app hebben we enkele migraties:
-
-- `places` tabel aanmaken
-- `users` tabel aanmaken
-- `transactions` tabel aanmaken
-- een kolom `rating` aan een place toevoegen
-
-### Migrations: voorbeeld
-
-We starten met het aanmaken van een migratie voor de tabel `users`. Maak een map `migrations` aan in de map `data`. Voeg vervolgens een bestand `202309111840_createUserTable.js` toe met volgende inhoud:
-
-```js
-const { tables } = require('..');
-
-module.exports = {
-  // 👇 1
-  up: async (knex) => {
-    await knex.schema.createTable(tables.user, (table) => { // 👈 2
-      table.increments('id'); // 👈 3
-
-      table.string('name', 255).notNullable(); // 👈 4
-    });
-  },
-  // 👇 1
-  down: async (knex) => {
-    return knex.schema.dropTableIfExists(tables.user);
-  },
-};
-```
-
-1. Een migration-bestand exporteert twee functies genaamd `up` en `down`. Beide functies krijgen de Knex-instantie mee als argument. Dit is de interface naar de databank.
-2. De `up`-functie zal de tabel `users` aanmaken. Hiervoor wordt de `createTable`-functie van de [Knex Schema API](https://knexjs.org/guide/schema-builder.html) gebruikt.
-   - Het eerste argument van de `createTable` functie is de tabelnaam. Uiteraard codeer je dit niet hard, je kan het `tables` object uit de datalaag importeren.
-   - Het tweede argument is een functie die een interface naar de tabel meekrijgt. Met deze interface kunnen we de tabel volledig instellen (kolommen, indices...). Merk op: deze interface bouwt een CREATE TABLE DDL-statement op. Per functie-aanroep op deze interface wordt geen DDL-statement uitgevoerd! Enkel als de functie van dit 2e argument uitgevoerd is worden de nodige DDL statements uitgevoerd.
-3. We maken eerst een kolom met als naam `id`, het type van deze kolom is `INT`. Deze kolom heeft een auto-increment en is daarom de primary key
-4. We voegen nog een kolom `name` toe. Deze kolom is van het type `string` en heeft een maximum lengte van 255 karakters. Deze kolom mag ook geen `NULL` bevatten
-5. De `down`-functie gooit simpelweg de eventueel gemaakte tabel weg.
-   - Het is niet altijd zo dat je een tabel weggooit. Als je in een migratie bv. een kolom toevoegt, verwijder je die kolom in de `down` functie. Als je bv. het type van een kolom zou wijzigen, herstel je dat in deze functie.
-
-We kunnen een gelijkaardige migratie voorzien voor de `places` tabel in een bestand `202309111845_createPlaceTable.js`:
-
-```js
-const { tables } = require('..');
-
-module.exports = {
-  up: async (knex) => {
-    await knex.schema.createTable(tables.place, (table) => {
-      table.increments('id');
-
-      table.string('name', 255).notNullable();
-
-      table.unique('name', 'idx_place_name_unique'); // 👈
-    });
-  },
-  down: async (knex) => {
-    return knex.schema.dropTableIfExists('places');
-  },
-};
-```
-
-In deze tabel stellen we ook nog een `UNIQUE INDEX` in op de kolom `name`. We geven deze index de naam `idx_place_name_unique` om (later) eenvoudiger een mooie foutboodschap te kunnen retourneren naar de client. Je kan deze checks ook in de code uitvoeren maar databankservers zijn vaak meer uit de kluiten gewassen dan de backend-server. **Alles wat de databank kan doen, laat je de databank doen**
-
-### Migrations uitvoeren
-
-Migrations worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
-
-```js
-const { join } = require('path');
-
-async function initializeData() {
-  //..
-
-  const knexOptions = {
-    //..
-    debug: isDevelopment,
-    migrations: {
-      tableName: 'knex_meta',
-      directory: join('src', 'data', 'migrations'),
-    }, // 👈 1
-  };
-
-  //..
-  // Run migrations
-  // 👈 2
-  try {
-    await knexInstance.migrate.latest();
-  } catch (error) {
-    logger.error('Error while migrating the database', {
-      error,
-    });
-
-    // No point in starting the server when migrations failed
-    throw new Error('Migrations failed, check the logs');
-  }
-  logger.info('Successfully connected to the database');
-  return knexInstance;
-}
-//..
-```
-
-1. We geven mee aan Knex waar onze migraties staan en in welke tabel hij metadata over de uitgevoerde migraties mag bijhouden.
-2. Nadat de connectie aangemaakt is en goed functioneert, voeren we de migraties uit. We gebruiken de `latest` functie van de Knex Migration API. Deze functie zal kijken op welke versie de databank zit en zal deze vervolgens up to date maken. Als de migraties gefaald zijn, gooien we een error waardoor de server crasht. Het heeft geen zin om de server te starten met een mogelijks corrupte databank, de developer moet dit zelf controleren en fixen.
-
-### Volgorde van uitvoeren
-
-**De volgorde van uitvoeren van migraties is belangrijk.** Je dient eerst de `places` en `users` tabel te creëren, en dan pas de `transactions` tabel. In de `transactions` tabel definiëren we de referentiële integriteit. Belangrijk is om mee te geven hoe de delete dient te gebeuren: `CASCADE`, `RESTRICT`, `NO ACTION` of `SET NULL`.
-
-Maak de migratie van de `transactions` tabel in het bestand `src/data/migrations/202309190850_createTransactionTable.js`:
-
-```js
-const { tables } = require('..');
-
-module.exports = {
-  up: async (knex) => {
-    await knex.schema.createTable(tables.transaction, (table) => {
-      table.increments('id');
-
-      table.integer('amount').notNullable();
-
-      table.dateTime('date').notNullable();
-
-      table.integer('user_id').unsigned().notNullable();
-
-      // Give this foreign key a name for better error handling in service layer
-      table
-        .foreign('user_id', 'fk_transaction_user')
-        .references('id')
-        .inTable(tables.user)
-        .onDelete('CASCADE');
-
-      table.integer('place_id').unsigned().notNullable();
-
-      // Give this foreign key a name for better error handling in service layer
-      table
-        .foreign('place_id', 'fk_transaction_place')
-        .references('id')
-        .inTable(tables.place)
-        .onDelete('CASCADE');
-    });
-  },
-  down: async (knex) => {
-    return knex.schema.dropTableIfExists(tables.transaction);
-  },
-};
-```
-
-### Oefening 6 - Je eigen project
-
-Maak voor een aantal tabellen in je project de migraties aan en voer deze uit. Voorzie ook reeds een migratie voor een tabel die een relatie heeft met een andere tabel die je reeds aangemaakt hebt.
-
-## Seeds
-
-Met seeds kan je testdata toevoegen aan een databank. Dit wordt typisch enkel gebruikt in development, niet in testing of production. Typisch maak je één seed per tabel. Let hier ook op de volgorde, bv. bij relaties!
-
-> :bulb: Mocht je in productie toch data willen toevoegen, zoals bv. een aantal categorieën van producten in een webshop, dan maak je hiervoor een migratie en geen seed.
-
-Indien je niet zelf de data wil genereren, kan je gebruik maken van het package [@faker-js/faker](https://github.com/faker-js/faker).
-
-### Seeds: KnexJS
-
-KnexJS heeft [builtin seeds](https://knexjs.org/#Seeds-API). Je moet in de [configuratie](https://knexjs.org/#Seeds-CLI) enkel aangeven waar seeds staan.
-
-Seeds zijn JavaScript modules die één functie `seed` exporteren. Deze functie bevat de code die de testdata toevoegt. Er is één bestand per seed (of dus per tabel). De bestandsnaam bevat een timestamp en een korte beschrijving van de seed: `YYYYMMDDHHmm_description.js`, bv. `202309111930_places.js`. Door de timestamp vooraan kan je een bepaalde volgorde afdwingen. KnexJS voert de seeds uit in alfabetische volgorde.
-
-Maak het seed bestand aan voor de seeding van de places tabel. Maak hiervoor een map `seeds` in de map data. Maak een nieuw bestand `202309111935_places.js` met deze inhoud:
-
-```js
-module.exports = {
-  // 👇 1
-  seed: async (knex) => {
-    // 👇 2
-    await knex('places').insert([
-      { id: 1, name: 'Loon', rating: 5 },
-      { id: 2, name: 'Dranken Geers', rating: 3 },
-      { id: 3, name: 'Irish Pub', rating: 4 },
-    ]);
-  },
-};
-```
-
-1. Een seed bestand exporteert één functie genaamd `seed`. Deze functie krijgt opnieuw de Knex-instantie mee als argument. Dit is de interface naar de databank.
-2. We voegen onze testdata toe. Je kan kiezen om vaste ids te nemen of om deze te laten genereren door de databank.
-   - Wat is een voordeel van vaste ids? Hiermee is het eenvoudig om relaties te definiëren. Logisch, want je kent het id van elke record, bij generatie is dit telkens verschillend.
-
-### Seeds uitvoeren
-
-Seeds worden typisch uitgevoerd voor de server opstart. We voegen deze code toe aan onze `initializeData` in `src/data/index.js`:
-
-```js
-async function initializeData() {
-  const knexOptions = {
-    // ...
-    seeds: {
-      // 👈 1
-      directory: join('src', 'data', 'seeds'),
-    },
-  };
-  // ...
-
-  const [nrOfPlaces] = await getKnex()(tables.place).count(); // 👈 2
-  if (isDevelopment && nrOfUsers['count(*)'] === 0) { // 👈 3
-    // 👇 4
-    try {
-      await knexInstance.seed.run();
-    } catch (error) {
-      logger.error('Error while seeding database', {
-        error,
-      });
-    }
-  }
-
-  return knexInstance;
-}
-```
-
-1. We geven aan Knex mee waar de seeds staan. We voegen deze code toe aan onze `initializeData`.
-2. We tellen het aantal records in de tabel `places`.
-3. We voeren de seed enkel uit indien we in development mode zijn en er nog geen records in de tabel staan.
-4. We gebruiken de run functie van de Knex Seed API. Hierna is de datalaag pas echt opgestart. Het is niet erg als de seeds falen; we loggen dit enkel, de server kan nadien gewoon opstarten.
-
-#### Opmerking over migrations en seeds uitvoeren
-
-Migrations en seeds moeten steeds vóór de start van de server uitgevoerd worden. Dat geeft een aantal mogelijkheden:
-
-- externe service die hiervoor zorgt
-- scripts die uitgevoerd worden voor de server start (voor `yarn start`)
-- de server doet het zelf
-
-Wij kozen voor de laatste optie.
-
-> :exclamation: Let op! Onze aanpak is niet aangepast voor/getest op servers die parallel draaien! De server is niet op de hoogte van de andere servers. Gevolg? Mogelijke conflicten tussen meerdere servers die tegelijk migreren of seeden.
-
-### Oefening 7 - Je eigen project
-
-Maak de seed aan voor één tabel en zorg ervoor dat deze seed kan worden uitgevoerd.
 
 ## Repository
 
