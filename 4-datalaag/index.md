@@ -6,10 +6,10 @@ l> ws start cd079f3 les4
 
 De **gelaagde architectuur** is een veel gebruikte architectuur waarin code is opgebouwd uit diverse lagen. In de context van het web zijn dit vaak volgende lagen:
 
-- REST API
-- Servicelaag
-- Repositorylaag (optioneel indien je gebruik maakt van ORM)
-- Datalaag
+- REST API (= presentatielaag)
+- Servicelaag (= domeinlaag)
+- Repositorylaag (= persistentielaag)
+- - Datalaag (= persistentielaag)
 
 Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In Node.js heb je de keuze, er is geen verplichte structuur.
 
@@ -502,31 +502,31 @@ Meestal is deze laag niet nuttig bij het gebruik van een ORM want het ORM is zel
 
 ## Services
 
-Nu moeten we enkel nog de Prisma client gebruiken in onze services. Pas hiervoor `src/service/place.ts` aan:
+Nu moeten we enkel nog de Prisma client gebruiken in onze services.
+
+### Places
+
+We passen allereerst de `src/service/place.ts` aan:
 
 ```ts
-const placesRepository = require('../repository/place'); // 👈 1
+import { prisma } from '../data'; // 👈 1
 
-const getAll = async () => {
-  const items = await placesRepository.findAll(); // 👈 2
-  return {
-    items,
-    count: items.length,
-  }; // 👈 3
+export const getAll = async () => { // 👈 3
+  return prisma.place.findMany(); // 👈 2
 };
 ```
 
-1. Importeer alle functies uit de places repository.
-2. In de functie `getAll` halen we de data nu op via de repository.
-3. En retourneren dit in een object, samen met de count (het aantal elementen in de lijst).
-   - Merk op: deze functie is async geworden doordat we een await doen op de functie uit de transaction repository.
+1. Importeer de Prisma client.
+2. Vraag alle plaatsen op via de Prisma client.
+3. Aangezien deze functie nu een Promise teruggeeft, maken we deze ook async.
+   - Je kan ook `return await` doen, maar dat is vrij zinloos als je niets met het resultaat van de Promise doet.
 
-Doordat deze functie async geworden is dienen we de REST-laag ook aan te passen. Voorlopig halen we simpelweg de lijst van places op in onze handler voor `GET /api/places`, maar deze functie is async geworden. Vergeet dus niet om await toe te voegen in `src/rest/place.js` of je zal geen correct antwoord krijgen!
+Doordat deze functie async geworden is dienen we de REST-laag ook aan te passen. Voorlopig halen we simpelweg de lijst van places op in onze handler voor `GET /api/places`, maar deze functie is async geworden. Vergeet dus niet om await toe te voegen in `src/rest/place.ts` of je zal geen correct antwoord krijgen!
 
-```js
-const placeService = require('../service/place');
+```ts
+// ...
 
-const getAllPlaces = async (ctx) => {
+const getAllPlaces = async (ctx: Context) => {
   const places = await placeService.getAll();
   ctx.body = {
     items: places,
@@ -534,6 +534,91 @@ const getAllPlaces = async (ctx) => {
 };
 // ...
 ```
+
+De andere functies in de service kan je op dezelfde manier aanpassen:
+
+```ts
+// ...
+export const getById = async (id: number) => {
+  return prisma.place.findUnique({
+    where: {
+      id,
+    },
+  });
+};
+
+export const create = async ({ name, rating }: any) => {
+  return prisma.place.create({
+    data: {
+      name,
+      rating,
+    },
+  });
+};
+
+export const updateById = async (id: number, { name, rating }: any) => {
+  return prisma.place.update({
+    where: {
+      id,
+    },
+    data: {
+      name,
+      rating,
+    },
+  });
+};
+
+export const deleteById = async (id: number) => {
+  await prisma.place.delete({
+    where: {
+      id,
+    },
+  });
+};
+```
+
+Na deze aanpassingen kan je de import van de mock data verwijderen, en moet je de REST-laag aanpassen zodat bij de juiste functies `await` toegevoegd wordt.
+
+Controleer of elk endpoint van de places nog steeds correct werkt.
+
+### Transactions
+
+Tot nu toe hebben we enkel data uit dezelfde tabel opgevraagd. Als alle services enkel uit "hun" tabel data ophalen, dan is het een vrij nutteloze service- of domeinlaag.
+
+We passen de functie `getAll` in `src/service/transaction.ts` aan:
+
+```ts
+// 👇 1
+const TRANSACTION_SELECT = {
+  id: true,
+  amount: true,
+  date: true,
+  place: true,
+  user: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+};
+
+export const getAll = async () => {
+  // 👇 2
+  return prisma.transaction.findMany({
+    select: TRANSACTION_SELECT,
+  });
+};
+```
+
+1. We definiëren een object `TRANSACTION_SELECT` dat aangeeft welke velden we willen selecteren. We kunnen dit later hergebruiken bij de `getById` functie.
+   - We selecteren alles van een transactie, en we halen de place en user op. We selecteren enkel de `id` en `name` van de user.
+   - Later komen nog extra attributen (voor authenticatie/autorisatie) in de user, die willen we hier niet selecteren.
+2. Vervolgens geven we dit object mee aan de `findMany` functie.
+   - Vergeet niet om `await` toe te voegen in de REST-laag.
+
+Controleer of je het juiste antwoord krijgt bij het ophalen van alle transacties.
+
+Pas de overige functies zelf aan.
 
 ### Repository in Node.js
 
