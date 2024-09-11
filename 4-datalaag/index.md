@@ -457,6 +457,7 @@ export async function shutdownData(): Promise<void> {
 ```
 
 1. Importeer de Prisma client en maak een instantie aan. Het is belangrijk dat we slechts één instantie hebben van de Prisma client. Per instantie die je aanmaakt wordt een nieuwe pool van connecties aangemaakt. Dit kan leiden tot een overbelasting van de databank of de webserver.
+   - We exporteren de instantie zodat we deze kunnen gebruiken in andere modules.
    - We gebruiken hier het [singleton](https://refactoring.guru/design-patterns/singleton) patroon.
 2. We definiëren een functie waarin we de connectie effectief maken. We loggen ook dat de connectie succesvol is.
    - Deze functie heeft `Promise<void>` als return type. De functie geeft nl. niets terug en is asynchroon. Door het feit dat de functie asynchroon is, kunnen we niet gewoon `: void` gebruiken.
@@ -501,9 +502,9 @@ Meestal is deze laag niet nuttig bij het gebruik van een ORM want het ORM is zel
 
 ## Services
 
-Om deze repositories nu te gebruiken, importeren we alle functies die in de modules gedefinieerd werden. Pas `src/service/place.js` als volgt aan:
+Nu moeten we enkel nog de Prisma client gebruiken in onze services. Pas hiervoor `src/service/place.ts` aan:
 
-```js
+```ts
 const placesRepository = require('../repository/place'); // 👈 1
 
 const getAll = async () => {
@@ -527,7 +528,9 @@ const placeService = require('../service/place');
 
 const getAllPlaces = async (ctx) => {
   const places = await placeService.getAll();
-  ctx.body = places;
+  ctx.body = {
+    items: places,
+  };
 };
 // ...
 ```

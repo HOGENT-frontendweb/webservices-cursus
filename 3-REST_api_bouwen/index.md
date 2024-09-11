@@ -422,7 +422,7 @@ We creëren een nieuw bestand `transaction.ts`, in een nieuwe `service` map. Voo
 import { TRANSACTIONS, PLACES } from '../data/mock_data';
 
 export const getAll = () => {
-  return { items: TRANSACTIONS, count: TRANSACTIONS.length };
+  return TRANSACTIONS;
 };
 
 export const getById = (id: number) => {
@@ -457,7 +457,9 @@ import * as transactionService from './service/transaction'; // 👈 1
 
 // 👇 2
 router.get('/api/transactions', async (ctx) => {
-  ctx.body = transactionService.getAll();
+  ctx.body = {
+    items: transactionService.getAll(),
+  };
 });
 
 // ...
@@ -465,6 +467,8 @@ router.get('/api/transactions', async (ctx) => {
 
 1. We importeren de service. We gebruiken hier `import *` om alle exports van de module te importeren in één object. Dit is een handige manier om niet steeds opnieuw een functie te moeten importeren als je een nieuwe functie nodig hebt uit hetzelfde bestand.
 2. En vervangen de hardgecodeerde data door een `getAll()` aanroep, that's it!
+   - Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een `items` property die de array bevat.
+   - Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
 
 ### Oefening 2 - Je eigen project
 
@@ -615,7 +619,9 @@ import * as transactionService from '../service/transaction';
 import Application, { Context } from 'koa';
 
 const getAllTransactions = async (ctx: Context) => {
-  ctx.body = transactionService.getAll();
+  ctx.body = {
+    items: transactionService.getAll(),
+  };
 };
 
 const createTransaction = async (ctx: Context) => {
@@ -988,11 +994,7 @@ We definiëren een nieuwe functie in `src/service/transaction.ts`:
 // src/service/transaction.ts
 // ...
 export const getTransactionsByPlaceId = async (placeId: number) => {
-  const items = TRANSACTIONS.filter((t) => t.place.id === placeId);
-  return {
-    items,
-    count: items.length,
-  };
+  return TRANSACTIONS.filter((t) => t.place.id === placeId);
 };
 ```
 
@@ -1005,7 +1007,9 @@ import { Context } from 'koa';
 
 const getTransactionsByPlaceId = async (ctx: Context) => {
   const transactions = await transactionService.getTransactionsByPlaceId(Number(ctx.params.id));
-  ctx.body = transactions;
+  ctx.body = {
+    items: transactions,
+  };
 };
 
 export default (parent: Router) => {
