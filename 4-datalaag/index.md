@@ -260,6 +260,7 @@ Prisma heeft ook ondersteuning voor seeds. Deze seeds worden uitgevoerd na de mi
 In dit geval zeggen we dat het bestand `src/data/seed.ts` uitgevoerd moet worden door `tsx`. We maken dit bestand aan:
 
 ```ts
+// src/data/seed.ts
 import { PrismaClient } from '@prisma/client'; // 👈 1
 
 const prisma = new PrismaClient(); // 👈 1
@@ -399,6 +400,7 @@ main()
 1. We importeren de Prisma client en maken een instantie aan.
 2. We definieren een `main` functie die de seeding zal uitvoeren. We seeden eerst de gebruikers, dan de plaatsen en tenslotte de transacties.
    - We maken hier gebruik van de Prisma client. Deze heeft één property per tabel, in dit geval `user`, `place` en `transaction`. Deze properties hebben methodes zoals `createMany` om meerdere records toe te voegen.
+   - Je zal merken dat Prisma suggesties geeft voor de velden die je kan invullen. Dit is de IntelliSense die we eerder vermeld hebben.
 3. We roepen de `main` functie aan en sluiten de connectie met de databank af na het uitvoeren van de seeding of bij een fout.
 
 Nu kunnen we onze seeds uitvoeren met volgend commando:
@@ -424,112 +426,58 @@ Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om 
 1. Configuur seeding voor je eigen project.
 2. Maak seeds aan voor alle tabellen die je in de vorige oefening hebt gedefinieerd.
 
-## Datalaag opbouwen
+## Datalaag finaliseren
 
-We maken een module voor onze datalaag. Maak in de map `data` een bestand`index.js` aan met volgende inhoud:
+Nu rest ons enkel nog een module te maken voor onze datalaag. Maak in de map `data` een bestand `index.ts` aan met volgende inhoud:
 
-```js
-const knex = require('knex'); // 👈 4
-const { getLogger } = require('../core/logging'); // 👈 8
+```ts
+// src/data/index.ts
+import { PrismaClient } from '@prisma/client'; // 👈 1
+import { getLogger } from '../core/logging';
 
-// 👇 1 - start config
-const config = require('config');
-
-const NODE_ENV = config.get('env');
-const isDevelopment = NODE_ENV === 'development';
-
-const DATABASE_CLIENT = config.get('database.client');
-const DATABASE_NAME = config.get('database.name');
-const DATABASE_HOST = config.get('database.host');
-const DATABASE_PORT = config.get('database.port');
-const DATABASE_USERNAME = config.get('database.username');
-const DATABASE_PASSWORD = config.get('database.password');
-// 👆 1 einde config
-
-let knexInstance; // 👈 5
+export const prisma = new PrismaClient(); // 👈 1
 
 // 👇 2
-async function initializeData() {
-  const logger = getLogger(); // 👈 9
-  logger.info('Initializing connection to the database'); // 👈 9
+export async function initializeData(): Promise<void> {
+  getLogger().info('Initializing connection to the database');
 
-  // 👇 6 - start knex opties
-  const knexOptions = {
-    client: DATABASE_CLIENT,
-    connection: {
-      host: DATABASE_HOST,
-      port: DATABASE_PORT,
-      database: DATABASE_NAME,
-      user: DATABASE_USERNAME,
-      password: DATABASE_PASSWORD,
-      insecureAuth: isDevelopment,
-    },
-  };
-  // 👆 6 einde knex opties
-  knexInstance = knex(knexOptions); // 👈 7
+  await prisma.$connect();
 
-  // 👇 8
-  try {
-    await knexInstance.raw('SELECT 1+1 AS result');
-  } catch (error) {
-    logger.error(error.message, { error }); // 👈 9
-    throw new Error('Could not initialize the data layer'); // 👈 10
-  }
-
-  logger.info('Successfully connected to the database'); // 👈 9
-  return knexInstance; // 👈 7
+  getLogger().info('Succesfully connected to the database');
 }
 
-// 👇 11
-function getKnex() {
-  if (!knexInstance)
-    throw new Error(
-      'Please initialize the data layer before getting the Knex instance'
-    );
-  return knexInstance;
+// 👇 3
+export async function shutdownData(): Promise<void> {
+  getLogger().info('Shutting down database connection');
+
+  await prisma?.$disconnect();
+
+  getLogger().info('Database connection closed');
 }
-
-// 👇 12
-const tables = Object.freeze({
-  transaction: 'transactions',
-  user: 'users',
-  place: 'places',
-});
-
-module.exports = {
-  initializeData, // 👈 3
-  getKnex, // 👈 11
-  tables, // 👈 12
-};
 ```
 
-1. Importeer eerst de configuratie en maak een variabele aan voor elk van de databankinstellingen.
-2. Maak vervolgens een functie `initializeData` die onze connectie zal aanmaken.
-3. Exporteer deze functie alvast.
-4. Importeer knex.
-5. Maak een globale variabele om onze connectie in te bewaren. Hierdoor kunnen we deze later gebruiken om queries uit te voeren of om correct af te sluiten.
-6. Definieer de connectie-opties voor knex. We gaan er hierbij vanuit dat de databank reeds bestaat.
-7. Vervolgens maken we een nieuwe Knex-instantie en retourneren deze.
-8. Als laatste checken we of de connectie goed functioneert door een simpele query uit te voeren.
-9. We loggen ook voldoende informatie zodat we kunnen debuggen als iets fout gaat.
-10. Het heeft geen zin om de server op te starten als we geen databankconnectie hebben. We gooien dus een error zodat de server crasht.
-11. Nu is de datalaag klaar voor gebruik. We moeten enkel onze connectie nog beschikbaar maken voor gebruik. We definiëren een getter voor de Knex-instantie. We exporteren deze ook.
-12. We definiëren ook een constant object `tables` met de namen van onze tabellen. Nee, we coderen deze niet hard! Zo hoeven we maar één aanpassing te maken indien nodig. We exporteren dit ook.
+1. Importeer de Prisma client en maak een instantie aan. Het is belangrijk dat we slechts één instantie hebben van de Prisma client. Per instantie die je aanmaakt wordt een nieuwe pool van connecties aangemaakt. Dit kan leiden tot een overbelasting van de databank of de webserver.
+   - We gebruiken hier het [singleton](https://refactoring.guru/design-patterns/singleton) patroon.
+2. We definiëren een functie waarin we de connectie effectief maken. We loggen ook dat de connectie succesvol is.
+   - Deze functie heeft `Promise<void>` als return type. De functie geeft nl. niets terug en is asynchroon. Door het feit dat de functie asynchroon is, kunnen we niet gewoon `: void` gebruiken.
+   - Een client aanmaken legt nl. niet meteen een connectie met de databank. Die wordt pas gemaakt als ze écht nodig is.
+3. We definiëren een functie om de connectie af te sluiten. We loggen ook dat de connectie succesvol is afgesloten.
+   - Dit is nodig aangezien Node.js niet zal afsluiten zolang er nog open connecties zijn.
 
-Nu dienen we de `initializeData` aan te roepen in ons opstartscript. Pas hiervoor `src/index.js` aan:
+Nu dienen we de `initializeData` aan te roepen in ons opstartscript. Pas hiervoor `src/index.ts` aan:
 
-```js
+```ts
 // andere imports
-const { initializeData } = require('./data'); // 👈 1
+import { initializeData } from './data'; // 👈 1
 // configuratie
 
 // 👇 2
-async function main() {
-  // logger initialiseren
+async function main(): Promise<void> {
+  // middlewares
 
   await initializeData(); // 👈 4
 
-  // andere code
+  // rest laag + listen
 }
 main(); // 👈 3
 ```
@@ -537,64 +485,11 @@ main(); // 👈 3
 1. We importeren de `initializeData` functie in ons opstartscript.
 2. Wrap alle code uit dit bestand (behalve imports en configuratie) in een `async main` functie. We mogen nl. geen `await` doen buiten een `async` functie.
 3. Roep deze functie vervolgens aan.
-4. Initialiseer de datalaag na het initialiseren van de logger. Zo kunnen we gebruik maken van de logger in de datalaag.
+4. Initialiseer de datalaag na het toevoegen van de middlewares aan de Koa app.
 
-### Oefening 1 - Je eigen project
+### Oefening 3 - Je eigen project
 
-Voeg de datalaag toe aan je eigen project.
-
-> 💡 Tip: je kan als extra functionaliteit ook gebruik maken van een ORM framework. Zoek op wat de best practices zijn voor het gebruik van een ORM framework in Node.js. Implementeer het maken van een verbinding met de database.
-
-### Databank automatisch aanmaken
-
-Het zou handig zijn als onze server automatisch onze databank aanmaakt, dat is niet altijd het geval. In bv. een MongoDB wordt die automatisch aangemaakt indien deze nog niet bestaat. In MySQL is dit niet het geval. We kunnen dit oplossen door een extra stap toe te voegen in onze `initializeData` functie:
-
-```js
-async function initializeData() {
-  const logger = getLogger();
-  logger.info('Initializing connection to the database');
-
-  const knexOptions = {
-    client: DATABASE_CLIENT,
-    connection: {
-      host: DATABASE_HOST,
-      port: DATABASE_PORT,
-      // database: DATABASE_NAME, // 👈 1
-      user: DATABASE_USERNAME,
-      password: DATABASE_PASSWORD,
-      insecureAuth: isDevelopment,
-    },
-  };
-  knexInstance = knex(knexOptions); // 👈 1
-
-  // 👇 2
-  try {
-    await knexInstance.raw('SELECT 1+1 AS result');
-    await knexInstance.raw('CREATE DATABASE IF NOT EXISTS ??', DATABASE_NAME); // 👈 3
-
-    // We need to update the Knex configuration and reconnect to use the created database by default
-    // USE ... would not work because a pool of connections is used
-    await knexInstance.destroy(); // 👈 4
-
-    knexOptions.connection.database = DATABASE_NAME; // 👈 5
-    knexInstance = knex(knexOptions); // 👈 6
-    await knexInstance.raw('SELECT 1+1 AS result'); // 👈 7
-  } catch (error) {
-    logger.error(error.message, { error });
-    throw new Error('Could not initialize the data layer');
-  }
-
-  // ...
-}
-```
-
-1. We verwijderen de databank naam en maken eerst een connectie zonder databank.
-2. Vervolgens breiden we onze connectiecheck uit.
-3. We maken een databank aan, indien deze nog niet bestaat. De `??` zijn een placeholder voor de databanknaam, die we als parameter doorgeven. Deze wordt geëscaped door KnexJS.
-4. We gooien de connectie weg.
-5. We passen de connectie-opties aan zodat we de al dan niet aangemaakte databank kunnen gebruiken.
-6. We maken een nieuwe connectie aan.
-7. We testen of de connectie goed functioneert.
+Voeg de Prisma client toe aan je eigen project.
 
 ## Repository
 
