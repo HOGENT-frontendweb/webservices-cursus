@@ -105,6 +105,7 @@ Een aantal **verplichte** plugins voor VS Code:
 - [Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [Path Intellisense](https://marketplace.visualstudio.com/items?itemName=christian-kohler.path-intellisense)
+- [Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
 
 Een aantal optionele, maar toch handige plugins:
 
