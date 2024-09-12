@@ -620,82 +620,345 @@ Controleer of je het juiste antwoord krijgt bij het ophalen van alle transacties
 
 Pas de overige functies zelf aan.
 
-### Repository in Node.js
+### Oefening 4 - Je eigen project
 
-Er is geen gouden graal, dit is slechts een voorbeeldaanpak. We hebben nu volgende mappenstructuur in de map `src`:
+Pas de service- en REST-laag aan in je eigen project zodat nu de databank gebruikt wordt.
 
-- `data`: connectie met databank opzetten en beheren, met in deze map ook deze mappen:
-  - `migrations`: zie verder
-  - `seeds`: zie verder
-- `repository`: bevat repositories
-- `service`: bevat services/domein logica
-- `rest`: bevat de REST-laag
+## Types toevoegen aan services
+
+Vervolgens voegen we types toe aan onze services. Op deze manier zijn we altijd zeker van het type van de data die we binnenkrijgen als argument en het type van de data die we teruggeven.
+
+Maak een map `types` aan in de `src` map. Aangezien elke entiteit in onze databank een `id` heeft, maken we een bestand `common.ts` aan in deze map:
+
+```ts
+// src/types/common.ts
+export interface Entity {
+  id: number;
+}
+```
+
+Voeg hierin een bestand `place.ts` toe. Daarin definiëren we het type van een plaats. We erven van `Entity`, zo krijg elke plaats ook een `id`. We voegen `null` toe aan de rating aangezien dit optioneel is.
+
+```ts
+// src/types/place.ts
+import type { Entity } from './common';
+
+export interface Place extends Entity {
+  name: string;
+  rating: number | null;
+}
+```
+
+Vervolgens definiëren we het type voor een gebruiker in `user.ts`:
+
+```ts
+// src/types/user.ts
+import type { Entity } from './common';
+
+export interface User extends Entity {
+  name: string;
+}
+```
+
+Als laatste definiëren we het type voor een transactie in `transaction.ts`:
+
+```ts
+// src/types/transaction.ts
+import type { Entity } from './common';
+import type { Place } from './place';
+import type { User } from './user';
+
+export interface Transaction extends Entity {
+  amount: number;
+  date: Date;
+  user: Pick<User, 'id' | 'name'>;
+  place: Pick<Place, 'id' | 'name'>;
+}
+```
+
+Hier maken we gebruik van `Pick`, een ingebouwd type in TypeScript. Dit type laat ons toe om enkel bepaalde velden van een type te selecteren. In dit geval willen we enkel de `id` en `name` van de user en de place. Je geeft de verschillende velden mee als string gescheiden door een `|`.
+
+Vervolgens passen we de services aan zodat ze deze types gebruiken:
+
+```ts
+// src/service/place.ts
+
+export const getAll = async (): Promise<Place[]> => {
+  // ...
+};
+
+export const getById = async (id: number): Promise<Place | null> => {
+  // ...
+};
+
+export const deleteById = async (id: number): Promise<void> => {
+  // ...
+};
+```
+
+Aangezien alle functies asynchroon zijn, voegen we `Promise` toe aan de return types.
+
+1. De `getAll` functie geeft een array van `Place` objecten terug.
+2. De `getById` functie geeft een `Place` object terug of `null` indien de plaats niet gevonden is.
+   - Later verwijderen we die `null` en vervangen we dit door een degelijke foutmelding.
+3. De `deleteById` functie geeft niets terug, dus `void`.
+
+Vervolgens definiëren we de types voor de parameters van de `create` en `updateById` functies:
+
+```ts
+// src/types/place.ts
+// ...
+
+export interface PlaceCreateInput {
+  name: string;
+  rating: number | null;
+}
+
+export interface PlaceUpdateInput extends PlaceCreateInput {}
+```
+
+We definieren een `PlaceCreateInput` en `PlaceUpdateInput` interface. De `PlaceUpdateInput` interface erft van de `PlaceCreateInput` interface. We kiezen er ook voor om alle velden voor de `PlaceCreateInput` interface opnieuw te definiëren. Je zou dit ook kunnen hergebruiken van een `Place` interface, maar dit is minder flexibel.
+
+Vervolgens passen we de `create` en `updateById` functies aan in de `src/service/place.ts`:
+
+```ts
+// src/service/place.ts
+export const create = async (place: PlaceCreateInput): Promise<Place> => {
+  return prisma.place.create({
+    data: place,
+  });
+};
+
+export const updateById = async (id: number, changes: PlaceUpdateInput): Promise<Place> => {
+  return prisma.place.update({
+    where: {
+      id,
+    },
+    data: changes,
+  });
+};
+```
+
+Analoog kan je de types toevoegen voor een transactie en een gebruiker.
 
 ### Oefening 5 - Je eigen project
 
-- Pas de service- en REST-laag aan in je eigen project voor de `findAll` functie uit de repository.
-- Voeg een `findCount` functie toe in je repository. Deze haalt het totaal aantal rijen op in de betreffende tabel. Meer in [de knex documentatie](https://knexjs.org/guide/query-builder.html#count).
-- Gebruik deze in de `getAll` (= service) om een property `count` toe te voegen aan de returnwaarde.
-- Doe dit ook voor de andere methodes: `getById`, `create`, `updateById` en de `deleteById`.
+1. Voeg types toe aan je eigen project.
+2. Gebruik deze types in je services.
 
-Indien je voor een ORM framework gaat, pas dan de service- en REST-laag aan.
+## Types toevoegen aan REST
 
-<!-- markdownlint-disable-next-line -->
-+ Oplossing +
+Als laatste voegen we types toe aan onze REST-laag. Dit is de laatste laag waar we nog geen types hebben toegevoegd.
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `76352e8`
+We breiden onze gemeenschappelijke types uit met een `ListReponse` en een `IdParams` interface:
 
-  ```bash
-  git clone https://github.com/HOGENT-Web/webservices-budget.git
-  git checkout -b oplossing 76352e8
-  yarn install
-  yarn start
-  ```
+```ts
+// src/types/common.ts
+// ...
 
-## Het totaalplaatje
+export interface ListResponse<T> {
+  items: T[];
+}
 
-Op dit punt is het belangrijk om inzicht te hebben in alles wat gebeurt in de datalaag, want dat is een heleboel. Als de datalaag opstart, worden volgende stappen uitgevoerd:
+export interface IdParams {
+  id: number;
+}
+```
 
-1. connectie maken met databank (zonder databank te specifiëren)
-2. connectie controleren
-3. databank aanmaken (indien onbestaand)
-4. connectie weggooien
-5. nieuwe connectie maken (op de aangemaakte databank)
-6. connectie controleren
-7. migraties uitvoeren
-   - indien gefaald: server stopt
-8. indien in development: seeds uitvoeren
-   - indien gefaald: geen probleem, server start verder op
-9. datalaag is succesvol opgestart
+De `ListResponse` interface bevat een array van items van een bepaald type. Dat type geven we mee als parameter `T` van het generieke type. De `IdParams` interface bevat een enkel veld `id` van het type `number`. Dit hergebruiken we later aangezien we vaak enkel een id nodig hebben als parameter.
 
-Code: zie [GitHub](https://github.com/HOGENT-Web/webservices-budget/blob/main/src/data/index.js). Kan je elke stap koppelen aan een stukje code?
+Vervolgens passen we de types aan in de `src/rest/place.ts`:
 
-## Oefening 8 - Je eigen project
+```ts
+// src/types/place.ts
+import type { Entity, ListResponse } from './common';
 
-Werk aan je eigen project!
+// ...
 
-- Vervolledig je repositories en services in je project met alle benodigde CRUD-operaties.
-- Vervolledig ook de migrations en seeds.
+export interface CreatePlaceRequest extends PlaceCreateInput {}
+export interface UpdatePlaceRequest extends PlaceUpdateInput {}
 
-OF
+export interface GetAllPlacesResponse extends ListResponse<Place> {}
+export interface GetPlaceByIdResponse extends Place {}
+export interface CreatePlaceResponse extends GetPlaceByIdResponse {}
+export interface UpdatePlaceResponse extends GetPlaceByIdResponse {}
+```
 
-- Voeg in webservices-budget de migratie, seeding, repo, service en rest toe voor de CRUD-operaties van de users
+We voegen enkel types toe voor requests die effectief data doorgeven en responses die data teruggeven:
 
-<!-- markdownlint-disable-next-line -->
-+ Oplossing +
+- `CreatePlaceRequest` en `UpdatePlaceRequest` zijn de types voor de request bodies van de `POST` en `PUT` requests.
+- `GetAllPlacesResponse` is de response voor de `GET` request die alle places opvraagt.
+- `GetPlaceByIdResponse`, `CreatePlaceResponse` en `UpdatePlaceResponse` zijn de responses voor de `GET`, `POST` en `PUT` requests die een enkele plaats opvragen/aanmaken/aanpassen.
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in commit `4f79853`
+Vervolgens voegen we enkele types toe voor Koa. Maak een nieuw bestand `koa.ts` aan in de `src/types` map:
 
-  ```bash
-  git clone https://github.com/HOGENT-Web/webservices-budget.git
-  git checkout -b oplossing 4f79853
-  yarn install
-  yarn start
-  ```
+```ts
+// src/types/koa.ts
+import type { ParameterizedContext } from 'koa';
+import type { SessionInfo } from '.';
+import type Application from 'koa';
+import type Router from '@koa/router';
+
+// 👇 1
+export interface BudgetAppState {
+  session: SessionInfo;
+}
+
+// 👇 2
+export interface BudgetAppContext<
+  Params = unknown,
+  RequestBody = unknown,
+  Query = unknown,
+> {
+  request: {
+    body?: RequestBody;
+    query: Query;
+  };
+  params: Params;
+}
+
+// 👇 3
+export type KoaContext<
+  ResponseBody = unknown,
+  Params = unknown,
+  RequestBody = unknown,
+  Query = unknown,
+> = // 👇 4
+  ParameterizedContext<
+    BudgetAppState,
+    BudgetAppContext<Params, RequestBody, Query>,
+    ResponseBody
+  >;
+
+// 👇 5
+export interface KoaApplication extends Application<BudgetAppState> {}
+
+// 👇 5
+export interface KoaRouter extends Router<BudgetAppState, BudgetAppContext> {}
+```
+
+1. We definiëren een `BudgetAppState` interface. State is één van de properties uit de Koa context. Momenteel hebben we nog geen state, dus laten we de interface leeg.
+2. Daarnaast kan je ook de Koa context uitbreiden met extra properties. We definiëren hiervoor een `BudgetAppContext` interface. Deze interface ontvangt drie types als parameters:
+   - `Params`: het type van de parameters uit de URL
+   - `RequestBody`: het type van de HTTP request body
+   - `Query`: het type van de query parameters uit het HTTP request
+   - Deze parameters hebben allemaal standaard het type `unknown`. Dit betekent dat we de waarde niet weten. Je bent dus verplicht een type op te geven als je hiermee werkt.
+3. Vervolgens definiëren we een eigen type voor de Koa context. We geven hier een extra type parameter `ResponseBody` mee, het type van de HTTP response body. De overige parametertypes hebben dezelfde functie als in de `BudgetAppContext` interface.
+4. Koa voorziet een `ParameterizedContext` waarmee je de context kan typeren. Deze interface verwacht drie type parameters: de state, de context en de response body. We geven onze `BudgetAppState` en `BudgetAppContext` interfaces mee als state en context. De response body vullen we in met het generieke type `ResponseBody`.
+5. Als laatste definiëren we onze eigen types voor de Koa applicatie en router. Deze interfaces zijn een extensie van de standaard Koa interfaces. We geven onze `BudgetAppState` en `BudgetAppContext` interfaces mee als extra types.
+
+Nu kunnen we deze types gebruiken in onze REST-laag. Pas de `src/rest/place.ts` aan:
+
+```ts
+// src/rest/place.ts
+// ...
+import type { BudgetAppContext, BudgetAppState} from '../types/koa';
+import type { KoaContext, KoaRouter } from '../types/koa';
+import type {
+  CreatePlaceRequest,
+  CreatePlaceResponse,
+  GetAllPlacesResponse,
+  GetPlaceByIdResponse,
+  UpdatePlaceRequest,
+  UpdatePlaceResponse,
+} from '../types/place';
+import type { IdParams } from '../types/common';
+
+// 👇 1
+const getAllPlaces = async (ctx: KoaContext<GetAllPlacesResponse>) => {
+  // ...
+};
+
+// 👇 2
+const getPlaceById = async (ctx: KoaContext<GetPlaceByIdResponse, IdParams>) => {
+  // ...
+};
+
+// 👇 3
+const createPlace = async (ctx: KoaContext<CreatePlaceResponse, void, CreatePlaceRequest>) => {
+  // ...
+};
+
+// 👇 4
+const updatePlace = async (ctx: KoaContext<UpdatePlaceResponse, IdParams, UpdatePlaceRequest>) => {
+  // ...
+};
+
+// 👇 5
+const deletePlace = async (ctx: KoaContext<void, IdParams>) => {
+  // ...
+};
+
+// 👇 6
+const getTransactionsByPlaceId = async (ctx: KoaContext<GetAllTransactionsReponse, IdParams>) => {
+  // ...
+};
+
+// 👇 7
+export default (parent: KoaRouter) => {
+  const router = new Router<BudgetAppState, BudgetAppContext>({
+    prefix: '/places',
+  });
+  // ...
+};
+```
+
+1. We vervangen de `Context` type door onze eigen `KoaContext` type. We geven ook het type van de response mee, in dit geval `GetAllPlacesResponse`.
+2. We geven ook het type van de parameters mee aan de `getPlaceById` functie. We verwachten een `IdParams` object als parameters in de URL.
+   - We negeren voorlopig de foutmelding die je krijgt op het instellen van `ctx.body`. Die lossen we op in hoofdstuk 6.
+3. De `createPlace` functie verwacht geen parameters in de URL, maar wel een `CreatePlaceRequest` object in de body van de request.
+4. De `updatePlace` functie verwacht een `IdParams` object in de URL en een `UpdatePlaceRequest` object in de body van de request.
+5. De `deletePlace` functie geeft niets terug en verwacht enkel een `IdParams` object in de URL.
+6. De `getTransactionsByPlaceId` geeft een lijst van transacties terug en ontvangt een `IdParams` object in de URL.
+   - Probeer zelf de interface `GetAllTransactionsReponse` te schrijven in `src/types/transaction.ts`. Maak hierbij gebruik van de `ListResponse`.
+7. We gebruiken ook ons eigen `KoaRouter` type in plaats van de standaard Koa router.
+   - We geven hier ook onze `BudgetAppState` en `BudgetAppContext` interfaces mee als extra types aan de Koa router.
+
+Analoog kan je de types toevoegen voor de andere routes in de REST-laag.
+
+Als laatste moeten we enkel nog onze state en context types toevoegen aan de algemene router in `src/rest/index.ts`:
+
+```ts
+// ...
+import type { BudgetAppContext, BudgetAppState, KoaApplication } from '../types/koa';
+
+export default (app: KoaApplication) => { // 👈
+  const router = new Router<BudgetAppState, BudgetAppContext>({ // 👈
+    prefix: '/api',
+  });
+
+  // ...
+};
+```
+
+En ook nog in de `src/index.ts`:
+
+```ts
+// ..
+import type { BudgetAppContext, BudgetAppState } from './types/koa';
+
+async function main(): Promise<void> {
+  const app = new Koa<BudgetAppState, BudgetAppContext>();
+
+  // ...
+}
+main();
+```
+
+Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten we nog een paar types finetunen, maar dat is voor later.
+
+### Oefening 6 - Je eigen project
+
+1. Voeg request/response types toe aan je eigen project.
+2. Gebruik deze types in je REST.
+3. Vervolledig je repositories en services in je project met alle benodigde CRUD-operaties.
+4. Vervolledig ook de migrations en seeds.
+
+l> ws oplossing 2ba923c les4-opl
 
 ## Mogelijke extra's voor de examenopdracht
 
 - Gebruik van een ander ORM framework of een querybuilder.
   - We raden niet aan om zelf queries te schrijven, tenzij je écht een goede reden hebt
-- Gebruik van een mapper package in de repositorylaag.
+- Gebruik van een mapper package in de repositorylaag (indien van toepassing).
 - Gebruik de [Node TypeScript Architecture](https://github.com/jbreckmckye/node-typescript-architecture).
