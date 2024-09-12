@@ -9,7 +9,7 @@ De **gelaagde architectuur** is een veel gebruikte architectuur waarin code is o
 - REST API (= presentatielaag)
 - Servicelaag (= domeinlaag)
 - Repositorylaag (= persistentielaag)
-- - Datalaag (= persistentielaag)
+- Datalaag (= persistentielaag)
 
 Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In Node.js heb je de keuze, er is geen verplichte structuur.
 
