@@ -200,7 +200,8 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 ![ERD](./images/kroki_erd.svg)
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   ```erd
   [Klant]
@@ -312,7 +313,8 @@ Onderstaand ERD zou een oplossing zijn voor onze receptenapplicatie, vol met bov
 ![Oplossing met FME](https://kroki.io/erd/svg/eNqLDkpNzixIjeXSykvMTeXiivbMSy9KTclMzSuBiSXm5pfmlXCV5mWWAOVDi1OLgDKZKVxpmUXFJX4gFTmJUEZiSkpRanExFxdIlYKhrq6WAsR8LggFEUJYAVGnhaQOAI2aLp8=)
 
 <!-- markdownlint-disable-next-line -->
-+ Broncode +
+
+- Broncode +
 
   Onderstaande code werd hiervoor gebruikt:
 
@@ -345,7 +347,8 @@ Een mogelijke oplossing ziet eruit als volgt:
 ![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjEOwjAMRXefonOqDL0CTF0YQEwVQ2g-KFKTVI6DxO1pSAWZ_GU9P__pjNmtuJFyloLxoH5mGIE9vImmMTwZ1iFIQxgfcxDKwQn1_L0f7QZfE7hiD8dJToVdzB6SMCAUsr-DaY1JzHKMFjQ7KZ8u5gX7K9PnzbVJVeMv-m7QWnUVozrq6l-04RonNblTWg-75AMGd1SG)
 
 <!-- markdownlint-disable-next-line -->
-+ Broncode +
+
+- Broncode +
 
   Onderstaande code werd gebruikt voor de oplossing:
 
@@ -502,12 +505,12 @@ De `package.json` bevat enkele properties:
 
 Met een simpele `yarn install` installeren we meteen een identieke omgeving (met zowel `dependencies` als `devDependencies`) en dat maakt het handiger om in een team te werken (`yarn install --prod` installeert enkel de `dependencies`).
 
-Het verschil tussen `dependencies` en `devDependencies` is het moment wanneer ze gebruikt worden. De `dependencies` zijn nodig in productie, m.a.w. de applicatie kan niet werken zonder deze packages. De `devDependencies` zijn enkel nodig om bv. het leven van de developer makkelijker te maken (types in TypeScript, linting, etc.) of bevatten packages die enkel gebruikt worden *at build time*, of dus wanneer de applicatie (bv. door webpack) omgevormd wordt tot iets wat browsers begrijpen.
+Het verschil tussen `dependencies` en `devDependencies` is het moment wanneer ze gebruikt worden. De `dependencies` zijn nodig in productie, m.a.w. de applicatie kan niet werken zonder deze packages. De `devDependencies` zijn enkel nodig om bv. het leven van de developer makkelijker te maken (types in TypeScript, linting, etc.) of bevatten packages die enkel gebruikt worden _at build time_, of dus wanneer de applicatie (bv. door webpack) omgevormd wordt tot iets wat browsers begrijpen.
 
 Dependencies maken gebruik van [semantic versioning](https://semver.org/) (lees gerust eens door de specificatie). Kort gezegd houdt dit in dat elk versienummer bestaat uit drie delen: `MAJOR.MINOR.PATCH`, elke deel wordt met één verhoogd in volgende gevallen:
 
-- `MAJOR`: wijzigingen die ***niet*** compatibel zijn met oudere versies
-- `MINOR`: wijzigen die ***wel*** compatibel zijn met oudere versies
+- `MAJOR`: wijzigingen die **_niet_** compatibel zijn met oudere versies
+- `MINOR`: wijzigen die **_wel_** compatibel zijn met oudere versies
 - `PATCH`: kleine bugfixes (compatibel met oudere versies)
 
 In een `package.json` zie je ook vaak versies zonder prefix of met een tilde (~) of hoedje (^) als prefix, dit heeft volgende betekenis:
@@ -581,18 +584,19 @@ const Koa = require('koa');
 
 const app = new Koa();
 
-app.use(async (ctx, next) => { // 👈 1 en 2
+app.use(async (ctx, next) => {
+  // 👈 1 en 2
   ctx.body = 'Hello World';
   await next();
 });
 
-app.use(async (ctx, next) => { // 👈 3
+app.use(async (ctx, next) => {
+  // 👈 3
   console.log(ctx);
   await next();
 });
 
 app.listen(9000);
-
 ```
 
 1. Via `app.use` kan je een middleware installeren in de applicatie. De meegegeven functie is wat men de middleware noemt.
@@ -752,7 +756,7 @@ Nu we TypeScript geïnstalleerd hebben en een `tsconfig.json` hebben, kunnen we 
 }
 ```
 
-Voer `yarn build` uit in de terminal. Je zou nu een `index.js` bestand moeten zien in de `build` map. Vergelijk de inhoud van dit bestand met de inhoud van `index.ts`. Je ziet heel wat extra code die TypeScript toevoegt om ervoor te zorgen dat je code correct werkt in de gekozen versie van JavaScript (`es2022` in ons geval). In de [GitHub wiki van  TypeScript repository](https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping) vind je de aangewezen configuratie voor een bepaalde Node.js versie.
+Voer `yarn build` uit in de terminal. Je zou nu een `index.js` bestand moeten zien in de `build` map. Vergelijk de inhoud van dit bestand met de inhoud van `index.ts`. Je ziet heel wat extra code die TypeScript toevoegt om ervoor te zorgen dat je code correct werkt in de gekozen versie van JavaScript (`es2022` in ons geval). In de [GitHub wiki van TypeScript repository](https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping) vind je de aangewezen configuratie voor een bepaalde Node.js versie.
 
 Voeg zeker de `build` map toe aan je `.gitignore` bestand. Deze map bevat gegenereerde bestanden en moet niet in je git repository terecht komen.
 
@@ -791,9 +795,7 @@ Maak een bestand `launch.json` aan in de `.vscode` map en voeg volgende configur
       "address": "localhost",
       "port": 9001,
       "request": "attach",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "type": "node",
       "restart": true,
       "timeout": 10000
@@ -814,7 +816,7 @@ Vervolgens zal je in de terminal zien dat de debugger verbonden is en kan je bre
 
 ![Debugger attached](images/debugger-attached.png)
 
-Voeg breakpoints toe door op de lijnnummers te klikken. De debugger zal nu stoppen op deze lijn wanneer deze uitgevoerd wordt (doordat je bv. een request uitvoert in Postman). Je kan een breakpoint zetten op de lijn `ctx.body = 'Hello World from TypeScript';` en zien dat de debugger stopt op deze lijn als je naar <http://localhost:9000> surft.  Bovenaan krijg je een paar knoppen die je zou moeten herkennen van bv. Eclipse of IntelliJ IDEA.
+Voeg breakpoints toe door op de lijnnummers te klikken. De debugger zal nu stoppen op deze lijn wanneer deze uitgevoerd wordt (doordat je bv. een request uitvoert in Postman). Je kan een breakpoint zetten op de lijn `ctx.body = 'Hello World from TypeScript';` en zien dat de debugger stopt op deze lijn als je naar <http://localhost:9000> surft. Bovenaan krijg je een paar knoppen die je zou moeten herkennen van bv. Eclipse of IntelliJ IDEA.
 
 ![Breakpoint](images/breakpoint.png)
 
@@ -849,7 +851,6 @@ const rootLogger: winston.Logger = winston.createLogger({
 export const getLogger = () => {
   return rootLogger;
 };
-
 ```
 
 1. We importeren de `winston` package.
@@ -874,7 +875,7 @@ app.listen(9000, () => {
 
 1. We importeren de `getLogger` functie.
 2. We loggen een bericht wanneer de server opgestart is.
-   - We maakten daarnet een zogenaamde *named export*, dit betekent dat we de functie moeten importeren tussen `{}`.
+   - We maakten daarnet een zogenaamde _named export_, dit betekent dat we de functie moeten importeren tussen `{}`.
 
 Voor nu volstaat dit, maar in het volgende hoofdstuk zullen we de logger nog uitbreiden met bv. een file transport in test modus, een aangepast formaat voor de logs, etc.
 
@@ -911,33 +912,43 @@ Maak een `eslint.config.mjs` bestand in de root met onderstaande configuratie. D
 
 ```js
 import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint'
+import tseslint from 'typescript-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 
-export default tseslint.config( // 👈 1
+export default tseslint.config(
+  // 👈 1
   eslint.configs.recommended, // 👈 2
   ...tseslint.configs.recommended, // 👈 2
-  { // 👇 3
+  {
+    // 👇 3
     files: ['**/*.ts', '**/*.spec.ts'],
     plugins: {
       '@stylistic': stylistic,
     },
     rules: {
-      '@stylistic/no-multiple-empty-lines': ['error', {
-        max: 1, maxEOF: 1, maxBOF: 0,
-      }],
-      '@stylistic/indent': ['error', 2, { 'SwitchCase': 1 }],
+      '@stylistic/no-multiple-empty-lines': [
+        'error',
+        {
+          max: 1,
+          maxEOF: 1,
+          maxBOF: 0,
+        },
+      ],
+      '@stylistic/indent': ['error', 2, { SwitchCase: 1 }],
       '@stylistic/linebreak-style': ['error', 'unix'],
       '@stylistic/quotes': ['error', 'single'],
       '@stylistic/semi': ['error', 'always'],
       '@stylistic/comma-dangle': ['error', 'always-multiline'],
       '@stylistic/no-tabs': ['error'],
-      '@stylistic/max-len': ['error', {
-        'code': 120,
-        'tabWidth': 2,
-      }],
+      '@stylistic/max-len': [
+        'error',
+        {
+          code: 120,
+          tabWidth: 2,
+        },
+      ],
       '@stylistic/arrow-parens': ['error', 'always'],
-      '@stylistic/brace-style': ['error', '1tbs', { 'allowSingleLine': false }],
+      '@stylistic/brace-style': ['error', '1tbs', { allowSingleLine: false }],
       '@stylistic/no-inner-declarations': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/consistent-type-imports': 'error',
@@ -961,7 +972,12 @@ Je kan VS Code zo instellen dat automatisch herstel van fouten wordt uitgevoerd 
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
-  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ]
 }
 ```
 
