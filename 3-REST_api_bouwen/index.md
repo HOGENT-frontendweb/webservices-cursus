@@ -153,11 +153,12 @@ const NODE_ENV = env['NODE_ENV']; // 👈 4
 const LOG_LEVEL = config.get<string>('log.level'); // 👈 2
 const LOG_DISABLED = config.get<boolean>('log.disabled'); // 👈 2
 
+// 👇 7
 console.log(
   `node env: ${NODE_ENV}, log level ${LOG_LEVEL}, logs enabled: ${
     LOG_DISABLED !== true
   }`,
-); // 👈 7
+);
 
 const rootLogger: winston.Logger = winston.createLogger({
   level: LOG_LEVEL, // 👈 3
@@ -504,8 +505,8 @@ De POST route om een nieuwe transactie toe te voegen is zeer gelijkaardig.
 
 ```ts
 // src/index.ts
+// 👇 1
 router.post('/api/transactions', async (ctx) => {
-  // 👈 1
   const newTransaction = transactionService.create({
     ...ctx.request.body, // 👈 2
     placeId: Number(ctx.request.body.placeId),
@@ -585,7 +586,7 @@ Voeg een nieuwe route toe:
 ```ts
 // src/index.ts
 router.get('/api/transactions/:id', async (ctx) => {
-  // 👈 1
+  // 👇 1
   ctx.body = transactionService.getById(Number(ctx.params.id)); // 👈 2
 });
 ```
@@ -741,17 +742,11 @@ Creëer een `health.ts` bestand in de `service` map dat 2 functies bevat:
 import config from 'config';
 import packageJson from '../../package.json';
 
-/**
- * Check if the server is healthy. Can be extended
- * with database connection check, etc.
- */
-export const ping = () => ({ pong: true }); // 👈 1
+// 👇 1
+export const ping = () => ({ pong: true });
 
-/**
- * Get the running server's information.
- */
+// 👇 2
 export const getVersion = () => ({
-  // 👈 2
   env: config.get<string>('env'),
   version: packageJson.version,
   name: packageJson.name,
@@ -827,8 +822,8 @@ const loggerFormat = () => {
 
   // 👇 4
   const format = (info: winston.Logform.TransformableInfo) => {
+    // 👇 5
     if (info?.['error'] instanceof Error) {
-      // 👈 5
       return formatError(info);
     }
 
@@ -958,8 +953,8 @@ app.use(
   koaCors({
     // 👇 4
     origin: (ctx) => {
+      // 👇 5
       if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) {
-        // 👈 5
         return ctx.request.header.origin!;
       }
       // Not a valid domain at this point, let's return the first valid as we should return a string

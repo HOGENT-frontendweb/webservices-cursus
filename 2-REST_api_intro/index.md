@@ -584,14 +584,14 @@ const Koa = require('koa');
 
 const app = new Koa();
 
+// 👇 1 en 2
 app.use(async (ctx, next) => {
-  // 👈 1 en 2
   ctx.body = 'Hello World';
   await next();
 });
 
 app.use(async (ctx, next) => {
-  // 👈 3
+  // 👇 3
   console.log(ctx);
   await next();
 });
@@ -915,8 +915,8 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import stylistic from '@stylistic/eslint-plugin';
 
+// 👇 1
 export default tseslint.config(
-  // 👈 1
   eslint.configs.recommended, // 👈 2
   ...tseslint.configs.recommended, // 👈 2
   {

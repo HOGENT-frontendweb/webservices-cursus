@@ -511,8 +511,8 @@ We passen allereerst de `src/service/place.ts` aan:
 ```ts
 import { prisma } from '../data'; // 👈 1
 
+// 👇 3
 export const getAll = async () => {
-  // 👈 3
   return prisma.place.findMany(); // 👈 2
 };
 ```
@@ -827,7 +827,8 @@ export type KoaContext<
   Params = unknown,
   RequestBody = unknown,
   Query = unknown,
-> = ParameterizedContext< // 👇 4
+> = ParameterizedContext<
+  // 👇 4
   BudgetAppState,
   BudgetAppContext<Params, RequestBody, Query>,
   ResponseBody
@@ -937,10 +938,10 @@ import type {
   KoaApplication,
 } from '../types/koa';
 
+// 👇
 export default (app: KoaApplication) => {
-  // 👈
+  // 👇
   const router = new Router<BudgetAppState, BudgetAppContext>({
-    // 👈
     prefix: '/api',
   });
 
