@@ -14,19 +14,19 @@ De applicatie die we gaan maken bevat volgende pagina's
 
 Deze pagina geeft een overzicht van alle transacties van alle gebruikers. Later toont deze enkel de transacties van de ingelogde gebruiker.
 
-   ![Transactions pagina](./images/transactions.png)
+![Transactions pagina](./images/transactions.png)
 
 ### **Places pagina**
 
 Deze pagina toont een overzicht van alle plaatsen waar je transacties kan doen.
 
-   ![Places pagina](./images/places.png)
+![Places pagina](./images/places.png)
 
 ### **Add/edit transaction pagina**
 
 De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaande aan te passen.
 
-   ![Add/edit transaction pagina](./images/add-transaction.png)
+![Add/edit transaction pagina](./images/add-transaction.png)
 
 <!-- tabs:end -->
 
@@ -36,7 +36,8 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
 - Welke endpoints moeten we voorzien?
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Het ERD ziet er als volgt uit:
 
@@ -45,6 +46,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
   De endpoints die we moeten voorzien zijn:
 
   <!-- markdownlint-disable-next-line -->
+
   **Transactions**
 
   - `GET /api/transactions`: alle transacties opvragen
@@ -54,6 +56,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
   - `DELETE /api/transactions/:id`: een transactie verwijderen
 
   <!-- markdownlint-disable-next-line -->
+
   **Places**
 
   - `GET /api/places`: alle plaatsen opvragen
@@ -64,6 +67,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
   - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
 
   <!-- markdownlint-disable-next-line -->
+
   **Users**
 
   - `GET /api/users`: alle gebruikers opvragen
@@ -107,7 +111,7 @@ We passen ons `start:dev` script in de `package.json` aan zodat het `.env` besta
 ```json
 {
   "scripts": {
-    "start:dev": "tsx watch --env-file .env --inspect=0.0.0.0:9001 src/index.ts",
+    "start:dev": "tsx watch --env-file .env --inspect=0.0.0.0:9001 src/index.ts"
   }
 }
 ```
@@ -149,7 +153,11 @@ const NODE_ENV = env['NODE_ENV']; // 👈 4
 const LOG_LEVEL = config.get<string>('log.level'); // 👈 2
 const LOG_DISABLED = config.get<boolean>('log.disabled'); // 👈 2
 
-console.log(`node env: ${NODE_ENV}, log level ${LOG_LEVEL}, logs enabled: ${LOG_DISABLED !== true}`); // 👈 7
+console.log(
+  `node env: ${NODE_ENV}, log level ${LOG_LEVEL}, logs enabled: ${
+    LOG_DISABLED !== true
+  }`,
+); // 👈 7
 
 const rootLogger: winston.Logger = winston.createLogger({
   level: LOG_LEVEL, // 👈 3
@@ -238,7 +246,8 @@ app.use(async (ctx) => {
     ctx.request.method === 'GET' && // 👈 1
     ctx.request.url === '/api/transactions'
   ) {
-    ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 2
+    ctx.body =
+      '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 2
   } else {
     ctx.body = 'Hello World from TypeScript'; // 👈 3
   }
@@ -271,7 +280,7 @@ We voegen alvast de bodyparser toe.
 ```ts
 // src/index.ts
 import Koa from 'koa';
-import bodyParser from 'koa-bodyparser' // 👈 1
+import bodyParser from 'koa-bodyparser'; // 👈 1
 import { getLogger } from './core/logging';
 
 const app = new Koa();
@@ -281,11 +290,9 @@ app.use(bodyParser()); // 👈 2
 app.use(async (ctx) => {
   getLogger().info(JSON.stringify(ctx.request));
   getLogger().info(JSON.stringify(ctx.request.body)); // 👈 3
-  if (
-    ctx.request.method === 'GET' &&
-    ctx.request.url === '/api/transactions'
-  ) {
-    ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]';
+  if (ctx.request.method === 'GET' && ctx.request.url === '/api/transactions') {
+    ctx.body =
+      '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]';
   } else {
     ctx.body = 'Hello World from TypeScript';
   }
@@ -305,7 +312,7 @@ We willen nu ook gebruik maken van de router.
 
 ```ts
 import Koa from 'koa';
-import bodyParser from 'koa-bodyparser'
+import bodyParser from 'koa-bodyparser';
 import Router from '@koa/router'; // 👈 1
 import { getLogger } from './core/logging';
 
@@ -317,11 +324,13 @@ const router = new Router(); // 👈 2
 
 // 👇 3
 router.get('/api/transactions', async (ctx) => {
-  ctx.body = '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 4
+  ctx.body =
+    '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 4
 });
 
-app.use(router.routes()) // 👈 4
-   .use(router.allowedMethods()); // 👈 4
+app
+  .use(router.routes()) // 👈 4
+  .use(router.allowedMethods()); // 👈 4
 
 app.listen(9000, () => {
   getLogger().info('🚀 Server listening on http://127.0.0.1:9000');
@@ -433,7 +442,10 @@ export const create = ({ amount, date, placeId, user }: any) => {
   throw new Error('Not implemented yet!');
 };
 
-export const updateById = (id: number, { amount, date, placeId, user }: any) => {
+export const updateById = (
+  id: number,
+  { amount, date, placeId, user }: any,
+) => {
   throw new Error('Not implemented yet!');
 };
 
@@ -448,7 +460,7 @@ De route aanpassen is nu niet veel werk. Pas aan in de `index.js`:
 
 ```js
 import Koa from 'koa';
-import bodyParser from 'koa-bodyparser'
+import bodyParser from 'koa-bodyparser';
 import Router from '@koa/router';
 import { getLogger } from './core/logging';
 import * as transactionService from './service/transaction'; // 👈 1
@@ -492,7 +504,8 @@ De POST route om een nieuwe transactie toe te voegen is zeer gelijkaardig.
 
 ```ts
 // src/index.ts
-router.post('/api/transactions', async (ctx) => { // 👈 1
+router.post('/api/transactions', async (ctx) => {
+  // 👈 1
   const newTransaction = transactionService.create({
     ...ctx.request.body, // 👈 2
     placeId: Number(ctx.request.body.placeId),
@@ -501,8 +514,7 @@ router.post('/api/transactions', async (ctx) => { // 👈 1
   ctx.body = newTransaction; // 👈 3
 });
 
-app.use(router.routes())
-   .use(router.allowedMethods());
+app.use(router.routes()).use(router.allowedMethods());
 ```
 
 1. Voeg de POST route toe. We negeren even de foutmeldingen die TypeScript geeft, die lossen we later op.
@@ -572,7 +584,8 @@ Voeg een nieuwe route toe:
 
 ```ts
 // src/index.ts
-router.get('/api/transactions/:id', async (ctx) => { // 👈 1
+router.get('/api/transactions/:id', async (ctx) => {
+  // 👈 1
   ctx.body = transactionService.getById(Number(ctx.params.id)); // 👈 2
 });
 ```
@@ -661,15 +674,14 @@ export default (parent: Router) => {
   router.put('/:id', updateTransaction);
   router.delete('/:id', deleteTransaction);
 
-  app.use(router.routes())
-     .use(router.allowedMethods());
+  app.use(router.routes()).use(router.allowedMethods());
 };
 ```
 
 Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter.
 
 ```ts
-import Application from "koa";
+import Application from 'koa';
 
 import Router from '@koa/router';
 import installTransactionRouter from './transaction';
@@ -681,8 +693,7 @@ export default (app: Application) => {
 
   installTransactionRouter(router);
 
-  app.use(router.routes())
-     .use(router.allowedMethods());
+  app.use(router.routes()).use(router.allowedMethods());
 };
 ```
 
@@ -739,7 +750,8 @@ export const ping = () => ({ pong: true }); // 👈 1
 /**
  * Get the running server's information.
  */
-export const getVersion = () => ({ // 👈 2
+export const getVersion = () => ({
+  // 👈 2
   env: config.get<string>('env'),
   version: packageJson.version,
   name: packageJson.name,
@@ -773,10 +785,8 @@ export default function installPlacesRoutes(parent: Router) {
   router.get('/ping', ping);
   router.get('/version', getVersion);
 
-  parent
-    .use(router.routes())
-    .use(router.allowedMethods());
-};
+  parent.use(router.routes()).use(router.allowedMethods());
+}
 ```
 
 Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden. Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
@@ -790,9 +800,7 @@ Als laatste refactoring gaan we onze logger een beetje uitbreiden. Pas het besta
 ```ts
 import config from 'config';
 import winston from 'winston';
-const {
-  combine, timestamp, colorize, printf,
-} = winston.format;
+const { combine, timestamp, colorize, printf } = winston.format;
 
 const NODE_ENV = config.get<string>('env');
 const LOG_LEVEL = config.get<string>('log.level');
@@ -802,28 +810,32 @@ const LOG_DISABLED = config.get<boolean>('log.disabled');
 const loggerFormat = () => {
   // 👇 2
   const formatMessage = ({
-    level, message, timestamp, ...rest
+    level,
+    message,
+    timestamp,
+    ...rest
   }: winston.Logform.TransformableInfo) => {
     return `${timestamp} | ${level} | ${message} | ${JSON.stringify(rest)}`;
   };
 
   // 👇 3
   const formatError = ({
-    error: { stack }, ...rest
-  }: winston.Logform.TransformableInfo) => `${formatMessage(rest)}\n\n${stack}\n`;
+    error: { stack },
+    ...rest
+  }: winston.Logform.TransformableInfo) =>
+    `${formatMessage(rest)}\n\n${stack}\n`;
 
   // 👇 4
   const format = (info: winston.Logform.TransformableInfo) => {
-    if (info?.['error'] instanceof Error) { // 👈 5
+    if (info?.['error'] instanceof Error) {
+      // 👈 5
       return formatError(info);
     }
 
     return formatMessage(info); // 👈 6
   };
 
-  return combine(
-    colorize(), timestamp(), printf(format),
-  );
+  return combine(colorize(), timestamp(), printf(format));
 };
 
 // 👇 7
@@ -831,14 +843,15 @@ const rootLogger: winston.Logger = winston.createLogger({
   level: LOG_LEVEL,
   format: loggerFormat(),
   defaultMeta: { env: NODE_ENV },
-  transports: NODE_ENV === 'testing' ? [
-    new winston.transports.File({
-      filename: 'test.log',
-      silent: LOG_DISABLED,
-    }),
-  ] : [
-    new winston.transports.Console({ silent: LOG_DISABLED }),
-  ],
+  transports:
+    NODE_ENV === 'testing'
+      ? [
+          new winston.transports.File({
+            filename: 'test.log',
+            silent: LOG_DISABLED,
+          }),
+        ]
+      : [new winston.transports.Console({ silent: LOG_DISABLED })],
 });
 
 export const getLogger = () => {
@@ -847,7 +860,8 @@ export const getLogger = () => {
 ```
 
 <!-- markdownlint-disable-next-line -->
-+ Uitleg +
+
+- Uitleg +
 
 1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
 2. We definiëren binnen deze functie een functie voor het printen van logberichten die geen foutmelding bevatten.
@@ -909,7 +923,8 @@ export default {
   log: {
     // ...
   },
-  cors: { // 👈 1
+  cors: {
+    // 👈 1
     origins: ['http://localhost:5173'], // 👈 2
     maxAge: 3 * 60 * 60, // 👈 3
   },
@@ -939,23 +954,22 @@ const CORS_MAX_AGE = config.get<number>('cors.maxAge'); // 👈 2
 const app = new Koa();
 
 // 👇 3
-app.use(koaCors({
-  // 👇 4
-  origin: (ctx) => {
-    if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) { // 👈 5
-      return ctx.request.header.origin!;
-    }
-    // Not a valid domain at this point, let's return the first valid as we should return a string
-    return CORS_ORIGINS[0] || ''; // 👈 6
-  },
-  // 👇 7
-  allowHeaders: [
-    'Accept',
-    'Content-Type',
-    'Authorization',
-  ],
-  maxAge: CORS_MAX_AGE, // 👈 8
-}));
+app.use(
+  koaCors({
+    // 👇 4
+    origin: (ctx) => {
+      if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) {
+        // 👈 5
+        return ctx.request.header.origin!;
+      }
+      // Not a valid domain at this point, let's return the first valid as we should return a string
+      return CORS_ORIGINS[0] || ''; // 👈 6
+    },
+    // 👇 7
+    allowHeaders: ['Accept', 'Content-Type', 'Authorization'],
+    maxAge: CORS_MAX_AGE, // 👈 8
+  }),
+);
 
 app.use(bodyParser());
 
@@ -982,7 +996,8 @@ In het vorige hoofdstuk hebben een voorbeeld uitgewerkt voor een recepten API wa
 Elke transactie heeft een plaats waar deze gebeurd is. We willen nu alle transacties van een bepaalde plaats opvragen. Welke URL gebruiken we hiervoor?
 
 <!-- markdownlint-disable-next-line -->
-+ Antwoord +
+
+- Antwoord +
 
   We gebruiken `/api/places/:id/transactions`. Hierbij is `:id` de id van de plaats.
 
@@ -1006,7 +1021,9 @@ import * as transactionService from '../service/transaction';
 import { Context } from 'koa';
 
 const getTransactionsByPlaceId = async (ctx: Context) => {
-  const transactions = await transactionService.getTransactionsByPlaceId(Number(ctx.params.id));
+  const transactions = await transactionService.getTransactionsByPlaceId(
+    Number(ctx.params.id),
+  );
   ctx.body = {
     items: transactions,
   };
@@ -1019,8 +1036,7 @@ export default (parent: Router) => {
 
   router.get('/:id/transactions', getTransactionsByPlaceId);
 
-  parent.use(router.routes())
-     .use(router.allowedMethods());
+  parent.use(router.routes()).use(router.allowedMethods());
 };
 ```
 
