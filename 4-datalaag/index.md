@@ -419,7 +419,7 @@ Migrations en seeds moeten steeds vóór de start van de server uitgevoerd worde
 
 Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om je migraties en seeds uit te voeren alvorens je de server start.
 
-?> **Tip:** documenteer duidelijk in de `README.md` hoe je de server start en welke stappen je moet ondernemen om de databank correct te initialiseren. *Dit is ook één van de minimumvereisten voor de examenopdracht (en wordt vaak verwaarloosd).*
+?> **Tip:** documenteer duidelijk in de `README.md` hoe je de server start en welke stappen je moet ondernemen om de databank correct te initialiseren. _Dit is ook één van de minimumvereisten voor de examenopdracht (en wordt vaak verwaarloosd)._
 
 ### Oefening 2 - Je eigen project
 
@@ -511,7 +511,8 @@ We passen allereerst de `src/service/place.ts` aan:
 ```ts
 import { prisma } from '../data'; // 👈 1
 
-export const getAll = async () => { // 👈 3
+export const getAll = async () => {
+  // 👈 3
   return prisma.place.findMany(); // 👈 2
 };
 ```
@@ -729,7 +730,10 @@ export const create = async (place: PlaceCreateInput): Promise<Place> => {
   });
 };
 
-export const updateById = async (id: number, changes: PlaceUpdateInput): Promise<Place> => {
+export const updateById = async (
+  id: number,
+  changes: PlaceUpdateInput,
+): Promise<Place> => {
   return prisma.place.update({
     where: {
       id,
@@ -823,12 +827,11 @@ export type KoaContext<
   Params = unknown,
   RequestBody = unknown,
   Query = unknown,
-> = // 👇 4
-  ParameterizedContext<
-    BudgetAppState,
-    BudgetAppContext<Params, RequestBody, Query>,
-    ResponseBody
-  >;
+> = ParameterizedContext< // 👇 4
+  BudgetAppState,
+  BudgetAppContext<Params, RequestBody, Query>,
+  ResponseBody
+>;
 
 // 👇 5
 export interface KoaApplication extends Application<BudgetAppState> {}
@@ -852,7 +855,7 @@ Nu kunnen we deze types gebruiken in onze REST-laag. Pas de `src/rest/place.ts` 
 ```ts
 // src/rest/place.ts
 // ...
-import type { BudgetAppContext, BudgetAppState} from '../types/koa';
+import type { BudgetAppContext, BudgetAppState } from '../types/koa';
 import type { KoaContext, KoaRouter } from '../types/koa';
 import type {
   CreatePlaceRequest,
@@ -870,17 +873,23 @@ const getAllPlaces = async (ctx: KoaContext<GetAllPlacesResponse>) => {
 };
 
 // 👇 2
-const getPlaceById = async (ctx: KoaContext<GetPlaceByIdResponse, IdParams>) => {
+const getPlaceById = async (
+  ctx: KoaContext<GetPlaceByIdResponse, IdParams>,
+) => {
   // ...
 };
 
 // 👇 3
-const createPlace = async (ctx: KoaContext<CreatePlaceResponse, void, CreatePlaceRequest>) => {
+const createPlace = async (
+  ctx: KoaContext<CreatePlaceResponse, void, CreatePlaceRequest>,
+) => {
   // ...
 };
 
 // 👇 4
-const updatePlace = async (ctx: KoaContext<UpdatePlaceResponse, IdParams, UpdatePlaceRequest>) => {
+const updatePlace = async (
+  ctx: KoaContext<UpdatePlaceResponse, IdParams, UpdatePlaceRequest>,
+) => {
   // ...
 };
 
@@ -890,7 +899,9 @@ const deletePlace = async (ctx: KoaContext<void, IdParams>) => {
 };
 
 // 👇 6
-const getTransactionsByPlaceId = async (ctx: KoaContext<GetAllTransactionsReponse, IdParams>) => {
+const getTransactionsByPlaceId = async (
+  ctx: KoaContext<GetAllTransactionsReponse, IdParams>,
+) => {
   // ...
 };
 
@@ -920,10 +931,16 @@ Als laatste moeten we enkel nog onze state en context types toevoegen aan de alg
 
 ```ts
 // ...
-import type { BudgetAppContext, BudgetAppState, KoaApplication } from '../types/koa';
+import type {
+  BudgetAppContext,
+  BudgetAppState,
+  KoaApplication,
+} from '../types/koa';
 
-export default (app: KoaApplication) => { // 👈
-  const router = new Router<BudgetAppState, BudgetAppContext>({ // 👈
+export default (app: KoaApplication) => {
+  // 👈
+  const router = new Router<BudgetAppState, BudgetAppContext>({
+    // 👈
     prefix: '/api',
   });
 
