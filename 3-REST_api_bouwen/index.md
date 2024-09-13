@@ -35,7 +35,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
 - Maak het ERD.
 - Welke endpoints moeten we voorzien?
 
-<!-- markdownlint-disable-next-line -->
+<!-- markdownlint-disable header-start-left -->
 
 - Oplossing +
 
@@ -74,6 +74,8 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
   Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `GET /api/places/:id` of `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
 
   !> Kijk goed hoe de twee geneste routes gedefineerd zijn (`GET /api/places/:id/transactions` en `GET /api/users/:id/transactions`)! Hiertegen worden heel wat fouten gemaakt.
+
+<!-- markdownlint-enable header-start-left -->
 
 ## Configuratie
 
