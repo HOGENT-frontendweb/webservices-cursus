@@ -1,9 +1,10 @@
 <!-- markdownlint-disable first-line-h1 -->
+
 ## Functioneel programmeren
 
 Functies zijn first-class citizens in JavaScript. Dit wil zeggen dat je functies kan doorgeven als argument aan een andere functie, kan teruggeven als resultaat van een functie en kan opslaan in een variabele.
 
-Tot nu toe heb je enkel object-georiënteerd geprogrammeerd. Dit is een totaal andere manier van programmeren. In object-georiënteerd programmeren staat een object centraal. Dit object heeft een aantal eigenschappen en methodes. In functioneel programmeren staat een functie centraal. Deze functie heeft een aantal argumenten en een resultaat. In vergelijking met OO programmeren, draait functioneel programmeren meer rond *wat* je wil doen en niet *hoe* je het wil doen.
+Tot nu toe heb je enkel object-georiënteerd geprogrammeerd. Dit is een totaal andere manier van programmeren. In object-georiënteerd programmeren staat een object centraal. Dit object heeft een aantal eigenschappen en methodes. In functioneel programmeren staat een functie centraal. Deze functie heeft een aantal argumenten en een resultaat. In vergelijking met OO programmeren, draait functioneel programmeren meer rond _wat_ je wil doen en niet _hoe_ je het wil doen.
 
 JavaScript is niet helemaal functioneel. Je hebt nl. ook nog objecten en klassen, side effects (globale variabelen)... Maar je kan wel functioneel programmeren in JavaScript. In de olods Web Services en Front-end Web Development zal daarom uitsluitend functioneel geprogrammeerd worden. Je bent natuurlijk vrij om klassen te gebruiken, maar dit zal niet de focus van deze olods zijn.
 
@@ -52,7 +53,7 @@ const g = (a) => {
 
 const h = (a) => {
   return a * 2;
-}
+};
 console.log(g === h);
 ```
 
@@ -173,7 +174,7 @@ const faculteit = (n) => {
   }
 
   return n * faculteit(n - 1);
-}
+};
 
 console.log(faculteit(5));
 ```
@@ -232,13 +233,13 @@ const myObject = {
 };
 const myObject2 = {
   birthday: '01-01-1970',
-}
+};
 
 // alles in één object plaatsen:
 const theObject = {
   ...myObject,
   ...myObject2,
-}
+};
 console.log(theObject);
 
 // bekijk het verschil zonder de spread operator:
@@ -278,7 +279,7 @@ Laten we een voorbeeld bekijken:
 const address = {
   city: 'gent',
   street: 'coupure',
-  number: 152
+  number: 152,
 };
 
 // we halen de straat en het huisnummer uit het object en slaan ze op in variabelen

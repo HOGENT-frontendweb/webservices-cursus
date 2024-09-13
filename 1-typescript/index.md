@@ -105,7 +105,7 @@ git commit -m "✨ Initial commit ✨"
 git push
 ```
 
-Schrijf in het kort neer waarover de applicatie zal gaan, welke functionaliteiten er *mogelijks* in zullen zitten, welke entiteiten er zullen zijn, welke attributen deze zullen hebben... Je doet dit bij voorkeur in een Markdown-bestand (nee, we gebruiken Word *niet* meer hiervoor). Door in tekstvorm te werken, kan je dit bestand bijhouden in jouw eigen GitHub repository.
+Schrijf in het kort neer waarover de applicatie zal gaan, welke functionaliteiten er _mogelijks_ in zullen zitten, welke entiteiten er zullen zijn, welke attributen deze zullen hebben... Je doet dit bij voorkeur in een Markdown-bestand (nee, we gebruiken Word _niet_ meer hiervoor). Door in tekstvorm te werken, kan je dit bestand bijhouden in jouw eigen GitHub repository.
 
 Vraag hulp/feedback aan je lector als je onzeker bent over je idee. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository (gebruik het template voor feedback).
 

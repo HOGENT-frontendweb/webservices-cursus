@@ -1,4 +1,5 @@
 <!-- markdownlint-disable first-line-h1 -->
+
 ## Complexe types
 
 Uiteraard zijn er meer dan alleen de basis types die we in de vorige notebook hebben gezien. In deze notebook gaan we kijken naar de complexere types die TypeScript kent.
@@ -11,15 +12,15 @@ Om types te combineren moet je gebruik maken van de `&` operator, dit heet **int
 
 ```typescript
 type Book = {
-    title: string;
-    author: string;
+  title: string;
+  author: string;
 };
 
-type BookExtension = Book & { isbn: string; };
+type BookExtension = Book & { isbn: string };
 const book: BookExtension = {
-    title: 'Introducing MLOps',
-    author: 'Mark Treveil & the Dataiku Team',
-    isbn: '9781492083290'
+  title: 'Introducing MLOps',
+  author: 'Mark Treveil & the Dataiku Team',
+  isbn: '9781492083290',
 };
 ```
 
@@ -29,27 +30,27 @@ Je kan ook types combineren met de `|` operator, dit heet **union types**. De ty
 
 ```typescript
 type Member = {
-    name: string;
-    age: number;
+  name: string;
+  age: number;
 };
 
 type Email = {
-    email: string;
+  email: string;
 };
 
 type MemberExtension = Member | Email;
 
 const member: MemberExtension = {
-    name: 'Thomas Aelbrecht',
-    age: 25
+  name: 'Thomas Aelbrecht',
+  age: 25,
 };
 const member2: MemberExtension = {
-    name: 'Thomas Aelbrecht',
-    age: 25,
-    email: 'thomas.aelbrecht@hogent.be',
+  name: 'Thomas Aelbrecht',
+  age: 25,
+  email: 'thomas.aelbrecht@hogent.be',
 };
 const member3: MemberExtension = {
-    email: 'thomas.aelbrecht@hogent.be',
+  email: 'thomas.aelbrecht@hogent.be',
 };
 ```
 
@@ -57,25 +58,25 @@ Zet je de union operator helemaal vooraan het type, dan moet het één van de ty
 
 ```typescript
 type NetworkLoadingState = {
-    state: "loading";
+  state: 'loading';
 };
 type NetworkFailedState = {
-    state: "failed";
-    code: number;
+  state: 'failed';
+  code: number;
 };
 type NetworkSuccessState = {
-    state: "success";
-    response: {
-        title: string;
-        duration: number;
-        summary: string;
-    };
+  state: 'success';
+  response: {
+    title: string;
+    duration: number;
+    summary: string;
+  };
 };
 // Een van de drie, niet allemaal
 type NetworkState =
-    | NetworkLoadingState
-    | NetworkFailedState
-    | NetworkSuccessState;
+  | NetworkLoadingState
+  | NetworkFailedState
+  | NetworkSuccessState;
 ```
 
 In dit voorbeeld is het property `state` gedeeld. TypeScript kan dit property gebruiken om type inference te doen om te bepalen welk type gebruikt wordt. Zo krijg je in bv. `if` statements de juiste code completion en type checking.
@@ -92,8 +93,8 @@ TypeScript heeft ook heel wat [utility types](https://www.typescriptlang.org/doc
 
 ```typescript
 type MyExample = {
-    a: number;
-    b: string;
+  a: number;
+  b: string;
 };
 
 type WithoutB = Omit<MyExample, 'b'>;

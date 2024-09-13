@@ -1,4 +1,5 @@
 <!-- markdownlint-disable first-line-h1 -->
+
 ## Types
 
 TypeScript kent een aantal basistypes:
@@ -19,7 +20,7 @@ Met enkel speciale:
 
 ```typescript
 function testVreemd(): void {
-    return;
+  return;
 }
 
 function test(): never {
@@ -48,7 +49,7 @@ Waar is de variabele `value` beschikbaar in onderstaande code?
 function getValue() {
   // 1
   if (condition) {
-    var value = "yes";
+    var value = 'yes';
     // 2
     return value;
   } else {
@@ -60,7 +61,8 @@ function getValue() {
 ```
 
 <!-- markdownlint-disable-next-line -->
-+ Antwoord +
+
+- Antwoord +
 
   `value` is beschikbaar in de hele functie, dus op de plaatsen 1, 2, 3 en 4. Dit wordt **hoisting** genoemd.
 
@@ -99,7 +101,7 @@ Het is niet altijd verplicht om elke variabele, functie... te voorzien van een t
 
 ```typescript
 let a = 1;
-let b = "hello";
+let b = 'hello';
 let c = true;
 let d = null;
 let e = undefined;
@@ -118,7 +120,7 @@ console.log('Type of g:', typeof g); // object - eigenlijk willen we hier ook ee
 Een andere waarde toekennen aan een variabele is ook een vorm van type inference. TypeScript laat hierbij niet toe dat je een waarde toekent die niet overeenkomt met het type van de variabele. Afhankelijk van de instellingen van de compiler zal dit een fout of een waarschuwing geven.
 
 ```typescript
-a = "test";
+a = 'test';
 
 console.log('Type of a:', typeof a); // string
 ```
@@ -127,7 +129,7 @@ Je zou ook types kunnen toekennen aan de variabelen door gebruik te maken van de
 
 ```typescript
 let getal: number = 1;
-let tekst: string = "hello";
+let tekst: string = 'hello';
 // ...
 ```
 
@@ -137,13 +139,13 @@ Het is wel mogelijk om een variable meerdere types te laten aannemen. Dit kan do
 let getalOfTekst: number | string = 1;
 
 // en dan later:
-getalOfTekst = "hello";
+getalOfTekst = 'hello';
 ```
 
 Je kan het zelfs nog wat complexer maken:
 
 ```typescript
-let x = [1, "hello", null];
+let x = [1, 'hello', null];
 // het type van x is (number | string | null)[]
 ```
 
@@ -152,11 +154,11 @@ In de documentatie van TypeScript kan je ook lezen dat type inference in de omge
 Je kan ook gedetailleerde types maken voor bijvoorbeeld objecten. Dit kan door gebruik te maken van de `{}` operator. Je kan hiervoor ook een **type alias** maken door gebruik te maken van het `type` keyword.
 
 ```typescript
-const obj1: { a: number, b: string } = { a: 1, b: "hello" };
+const obj1: { a: number; b: string } = { a: 1, b: 'hello' };
 
 // of
-type MyObject = { a: number, b: string }; // of een interface
-const obj2: MyObject = { a: 1, b: "hello" };
+type MyObject = { a: number; b: string }; // of een interface
+const obj2: MyObject = { a: 1, b: 'hello' };
 ```
 
 Er zijn ook programmeurs die meer houden van een OO-aanpak. Daarvoor voorziet TypeScript ook een aantal keywords:
@@ -166,7 +168,11 @@ Er zijn ook programmeurs die meer houden van een OO-aanpak. Daarvoor voorziet Ty
 - `enum`: om een enum te maken
 
 ```typescript
-enum Kleur { Rood, Groen, Blauw };
+enum Kleur {
+  Rood,
+  Groen,
+  Blauw,
+}
 
 interface Kaart {
   naam: string;
@@ -183,8 +189,7 @@ class Persoon {
 
 // of korter:
 class Persoon2 {
-  constructor(public naam: string) {
-  }
+  constructor(public naam: string) {}
 }
 ```
 

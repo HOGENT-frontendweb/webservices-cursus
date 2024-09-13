@@ -1,5 +1,5 @@
-
 <!-- markdownlint-disable first-line-h1 -->
+
 ## Array functions
 
 JavaScript heeft een aantal handige functies die je kan gebruiken op arrays. Deze functies zijn geïnspireerd op functioneel programmeren en zijn dus erg handig om te gebruiken. We overlopen de belangrijkste functies:
@@ -57,17 +57,20 @@ console.log(sum);
 
 // reduce kan je ook gebruiken om een group by te doen
 // laten we de even en oneven getallen groeperen in een array
-const groupBy = numbers.reduce((accumulator, number) => {
-  if (number % 2 === 0) {
-    accumulator.even.push(number);
-  } else {
-    accumulator.odd.push(number);
-  }
-  return accumulator;
-}, {
-  even: [],
-  odd: [],
-});
+const groupBy = numbers.reduce(
+  (accumulator, number) => {
+    if (number % 2 === 0) {
+      accumulator.even.push(number);
+    } else {
+      accumulator.odd.push(number);
+    }
+    return accumulator;
+  },
+  {
+    even: [],
+    odd: [],
+  },
+);
 console.log(groupBy);
 ```
 
@@ -84,7 +87,7 @@ numbers.forEach((number) => {
 });
 
 // misbruik terwijl je eigenlijk map wil gebruiken:
-const doubled = []
+const doubled = [];
 numbers.forEach((number) => {
   doubled.push(number * 2);
 });
@@ -141,7 +144,7 @@ console.log(areSmallNumbers);
 
 ```javascript
 const numbers = [5, 2, 3, 1, 4];
-const hasThree  = numbers.includes(3);
+const hasThree = numbers.includes(3);
 console.log(hasThree);
 ```
 
