@@ -90,9 +90,9 @@ yarn add config
 yarn add --dev @types/config
 ```
 
-Het package `config` vereist dat de `NODE_ENV` environment variabele gedefinieerd is. Deze stel je typisch in op bv. 'development' of 'production'. De library zoekt in de `config` map naar een bestand met de naam uit `NODE_ENV` (bv. `config/development.js`).
+Het package `config` vereist dat de `NODE_ENV` environment variabele gedefinieerd is. Deze stel je typisch in op bv. 'development' of 'production'. De library zoekt in de `config` map naar een bestand met de naam uit `NODE_ENV` (bv. `config/development.ts`).
 
-Eventueel kan je een extra bestand `config/custom-environment-variables.js` definiëren. Dit bestand bevat mappings om andere environment variabelen ook via de config in de app te laden. Dit maakt het eenvoudig om configuratie tijdelijk aan te passen zonder dat je het specifieke configuratiebestand moet aanpassen.
+Eventueel kan je een extra bestand `config/custom-environment-variables.ts` definiëren. Dit bestand bevat mappings om andere environment variabelen ook via de config in de app te laden. Dit maakt het eenvoudig om configuratie tijdelijk aan te passen zonder dat je het specifieke configuratiebestand moet aanpassen.
 
 Maak een `.env` bestand aan in de root met onderstaande code
 
@@ -124,7 +124,7 @@ export default {
 };
 ```
 
-Doe hetzelfde voor productie, nl. in `config/production.js`, met net iets andere waarden natuurlijk, anders zien we het verschil niet.
+Doe hetzelfde voor productie, nl. in `config/production.ts`, met net iets andere waarden natuurlijk, anders zien we het verschil niet.
 
 ```ts
 export default {
@@ -626,7 +626,7 @@ We typeren `ctx` als `Context` en `parent` als `Router`, beide types uit Koa. Zo
 ```ts
 import Router from '@koa/router';
 import * as transactionService from '../service/transaction';
-import Application, { Context } from 'koa';
+import type { Context } from 'koa';
 
 const getAllTransactions = async (ctx: Context) => {
   ctx.body = {
@@ -671,14 +671,16 @@ export default (parent: Router) => {
   router.put('/:id', updateTransaction);
   router.delete('/:id', deleteTransaction);
 
-  app.use(router.routes()).use(router.allowedMethods());
+  parent.use(router.routes()).use(router.allowedMethods());
 };
 ```
 
-Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter.
+Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter. 
+
+Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
 
 ```ts
-import Application from 'koa';
+import type Application from 'koa';
 
 import Router from '@koa/router';
 import installTransactionRouter from './transaction';
@@ -770,7 +772,7 @@ const getVersion = async (ctx: Context) => {
   ctx.body = healthService.getVersion();
 };
 
-export default function installPlacesRoutes(parent: Router) {
+export default (parent: Router) => {
   const router = new Router({ prefix: '/health' });
 
   router.get('/ping', ping);
@@ -780,7 +782,7 @@ export default function installPlacesRoutes(parent: Router) {
 }
 ```
 
-Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden. Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
+Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden.
 
 ### Logging
 
@@ -1009,7 +1011,7 @@ Deze functie filtert alle transacties op basis van de plaats id en geeft deze te
 ```ts
 import Router from '@koa/router';
 import * as transactionService from '../service/transaction';
-import { Context } from 'koa';
+import type { Context } from 'koa';
 
 const getTransactionsByPlaceId = async (ctx: Context) => {
   const transactions = await transactionService.getTransactionsByPlaceId(
