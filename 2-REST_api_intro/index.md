@@ -452,18 +452,6 @@ Vervolgens initialiseren we een nieuw Yarn project. Je bent vrij om te kiezen vo
 ```terminal
 yarn init
 ```
-
-Beantwoord alle vragen:
-
-- name: webservices-budget (of een andere naam in het geval van je eigen project)
-- version: 1.0.0
-- description: Demo application for the course Web Services.
-- entry point: index.**t**s
-- repository url: mag je leeg laten, mag ook een link naar je GitHub repository zijn in het geval van je eigen project
-- author: VOORNAAM NAAM &lt;EMAIL&gt;
-- license: MIT
-- private: true
-
 Vervolgens kies je de meeste recente versie van Yarn (v4 op dit moment).
 
 ```terminal
@@ -484,7 +472,7 @@ yarn add koa
 
 ### package.json
 
-De [package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) bevat alle metadata van ons project, meer in het bijzonder alle dependencies en commando's om onze app te starten. Het `yarn init` commando zou een `package.json` gemaakt moeten hebben in de root van je project. Open deze, en je zou iets als volgt moeten zien:
+De [package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) bevat alle metadata van ons project, meer in het bijzonder alle dependencies en commando's om onze app te starten. Het `yarn init` commando zou een `package.json` gemaakt moeten hebben in de root van je project. Open deze, vul verder aan:
 
 [package.json](examples/package.json ':include :type=code')
 
@@ -970,7 +958,7 @@ Je kan VS Code zo instellen dat automatisch herstel van fouten wordt uitgevoerd 
 ```json
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": 'explicit'
   },
   "eslint.validate": [
     "javascript",
