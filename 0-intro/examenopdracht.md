@@ -47,7 +47,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 ### Algemeen
 
 - er is een minimum aan logging en configuratie voorzien
-- een aantal niet-triviale én werkende integratietesten (min. 1 entiteit in REST-laag >= 90% coverage)
+- een aantal niet-triviale én werkende integratietesten (min. 1 entiteit in REST-laag >= 90% coverage, naast de testen voor user)
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
 - minstens één extra technologie die we niet gezien hebben in de les (zie [sectie 4](#4-voorbeelden-van-extras) voor voorbeelden)
 - maakt gebruik van de laatste ES-features (async/await, object destructuring, spread operator...)
@@ -64,7 +64,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 - de student toont een werkende REST API in NodeJS
 - de student overloopt de projectstructuur
 - de applicatie wijkt voldoende af van de voorbeeldapplicatie
-- de student kan de CRUD operaties voor 1 of meerdere entiteiten demonstreren
+- de student kan de API calls (CRUD operaties) voor 1 of meerdere entiteiten demonstreren
 - de student toont de implementatie/werking van de extra technologie
 - alle testen slagen
 - de student toont een stukje code waar die fier op is
