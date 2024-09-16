@@ -108,7 +108,7 @@ Allereerst moeten we een databankschema definiëren. We laten Prisma dit voor on
 yarn prisma init --datasource-provider mysql
 ```
 
-Als we aan `yarn` een commmando/script meegeven dat niet in `package.json` staat, zal `yarn` dit commando uitvoeren alsof het een CLI-commando is. Dit is handig voor packages die geen CLI-commando's hebben. CLI-commando's staan in de `node_modules/.bin` map. `yarn` zal deze automatisch vinden en uitvoeren.
+Als we aan `yarn` een commando/script meegeven dat niet in `package.json` staat, zal `yarn` dit commando uitvoeren alsof het een CLI-commando is. Dit is handig voor packages die geen CLI-commando's hebben. CLI-commando's staan in de `node_modules/.bin` map. `yarn` zal deze automatisch vinden en uitvoeren.
 
 We merken echter dat Prisma ons schema buiten de `src` map plaatst. Dit is niet de bedoeling, we willen alles netjes in onze `src` map houden. We passen dit aan door de `prisma` property toe te voegen aan onze `package.json`:
 
@@ -170,7 +170,7 @@ model User {
 }
 ```
 
-Zoals je kan zien gebruikt Prisma een zeer leesbare syntaxx voor het databankschema. Lees zelf eens door het schema en probeer te achterhalen wat Prisma precies zal aanmaken in de databank. Meer informatie over het schema vind je in de [Prisma documentatie](https://www.prisma.io/docs/orm/prisma-schema/overview).
+Zoals je kan zien gebruikt Prisma een zeer leesbare syntax voor het databankschema. Lees zelf eens door het schema en probeer te achterhalen wat Prisma precies zal aanmaken in de databank. Meer informatie over het schema vind je in de [Prisma documentatie](https://www.prisma.io/docs/orm/prisma-schema/overview).
 
 Zoals je ziet definiëren we onze relaties ook in de schema, net alsof we objectgeoriënteerd aan het werk zijn. Prisma zal deze relaties automatisch voor ons afhandelen met bv. een tussentabel voor veel-op-veel relaties, enz.
 
@@ -578,9 +578,9 @@ export const deleteById = async (id: number) => {
 };
 ```
 
-Na deze aanpassingen kan je de import van de mock data verwijderen, en moet je de REST-laag aanpassen zodat bij de juiste functies `await` toegevoegd wordt.
+Na deze aanpassingen kan je de import van de mock data verwijderen, en moet je de REST-laag verder aanpassen zodat de CRUD endpoints ook beschikbaar zijn (werk met `await`).
 
-Controleer of elk endpoint van de places nog steeds correct werkt.
+Controleer of elk endpoint van de places correct werkt.
 
 ### Transactions
 
