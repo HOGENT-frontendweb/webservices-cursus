@@ -42,7 +42,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 - volgt de conventies van een RESTful API
 - bevat geen domeinlogica
 - geen API calls voor entiteiten die geen zin hebben zonder hun ouder (bv. tussentabellen)
-- degelijke authorisatie/authenticatie op alle routes
+- degelijke autorisatie/authenticatie op alle routes
 
 ### Algemeen
 
