@@ -452,6 +452,7 @@ Vervolgens initialiseren we een nieuw Yarn project. Je bent vrij om te kiezen vo
 ```terminal
 yarn init
 ```
+
 Vervolgens kies je de meeste recente versie van Yarn (v4 op dit moment).
 
 ```terminal
@@ -958,7 +959,7 @@ Je kan VS Code zo instellen dat automatisch herstel van fouten wordt uitgevoerd 
 ```json
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": 'explicit'
+    "source.fixAll.eslint": "explicit"
   },
   "eslint.validate": [
     "javascript",

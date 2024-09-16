@@ -675,7 +675,7 @@ export default (parent: Router) => {
 };
 ```
 
-Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter. 
+Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter.
 
 Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
 
@@ -779,7 +779,7 @@ export default (parent: Router) => {
   router.get('/version', getVersion);
 
   parent.use(router.routes()).use(router.allowedMethods());
-}
+};
 ```
 
 Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden.
