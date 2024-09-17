@@ -3,7 +3,7 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > git checkout -b les6 dc52535
 > yarn install
@@ -578,7 +578,7 @@ const create = async ({ amount, date, placeId, userId }) => {
 
 ## Integratietesten
 
-- Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget/) en bekijk de `validate`-functie. Deze werd aangepast om ook query parameters te valideren.
+- Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget/) en bekijk de `validate`-functie. Deze werd aangepast om ook query parameters te valideren.
 - Ook voor de overige endpoints werd een validatieschema toegevoegd.
   - **Let op:** voorzie ook validatie voor requests die geen invoer verwachten!
 - Integratietesten werden toegevoegd om te checken op invoervalidatie.

@@ -41,15 +41,15 @@ Naar goeie traditie schrijven we hier enkele voorbeelden van jullie voorgangers.
 
 ## Cursusmateriaal?
 
-Het cursusmateriaal wordt op GitHub gehost: <https://hogent-web.github.io/webservices-cursus>.
+Het cursusmateriaal wordt op GitHub gehost: <https://HOGENT-frontendweb.github.io/webservices-cursus>.
 
-Er is een voorbeeldapplicatie (stap per stap opgebouwd, zoals in de cursus): <https://github.com/hogent-web/webservices-budget>.
+Er is een voorbeeldapplicatie (stap per stap opgebouwd, zoals in de cursus): <https://github.com/HOGENT-frontendweb/webservices-budget>.
 
-De bijhorende front-end is te vinden op: <https://github.com/hogent-web/frontendweb-budget>.
+De bijhorende front-end is te vinden op: <https://github.com/HOGENT-frontendweb/frontendweb-budget>.
 
 Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stelselmatig omgevormd naar TypeScript. Het merendeel van de hoofdstukken is al omgezet, maar nog niet alles. We geven duidelijk aan wanneer een hoofdstuk nog niet omgezet is (`WIP` naast de titel). Wees dus niet verrast als een hoofdstuk nog in JavaScript is of er plots helemaal anders uitziet.
 
-> Suggesties voor verbeteringen of aanpassingen van schrijffouten zijn altijd welkom! Maak hiervoor een issue of pull request op de GitHub-repository van de cursus: <https://github.com/hogent-web/webservices-cursus>.
+> Suggesties voor verbeteringen of aanpassingen van schrijffouten zijn altijd welkom! Maak hiervoor een issue of pull request op de GitHub-repository van de cursus: <https://github.com/HOGENT-frontendweb/webservices-cursus>.
 
 ## Planning
 

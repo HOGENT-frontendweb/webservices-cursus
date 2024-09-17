@@ -5,7 +5,7 @@
 > Het volstaat om uit te checken op de `main` branch, op de `authenticatie` branch mag ook.
 >
 > ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > yarn install
 > yarn start
@@ -108,7 +108,7 @@ Voeg regels toe voor volgende vereisten:
 
 Alle mogelijke regels vind je in de [documentatie](https://eslint.org/docs/latest/rules/) (of via Google).
 
-Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget).
+Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget).
 
 ## API documentatie
 
@@ -151,13 +151,13 @@ OpenAPI definities schrijf je in YAML of JSON. Wij maken hier gebruik van YAML. 
 - `API components`: documentatie van de verschillende herbruikbare data modellen: schema's, parameters, beveiligingsschema's, request bodies, responses, headers, voorbeelden, koppelingen en callbacks.
 - `API paths`: paden naar de documentatie, relatief t.o.v. de root.
 
-Voeg zelf o.b.v. de documentatie van [swagger-jsdoc](https://www.npmjs.com/package/swagger-jsdoc) en [koa2-swagger-ui](https://www.npmjs.com/package/koa2-swagger-ui) Swagger toe aan onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget).
+Voeg zelf o.b.v. de documentatie van [swagger-jsdoc](https://www.npmjs.com/package/swagger-jsdoc) en [koa2-swagger-ui](https://www.npmjs.com/package/koa2-swagger-ui) Swagger toe aan onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget).
 
 - Maak gebruik van de Open API documentatie.
 - Als startpunt kan je commit `5828969` gebruiken.
 - Uiteraard kan dit ook meteen in je eigen project.
 - (ja, als developer moet je zelf ook dingen kunnen uitzoeken en leren gebruiken)
-- Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-Web/webservices-budget) op de branch `authenticatie`.
+- Een oplossing vind je in onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget) op de branch `authenticatie`.
 
 ### Aanpassing voor koa-helmet
 
