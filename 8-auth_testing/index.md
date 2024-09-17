@@ -5,7 +5,7 @@
 > Het volstaat om uit te checken op de `authenticatie` branch en op commit `faf3c57`
 >
 > ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > git checkout origin/authenticatie
 > git checkout -b les8 faf3c57
@@ -330,10 +330,10 @@ Herhaal hetzelfde voor alle andere testen van transactions, places en users:
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie`
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in de branch `authenticatie`
 
   ```bash
-  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
   git checkout -b authenticatie-testen origin/authenticatie
   yarn install
   yarn start

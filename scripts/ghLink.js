@@ -1,8 +1,8 @@
 const MATCHER = /l\>\s+(ws|fe)\s+(start|oplossing)\s+([0-9a-fA-F]{7})\s+(.+)/gm;
 
 const githubLinks = new Map([
-  ['ws', 'https://github.com/Web-IV/webservices-budget.git'],
-  ['fe', 'https://github.com/Web-IV/frontendweb-budget.git']
+  ['ws', 'https://github.com/HOGENT-frontendweb/webservices-budget.git'],
+  ['fe', 'https://github.com/HOGENT-frontendweb/frontendweb-budget.git']
 ]);
 
 const folderNames = new Map([

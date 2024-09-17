@@ -119,7 +119,7 @@ Als je al ervaring hebt met TypeScript, kan je de oefeningen op deze website pro
 
 Vervolgens loont het de moeite om een aantal JavaScript drill-oefeningen te maken. Tijdens dit olod leer je heel wat nieuws in Node.js, we kunnen niet blijven stilstaan bij basis JavaScript-syntax en -functionaliteiten.
 
-Clone de repository <https://github.com/HOGENT-Web/webservices-ch1-exercise> en lees de instructies in de README. De oplossingen zijn te vinden op de branch [`solution`](https://github.com/HOGENT-Web/webservices-ch1-exercise/tree/solution).
+Clone de repository <https://github.com/HOGENT-frontendweb/webservices-ch1-exercise> en lees de instructies in de README. De oplossingen zijn te vinden op de branch [`solution`](https://github.com/HOGENT-frontendweb/webservices-ch1-exercise/tree/solution).
 
 ## Must read/watch
 

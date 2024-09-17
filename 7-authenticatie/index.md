@@ -5,7 +5,7 @@
 > Het volstaat om uit te checken op de `main` branch
 >
 > ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > git checkout -b les7
 > yarn install
@@ -536,10 +536,10 @@ const register = async ({
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie` op commit `8c2a689`
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in de branch `authenticatie` op commit `8c2a689`
 
   ```bash
-  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
   git checkout -b authenticatie-oef1 8c2a689
   yarn install
   yarn start
@@ -915,7 +915,7 @@ const checkAndParseSession = async (authHeader) => {
   // 👇 1
   if (!authHeader) {
     throw ServiceError.unauthorized('You need to be signed in');
-  } 
+  }
 
   // 👇 2
   if (!authHeader.startsWith('Bearer ')) {
@@ -1104,10 +1104,10 @@ Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazo
 <!-- markdownlint-disable-next-line -->
 + Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-Web/webservices-budget> in de branch `authenticatie` in de commit `90d9ffd`
+  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in de branch `authenticatie` in de commit `90d9ffd`
 
   ```bash
-  git clone https://github.com/HOGENT-Web/webservices-budget.git
+  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
   git checkout -b authenticatie-oef2 90d9ffd
   yarn install
   yarn start

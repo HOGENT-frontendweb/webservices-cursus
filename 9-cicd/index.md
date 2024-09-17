@@ -5,7 +5,7 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-Web/webservices-budget.git
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > yarn install
 > yarn start
@@ -198,7 +198,7 @@ We koppelen onze GitHub repository aan Render. Klik op "Connect account" bij Git
 
 ![Render connect account](./images/9_7_connect_github_account.png ':size=80%')
 
-Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "Web-IV" toegang hebben tot Render.
+Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "HOGENT-frontendweb" toegang hebben tot Render.
 
 ![Render pick organization](./images/9_8_pick_organization.png ':size=80%')
 
@@ -253,7 +253,7 @@ We koppelen onze GitHub repository aan Render. Klik op "Connect account" bij Git
 
 ![Render connect account](./images/9_7_connect_github_account.png ':size=80%')
 
-Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "Web-IV" toegang hebben tot Render.
+Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "HOGENT-frontendweb" toegang hebben tot Render.
 
 ![Render pick organization](./images/9_8_pick_organization.png ':size=80%')
 
