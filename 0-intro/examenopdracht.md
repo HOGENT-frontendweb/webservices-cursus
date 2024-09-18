@@ -16,7 +16,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 ### Datalaag
 
-- voldoende complex (meer dan één tabel, tabellen bevatten meerdere kolommen, 2 een-op-veel of veel-op-veel relaties naast de user tabel)
+- voldoende complex en correct (meer dan één tabel (naast de user tabel), tabellen bevatten meerdere kolommen, 2 een-op-veel of veel-op-veel relaties)
 - één module beheert de connectie + connectie wordt gesloten bij sluiten server
 - heeft migraties - indien van toepassing
 - heeft seeds
@@ -30,7 +30,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 ### Servicelaag met een zekere complexiteit
 
 - bevat alle domeinlogica
-- er worden kindrelaties opgevraagd (m.b.v. JOINs)
+- er wordt gerelateerde data uit meerdere tabellen opgevraagd
 - bevat geen services voor entiteiten die geen zin hebben zonder hun ouder (bv. tussentabellen)
 - bevat geen SQL-queries of databank-gerelateerde code
 
@@ -51,7 +51,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
 - minstens één extra technologie die we niet gezien hebben in de les (zie [sectie 4](#4-voorbeelden-van-extras) voor voorbeelden)
 - maakt gebruik van de laatste ES-features (async/await, object destructuring, spread operator...)
-- de applicatie start zonder problemen op
+- de applicatie start zonder problemen op gebruik makend van de instructies in de README
 - de API draait online
 - duidelijke en volledige README.md
 - er werden voldoende (kleine) commits gemaakt
@@ -116,9 +116,12 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
     - Projectstructuur overlopen (mappenstructuur, speciale ontwerpkeuzes...)
     - Demo van de applicatie (gebruik de online versie)
       - Toon dat jouw front-end responsive is (indien van toepassing)
+      - De webservice kan je demonstreren in Postman
     - Demo van de extra technologie + werking/implementatie
     - Testen laten lopen
     - Toon een stukje code waar je fier op bent en leg uit (voor beide olods)
+
+Zorg ervoor dat jouw applicatie aan alle minimumvereisten voldoet op het moment van de deadline. We staan toe dat maximaal één minimumvereiste met een gewicht van 2, of twee minimumvereisten met een gewicht van 1, niet worden nageleefd. In alle andere gevallen wordt een score van 0 toegekend. Indien je op Chamilo geen dossier indient, dan krijg je de score AFW.
 
 **De deadline voor het portfolio is het einde van week 13 (vrijdag 20 december 2024, 23u59).**
 
