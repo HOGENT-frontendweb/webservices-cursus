@@ -54,16 +54,14 @@ Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stel
 
 ## Planning
 
-> TODO: planning updaten
-
 Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 
 | Week    | Inhoud                                        |
 | ------- | --------------------------------------------- |
-| week 1  | Inleiding, Javascript                         |
-| week 2  | REST, uitleg / voorbeelden                    |
-| week 3  | REST API voor onze voorbeeldapp starten       |
-| week 4  | REST API voor onze voorbeeldapp starten       |
+| week 1  | Inleiding, TypeScript                         |
+| week 2  | TypeScript, REST API intro                    |
+| week 3  | REST API intro + bouwen                       |
+| week 4  | REST API bouwen                               |
 | week 5  | datalaag en CRUD                              |
 | week 6  | datalaag en CRUD                              |
 | week 7  | (geen nieuwe theorie, aan de opdracht werken) |
