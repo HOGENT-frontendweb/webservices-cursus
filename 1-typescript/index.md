@@ -83,7 +83,7 @@ Denk gedurende deze eerste les na over het onderwerp van de [examenopdracht](./0
 
 Maak een nieuwe GitHub repository aan via de GitHub classroom link in de introductie van de Chamilo-cursus. Clone jouw GitHub repository uit de GitHub classroom:
 
-```terminal
+```bash
 git clone <JOUW_GIT_REPOSITORY_URL>
 ```
 
@@ -99,7 +99,7 @@ Vul alvast de `README.md` en `dossier.md` aan voor zover mogelijk:
 
 Commit vervolgens deze wijzigingen:
 
-```terminal
+```bash
 git add .
 git commit -m "✨ Initial commit ✨"
 git push

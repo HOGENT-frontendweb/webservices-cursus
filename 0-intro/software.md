@@ -20,7 +20,7 @@ Installeer Git via een package manager:
 
 Open een terminal (of bv. Git Bash op Windows) en voer onderstaande commando's uit. Je bent natuurlijk vrij om deze instellingen aan te passen naar jouw voorkeur.
 
-```terminal
+```bash
 git config --global core.autocrlf true # <- enkel op Windows
 git config --global core.autocrlf input # <- enkel op macOS en Linux
 git config --global core.ignorecase false
@@ -53,7 +53,7 @@ Of kies voor een manuele installatie door **minimaal v20.6.0** te downloaden van
 
 Check na de installatie of Node.js correct geïnstalleerd is door volgend commando uit te voeren:
 
-```terminal
+```bash
 $ node --version
 v20.6.0
 ```
@@ -62,13 +62,13 @@ v20.6.0
 
 Installeer `yarn` als alternatieve package manager voor `npm`:
 
-```terminal
+```bash
 npm install -g yarn
 ```
 
 Schakel vervolgens [Corepack](https://nodejs.org/api/corepack.html) in:
 
-```terminal
+```bash
 corepack enable
 ```
 
@@ -76,7 +76,7 @@ Corepack is een package manager die de installatie van `yarn` en andere packages
 
 Test of `yarn` correct geïnstalleerd is en kan gebruikt worden:
 
-```terminal
+```bash
 yarn --version
 ```
 
@@ -84,7 +84,7 @@ Dit zou een versienummer moeten opleveren.
 
 Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. De fout is in de vorm van `yarn.ps1 cannot be loaded because running scripts is disabled on this system`. Indien dit het geval is, open een PowerShell terminal in Administrator modus. Voer vervolgens het volgende commando uit en antwoord met `A` op de vraag:
 
-```terminal
+```bash
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
 

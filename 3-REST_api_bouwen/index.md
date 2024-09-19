@@ -85,7 +85,7 @@ De configuratie doen we liefst op 1 plaats. In `src/index.ts` verwijzen we bv. n
 
 Eerst installeren het [config](https://www.npmjs.com/package/config) en de bijhorende types. Dit package laat toe om eenvoudig configuratie te switchen op basis van de environment variabele `NODE_ENV`.
 
-```terminal
+```bash
 yarn add config
 yarn add --dev @types/config
 ```
@@ -263,7 +263,7 @@ Je zou op deze manier een hele server kunnen bouwen maar je voelt al dat veel we
 
 We voegen [@koa/router](https://www.npmjs.com/package/koa-router) [koa-bodyparser](https://www.npmjs.com/package/koa-body-parser), en hun types toe om requests makkelijker af te handelen.
 
-```terminal
+```bash
 yarn add @koa/router koa-bodyparser
 yarn add --dev @types/koa__router @types/koa-bodyparser
 ```
@@ -902,7 +902,7 @@ Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aan
 
 Voeg het CORS package en de bijbehorende types toe:
 
-```terminal
+```bash
 yarn add @koa/cors
 yarn add --dev @types/koa__cors
 ```

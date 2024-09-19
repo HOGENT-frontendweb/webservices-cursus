@@ -104,7 +104,7 @@ yarn add prisma @prisma/client
 
 Allereerst moeten we een databankschema definiëren. We laten Prisma dit voor ons doen, we kiezen ook meteen voor MySQL als databank. We initialiseren Prisma met volgend commando:
 
-```terminal
+```bash
 yarn prisma init --datasource-provider mysql
 ```
 
@@ -202,7 +202,7 @@ Prisma heeft een heleboel ingebouwde mechanismen om migraties automatisch uit te
 
 Wij hebben reeds ons schema gedefiniëerd. We kunnen nu een migratie genereren met volgend commando:
 
-```terminal
+```bash
 yarn prisma migrate dev --name init
 ```
 
@@ -218,7 +218,7 @@ Je merkt dat de naam van de migratie voorafgegaan wordt door een timestamp. Dit 
 
 Wanneer je de databank lokaal eens wil weggooien en opnieuw maken, kan je dit doen met volgend commando:
 
-```terminal
+```bash
 yarn prisma migrate reset
 ```
 
@@ -405,7 +405,7 @@ main()
 
 Nu kunnen we onze seeds uitvoeren met volgend commando:
 
-```terminal
+```bash
 yarn prisma db seed
 ```
 
