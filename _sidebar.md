@@ -6,7 +6,7 @@
 
 - [0. Algemene info](/0-intro/situering.md)
 - [0. Software](/0-intro/software.md)
-- [0. Examenopdracht (WIP)](/0-intro/examenopdracht.md)
+- [0. Examenopdracht](/0-intro/examenopdracht.md)
 - [1. TypeScript](/1-typescript/index.md)
 - [2. REST API intro](/2-REST_api_intro/index.md)
 - [3. REST API bouwen](/3-REST_api_bouwen/index.md)
