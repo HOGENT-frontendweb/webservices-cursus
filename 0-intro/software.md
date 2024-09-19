@@ -12,7 +12,7 @@ Voor dit olod gaan we ervan uit dat je onderstaande **software installeert en co
 
 Installeer Git via een package manager:
 
-- Windows: `choco install git`
+- Windows: `winget install -e --id Git.Git`
 - macOS: `brew install git`
 - Linux: [distro afhankelijk](https://git-scm.com/download/linux)
 
@@ -45,7 +45,7 @@ Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/conn
 
 Installeer Node.js (**minimaal versie 20.6.0**) via een package manager:
 
-- Windows: `choco install nodejs`
+- Windows: `winget install -e --id OpenJS.NodeJS`
 - macOS: `brew install node`
 - Linux: [distro afhankelijk](https://nodejs.org/en/download/package-manager)
 
@@ -92,7 +92,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 
 Installeer Visual Studio Code via een package manager:
 
-- Windows: `choco install vscode`
+- Windows: `winget install -e --id Microsoft.VisualStudioCode`
 - macOS: `brew install --cask visual-studio-code`
 - Linux: [distro afhankelijk](https://code.visualstudio.com/docs/setup/linux)
 
@@ -153,6 +153,7 @@ Fira Code is een gratis monospace lettertype met speciale karakters voor develop
 Installeer het lettertype via een package manager:
 
 - Windows: `choco install firacode`
+  - Winget is nog niet beschikbaar voor Fira Code, manuele installatie is ook mogelijk: <https://github.com/tonsky/FiraCode/wiki/Installing#windows>
 - macOS: `brew install firacode`
 - Linux: [distro afhankelijk](https://github.com/tonsky/FiraCode/wiki/Linux-instructions#installing-with-a-package-manager)
 
@@ -173,7 +174,7 @@ Voeg nadien volgende JSON-configuratie toe aan de settings van VS Code (zie hier
 
 Installeer Postman via een package manager:
 
-- Windows: `choco install postman`
+- Windows: `winget install -e --id Postman.Postman`
 - macOS: `brew install --cask postman`
 - Linux: [distro afhankelijk](https://www.postman.com/downloads/)
 
