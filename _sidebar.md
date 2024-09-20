@@ -17,4 +17,3 @@
 - [8. Testen: authenticatie & autorisatie (WIP)](/8-auth_testing/index.md)
 - [9. CI/CD (WIP)](/9-cicd/index.md)
 - [10. Linting en Swagger (optioneel) (WIP)](/10-linting_swagger/index.md)
-- [11. FAQ (WIP)](/11_faq/index.md)
