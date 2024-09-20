@@ -1,14 +1,6 @@
 # Testing
 
-> **Startpunt voorbeeldapplicatie**
->
-> ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-> cd webservices-budget
-> git checkout -b les5 4f79853
-> yarn install
-> yarn start
-> ```
+<!-- TODO: startpunt en oplossing toevoegen -->
 
 <!-- TODO: ESLint plugin voor jest toevoegen -->
 
@@ -50,35 +42,33 @@ Om testen te kunnen maken heb je nood aan een test library en een test runner. B
 - [Mocha](https://mochajs.org/)
 - [Jasmine](https://jasmine.github.io/)
 - [Vitest](https://vitest.dev/)
+- ...
 
 ## Integratietesten
 
 In deze cursus focussen we ons op integratietesten. We schrijven hier integratietesten om te testen of de verschillende onderdelen van onze applicatie goed samenwerken (bv. validatie, authenticatie...). We gebruiken hiervoor [Jest](https://jestjs.io/), een populaire test library voor JavaScript. Jest is een te groot framework om volledig in detail te behandelen, dus we beperken ons tot wat wij specifiek nodig hebben. Zoals elke developer, moet jij in staat zijn om zelfstandig een nieuwe functionaliteit op te zoeken en te leren gebruiken.
-
-> 💡 Tip: voel je vrij om een andere library te gebruiken in je eigen project.
 
 Om integratietesten uit te voeren, heb je een draaiende server nodig. Dat is niet zo handig want dan moet je steeds twee commando's uitvoeren: 1) server starten en 2) testen uitvoeren. Wij gaan ervoor zorgen dat we met één commando de testen kunnen uitvoeren zonder onze server expliciet te hoeven starten.
 
 We installeren eerst de nodige dependencies:
 
 ```bash
-yarn add --dev jest
-yarn add --dev supertest
+yarn add --dev jest supertest env-cmd
 ```
 
 - [**jest**](https://jestjs.io/): de test library en test runner
 - [**supertest**](https://www.npmjs.com/package/supertest): een library om HTTP requests te maken naar een server en de response te testen
   - wij gaan dit enkel gebruiken om HTTP requests te kunnen sturen zonder een echte server te moeten opzetten
   - we gebruiken de in Jest ingebouwde functionaliteiten om de response te testen
+- [**env-cmd**](https://www.npmjs.com/package/env-cmd): een library om environment variabelen in te laden vanuit een bestand
 
 ### Configuratie
 
-Eerst en vooral moeten we onze server configureerbaar maken in test modus. Maak een bestand `config/test.js` aan en kopieer de inhoud van `config/development.js` hiernaar. Pas de naam van de databank aan naar `budget_test` (via het property `database.name`) en schakel de logging uit (zet `log.disabled` op `true`). Normaal zou de andere databankconfiguratie identiek moeten zijn aan de development-omgeving (die is nl. ook bedoeld om lokaal te draaien).
-
-Maak vervolgens een `.env.test` aan in de root map, met volgende inhoud:
+Eerst en vooral moeten we onze server configureerbaar maken in test modus. Maak een bestand `config/test.ts` aan en kopieer de inhoud van `config/development.js` hiernaar. Maak vervolgens een `.env.test` aan in de root map, met volgende inhoud:
 
 ```ini
 NODE_ENV=test
+DATABASE_URL=mysql://root:root@localhost:3306/budget_test
 ```
 
 Later gebruiken we dit bestand om ervoor te zorgen dat het juiste configuratiebestand wordt ingeladen.
@@ -92,7 +82,7 @@ yarn jest --init
 Antwoord op de vragen als volgt:
 
 - Would you like to use Jest when running "test" script in "package.json"?: yes
-- Would you like to use Typescript for the configuration file?: no
+- Would you like to use Typescript for the configuration file?: yes
 - Choose the test environment that will be used for testing: node
 - Do you want Jest to add coverage reports?: no
 - Which provider should be used to instrument code for coverage?: v8
@@ -102,7 +92,7 @@ Dit commando maakt een bestand `jest.config.js` aan. Je vindt de nodige informat
 
 Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests__/**/*.[jt]s?(x)` en `**/?(*.)+(spec|test).[tj]s?(x)`. Het zoekt dus naar bestanden die zich in een map `__tests__` bevinden, of bestanden die eindigen op `.spec.js`, `.test.js`, `.spec.ts` of `.test.ts`. Pas in dit bestand volgende property aan en plaats uit commentaar:
 
-```js
+```ts
 {
   testMatch: [
     "**/__tests__/**/?(*.)+(spec|test).[jt]s?(x)",
@@ -119,10 +109,9 @@ We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons
 ```json
 {
   "scripts": {
-    "start": "env-cmd nodemon",
     "test": "env-cmd -f .env.test jest --runInBand",
     "test:coverage": "env-cmd -f .env.test jest --runInBand --coverage"
-  },
+  }
 }
 ```
 
@@ -137,52 +126,46 @@ We gaan onze code wat refactoren zodat we onze testen kunnen schrijven. We gaan 
 
 ### Installatie middlewares afzonderen
 
-Maak een nieuw bestand `src/core/installMiddlewares.js`. Maak en exporteer een functie `installMiddlewares` die alle huidige middlewares (buiten de routers) installeert in een Koa applicatie. Deze Koa applicatie wordt meegegeven als parameter. Kopieer ook de nodige imports en configuratievariabelen.
+Maak een nieuw bestand `src/core/installMiddlewares.ts`. Maak en exporteer een functie `installMiddlewares` die alle huidige middlewares (buiten de routers) installeert in een Koa applicatie. Deze Koa applicatie wordt meegegeven als parameter. Kopieer ook de nodige imports en configuratievariabelen.
 
-```js
-const config = require('config');
-const bodyParser = require('koa-bodyparser');
-const koaCors = require('@koa/cors');
+```ts
+// src/core/installMiddlewares.ts
+import config from 'config';
+import bodyParser from 'koa-bodyparser';
+import koaCors from '@koa/cors';
+import type { KoaApplication } from '../types';
 
-const CORS_ORIGINS = config.get('cors.origins');
-const CORS_MAX_AGE = config.get('cors.maxAge');
+const CORS_ORIGINS = config.get<string[]>('cors.origins');
+const CORS_MAX_AGE = config.get<number>('cors.maxAge');
 
-/**
- * Install all required middlewares in the given app.
- *
- * @param {koa.Application} app - The Koa application.
- */
-module.exports = function installMiddleware(app) {
-   app.use(
+export default function installMiddleware(app: KoaApplication) {
+  app.use(
     koaCors({
       origin: (ctx) => {
-        if (CORS_ORIGINS.indexOf(ctx.request.header.origin) !== -1) {
-          return ctx.request.header.origin;
+        if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) {
+          return ctx.request.header.origin!;
         }
         // Not a valid domain at this point, let's return the first valid as we should return a string
-        return CORS_ORIGINS[0];
+        return CORS_ORIGINS[0] || '';
       },
       allowHeaders: ['Accept', 'Content-Type', 'Authorization'],
       maxAge: CORS_MAX_AGE,
-    })
+    }),
   );
 
   app.use(bodyParser());
-};
+}
 ```
 
-Importeer deze functie in `src/index.js` en gebruik ze om de middlewares te installeren:
+Importeer deze functie in `src/index.ts` en gebruik ze om de middlewares te installeren:
 
-```js
+```ts
 // imports
 // ...
-const installMiddlewares = require('./core/installMiddlewares'); // 👈
+import installMiddlewares from './core/installMiddlewares'; // 👈
 
-// ...
-// configuratievariabelen
-
-// ...
-// logger initialiseren
+// ... (configuratievariabelen)
+// ... (app initialiseren)
 
 installMiddlewares(app); // 👈
 
@@ -193,45 +176,41 @@ Start de server en controleer of alles nog werkt.
 
 ### Server starten zonder luisteren
 
-We hernoemen `src/index.js` naar `src/createServer.js`.
+We hernoemen `src/index.ts` naar `src/createServer.ts`.
 
-```js
-const config = require('config');
-const Koa = require('koa');
-const { initializeLogger, getLogger } = require('./core/logging');
-const installRest = require('./rest');
-const { initializeData, shutdownData } = require('./data');
-const installMiddleware = require('./core/installMiddleware');
+```ts
+// src/createServer.ts
+import config from 'config';
+import Koa from 'koa';
 
-const NODE_ENV = config.get('env');
-const LOG_LEVEL = config.get('log.level');
-const LOG_DISABLED = config.get('log.disabled');
+import { getLogger } from './core/logging';
+import { initializeData, shutdownData } from './data';
+import installMiddlewares from './core/installMiddlewares';
+import installRest from './rest';
 
-module.exports = async function createServer() { // 👈 1
-  initializeLogger({
-    level: LOG_LEVEL,
-    disabled: LOG_DISABLED,
-    defaultMeta: {
-      NODE_ENV,
-    },
-  });
+// 👇 1
+export interface Server {
+  getApp(): KoaApplication;
+  start(): Promise<void>;
+  stop(): Promise<void>;
+}
 
-  await initializeData();
-
-  const app = new Koa();
+// 👇 2
+export default async function createServer(): Promise<Server> {
+  const app = new Koa<BudgetAppState, BudgetAppContext>();
 
   installMiddleware(app);
-
+  await initializeData();
   installRest(app);
 
-  // 👇 2
+  // 👇 3
   return {
     getApp() {
       return app;
     },
 
     start() {
-      return new Promise((resolve) => {
+      return new Promise<void>((resolve) => {
         app.listen(9000, () => {
           getLogger().info('🚀 Server listening on http://localhost:9000');
           resolve();
@@ -245,15 +224,27 @@ module.exports = async function createServer() { // 👈 1
       getLogger().info('Goodbye! 👋');
     },
   };
-};
+}
 ```
 
-Vervolgens maken we een nieuwe `src/index.js`:
+1. Definieer een interface voor het object dat we gaan returnen. Dit object bevat:
+   - een functie `getApp` die de Koa applicatie teruggeeft
+   - een functie `start` die de server start
+   - een functie `stop` die de server stopt
+2. De functie retourneert een `Server` object, maar de functie is `async` dus het returntype is een `Promise<Server>`.
+3. We returnen een object met de drie functies die we hebben gedefinieerd.
+   - `getApp` retourneert de Koa applicatie.
+   - `start` start de server en retourneert een `Promise<void>`. Hier maken we zelf een `Promise` aan omdat `app.listen` geen `Promise` retourneert. Als de callback van `app.listen` aangeroepen wordt, luistert de server naar requests. We roepen in die callback de `resolve` functie aan.
+   - `stop` stopt de server. We verwijderen eerst alle listeners van de app, sluiten de databankconnectie en loggen een afscheidsbericht. Zonder het sluiten van de databankconnectie, zal bv. Jest nooit stoppen met uitvoeren van de testen. Openstaande connecties is een van de dingen waarop een Node.js proces blijft wachten.
 
-```js
-const createServer = require('./createServer'); // 👈 3
+Vervolgens maken we een nieuwe `src/index.ts`:
 
-async function main() { // 👈 1
+```ts
+// src/index.ts
+import createServer from './createServer'; // 👈 3
+
+// 👇 1
+async function main() {
   // 👇 4
   try {
     const server = await createServer(); // 👈 5
@@ -268,49 +259,44 @@ async function main() { // 👈 1
     process.on('SIGTERM', onClose); // 👈 7
     process.on('SIGQUIT', onClose); // 👈 7
   } catch (error) {
-    console.error(error); // 👈 4
+    console.log('\n', error); // 👈 4
     process.exit(-1); // 👈 4
   }
 }
+
 main(); // 👈 2
 ```
 
-1. We maken een `main` functie aan die we async maken zodat we `await` kunnen gebruiken.
+1. We maken een `main` functie aan die we `async` maken zodat we `await` kunnen gebruiken.
 2. We roepen deze functie aan zodat de server effectief wordt gestart.
 3. We importeren de `createServer` functie die we eerder hebben aangemaakt.
 4. We maken een `try/catch` blok aan om eventuele fouten op te vangen. Als er een fout optreedt, loggen we deze en stoppen we de applicatie met een exit code `-1`.
+   - Herinner je: alle exit codes verschillend van `0` betekenen dat er een fout is opgetreden.
 5. We maken een server aan en starten deze meteen.
 6. We maken een functie `onClose` aan die we gebruiken om de server te stoppen en de applicatie af te sluiten. Als we deze functie niet zouden gebruiken, dan wordt bv. de databankconnectie niet mooi afgesloten en gaat Jest nooit stoppen met uitvoeren van de testen.
 7. We registreren deze functie als handler voor de `SIGTERM` en `SIGQUIT` events. Deze events worden getriggerd als de applicatie wordt gestopt (bv. door Jest).
 8. Het is belangrijk om de applicatie zelf ook expliciet te stoppen met een exit code `0`. Dit wordt niet meer automatisch gedaan als je een handler registreert voor `SIGTERM` en `SIGQUIT`.
 
-Als laatste voegen we een shutdownData functie toe aan `src/data/index.js` en exporteren deze ook:
+Als laatste voegen we een shutdownData functie toe aan `src/data/index.ts` en exporteren deze ook:
 
 ```js
+// src/data/index.ts
 // ...
 
-async function shutdownData() {
-  const logger = getLogger();
+export async function shutdownData(): Promise<void> {
+  getLogger().info('Shutting down database connection');
 
-  logger.info('Shutting down database connection');
+  await prisma?.$disconnect();
 
-  await knexInstance.destroy();
-  knexInstance = null;
-
-  logger.info('Database connection closed');
+  getLogger().info('Database connection closed');
 }
-
-// ...
-
-module.exports = {
-  // ...
-  shutdownData,
-};
 ```
 
-Deze functie sluit de connectie met de databank en zet de Knex instantie op `null`.
+Deze functie sluit de connectie met de databank.
 
 Door deze refactoring kunnen we onze server gebruiken in onze testen zonder dat we deze hoeven op te starten. Zonder deze refactoring zouden we twee terminals nodig hebben: één om de server te starten en één om de testen uit te voeren. Dit zou ook onhandig zijn in CI/CD pipelines.
+
+<!-- TODO: hier verder nalezen -->
 
 ## Integratietesten schrijven
 
@@ -376,9 +362,11 @@ Nu is het tijd om een eerste echte integratietest te schrijven!
 describe('Transactions', () => {
   // ...
 
-  describe('GET /api/transactions', () => { // 👈 1
+  describe('GET /api/transactions', () => {
+    // 👈 1
 
-    it('should 200 and return all transactions', async () => { // 👈 2
+    it('should 200 and return all transactions', async () => {
+      // 👈 2
       const response = await request.get(url); // 👈 3
       expect(response.status).toBe(200); // 👈 4
     });
@@ -400,36 +388,42 @@ We definiëren wat testdata bovenaan in het bestand `transactions.spec.js`, we z
 
 ```js
 const data = {
-  transactions: [{
-    id: 1,
-    user_id: 1,
-    place_id: 1,
-    amount: 3500,
-    date: new Date(2021, 4, 25, 19, 40),
-  },
-  {
-    id: 2,
-    user_id: 1,
-    place_id: 1,
-    amount: -220,
-    date: new Date(2021, 4, 8, 20, 0),
-  },
-  {
-    id: 3,
-    user_id: 1,
-    place_id: 1,
-    amount: -74,
-    date: new Date(2021, 4, 21, 14, 30),
-  }],
-  places: [{
-    id: 1,
-    name: 'Test place',
-    rating: 3,
-  }],
-  users: [{
-    id: 1,
-    name: 'Test User'
-  }]
+  transactions: [
+    {
+      id: 1,
+      user_id: 1,
+      place_id: 1,
+      amount: 3500,
+      date: new Date(2021, 4, 25, 19, 40),
+    },
+    {
+      id: 2,
+      user_id: 1,
+      place_id: 1,
+      amount: -220,
+      date: new Date(2021, 4, 8, 20, 0),
+    },
+    {
+      id: 3,
+      user_id: 1,
+      place_id: 1,
+      amount: -74,
+      date: new Date(2021, 4, 21, 14, 30),
+    },
+  ],
+  places: [
+    {
+      id: 1,
+      name: 'Test place',
+      rating: 3,
+    },
+  ],
+  users: [
+    {
+      id: 1,
+      name: 'Test User',
+    },
+  ],
 };
 ```
 
@@ -439,7 +433,7 @@ De data zal ook verwijderd moeten worden uit de database. We definiëren bovenaa
 const dataToDelete = {
   transactions: [1, 2, 3],
   places: [1],
-  users: [1]
+  users: [1],
 };
 ```
 
@@ -452,7 +446,6 @@ describe('Transactions', () => {
   // ...
 
   describe('GET /api/transactions', () => {
-
     // 👇 1
     beforeAll(async () => {
       await knex(tables.place).insert(data.places);
@@ -466,13 +459,9 @@ describe('Transactions', () => {
         .whereIn('id', dataToDelete.transactions)
         .delete();
 
-      await knex(tables.place)
-        .whereIn('id', dataToDelete.places)
-        .delete();
+      await knex(tables.place).whereIn('id', dataToDelete.places).delete();
 
-        await knex(tables.user)
-        .whereIn('id', dataToDelete.users)
-        .delete();
+      await knex(tables.user).whereIn('id', dataToDelete.users).delete();
     });
 
     it('should 200 and return all transactions', async () => {
@@ -541,7 +530,8 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
    2. Check of de geretourneerde transactie zoals verwacht is.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `b969d7e`
 
@@ -581,14 +571,10 @@ describe('Transactions', () => {
         .delete();
 
       // 👇 1
-      await knex(tables.place)
-        .whereIn('id', dataToDelete.places)
-        .delete();
+      await knex(tables.place).whereIn('id', dataToDelete.places).delete();
 
       // 👇 3
-      await knex(tables.user)
-        .whereIn('id', dataToDelete.users)
-        .delete();
+      await knex(tables.user).whereIn('id', dataToDelete.users).delete();
     });
   });
 });
@@ -603,25 +589,26 @@ Daarna schrijven we de test:
 ```js
 it('should 201 and return the created transaction', async () => {
   // 👇 1
-  const response = await request.post(url)
-    .send({
-      amount: 102,
-      date: '2021-05-27T13:00:00.000Z',
-      placeId: 1,
-      userId: 1,
-    });
+  const response = await request.post(url).send({
+    amount: 102,
+    date: '2021-05-27T13:00:00.000Z',
+    placeId: 1,
+    userId: 1,
+  });
 
   expect(response.status).toBe(201); // 👈 2
   expect(response.body.id).toBeTruthy(); // 👈 3
   expect(response.body.amount).toBe(102); // 👈 4
   expect(response.body.date).toBe('2021-05-27T13:00:00.000Z'); // 👈 4
-  expect(response.body.place).toEqual({  // 👈 4
+  expect(response.body.place).toEqual({
+    // 👈 4
     id: 1,
     name: 'Test place',
   });
-  expect(response.body.user).toEqual({ // 👈 5
+  expect(response.body.user).toEqual({
+    // 👈 5
     id: 1,
-    name: 'Test User'
+    name: 'Test User',
   });
 
   // 👇 6
@@ -655,7 +642,8 @@ Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
    2. Check of de geretourneerde transactie zoals verwacht is.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `bbea3e7`
 
@@ -683,7 +671,8 @@ Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
    2. Check of de body leeg is.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `fbc1d5f`
 
@@ -704,7 +693,8 @@ Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
 Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/api/health`. Denk na over de testen die je nu al kan schrijven en welke je pas kan schrijven als validatie is toegevoegd aan de back-end.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `dc52535`
 
@@ -722,4 +712,4 @@ Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/ap
 
 ## Extra's voor de examenopdracht
 
-- Gebruik een andere test library (bv. [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/), [Vitest](http://localhost:3000/[https://](https://vitest.dev/))...)
+- Gebruik een andere test library (bv. [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/), [Vitest](<http://localhost:3000/[https://](https://vitest.dev/)>)...)

@@ -835,7 +835,8 @@ export type KoaContext<
 >;
 
 // 👇 5
-export interface KoaApplication extends Application<BudgetAppState> {}
+export interface KoaApplication
+  extends Application<BudgetAppState, BudgetAppContext> {}
 
 // 👇 5
 export interface KoaRouter extends Router<BudgetAppState, BudgetAppContext> {}
