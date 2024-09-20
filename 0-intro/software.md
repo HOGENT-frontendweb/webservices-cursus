@@ -69,6 +69,7 @@ npm install -g yarn
 Schakel vervolgens [Corepack](https://nodejs.org/api/corepack.html) in:
 
 ```bash
+# Administrator rechten zijn nodig op Windows!
 corepack enable
 ```
 
