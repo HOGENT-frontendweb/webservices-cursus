@@ -105,7 +105,6 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 - De code van je applicatie
   - Moet te vinden zijn in de GitHub classroom repository op de `main` branch
 - Het ingevulde dossier, als PDF ingediend op Chamilo
-- Een ingevulde evaluatiekaart (zie Chamilo), ook ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
   - De demo mag maximaal 15 minuten duren (incl. demo Front-end Web Development)
   - De webcam moet aanstaan tijdens de demo
