@@ -193,7 +193,7 @@ class Persoon2 {
 }
 ```
 
-De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework. In de olods Web Services en Front-end Web Development zal er echter zelden enkel gebruik gemaakt worden van interfaces.
+De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework. In de olods Web Services en Front-end Web Development zal er echter enkel gebruik gemaakt worden van interfaces.
 
 Je kan hier dus ook keywords als `extends` en `implements` gebruiken om respectievelijk te erven van een klasse/interface of een interface te implementeren.
 

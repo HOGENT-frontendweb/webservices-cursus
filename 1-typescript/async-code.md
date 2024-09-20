@@ -2,7 +2,7 @@
 
 ## Asynchrone code
 
-JavaScript is een single-threaded taal. Dit wil zeggen dat er maar één thread is die de code uitvoert. Dit is een groot verschil met bv. Java, waar je meerdere threads _kan_ hebben die parallel uitgevoerd worden. Dit heeft als gevolg dat JavaScript code asynchroon moet uitgevoerd worden. Als je bv. een API call doet, dan moet je wachten op het resultaat. Als je dit synchroon zou doen, dan zou de hele applicatie blokkeren tot het resultaat van de API call terug is.
+JavaScript is een single-threaded taal (je kan wel threads maken m.b.v. [worker threads](https://nodejs.org/api/worker_threads.html)). Dit wil zeggen dat er maar één thread is die de code uitvoert. Dit is een groot verschil met bv. Java, waar je meerdere threads _kan_ hebben die parallel uitgevoerd worden. Dit heeft als gevolg dat JavaScript code asynchroon moet uitgevoerd worden. Als je bv. een API call doet, dan moet je wachten op het resultaat. Als je dit synchroon zou doen, dan zou de hele applicatie blokkeren tot het resultaat van de API call terug is.
 
 In JavaScript werd/wordt dit opgelost door een callback functie mee te geven aan de functie die de API call doet. De callback functie wordt dan uitgevoerd als het resultaat van de API call terug is.
 
