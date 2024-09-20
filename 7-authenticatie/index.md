@@ -25,9 +25,11 @@ Als een JWT alle sessie-info als plain text bevat, kan ik die wijzigen? Ja, je k
 Dit is een voorbeeld van een JWT:
 
 <!-- cspell: disable -->
+
 ```text
 eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
 ```
+
 <!-- cspell: enable -->
 
 Een JWT bestaat uit 3 delen:
@@ -43,7 +45,7 @@ Deze drie delen worden gescheiden door een punt en staan in [`base64url` encoder
 Dit bestaat gewoonlijk uit twee delen:
 
 - `type`: het type van token, in dit geval JWT
-- `alg` (= signing algorithm): het algoritme gebruikt om de token te ondertekenen, bv. [HMAC](https://en.wikipedia.org/wiki/HMAC), [SHA256](https://en.wikipedia.org/wiki/SHA-2), [RSA](https://en.wikipedia.org/wiki/RSA_(cryptosystem)).
+- `alg` (= signing algorithm): het algoritme gebruikt om de token te ondertekenen, bv. [HMAC](https://en.wikipedia.org/wiki/HMAC), [SHA256](https://en.wikipedia.org/wiki/SHA-2), [RSA](<https://en.wikipedia.org/wiki/RSA_(cryptosystem)>).
 
 Je kan de header gewoon van `base64url` naar plain text omvormen. Met het voorbeeld geeft dit:
 
@@ -93,11 +95,13 @@ yarn add jsonwebtoken
 We voegen wat configuratie toe voor jsonwebtoken in `config/development.js`, `config/production.js` en `config/test.js`:
 
 <!-- cSpell: disable -->
+
 ```js
 module.exports = {
   auth: {
     jwt: {
-      secret: 'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
+      secret:
+        'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
       expirationInterval: 60 * 60 * 1000, // ms (1 hour)
       issuer: 'budget.hogent.be',
       audience: 'budget.hogent.be',
@@ -105,6 +109,7 @@ module.exports = {
   },
 };
 ```
+
 <!-- cSpell: enable -->
 
 - `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
@@ -355,6 +360,7 @@ Kopieer deze code in een `src/testpw.js` bestand en test zelf of jouw code werkt
 Je kan onderstaande code uitvoeren m.b.v. `node src/testpw.js`.
 
 <!-- cSpell: disable -->
+
 ```js
 process.env.NODE_CONFIG = JSON.stringify({
   env: 'development',
@@ -380,12 +386,13 @@ async function main() {
     'The password',
     wrongPassword,
     'is',
-    valid ? 'valid' : 'incorrect'
+    valid ? 'valid' : 'incorrect',
   );
 }
 
 main();
 ```
+
 <!-- cSpell: enable -->
 
 ### Wachtwoord opslaan in de databank
@@ -397,7 +404,8 @@ const { tables } = require('..');
 
 module.exports = {
   up: async (knex) => {
-    await knex.schema.alterTable(tables.user, (table) => { // 👈 1
+    await knex.schema.alterTable(tables.user, (table) => {
+      // 👈 1
       table.string('email').notNullable(); // 👈 2
 
       table.string('password_hash').notNullable(); // 👈 2
@@ -425,6 +433,7 @@ module.exports = {
 Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen kunnen `user` en/of `admin` worden toegekend.
 
 <!-- cSpell: disable -->
+
 ```js
 const { tables } = require('..');
 
@@ -463,6 +472,7 @@ module.exports = {
   },
 };
 ```
+
 <!-- cSpell: enable -->
 
 De extra kolommen hebben als gevolg dat de user repository (in `src/repository/user.js`) nu ook een `email`, `passwordHash` en `roles` verwacht als parameter bij `create`.
@@ -534,16 +544,10 @@ const register = async ({
 - Pas ook de REST-laag van de users aan waar nodig.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in de branch `authenticatie` op commit `8c2a689`
+- Oplossing +
 
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  git checkout -b authenticatie-oef1 8c2a689
-  yarn install
-  yarn start
-  ```
+  TODO: voorbeeldoplossing toevoegen
 
 ## Aanmelden
 
@@ -559,6 +563,7 @@ module.exports = Object.freeze({
 We updaten de **seed voor users** met deze nieuwe rollen:
 
 <!-- cSpell: disable -->
+
 ```js
 const { tables } = require('..');
 const Role = require('../../core/roles'); // 👈
@@ -598,6 +603,7 @@ module.exports = {
   },
 };
 ```
+
 <!-- cSpell: enable -->
 
 We passen `ServiceError` aan. Mogelijke nieuwe fouten zijn:
@@ -715,7 +721,7 @@ const login = async (email, password) => {
   if (!user) {
     // DO NOT expose we don't know the user
     throw ServiceError.unauthorized(
-      'The given email and password do not match'
+      'The given email and password do not match',
     );
   }
 
@@ -725,7 +731,7 @@ const login = async (email, password) => {
   if (!passwordValid) {
     // DO NOT expose we know the user but an invalid password was given
     throw ServiceError.unauthorized(
-      'The given email and password do not match'
+      'The given email and password do not match',
     );
   }
 
@@ -759,7 +765,8 @@ const login = async (ctx) => {
   const token = await userService.login(email, password); // 👈 3
   ctx.body = token; // 👈 4
 };
-login.validationScheme = { // 👈 5
+login.validationScheme = {
+  // 👈 5
   body: {
     email: Joi.string().email(),
     password: Joi.string(),
@@ -833,7 +840,8 @@ const register = async (ctx) => {
   ctx.body = token; // 👈 2
   ctx.status = 200; // 👈 2
 };
-register.validationScheme = { // 👈 3
+register.validationScheme = {
+  // 👈 3
   body: {
     name: Joi.string().max(255),
     email: Joi.string().email(),
@@ -869,7 +877,7 @@ const requireAuthentication = async (ctx, next) => {
 
   // 👇 4
   const { authToken, ...session } = await userService.checkAndParseSession(
-    authorization
+    authorization,
   );
 
   ctx.state.session = session; // 👈 5
@@ -926,7 +934,6 @@ const checkAndParseSession = async (authHeader) => {
   try {
     const { roles, sub } = await verifyJWT(authToken); // 👈 5
 
-
     return {
       userId: Number(sub),
       roles,
@@ -961,7 +968,7 @@ const checkRole = (role, roles) => {
 
   if (!hasPermission) {
     throw ServiceError.forbidden(
-      'You are not allowed to view this part of the application'
+      'You are not allowed to view this part of the application',
     ); // 👈 2
   }
 };
@@ -1002,29 +1009,28 @@ module.exports = function installUsersRoutes(app) {
     requireAuthentication,
     requireAdmin,
     validate(getAllUsers.validationScheme),
-    getAllUsers
+    getAllUsers,
   ); // 👈 3 en 4
   router.get(
     '/:id',
     requireAuthentication,
     validate(getUserById.validationScheme),
-    getUserById
+    getUserById,
   ); // 👈 3
   router.put(
     '/:id',
     requireAuthentication,
     validate(updateUserById.validationScheme),
-    updateUserById
+    updateUserById,
   ); // 👈 3
   router.delete(
     '/:id',
     requireAuthentication,
     validate(deleteUserById.validationScheme),
-    deleteUserById
+    deleteUserById,
   ); // 👈 3
 
-  app.use(router.routes())
-    .use(router.allowedMethods());
+  app.use(router.routes()).use(router.allowedMethods());
 };
 ```
 
@@ -1057,7 +1063,7 @@ const checkUserId = (ctx, next) => {
       "You are not allowed to view this user's information",
       {
         code: 'FORBIDDEN',
-      }
+      },
     );
   }
   return next();
@@ -1068,21 +1074,21 @@ router.get(
   requireAuthentication,
   validate(getUserById.validationScheme),
   checkUserId, // 👈
-  getUserById
+  getUserById,
 );
 router.put(
   '/:id',
   requireAuthentication,
   validate(updateUserById.validationScheme),
   checkUserId, // 👈
-  updateUserById
+  updateUserById,
 );
 router.delete(
   '/:id',
   requireAuthentication,
   validate(deleteUserById.validationScheme),
   checkUserId, // 👈
-  deleteUserById
+  deleteUserById,
 );
 ```
 
@@ -1102,16 +1108,10 @@ Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazo
 - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in de branch `authenticatie` in de commit `90d9ffd`
+- Oplossing +
 
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  git checkout -b authenticatie-oef2 90d9ffd
-  yarn install
-  yarn start
-  ```
+  TODO: voorbeeldoplossing toevoegen
 
 ## Extra's voor de examenopdracht
 
