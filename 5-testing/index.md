@@ -537,20 +537,18 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 
 - Oplossing +
 
-  TODO: oplossint toevoegen
+  TODO: oplossing toevoegen
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
   - testen of de statuscode 404 is als de transactie niet bestaat
   - testen of de statuscode 400 is als de id geen nummer is
 
-<!-- TODO: vanaf hier verder nalezen -->
-
 ### POST /api/transactions
 
 Maak een nieuwe test suite aan voor het endpoint `POST /api/transactions`:
 
-```js
+```ts
 describe('Transactions', () => {
   // ...
 
@@ -559,33 +557,37 @@ describe('Transactions', () => {
 
     // 👇 1
     beforeAll(async () => {
-      await knex(tables.place).insert(data.places);
-      await knex(tables.user).insert(data.users);
+      await prisma.place.create(data.places);
+      await prisma.place.create(data.users);
     });
 
     afterAll(async () => {
       // 👇 2
-      await knex(tables.transaction)
-        .whereIn('id', transactionsToDelete)
-        .delete();
-
-      // 👇 1
-      await knex(tables.place).whereIn('id', dataToDelete.places).delete();
+      await prisma.transaction.deleteMany({
+        where: { id: { in: transactionsToDelete } },
+      });
 
       // 👇 3
-      await knex(tables.user).whereIn('id', dataToDelete.users).delete();
+      await prisma.place.deleteMany({
+        where: { id: { in: dataToDelete.places } },
+      });
+
+      // 👇 3
+      await prisma.user.deleteMany({
+        where: { id: { in: dataToDelete.users } },
+      });
     });
   });
 });
 ```
 
-1. We voegen enkel de places toe aan de databank, want we hebben enkel een place nodig om een transactie aan te maken. De user wordt nl. elke keer aangemaakt in de databank (dit wordt opgelost bij het hoofdstuk rond authenticatie).
+1. We voegen de places en users toe aan de databank. We hebben beide nodig om een transactie aan te maken.
 2. We voegen een array toe om de id's van de transacties bij te houden die we moeten verwijderen na de testen. We zullen er nl. één toevoegen hier, daarvan weten we het id nog niet.
-3. We doen hetzelfde voor de users.
+3. We verwijderen nadien de toegevoegde places en users.
 
 Daarna schrijven we de test:
 
-```js
+```ts
 it('should 201 and return the created transaction', async () => {
   // 👇 1
   const response = await request.post(url).send({
@@ -599,13 +601,13 @@ it('should 201 and return the created transaction', async () => {
   expect(response.body.id).toBeTruthy(); // 👈 3
   expect(response.body.amount).toBe(102); // 👈 4
   expect(response.body.date).toBe('2021-05-27T13:00:00.000Z'); // 👈 4
+  // 👇 5
   expect(response.body.place).toEqual({
-    // 👈 4
     id: 1,
     name: 'Test place',
   });
+  // 👇 5
   expect(response.body.user).toEqual({
-    // 👈 5
     id: 1,
     name: 'Test User',
   });
@@ -615,12 +617,12 @@ it('should 201 and return the created transaction', async () => {
 });
 ```
 
-1. Voer het POST request uit. Met de send functie kan je de request body doorgeven.
+1. Voer het POST request uit. Met de `send` functie kan je de request body doorgeven.
 2. Check of de statuscode gelijk is aan 201.
 3. Check of het response een id bevat. De waarde maakt hier niet uit, het moet enkel bestaan.
 4. Controleer of het response de juiste waarden bevat.
-5. Controleer of het response de juiste user bevat. De id moet bestaan, de naam moet gelijk zijn aan de naam die we hebben doorgegeven.
-6. Voeg de id's toe aan de arrays zodat we de data kunnen verwijderen na de testen.
+5. Controleer of het response de juiste place en user bevat.
+6. Voeg het id toe aan de array zodat we de transactie kunnen verwijderen na de testen.
 
 Voer de test uit en controleer of hij slaagt.
 
@@ -633,8 +635,8 @@ Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzi
 
 Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
 
-1. Maak een nieuwe test suite aan voor het endpoint PUT /api/transactions/:id.
-2. Zorg ervoor data wat testdata aanwezig is in de databank.
+1. Maak een nieuwe test suite aan voor het endpoint `PUT /api/transactions/:id`.
+2. Zorg ervoor dat wat testdata aanwezig is in de databank.
 3. Ruim deze data ook op na de testen.
 4. Voer de test uit:
    1. Check of de statuscode gelijk is aan 200.
@@ -644,14 +646,7 @@ Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
 
 - Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `bbea3e7`
-
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  git checkout -b oplossing bbea3e7
-  yarn install
-  yarn start
-  ```
+  TODO: oplossing toevoegen
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -662,8 +657,8 @@ Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
 
 Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
 
-1. Maak een nieuwe test suite aan voor het endpoint DELETE /api/transactions/:id.
-2. Zorg ervoor data wat testdata aanwezig is in de databank.
+1. Maak een nieuwe test suite aan voor het endpoint `DELETE /api/transactions/:id`.
+2. Zorg ervoor dat wat testdata aanwezig is in de databank.
 3. Ruim deze data ook op na de testen.
 4. Voer de test uit:
    1. Check of de statuscode gelijk is aan 204.
@@ -673,14 +668,7 @@ Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
 
 - Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `fbc1d5f`
-
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  git checkout -b oplossing fbc1d5f
-  yarn install
-  yarn start
-  ```
+  TODO: oplossing toevoegen
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -695,14 +683,7 @@ Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/ap
 
 - Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `dc52535`
-
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  git checkout -b oplossing dc52535
-  yarn install
-  yarn start
-  ```
+  TODO: oplossing toevoegen
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
