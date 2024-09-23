@@ -57,14 +57,14 @@ yarn add --dev jest supertest env-cmd
 ```
 
 - [**jest**](https://jestjs.io/): de test library en test runner
-- [**supertest**](https://www.npmjs.com/package/supertest): een library om HTTP requests te maken naar een server en de response te testen
+- [**supertest**](https://www.npmjs.com/package/supertest): een library om HTTP requests te maken naar een server en het response te testen
   - wij gaan dit enkel gebruiken om HTTP requests te kunnen sturen zonder een echte server te moeten opzetten
-  - we gebruiken de in Jest ingebouwde functionaliteiten om de response te testen
+  - we gebruiken de in Jest ingebouwde functionaliteiten om het response te testen
 - [**env-cmd**](https://www.npmjs.com/package/env-cmd): een library om environment variabelen in te laden vanuit een bestand
 
 ### Configuratie
 
-Eerst en vooral moeten we onze server configureerbaar maken in test modus. Maak een bestand `config/test.ts` aan en kopieer de inhoud van `config/development.js` hiernaar. Maak vervolgens een `.env.test` aan in de root map, met volgende inhoud:
+Eerst en vooral moeten we onze server configureerbaar maken in test modus. Maak een bestand `config/test.ts` aan en kopieer de inhoud van `config/development.ts` hiernaar. Maak vervolgens een `.env.test` aan in de root map, met volgende inhoud:
 
 ```ini
 NODE_ENV=test
@@ -88,7 +88,7 @@ Antwoord op de vragen als volgt:
 - Which provider should be used to instrument code for coverage?: v8
 - Automatically clear mock calls, instances, contexts and results before every test?: no
 
-Dit commando maakt een bestand `jest.config.js` aan. Je vindt de nodige informatie over deze configuratie op <https://jestjs.io/docs/configuration>.
+Dit commando maakt een bestand `jest.config.ts` aan. Je vindt de nodige informatie over deze configuratie op <https://jestjs.io/docs/configuration>.
 
 Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests__/**/*.[jt]s?(x)` en `**/?(*.)+(spec|test).[tj]s?(x)`. Het zoekt dus naar bestanden die zich in een map `__tests__` bevinden, of bestanden die eindigen op `.spec.js`, `.test.js`, `.spec.ts` of `.test.ts`. Pas in dit bestand volgende property aan en plaats uit commentaar:
 
@@ -100,7 +100,7 @@ Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests_
 }
 ```
 
-Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Zonder deze aanpassing probeert Jest ook ons configuratiebestand `test.js` uit te voeren.
+Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Zonder deze aanpassing probeert Jest ook ons configuratiebestand `test.ts` uit te voeren.
 
 Je kan ervoor opteren om unit testen te maken voor bv. de servicelaag. In dat geval maak je een map `__tests__` aan in de `src/service` map en plaats je daar je unit testen in. We plaatsen onze testen in een map `__tests__` in de root map van onze applicatie, want het zijn integratietesten voor de hele applicatie.
 
@@ -277,9 +277,9 @@ main(); // 👈 2
 7. We registreren deze functie als handler voor de `SIGTERM` en `SIGQUIT` events. Deze events worden getriggerd als de applicatie wordt gestopt (bv. door Jest).
 8. Het is belangrijk om de applicatie zelf ook expliciet te stoppen met een exit code `0`. Dit wordt niet meer automatisch gedaan als je een handler registreert voor `SIGTERM` en `SIGQUIT`.
 
-Als laatste voegen we een shutdownData functie toe aan `src/data/index.ts` en exporteren deze ook:
+Als laatste voegen we een `shutdownData` functie toe aan `src/data/index.ts` en exporteren deze ook:
 
-```js
+```ts
 // src/data/index.ts
 // ...
 
@@ -296,8 +296,6 @@ Deze functie sluit de connectie met de databank.
 
 Door deze refactoring kunnen we onze server gebruiken in onze testen zonder dat we deze hoeven op te starten. Zonder deze refactoring zouden we twee terminals nodig hebben: één om de server te starten en één om de testen uit te voeren. Dit zou ook onhandig zijn in CI/CD pipelines.
 
-<!-- TODO: hier verder nalezen -->
-
 ## Integratietesten schrijven
 
 Jest voorziet een aantal globale functies die je kan gebruiken in je testen. De belangrijkste zijn:
@@ -313,60 +311,56 @@ Jest voorziet een aantal globale functies die je kan gebruiken in je testen. De 
 
 #### De opzet
 
-Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een bestand `transactions.spec.js` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
+Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een bestand `transactions.spec.ts` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
 
-```js
-const supertest = require('supertest'); // 👈 1
-const createServer = require('../../src/createServer'); // 👈 1
-const { getKnex } = require('../../src/data'); // 👈
+```ts
+import supertest from 'supertest'; // 👈 1
+import createServer from '../../src/createServer'; // 👈 1
 
 // 👇 2
 describe('Transactions', () => {
   // 👇 3
   let server;
   let request;
-  let knex;
 
   // 👇 4
   beforeAll(async () => {
     server = await createServer(); // 👈 5
     request = supertest(server.getApp().callback()); // 👈 6
-    knex = getKnex(); // 👈 7
   });
 
-  // 👇 8
+  // 👇 7
   afterAll(async () => {
     await server.stop();
   });
 
-  const url = '/api/transactions'; // 👈 9
+  const url = '/api/transactions'; // 👈 8
 });
 ```
 
 1. Importeer `supertest` en `createServer` zodat we een server kunnen starten zonder dat deze luistert naar requests.
-2. We groeperen onze testen voor de transacties in een test suite met naam "Transactions". `describe` definieert een test suite. De functie verwacht een naam en een functie als argument. De functie bevat de testen die we willen uitvoeren.
+2. We groeperen onze testen voor de transacties in een test suite met naam "Transactions".
+   - `describe` definieert een test suite. De functie verwacht een naam en een functie als argument. De functie bevat de testen die we willen uitvoeren.
 3. Definieer een aantal variabelen voor later.
 4. We gebruiken de functie `beforeAll` om een aantal dingen uit te voeren voor alle testen uitgevoerd worden.
 5. We maken een server.
 6. We maken een supertest instantie waarmee we HTTP requests kunnen sturen naar de server.
-7. We importeren onze Knex instantie zodat we de databank kunnen manipuleren.
-8. Na alle testen stoppen we de server.
+7. Na alle testen stoppen we de server.
    - Je kan dit eens weglaten en dan zal je zien dat Jest de uitvoering nooit stopt. Dit komt omdat de connectie met de databank niet wordt afgesloten en Jest dus blijft wachten tot deze connectie wordt afgesloten.
-9. We definiëren een constante `url` die we gebruiken om de URL van de API te definiëren. Dit is een goede gewoonte omdat je zo maar op één plaats de URL moet aanpassen als deze zou wijzigen.
+8. We definiëren een constante `url` die we gebruiken om de URL van de API te definiëren. Dit is een goede gewoonte omdat je zo maar op één plaats de URL moet aanpassen als deze zou wijzigen.
 
 #### De test zelf
 
 Nu is het tijd om een eerste echte integratietest te schrijven!
 
-```js
+```ts
 describe('Transactions', () => {
   // ...
 
+  // 👇 1
   describe('GET /api/transactions', () => {
-    // 👈 1
-
+    // 👇 2
     it('should 200 and return all transactions', async () => {
-      // 👈 2
       const response = await request.get(url); // 👈 3
       expect(response.status).toBe(200); // 👈 4
     });
@@ -377,16 +371,16 @@ describe('Transactions', () => {
 1. We maken een nieuwe test suite aan voor de `GET /api/transactions` endpoint. Zo kan je alle testen voor dit endpoint groeperen en krijg je een mooie en overzichtelijke uitvoer in de console.
 2. We definiëren een test om te checken of alle transacties opgehaald kunnen worden.
 3. We sturen een GET request naar `/api/transactions`.
-4. We verwachten dat de statuscode van de response gelijk is aan 200.
-   - Merk op: Deze test is te algemeen. We moeten ook verifiëren of de verwachte transacties in het response aanwezig zijn. Hiervoor moet de database aangevuld worden met testdata.
+4. We verwachten dat de statuscode van het response gelijk is aan 200.
+   - Merk op: Deze test is te algemeen. We moeten nl. ook verifiëren of de verwachte transacties in het response aanwezig zijn. Hiervoor moet de database aangevuld worden met testdata.
 
-Voer de test uit met `yarn test` en controleer of hij slaagt.
+Voer de test uit met `yarn test` en controleer of de test slaagt.
 
 #### Testdata
 
-We definiëren wat testdata bovenaan in het bestand `transactions.spec.js`, we zien hier drie transacties, één place en één user:
+We definiëren wat testdata bovenaan in het bestand `transactions.spec.ts`, we zien hier drie transacties, één place en één user:
 
-```js
+```ts
 const data = {
   transactions: [
     {
@@ -429,7 +423,7 @@ const data = {
 
 De data zal ook verwijderd moeten worden uit de database. We definiëren bovenaan ook een `dataToDelete` die de id's bevat die uit de database verwijderd dienen te worden.
 
-```js
+```ts
 const dataToDelete = {
   transactions: [1, 2, 3],
   places: [1],
@@ -437,31 +431,33 @@ const dataToDelete = {
 };
 ```
 
-We voegen de testdate toe aan de databank voor alle testen omtrent `GET /api/transactions` uitgevoerd worden:
+We voegen de testdata toe aan de databank voor alle testen omtrent `GET /api/transactions` uitgevoerd worden:
 
-```js
-const { tables, getKnex } = require('../../src/data'); // 👈 2
+```ts
+import { prisma } from '../../src/data'; // 👈 1
 
 describe('Transactions', () => {
   // ...
 
   describe('GET /api/transactions', () => {
-    // 👇 1
+    // 👇 2
     beforeAll(async () => {
-      await knex(tables.place).insert(data.places);
-      await knex(tables.user).insert(data.users);
-      await knex(tables.transaction).insert(data.transactions);
+      await prisma.place.create(data.places);
+      await prisma.user.create(data.users);
+      await prisma.transaction.create(data.transactions);
     });
 
     // 👇 3
     afterAll(async () => {
-      await knex(tables.transaction)
-        .whereIn('id', dataToDelete.transactions)
-        .delete();
-
-      await knex(tables.place).whereIn('id', dataToDelete.places).delete();
-
-      await knex(tables.user).whereIn('id', dataToDelete.users).delete();
+      await prisma.transaction.deleteMany({
+        where: { id: { in: dataToDelete.transactions } },
+      });
+      await prisma.place.deleteMany({
+        where: { id: { in: dataToDelete.places } },
+      });
+      await prisma.user.deleteMany({
+        where: { id: { in: dataToDelete.users } },
+      });
     });
 
     it('should 200 and return all transactions', async () => {
@@ -473,9 +469,9 @@ describe('Transactions', () => {
 });
 ```
 
-1. We gebruiken de `beforeAll` functie om de testdata toe te voegen aan de databank voor alle testen uit deze test suite uitgevoerd worden. We gebruiken de `insert` functie van Knex om de data toe te voegen.
-2. We gebruiken de `tables` constante om de juiste tabelnamen te gebruiken.
-3. De data moet ook verwijderd worden na alle testen. We gebruiken de `afterAll` functie om dit te doen nadat alle testen uit deze test suite uitgevoerd zijn. We gebruiken de `delete` functie van Knex om de data te verwijderen.
+1. We importeren `prisma` zodat we de data kunnen toevoegen en verwijderen.
+2. We gebruiken de `beforeAll` functie om de testdata toe te voegen aan de databank voor alle testen uit deze test suite uitgevoerd worden. We gebruiken de `create` functie van Prisma om de data toe te voegen.
+3. De data moet ook verwijderd worden na alle testen. We gebruiken de `afterAll` functie om dit te doen nadat alle testen uit deze test suite uitgevoerd zijn. We gebruiken de `deleteMany` functie van Prisma om de data te verwijderen. We verwijderen enkel de data die we hebben toegevoegd.
 4. Controleer nu of het aantal opgehaalde transacties het verwachte aantal is.
 
 We breiden de test uit om te controleren of de juiste transacties worden opgehaald:
@@ -487,34 +483,42 @@ it('should 200 and should return all transactions', async () => {
   expect(response.body.items.length).toBe(3);
 
   // 👇
-  expect(response.body.items[1]).toEqual({
-    id: 3,
-    user: {
-      id: 1,
-      name: 'Test User',
-    },
-    place: {
-      id: 1,
-      name: 'Test place',
-    },
-    amount: -74,
-    date: new Date(2021, 4, 21, 14, 30).toJSON(),
-  });
-  expect(response.body.items[2]).toEqual({
-    id: 1,
-    user: {
-      id: 1,
-      name: 'Test User',
-    },
-    place: {
-      id: 1,
-      name: 'Test place',
-    },
-    amount: 3500,
-    date: new Date(2021, 4, 25, 19, 40).toJSON(),
-  });
+  expect(response.body.items).toEqual(
+    expect.arrayContaining([
+      {
+        id: 2,
+        user: {
+          id: 1,
+          name: 'Test User',
+        },
+        place: {
+          id: 1,
+          name: 'Test place',
+          rating: 3,
+        },
+        amount: -220,
+        date: new Date(2021, 4, 8, 20, 0).toJSON(),
+      },
+      {
+        id: 3,
+        user: {
+          id: 1,
+          name: 'Test User',
+        },
+        place: {
+          id: 1,
+          name: 'Test place',
+          rating: 3,
+        },
+        amount: -74,
+        date: new Date(2021, 4, 21, 14, 30).toJSON(),
+      },
+    ]),
+  );
 });
 ```
+
+Met `expect.arrayContaining` controleren we of de array `response.body.items` minstens de objecten bevat die we verwachten. De objecten moeten niet in dezelfen volgorde staan, maar ze moeten wel allemaal aanwezig zijn. Hier testen we of de transacties met id 2 en 3 aanwezig zijn in het response.
 
 Voer de test uit en controleer of hij slaagt.
 
@@ -523,7 +527,7 @@ Voer de test uit en controleer of hij slaagt.
 Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 
 1. Maak een nieuwe test suite aan voor het endpoint `GET /api/transactions/:id`.
-2. Zorg ervoor data wat testdata aanwezig is in de databank.
+2. Zorg ervoor dat wat testdata aanwezig is in de databank.
 3. Ruim deze data ook op na de testen.
 4. Voer de test uit:
    1. Check of de statuscode gelijk is aan 200.
@@ -533,19 +537,14 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 
 - Oplossing +
 
-  Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in commit `b969d7e`
-
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  git checkout -b oplossing b969d7e
-  yarn install
-  yarn start
-  ```
+  TODO: oplossint toevoegen
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
   - testen of de statuscode 404 is als de transactie niet bestaat
   - testen of de statuscode 400 is als de id geen nummer is
+
+<!-- TODO: vanaf hier verder nalezen -->
 
 ### POST /api/transactions
 
@@ -618,9 +617,9 @@ it('should 201 and return the created transaction', async () => {
 
 1. Voer het POST request uit. Met de send functie kan je de request body doorgeven.
 2. Check of de statuscode gelijk is aan 201.
-3. Check of de response een id bevat. De waarde maakt hier niet uit, het moet enkel bestaan.
-4. Controleer of de response de juiste waarden bevat.
-5. Controleer of de response de juiste user bevat. De id moet bestaan, de naam moet gelijk zijn aan de naam die we hebben doorgegeven.
+3. Check of het response een id bevat. De waarde maakt hier niet uit, het moet enkel bestaan.
+4. Controleer of het response de juiste waarden bevat.
+5. Controleer of het response de juiste user bevat. De id moet bestaan, de naam moet gelijk zijn aan de naam die we hebben doorgegeven.
 6. Voeg de id's toe aan de arrays zodat we de data kunnen verwijderen na de testen.
 
 Voer de test uit en controleer of hij slaagt.
