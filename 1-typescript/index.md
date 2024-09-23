@@ -92,8 +92,7 @@ Vul alvast de `README.md` en `dossier.md` aan voor zover mogelijk:
 - `README.md`:
   - Vul de titel en je naam, studentennummer en e-mailadres in.
 - `dossier.md`:
-  - Vul de titel in.
-  - Duid aan welk(e) vak(ken) je volgt
+  - Duid aan welk(e) vak(ken) je volgt, verwijder alles van het vak dat niet van toepassing is.
   - Vul de link(s) naar de GitHub repository/repositories in.
   - De link naar de online versie kan je nu **nog niet** invullen! Laat deze placeholder gewoon staan.
 
