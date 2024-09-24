@@ -2,7 +2,7 @@
 
 <!-- TODO: startpunt en oplossing toevoegen -->
 
-Heel wat REST API's die je online vindt, gaan er vanuit dat de invoer altijd correct is, geven totaal verkeerde foutmeldingen terug, of geven helemaal geen foutmeldingen. Dit is een bad practise! Een goede API geeft duidelijke foutmeldingen terug en valideert de invoer. Invoervalidatie is belangrijk voor de integriteit van de data en de veiligheid van de applicatie. Degelijke foutboodschappen helpen de gebruikers van de API om fouten te begrijpen en te corrigeren, indien mogelijk.
+Heel wat REST API's die je online vindt, gaan er vanuit dat de invoer altijd correct is, geven totaal verkeerde foutmeldingen terug, of geven helemaal geen foutmeldingen. Dit is een bad practice! Een goede API geeft duidelijke foutmeldingen terug en valideert de invoer. Invoervalidatie is belangrijk voor de integriteit van de data en de veiligheid van de applicatie. Degelijke foutboodschappen helpen de gebruikers van de API om fouten te begrijpen en te corrigeren, indien mogelijk.
 
 In dit hoofdstuk voegen we o.a. invoervalidatie, request logging en foutafhandeling toe aan onze Koa applicatie. Dit maakt onze applicatie robuuster en veiliger.
 
@@ -339,60 +339,46 @@ Controleer of je een foutmelding krijgt als je toch invoer meegeeft bij het requ
 
 ## Request logging
 
-<!-- TODO: vanaf hier verder nalezen -->
+We voegen een extra middleware toe die elk binnenkomend request zal loggen. Dit helpt o.a. enorm bij het debuggen. We voegen onze middleware toe voor het toevoegen van de `bodyParser` middleware in `src/core/installMiddleware.ts`:
 
-We voegen een extra middleware toe die elk binnenkomend request zal loggen. Dit helpt enorm bij het debuggen. We installeren eerst een package om leuke emoji's te tonen in de console.
+```ts
+// src/core/installMiddleware.ts
+// ... (imports)
 
-```bash
-yarn add node-emoji@1.11.0
-```
+import { getLogger } from './logging'; // 👈 1
 
-We voegen vervolgens onze middleware toe voor het toevoegen van de `bodyParser` middleware in `src/core/installMiddleware.js`:
-
-```js
-const emoji = require('node-emoji'); // 👈 1
-const { getLogger } = require('./logging'); // 👈 1
 // ...
 
-// 👇 1
+// 👇 2
 app.use(async (ctx, next) => {
-  getLogger().info(`${emoji.get('fast_forward')} ${ctx.method} ${ctx.url}`); // 👈 3
+  // 👇 3
+  getLogger().info(`⏩ ${ctx.method} ${ctx.url}`);
 
   // 👇 4
   const getStatusEmoji = () => {
-    if (ctx.status >= 500) return emoji.get('skull');
-    if (ctx.status >= 400) return emoji.get('x');
-    if (ctx.status >= 300) return emoji.get('rocket');
-    if (ctx.status >= 200) return emoji.get('white_check_mark');
-    return emoji.get('rewind');
+    if (ctx.status >= 500) return '💀';
+    if (ctx.status >= 400) return '❌';
+    if (ctx.status >= 300) return '🔀';
+    if (ctx.status >= 200) return '✅';
+    return '🔄';
   };
 
+  // 👇 5
+  await next();
+
   // 👇 6
-  try {
-    await next(); // 👈 5
-
-    getLogger().info(
-      `${getStatusEmoji()} ${ctx.method} ${ctx.status} ${ctx.url}`,
-    ); // 👈 5
-  } catch (error) {
-    getLogger().error(
-      `${emoji.get('x')} ${ctx.method} ${ctx.status} ${ctx.url}`,
-      {
-        error,
-      },
-    );
-
-    throw error;
-  }
+  getLogger().info(
+    `${getStatusEmoji()} ${ctx.method} ${ctx.status} ${ctx.url}`,
+  );
 });
 
 app.use(bodyParser());
 // ...
 ```
 
-1. Voeg deze middleware toe net voor de de installatie van de bodyParser middleware.
-2. Importeer `node-emoji` en de getter van onze logger.
-3. We loggen alvast wanneer het request binnen komt. In Koa kan een request soms "uitsterven" door foutieve async/await, errors die "opgegeten" worden... Dan is het altijd handig om te weten of het request effectief binnen kwam of niet.
+1. Importeer de getter van onze logger.
+2. Voeg deze middleware toe net voor de de installatie van de bodyParser middleware.
+3. We loggen alvast wanneer het request binnen komt. In Koa kan een request soms "uitsterven" door foutief gebruik van async/await, errors die "opgegeten" worden... Dan is het altijd handig om te weten of het request effectief binnen kwam of niet.
 4. We definiëren een inline functie om de juiste emoji te krijgen afhankelijk van de HTTP status code van het response.
 5. We wachten de request afhandeling af en loggen het resultaat.
 6. We voegen een try/catch toe om eventuele fouten tijdens de request afhandeling op te vangen. Indien er een error was, dan loggen we die ook. Gooi zeker de error opnieuw: deze middleware handelt hem niet af.
@@ -402,65 +388,110 @@ app.use(bodyParser());
 
 ### ServiceError
 
-We definiëren een klasse (de enige in deze cursus) die een error uit de servicelaag voorstelt. Het is een bad practice om in de servicelaag een HTTP status code in een error te schrijven. Daarmee forceer je de applicatie richting HTTP (en dus REST), terwijl ook perfect GraphQL, gRPC of tRPC kan draaien bovenop de servicelaag.
+We definiëren een klasse (de enige in deze cursus) die een error uit de servicelaag voorstelt. Het is een bad practice om in de servicelaag een HTTP status code in een error te schrijven. Daarmee forceer je de applicatie richting HTTP (en dus REST), terwijl ook perfect GraphQL, gRPC, tRPC of iets anders kan draaien bovenop de servicelaag.
 
-We definiëren deze klasse in `src/core/serviceError.js`:
+We definiëren deze klasse in `src/core/serviceError.ts`:
 
-```js
-const NOT_FOUND = 'NOT_FOUND'; // 👈 2
-const VALIDATION_FAILED = 'VALIDATION_FAILED'; // 👈 2
+```ts
+// src/core/serviceError.ts
+
+// 👇 2
+const NOT_FOUND = 'NOT_FOUND';
+const VALIDATION_FAILED = 'VALIDATION_FAILED';
+const UNAUTHORIZED = 'UNAUTHORIZED';
+const FORBIDDEN = 'FORBIDDEN';
+const INTERNAL_SERVER_ERROR = 'INTERNAL_SERVER_ERROR';
+const CONFLICT = 'CONFLICT';
 
 // 👇 1
-class ServiceError extends Error {
+export default class ServiceError extends Error {
   // 👇 3
-  constructor(code, message, details = {}) {
+  code: string;
+
+  // 👇 3
+  constructor(code: string, message: string) {
     super(message);
     this.code = code;
-    this.details = details;
     this.name = 'ServiceError';
   }
 
-  // 👇 5
-  static notFound(message, details) {
-    return new ServiceError(NOT_FOUND, message, details);
-  }
-
-  // 👇 5
-  static validationFailed(message, details) {
-    return new ServiceError(VALIDATION_FAILED, message, details);
-  }
-
   // 👇 4
-  get isNotFound() {
+  static notFound(message: string) {
+    return new ServiceError(NOT_FOUND, message);
+  }
+
+  static validationFailed(message: string) {
+    return new ServiceError(VALIDATION_FAILED, message);
+  }
+
+  static unauthorized(message: string) {
+    return new ServiceError(UNAUTHORIZED, message);
+  }
+
+  static forbidden(message: string) {
+    return new ServiceError(FORBIDDEN, message);
+  }
+
+  static internalServerError(message: string) {
+    return new ServiceError(INTERNAL_SERVER_ERROR, message);
+  }
+
+  static conflict(message: string) {
+    return new ServiceError(CONFLICT, message);
+  }
+
+  // 👇 5
+  get isNotFound(): boolean {
     return this.code === NOT_FOUND;
   }
 
-  // 👇 4
-  get isValidationFailed() {
+  get isValidationFailed(): boolean {
     return this.code === VALIDATION_FAILED;
   }
-}
 
-module.exports = ServiceError;
+  get isUnauthorized(): boolean {
+    return this.code === UNAUTHORIZED;
+  }
+
+  get isForbidden(): boolean {
+    return this.code === FORBIDDEN;
+  }
+
+  get isInternalServerError(): boolean {
+    return this.code === INTERNAL_SERVER_ERROR;
+  }
+
+  get isConflict(): boolean {
+    return this.code === CONFLICT;
+  }
+}
 ```
 
 1. Definieer de klasse ServiceError.
 2. Definieer een aantal constante strings die alle mogelijke errors voorstellen.
    - Je zou ook specifieke errors kunnen definiëren, bv. `PLACE_NOT_FOUND` of `TRANSACTION_NOT_FOUND`. In dit geval laat je deze constanten weg en gebruik je gewoon de constructor met de string als parameter.
-3. Definieer een constructor die een foutcode, bericht en eventuele details meekrijgt.
-4. Daarnaast voorzien we enkele getters om te kijken welk type fout opgetreden is.
-5. En enkele statische methodes om een specifieke fout te gooien.
+   - We voegen volgende foutcodes toe:
+     - `NOT_FOUND`: een resource wordt niet gevonden wordt.
+     - `VALIDATION_FAILED`: de client geeft foutieve invoer
+     - `UNAUTHORIZED`: een gebruiker is niet aangemeld voor een resource waarvoor je aangemeld moet zijn (zie volgend hoofdstuk).
+     - `FORBIDDEN`: een gebruiker heeft onvoldoende rechten voor een bepaalde resource (zie volgend hoofdstuk).
+     - `INTERNAL_SERVER_ERROR`: een onverwachte fout is opgetreden.
+     - `CONFLICT`: de gebruiker voert een actie uit die niet toegelaten is (bv. een plaats verwijderen als hieraan nog transacties gekoppeld zijn).
+3. Definieer een constructor die een foutcode en een bericht meekrijgt. Het bericht geven we door aan onze ouder, de foutcode houden we in onze klasse bij.
+4. Daarnaast voorzien we enkele statische methodes om een specifieke fout te gooien.
+5. En enkele getters om te kijken welk type fout opgetreden is.
 
 ### Middleware
 
-We voegen een extra middleware toe om fouten af te handelen. Voeg dit als laatste middleware toe in `src/core/installMiddleware.js`:
+We voegen een extra middleware toe om fouten af te handelen. Voeg deze als laatste middleware toe in `src/core/installMiddleware.ts`:
 
-```js
-// imports
-const ServiceError = require('./serviceError'); // 👈 1
+```ts
+// src/core/installMiddleware.ts
 
-// config
-const NODE_ENV = config.get('env'); // 👈 2
+// ... (imports)
+import ServiceError from './serviceError'; // 👈 1
+
+const NODE_ENV = config.get<string>('env'); // 👈 2
 
 // ...
 
@@ -468,19 +499,25 @@ const NODE_ENV = config.get('env'); // 👈 2
 app.use(async (ctx, next) => {
   try {
     await next(); // 👈 4
-  } catch (error) {
-    getLogger().error('Error occured while handling a request', { error }); // 👈 5
-    let statusCode = error.status || 500; // 👈 6
-    let errorBody = {
-      // 👈 6
+  } catch (error: any) {
+    // 👇 5
+    getLogger().error('Error occured while handling a request', { error });
+
+    // 👇 6
+    let statusCode = error.status || 500;
+    const errorBody = {
       code: error.code || 'INTERNAL_SERVER_ERROR',
-      message: error.message,
-      details: error.details || {},
+      // Do not expose the error message in production
+      message:
+        error.message || 'Unexpected error occurred. Please try again later.',
+      details: error.details,
       stack: NODE_ENV !== 'production' ? error.stack : undefined,
     };
 
     // 👇 7
     if (error instanceof ServiceError) {
+      errorBody.message = error.message;
+
       if (error.isNotFound) {
         statusCode = 404;
       }
@@ -488,15 +525,27 @@ app.use(async (ctx, next) => {
       if (error.isValidationFailed) {
         statusCode = 400;
       }
+
+      if (error.isUnauthorized) {
+        statusCode = 401;
+      }
+
+      if (error.isForbidden) {
+        statusCode = 403;
+      }
+
+      if (error.isConflict) {
+        statusCode = 409;
+      }
     }
 
-    ctx.status = statusCode; // 👈 8
-    ctx.body = errorBody; // 👈 8
+    // 👇 8
+    ctx.status = statusCode;
+    ctx.body = errorBody;
   }
 });
 
 // 👇 9
-// Handle 404 not found with uniform response
 app.use(async (ctx, next) => {
   await next();
 
@@ -514,9 +563,9 @@ app.use(async (ctx, next) => {
 2. Haal de `NODE_ENV` op uit de config.
 3. Voeg een stukje middleware toe.
 4. Definiëren een try/catch en laat het request gewoon doorgaan. We willen enkel een mogelijke error opvangen.
-5. Log alvast de error die opgetreden is. Een standaard JavaScript error wordt niet goed geprint op de console, onze logger kan hier wel goed mee omgaan.
-   - Check in `src/core/logging.js` maar eens waarom dit zo is.
-6. Vervolgens maken we reeds onze response body op. Voorlopig nemen we de status uit de Koa context of standaard 500. We retourneren ook enkel de stack in de body als we niet in productie draaien (om security redenen).
+5. Log alvast de error die opgetreden is. We gebruiken hier `any` als type omdat we niet zeker weten welke fout opgetreden is. Een standaard JavaScript error wordt niet goed geprint op de console, onze logger kan hier wel goed mee omgaan.
+   - Check in `src/core/logging.ts` maar eens waarom dit zo is.
+6. Vervolgens maken we reeds onze response body op. Voorlopig nemen we de status uit de Koa context of standaard 500. We retourneren ook enkel de stack in de body als we niet in productie draaien (om veiligheidsredenen).
 7. Vervolgens updaten we de status als de opgetreden error een `ServiceError` is en we kennen de error.
 8. Als laatste stellen we de `status` en `body` van het response in.
 9. Het enige geval waarbij we nog geen mooi error response hebben is een 404 van de Koa router. Dit vangen we op deze manier op.
@@ -524,6 +573,8 @@ app.use(async (ctx, next) => {
 > 💡 Tip: kijk eens wat een mooi response we krijgen als we verkeerde invoer geven 🤩
 
 ### ServiceError gebruiken
+
+<!-- TODO: voorbeeld geven van CONFLICT in handleDBError -->
 
 Nu moeten we enkel nog onze eigen `ServiceError` gebruiken in de servicelaag. We dienen alle errors op te vangen en om te vormen naar een `ServiceError`.
 
@@ -533,119 +584,167 @@ Als we een record toevoegen aan de database, dan kan er van alles foutlopen:
 - niet voldaan aan de referentiële integriteit
 - ...
 
-Hiervoor maken we eerst een aparte functie `handleDBError`, zodat we deze binnen de verschillende modules kan gebruikt worden. Maak hiervoor een bestand `_handleDBError.js` aan in de `src/service` map. We starten dit bestand met underscore aangezien dit bestand nergens anders nodig is, dat is een conventie.
+Hiervoor maken we eerst een aparte functie `handleDBError`, zodat we deze binnen de verschillende modules kan gebruikt worden. Maak hiervoor een bestand `_handleDBError.ts` aan in de `src/service` map. We starten dit bestand met underscore aangezien dit bestand nergens anders nodig is, dat is een conventie.
 
-```js
-const ServiceError = require('../core/serviceError'); // 👈 2
+```ts
+import ServiceError from '../core/serviceError'; // 👈 2
 
 // 👇 1
-const handleDBError = (error) => {
-  const { code = '', sqlMessage } = error; // 👈 3
+const handleDBError = (error: any) => {
+  // 👇 3
+  const { code = '', message } = error;
 
-  // 👇 4
-  if (code === 'ER_DUP_ENTRY') {
+  if (code === 'P2002') {
     switch (true) {
-      case sqlMessage.includes('idx_place_name_unique'):
-        return ServiceError.validationFailed(
+      case message.includes('idx_place_name_unique'):
+        throw ServiceError.validationFailed(
           'A place with this name already exists',
         );
-      case sqlMessage.includes('idx_user_email_unique'):
-        return ServiceError.validationFailed(
+      case message.includes('idx_user_email_unique'):
+        throw ServiceError.validationFailed(
           'There is already a user with this email address',
         );
       default:
-        return ServiceError.validationFailed('This item already exists');
+        throw ServiceError.validationFailed('This item already exists');
     }
   }
 
-  // 👇 4
-  if (code.startsWith('ER_NO_REFERENCED_ROW')) {
+  if (code === 'P2025') {
     switch (true) {
-      case sqlMessage.includes('fk_transaction_user'):
-        return ServiceError.notFound('This user does not exist');
-      case sqlMessage.includes('fk_transaction_place'):
-        return ServiceError.notFound('This place does not exist');
+      case message.includes('fk_transaction_user'):
+        throw ServiceError.notFound('This user does not exist');
+      case message.includes('fk_transaction_place'):
+        throw ServiceError.notFound('This place does not exist');
+      case message.includes('transaction'):
+        throw ServiceError.notFound('No transaction with this id exists');
+      case message.includes('place'):
+        throw ServiceError.notFound('No place with this id exists');
+      case message.includes('user'):
+        throw ServiceError.notFound('No user with this id exists');
     }
   }
 
-  // Return error because we don't know what happened
-  return error;
+  if (code === 'P2003') {
+    switch (true) {
+      case message.includes('place_id'):
+        throw ServiceError.conflict(
+          'This place is still linked to transactions',
+        );
+      case message.includes('user_id'):
+        throw ServiceError.conflict(
+          'This user is still linked to transactions',
+        );
+    }
+  }
+
+  // Rethrow error because we don't know what happened
+  throw error;
 };
 
-module.exports = handleDBError; // 👈 1
+export default handleDBError; // 👈 1
 ```
 
 1. Creëer een functie die gegeven een database error een `ServiceError` gooit en exporteer deze.
 2. Importeer de `ServiceError`.
 3. Haal de nodige properties uit de fout.
-4. Afhankelijk van de `sqlMessage`, bepaald door de unique index of de gedefinieerde relaties, gooien we de juiste `ServiceError`.
+4. Afhankelijk van de `code`, bepaald door de unique index of de gedefinieerde relaties, gooien we de juiste `ServiceError`.
    - We gebruiken hiervoor een `switch(true)`. Dat lijkt misschien vreemd maar is een veelgebruikte techniek bij meerdere voorwaarden. Je zou ook meerdere if/else statements kunnen gebruiken.
+   - De codes krijgen we van MySQL en betekenen het volgende:
+     - `P2002`: er werd een unique constraint geschonden.
+     - `P2025`: er werd niet voldaan aan referentiële integriteit, het gevraagde record bestaat dus niet.
+     - `P2003`: er werd geprobeerd om een entiteit te verwijderen die nog een relatie heeft met een andere entiteit.
 
-Pas dan de servicelaag aan, zodat deze nu gebruik maakt van onze eigen `ServiceError` voor het afhandelen van fouten.
+Pas vervolgens de servicelaag aan, zodat deze nu gebruik maakt van onze eigen `ServiceError` voor het afhandelen van fouten.
 
-We geven een voorbeeld voor `src/service/transaction.js`:
+We geven een voorbeeld voor `src/service/transaction.ts`:
 
-```js
-const ServiceError = require('../core/serviceError'); // 👈 1
-const handleDBError = require('./_handleDBError'); // 👈 1
+```ts
+// src/service/transaction.ts
 
-//...
-const getById = async (id, userId) => {
-  const transaction = await transactionRepository.findById(id);
+// ... (imports)
+import ServiceError from '../core/serviceError'; // 👈 1
+import handleDBError from './_handleDBError'; // 👈 1
 
-  if (!transaction || transaction.user.id !== userId) {
-    // throw new Error(`There is no transaction with id ${id}`); // 👈 2
-    throw ServiceError.notFound(`No transaction with id ${id} exists`, { id }); // 👈 2
+// ...
+// 👇 2
+export const getById = async (id: number): Promise<Transaction> => {
+  const transaction = await prisma.transaction.findUnique({
+    where: {
+      id,
+    },
+    select: TRANSACTION_SELECT,
+  });
+
+  // 👇 3
+  if (!transaction) {
+    throw ServiceError.notFound('No transaction with this id exists');
   }
 
   return transaction;
 };
 
-const create = async ({ amount, date, placeId, userId }) => {
-  const existingPlace = await placeService.getById(placeId);
-
-  if (!existingPlace) {
-    throw ServiceError.notFound(`There is no place with id ${id}.`, { id }); // 👈 3
-  }
-
+export const create = async ({
+  amount,
+  date,
+  placeId,
+  userId,
+}: TransactionCreateInput): Promise<Transaction> => {
+  // 👇 4
   try {
-    const id = await transactionRepository.create({
-      amount,
-      date,
-      userId,
-      placeId,
+    return prisma.transaction.create({
+      data: {
+        amount,
+        date,
+        user_id: userId,
+        place_id: placeId,
+      },
+      select: TRANSACTION_SELECT,
     });
-
-    return getById(id, userId);
-  } catch (error) {
-    throw handleDBError(error); // 👈 4
+  } catch (error: any) {
+    // 👇 5
+    throw handleDBError(error);
   }
 };
-//...
+// ...
 ```
 
 1. Importeer `ServiceError` en `handleDBError`.
-2. Vervang elke `Error` door de juiste `ServiceError` zoals bij de `getById`. Bekijk het response wanneer je een onbestaande transactie opvraagt. In dit geval geven we het `id` mee aan de details, dat is niet verplicht maar simpel als voorbeeld.
-3. Gooi een `ServiceError.notFound` als de plaats niet bestaat in de `create` method.
-4. Als de create van een transactie mislukt, proberen we de fout om te zetten naar een `ServiceError` of gooien we de fout opnieuw.
+2. We verwijderen de `null` uit onze returnwaarde. De `getById` functie retourneert nu altijd een transactie of gooit een fout als die niet bestaat.
+3. Als we geen transactie terugkregen, dan gooien we de gepaste `ServiceErrror`.
+4. We hebben geen check meer nodig of de plaats bestaat, de databank doet dit voor ons. We wrappen de `create` functie in een try/catch.
+5. We vangen een foutmelding op en geven deze door aan `handleDBError`. Deze functie vormt de error om, indien gekend, of retourneert dezelfde fout. De returnwaarde van deze functie wordt opnieuw gegooid.
+   - Onze [error handler](#middleware) (zie hierboven) zal de fout opvangen en een mooi response teruggeven.
+
+## Query parameter validatie
+
+Als laatste werken we onze `validate` functie af met query parameter validatie:
+
+```ts
+// src/core/validation.ts
+
+// ...
+
+const { error: queryErrors, value: queryValue } = parsedSchema.query.validate(
+  ctx.query,
+  JOI_OPTIONS,
+);
+
+if (queryErrors) {
+  errors.set('query', cleanupJoiError(queryErrors));
+} else {
+  ctx.query = queryValue;
+}
+```
 
 ## Integratietesten
 
-- Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget/) en bekijk de `validate`-functie. Deze werd aangepast om ook query parameters te valideren.
-- Ook voor de overige endpoints werd een validatieschema toegevoegd.
+<!-- TODO: commit updaten -->
+
+Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget/) en bekijk de code:
+
+- Voor de overige endpoints werd een validatieschema toegevoegd.
   - **Let op:** voorzie ook validatie voor requests die geen invoer verwachten!
 - Integratietesten werden toegevoegd om te checken op invoervalidatie.
-
-## Oefening 2 - Je eigen project
-
-Werk aan je eigen project:
-
-- Maak gebruik van invoervalidatie voor alle endpoints en voeg de `validate`-functie toe.
-- Voeg de request logging middleware toe.
-- Voeg foutafhandeling toe.
-- Voeg de testen toe.
-
-> 💡 Tip: als extra functionaliteit kan je een andere validatie library of middleware gebruiken.
 
 ## Koa Helmet
 
@@ -668,23 +767,30 @@ Installeer koa-helmet:
 yarn add koa-helmet
 ```
 
-Pas `src/core/installMiddleware.js` en installeer koa-helmet in de middleware pipeline:
+Pas `src/core/installMiddleware.ts` en installeer koa-helmet in de middleware pipeline:
 
-```js
-const koaHelmet = require('koa-helmet');
+```ts
+// src/core/installMiddleware.ts
+// ... (imports)
+import koaHelmet from 'koa-helmet'; // 👈
 
 // ...
 
-// Add the body parser
 app.use(bodyParser());
 
-// Add some security headers
-app.use(koaHelmet());
+app.use(koaHelmet()); // 👈
 
-// Add CORS
 // ...
 ```
 
 ### Oefening 4 - Je eigen project
 
-Voeg Koa Helmet toe aan je eigen project.
+Werk aan je eigen project:
+
+- Maak gebruik van invoervalidatie voor alle endpoints en voeg de `validate`-functie toe.
+- Voeg de request logging middleware toe.
+- Voeg foutafhandeling toe.
+- Voeg de testen toe.
+- Voeg Koa Helmet toe.
+
+> 💡 Tip: als extra functionaliteit kan je een andere validatie library of middleware gebruiken. Zorg er wel voor dat deze library minstens ondersteuning heeft voor validatie van URL parameters, query parameters en request body.
