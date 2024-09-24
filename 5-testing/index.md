@@ -500,7 +500,7 @@ describe('Transactions', () => {
 
 We breiden de test uit om te controleren of de juiste transacties worden opgehaald:
 
-```js
+```ts
 it('should 200 and should return all transactions', async () => {
   const response = await request.get(url);
   expect(response.status).toBe(200);
