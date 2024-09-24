@@ -2,8 +2,6 @@
 
 <!-- TODO: startpunt en oplossing toevoegen -->
 
-<!-- TODO: ESLint plugin voor jest toevoegen -->
-
 ## Soorten testen
 
 We onderscheiden 3 soorten testen:
@@ -116,6 +114,32 @@ We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons
 ```
 
 We gebruiken hier ook de `runInBand` optie van Jest zodat onze testen niet parallel worden uitgevoerd. Dit zorgt er o.a. voor dat het werken met testdata iets eenvoudiger is.
+
+### Linting configuratie
+
+Alvorens we aan de slag gaan, configureren we ook de ESLint plugin voor Jest. Installeer de plugin:
+
+```bash
+yarn add --dev eslint-plugin-jest
+```
+
+En voeg de plugin toe aan de ESLint configuratie:
+
+```js
+// eslint.config.mjs
+// ... (imports)
+import jest from 'eslint-plugin-jest';
+
+export default tseslint.config(
+  // ...
+  {
+    files: ['**/*.spec.ts'],
+    plugins: { jest },
+  },
+);
+```
+
+We linten hierbij enkel de testbestanden, omdat we enkel daar Jest gebruiken.
 
 ## Refactoring
 
