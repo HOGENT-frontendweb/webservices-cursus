@@ -399,7 +399,7 @@ main()
 
 1. We importeren de Prisma client en maken een instantie aan.
 2. We definieren een `main` functie die de seeding zal uitvoeren. We seeden eerst de gebruikers, dan de plaatsen en tenslotte de transacties.
-   - We maken hier gebruik van de Prisma client. Deze heeft één property per tabel, in dit geval `user`, `place` en `transaction`. Deze properties hebben methodes zoals `createMany` om meerdere records toe te voegen.
+   - We maken hier gebruik van de Prisma client. Deze heeft één property per tabel, in dit geval `user`, `place` en `transaction`. Deze properties hebben functies zoals `createMany` om meerdere records toe te voegen.
    - Je zal merken dat Prisma suggesties geeft voor de velden die je kan invullen. Dit is de IntelliSense die we eerder vermeld hebben.
 3. We roepen de `main` functie aan en sluiten de connectie met de databank af na het uitvoeren van de seeding of bij een fout.
 
