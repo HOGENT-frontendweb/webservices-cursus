@@ -178,6 +178,8 @@ export default validate; // 👈 2
     - `RequestValidationSchemeInput`: een object met optionele properties `params`, `body` en `query` die een `SchemaLike` object bevatten. `SchemaLike` is een type dat een schema kan zijn, Joi is in staat om van diverse types een schema te maken (bv. string, number, object...).
     - `RequestValidationScheme`: een object met properties `params`, `body` en `query` die een `Schema` object bevatten.
 
+!> **Merk op:** Je moet **overal** validatie toevoegen, ook al verwacht je geen invoer. Je denkt misschien dat het overbodig is om hard te valideren dat er niets meegegeven wordt, maar het is een belangrijk principe in het kader van bv. veiligheid.
+
 #### Errors formatteren
 
 De Joi validatie geeft een `ValidationError` terug. Deze bevat een `details` property met een array van alle fouten. We willen deze fouten formatteren zodat we mooi per type parameter de fouten kunnen groeperen. Voeg volgende code toe in: `src/core/validation.ts`
