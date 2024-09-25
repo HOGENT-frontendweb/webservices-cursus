@@ -42,6 +42,8 @@ Om testen te kunnen maken heb je nood aan een test library en een test runner. B
 - [Vitest](https://vitest.dev/)
 - ...
 
+Node.js heeft tegenwoordig ook een [ingebouwde test runner](https://nodejs.org/api/test.html), maar deze is nog steeds experimenteel en momenteel nog beperkt op het gebied van coverage.
+
 ## Integratietesten
 
 In deze cursus focussen we ons op integratietesten. We schrijven hier integratietesten om te testen of de verschillende onderdelen van onze applicatie goed samenwerken (bv. validatie, authenticatie...). We gebruiken hiervoor [Jest](https://jestjs.io/), een populaire test library voor JavaScript. Jest is een te groot framework om volledig in detail te behandelen, dus we beperken ons tot wat wij specifiek nodig hebben. Zoals elke developer, moet jij in staat zijn om zelfstandig een nieuwe functionaliteit op te zoeken en te leren gebruiken.
