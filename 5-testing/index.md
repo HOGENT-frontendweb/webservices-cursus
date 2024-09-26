@@ -53,7 +53,7 @@ Om integratietesten uit te voeren, heb je een draaiende server nodig. Dat is nie
 We installeren eerst de nodige dependencies:
 
 ```bash
-yarn add --dev jest supertest env-cmd
+yarn add --dev jest supertest env-cmd ts-node ts-jest @types/jest @types/supertest
 ```
 
 - [**jest**](https://jestjs.io/): de test library en test runner
@@ -61,6 +61,10 @@ yarn add --dev jest supertest env-cmd
   - wij gaan dit enkel gebruiken om HTTP requests te kunnen sturen zonder een echte server te moeten opzetten
   - we gebruiken de in Jest ingebouwde functionaliteiten om het response te testen
 - [**env-cmd**](https://www.npmjs.com/package/env-cmd): een library om environment variabelen in te laden vanuit een bestand
+- [**ts-node**](https://www.npmjs.com/package/ts-node): een library voor jit compilatie van de typescript test bestanden
+- [**ts-jest**](https://www.npmjs.com/package/ts-jest): Typescript preprocessor voor Jest
+- @types/jest: types voor Jest global
+- @types/supertest: types voor supertest
 
 ### Configuratie
 
@@ -72,6 +76,8 @@ DATABASE_URL=mysql://root:root@localhost:3306/budget_test
 ```
 
 Later gebruiken we dit bestand om ervoor te zorgen dat het juiste configuratiebestand wordt ingeladen.
+
+Maak alvast de database budget_test aan via migrations.
 
 We laten Jest een leeg configuratiebestand aanmaken:
 
@@ -101,6 +107,13 @@ Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests_
 ```
 
 Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Zonder deze aanpassing probeert Jest ook ons configuratiebestand `test.ts` uit te voeren.
+
+Met de `preset` instelling zorgen we ervoor dat de ts bestanden getranspiled worden met `ts-jest`.
+
+```ts
+{
+  preset: 'ts-jest',
+}
 
 Je kan ervoor opteren om unit testen te maken voor bv. de servicelaag. In dat geval maak je een map `__tests__` aan in de `src/service` map en plaats je daar je unit testen in. We plaatsen onze testen in een map `__tests__` in de root map van onze applicatie, want het zijn integratietesten voor de hele applicatie.
 
@@ -141,7 +154,7 @@ export default tseslint.config(
 );
 ```
 
-We linten hierbij enkel de testbestanden, omdat we enkel daar Jest gebruiken.
+We linten hierbij enkel de testbestanden, omdat we enkel daar Jest gebruiken. Voeg dit onderaan toe.
 
 ## Refactoring
 
@@ -159,12 +172,12 @@ Maak een nieuw bestand `src/core/installMiddlewares.ts`. Maak en exporteer een f
 import config from 'config';
 import bodyParser from 'koa-bodyparser';
 import koaCors from '@koa/cors';
-import type { KoaApplication } from '../types';
+import type { KoaApplication } from '../types/koa';
 
 const CORS_ORIGINS = config.get<string[]>('cors.origins');
 const CORS_MAX_AGE = config.get<number>('cors.maxAge');
 
-export default function installMiddleware(app: KoaApplication) {
+export default function installMiddlewares(app: KoaApplication) {
   app.use(
     koaCors({
       origin: (ctx) => {
@@ -206,13 +219,13 @@ We hernoemen `src/index.ts` naar `src/createServer.ts`.
 
 ```ts
 // src/createServer.ts
-import config from 'config';
 import Koa from 'koa';
 
 import { getLogger } from './core/logging';
 import { initializeData, shutdownData } from './data';
 import installMiddlewares from './core/installMiddlewares';
 import installRest from './rest';
+import type { KoaApplication, BudgetAppContext, BudgetAppState } from './types/koa';
 
 // 👇 1
 export interface Server {
@@ -225,7 +238,7 @@ export interface Server {
 export default async function createServer(): Promise<Server> {
   const app = new Koa<BudgetAppState, BudgetAppContext>();
 
-  installMiddleware(app);
+  installMiddlewares(app);
   await initializeData();
   installRest(app);
 
@@ -303,23 +316,6 @@ main(); // 👈 2
 7. We registreren deze functie als handler voor de `SIGTERM` en `SIGQUIT` events. Deze events worden getriggerd als de applicatie wordt gestopt (bv. door Jest).
 8. Het is belangrijk om de applicatie zelf ook expliciet te stoppen met een exit code `0`. Dit wordt niet meer automatisch gedaan als je een handler registreert voor `SIGTERM` en `SIGQUIT`.
 
-Als laatste voegen we een `shutdownData` functie toe aan `src/data/index.ts` en exporteren deze ook:
-
-```ts
-// src/data/index.ts
-// ...
-
-export async function shutdownData(): Promise<void> {
-  getLogger().info('Shutting down database connection');
-
-  await prisma?.$disconnect();
-
-  getLogger().info('Database connection closed');
-}
-```
-
-Deze functie sluit de connectie met de databank.
-
 Door deze refactoring kunnen we onze server gebruiken in onze testen zonder dat we deze hoeven op te starten. Zonder deze refactoring zouden we twee terminals nodig hebben: één om de server te starten en één om de testen uit te voeren. Dit zou ook onhandig zijn in CI/CD pipelines.
 
 ## Integratietesten schrijven
@@ -337,17 +333,18 @@ Jest voorziet een aantal globale functies die je kan gebruiken in je testen. De 
 
 #### De opzet
 
-Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een bestand `transactions.spec.ts` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
+Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een folder rest met een bestand `transactions.spec.ts` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
 
 ```ts
-import supertest from 'supertest'; // 👈 1
+import supertest from 'supertest'; // 👈 3
 import createServer from '../../src/createServer'; // 👈 1
+import type { Server } from '../../src/createServer'; // 👈 3
 
 // 👇 2
 describe('Transactions', () => {
   // 👇 3
-  let server;
-  let request;
+  let server: Server;
+  let request : supertest.Agent;
 
   // 👇 4
   beforeAll(async () => {
@@ -468,9 +465,9 @@ describe('Transactions', () => {
   describe('GET /api/transactions', () => {
     // 👇 2
     beforeAll(async () => {
-      await prisma.place.create(data.places);
-      await prisma.user.create(data.users);
-      await prisma.transaction.create(data.transactions);
+      await prisma.place.createMany({data:data.places});
+      await prisma.user.createMany({data:data.users});
+      await prisma.transaction.createMany({data:data.transactions});
     });
 
     // 👇 3
@@ -496,7 +493,7 @@ describe('Transactions', () => {
 ```
 
 1. We importeren `prisma` zodat we de data kunnen toevoegen en verwijderen.
-2. We gebruiken de `beforeAll` functie om de testdata toe te voegen aan de databank voor alle testen uit deze test suite uitgevoerd worden. We gebruiken de `create` functie van Prisma om de data toe te voegen.
+2. We gebruiken de `beforeAll` functie om de testdata toe te voegen aan de databank voor alle testen uit deze test suite uitgevoerd worden. We gebruiken de `createMany` functie van Prisma om de data toe te voegen.
 3. De data moet ook verwijderd worden na alle testen. We gebruiken de `afterAll` functie om dit te doen nadat alle testen uit deze test suite uitgevoerd zijn. We gebruiken de `deleteMany` functie van Prisma om de data te verwijderen. We verwijderen enkel de data die we hebben toegevoegd.
 4. Controleer nu of het aantal opgehaalde transacties het verwachte aantal is.
 
