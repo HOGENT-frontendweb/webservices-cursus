@@ -819,7 +819,7 @@ register.validationScheme = {
 
 module.exports = function installUsersRoutes(app) {
   // ...
-  router.post('/register', validate(register.validationScheme), register); // 👈 4
+  router.post('/', validate(register.validationScheme), register); // 👈 4
   // ...
 };
 ```
@@ -827,7 +827,8 @@ module.exports = function installUsersRoutes(app) {
 1. We registreren de nieuwe gebruiker (alle informatie zit in de HTTP body). We krijgen de token-informatie en publieke user informatie terug.
 2. We retourneren deze token-informatie en publieke user informatie in de HTTP response body, evenals een statuscode 200.
 3. We voorzien ook een validatieschema voor de input. We vereisen een wachtwoord van minimum 12 karakters en maximum 128 karakters.
-4. We geven deze functie mee aan de POST op `/register` en doen ook de invoervalidatie.
+4. We geven deze functie mee aan de POST op `/api/users` en doen ook de invoervalidatie.
+   - Merk op: we gebruiken niet `POST /api/users/register` omdat dit geen RESTful route is. Je mag nl. geen werkwoorden of acties in je URL's steken.
 
 ## Helpers voor authenticatie/autorisatie
 
