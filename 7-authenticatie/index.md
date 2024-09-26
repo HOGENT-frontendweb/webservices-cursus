@@ -100,8 +100,6 @@ export interface UserRecord {
 }
 ```
 
-<!-- TODO: PublicUser, requests en responses toevoegen -->
-
 1. We voegen `email`, `passwordHash` en `roles` toe aan de `User` interface.
 2. We definiëren ook een interface die een record van een gebruiker voorstelt. Deze interface hebben we nodig omdat onze JWT helpers zullen werken met de raw data uit de databank.
    - Later zal je zien dat we nooit de volledige `User` interface zullen teruggeven. Die bevat nl. `passwordHash` en dat willen we niet zomaar teruggeven.
@@ -151,7 +149,7 @@ import type {
 } from 'jsonwebtoken'; // 👈 2
 import jwt from 'jsonwebtoken'; // 👈 2
 import util from 'node:util'; // 👈 3
-import type { UserRecord } from '../types';
+import type { UserRecord } from '../types/user';
 
 // 👇 1
 const JWT_AUDIENCE = config.get<string>('auth.jwt.audience');
@@ -505,7 +503,7 @@ En vervolgens passen we de user service aan. We hernoemen ook de `create` functi
 import type {
   // ...
   PublicUser, // 👈 1
-} from '../types';
+} from '../types/user';
 import { hashPassword } from '../core/password'; // 👈 3
 
 // 👇 1
@@ -648,7 +646,7 @@ We definiëren een functie `login` in `src/service/user.ts` die een gebruiker me
 import type {
   // ...
   LoginResponse, // 👈 1
-} from '../types';
+} from '../types/user';
 import { hashPassword, verifyPassword } from '../core/password'; // 👈 4
 import { generateJWT } from '../core/jwt'; // 👈 7
 
@@ -703,14 +701,15 @@ export const login = async (
 8. Vervolgens retourneren we de token en enkel de velden van de user die publiek zijn.
 9. Vergeet ook de `login` functie niet te exporteren.
 
-Vervolgens passen we de rest module voor alle routes m.b.t. de gebruikers aan (`src/rest/user.js`):
+Vervolgens passen we de rest module voor alle routes m.b.t. de gebruikers aan:
 
 ```ts
+// src/rest/user.ts
 // ... (imports)
 import type {
   // ...
   LoginRequest, // 👈 1
-} from '../types';
+} from '../types/user';
 
 // ...
 
@@ -761,12 +760,13 @@ Pas ook de overige functies in de user service aan:
 
 We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.ts` hebben we:
 
-```js
+```ts
 export const register = async ({
   name,
   email,
   password,
-}: RegisterUserRequest): Promise<LoginResponse> => { // 👈 1
+}: RegisterUserRequest): Promise<LoginResponse> => {
+  // 👈 1
   try {
     const passwordHash = await hashPassword(password);
 
@@ -777,11 +777,13 @@ export const register = async ({
         password_hash: passwordHash,
         roles: [Role.USER],
       },
-    })
+    });
 
     // 👇 2
     if (!user) {
-      throw ServiceError.internalServerError('An unexpected error occured when creating the user');
+      throw ServiceError.internalServerError(
+        'An unexpected error occured when creating the user',
+      );
     }
 
     return await makeLoginData(user); // 👈 1
@@ -827,216 +829,231 @@ module.exports = function installUsersRoutes(app) {
 3. We voorzien ook een validatieschema voor de input. We vereisen een wachtwoord van minimum 12 karakters en maximum 128 karakters.
 4. We geven deze functie mee aan de POST op `/register` en doen ook de invoervalidatie.
 
-<!-- TODO: hier verder nalezen -->
-
 ## Helpers voor authenticatie/autorisatie
 
-We definiëren een module `src/core/auth.js` die twee helpers exporteert. Beide helpers zijn middlewares voor Koa.
+We definiëren een module `src/core/auth.ts` die twee helpers exporteert.
 
-- De eerste helper dwingt af dat de gebruiker moet aangemeld zijn om een endpoint uit te voeren.
-- De tweede helper dwingt af dat de gebruiker de juiste rollen heeft om een endpoint uit te voeren.
+- De eerste helper dwingt af dat de gebruiker moet aangemeld zijn om een endpoint uit te voeren. Dit is een middleware.
+- De tweede helper dwingt af dat de gebruiker de juiste rollen heeft om een endpoint uit te voeren. Deze helper geeft een middleware terug (= currying).
 
-```js
-const userService = require('../service/user');
+```ts
+// src/core/auth.ts
+import type { Next } from 'koa'; // 👈 1
+import type { KoaContext } from '../types/koa'; // 👈 1
+import { userService } from '../service'; // 👈 1
 
 // 👇 1
-const requireAuthentication = async (ctx, next) => {
+export const requireAuthentication = async (ctx: KoaContext, next: Next) => {
   const { authorization } = ctx.headers; // 👈 3
 
-  // 👇 4
-  const { authToken, ...session } = await userService.checkAndParseSession(
-    authorization,
-  );
+  //  👇 4
+  ctx.state.session = await userService.checkAndParseSession(authorization);
 
-  ctx.state.session = session; // 👈 5
-  ctx.state.authToken = authToken; // 👈 6
-
-  return next(); // 👈 7
+  return next(); // 👈 5
 };
 
-// 👇 2
-const makeRequireRole = (role) => async (ctx, next) => {
-  const { roles = [] } = ctx.state.session; // 👈 8
+// 👇 6
+export const makeRequireRole =
+  (role: string) => async (ctx: KoaContext, next: Next) => {
+    const { roles = [] } = ctx.state.session; // 👈 7
 
-  userService.checkRole(role, roles); // 👈 9
-  return next(); // 👈 10
-};
+    userService.checkRole(role, roles); // 👈 8
 
-module.exports = {
-  requireAuthentication, // 👈 1
-  makeRequireRole, // 👈 2
-};
+    return next(); // 👈 9
+  };
 ```
 
-1. Een eerste helper dwingt af om aangemeld te zijn (= **authenticatie**).
-2. Een andere helper die een middleware opmaakt die een bepaalde rol afdwingt (= **autorisatie**).
+1. Importeer de nodige types voor de middleware, alsook de user service.
+2. Een eerste helper dwingt af om aangemeld te zijn (= **authenticatie**).
 3. We halen de `Authorization` header op.
-4. We laten de user service deze token verifiëren en parsen, en verwachten sessie-informatie terug. We implementeren deze functie later.
-5. We slaan de sessie-informatie op in de `state` van de huidige `context`. In de `ctx.state` kan je bijhouden wat je wil.
-6. We slaan ook de JWT op in `ctx.state`.
-7. We roepen de volgende middleware in de rij aan.
-8. We halen de rollen uit de sessie-informatie.
+4. We laten de user service deze token verifiëren en parsen, en verwachten sessie-informatie terug. We implementeren deze functie later. We slaan de sessie-informatie op in de `state` van de huidige `context`. In de `ctx.state` kan je bijhouden wat je wil.
+   - Later passen we het type van de `ctx.state` aan zodat we correcte typechecking hebben.
+5. We roepen de volgende middleware in de rij aan.
+6. Een andere helper maakt een middleware die een bepaalde rol afdwingt (= **autorisatie**).
+7. We halen de rollen uit de sessie-informatie.
    - **Merk op:** deze middleware vereist dat de `requireAuthentication` middleware reeds uitgevoerd is, let dus op de volgorde!!!
-9. We laten de user service checken of de aangemelde gebruiker de vereiste rol heeft. We implementeren deze functie ook later.
-10. Als laatste roepen we ook de volgende middleware in de rij aan.
+8. We laten de user service checken of de aangemelde gebruiker de vereiste rol heeft. We implementeren deze functie ook later.
+9. Als laatste roepen we ook de volgende middleware in de rij aan.
 
-We definiëren een eerste functie om een JWT te verifiëren en te parsen in `src/service/user.js`:
+Vervolgens definiëren we een nieuw type in `src/types/auth.ts`:
 
-```js
-const config = require('config'); // 👈 7
-const { getLogger } = require('../core/logging'); // 👈 4
-const { generateJWT, verifyJWT } = require('../core/jwt'); // 👈 5
+```ts
+export interface SessionInfo {
+  userId: number;
+  roles: string[];
+}
+```
 
-const checkAndParseSession = async (authHeader) => {
-  // 👇 1
+En passen we de `BudgetAppState` interface aan in `src/types/koa.ts`:
+
+```ts
+import type { SessionInfo } from './auth';
+
+export interface BudgetAppState {
+  session: SessionInfo;
+}
+```
+
+Daarna definiëren we in `src/service/user.ts` een eerste functie om een JWT te verifiëren en te parsen:
+
+```ts
+// src/service/user.ts
+import config from 'config'; // 👈 7
+import { getLogger } from '../core/logging'; // 👈 4
+import { generateJWT, verifyJWT } from '../core/jwt'; // 👈 5
+import type { SessionInfo } from '../types/auth'; // 👈 1
+
+// 👇 1
+export const checkAndParseSession = async (
+  authHeader?: string,
+): Promise<SessionInfo> => {
+  // 👇 2
   if (!authHeader) {
     throw ServiceError.unauthorized('You need to be signed in');
   }
 
-  // 👇 2
+  // 👇 3
   if (!authHeader.startsWith('Bearer ')) {
     throw ServiceError.unauthorized('Invalid authentication token');
   }
 
-  const authToken = authHeader.substring(7); // 👈 3
-  try {
-    const { roles, sub } = await verifyJWT(authToken); // 👈 5
+  // 👇 4
+  const authToken = authHeader.substring(7);
 
+  // 👇 5
+  try {
+    const { roles, sub } = await verifyJWT(authToken); // 👈 6
+
+    // 👇 7
     return {
       userId: Number(sub),
       roles,
-      authToken,
-    }; // 👈 6
-  } catch (error) {
+    };
+  } catch (error: any) {
+    // 👇 8
     getLogger().error(error.message, { error });
-    throw new Error(error.message);
-  } // 👈 4
-};
 
-// ...
-module.exports = {
-  checkAndParseSession,
-  // ...
+    // 👇 8
+    if (error instanceof jwt.TokenExpiredError) {
+      throw ServiceError.unauthorized('The token has expired');
+    } else if (error instanceof jwt.JsonWebTokenError) {
+      throw ServiceError.unauthorized(
+        `Invalid authentication token: ${error.message}`,
+      );
+    } else {
+      throw ServiceError.unauthorized(error.message);
+    }
+  }
 };
 ```
 
-1. Als er geen header meegegeven werd aan het request, gooien we een fout.
-2. Indien de header niet start met "Bearer " gooien we ook een fout, dit moet zo per definitie.
-3. Vervolgens verwijderen we de "Bearer " van de token, zo hebben we enkel de JWT over.
-4. We wrappen alles in een try-catch om de fouten nog eens afzonderlijk te loggen. Alle fouten die gegooid worden, hebben te maken met de geldigheid van de JWT (verlopen, ongeldig signature...)
-5. We verifiëren de JWT. Als deze geldig is, dan krijgen we de payload van de token terug.
+1. We definiëren een functie die de sessie-informatie controleert en parset. Ze krijgt de `Authorization` header mee en retourneert de sessie-informatie.
+2. Als er geen header meegegeven werd aan het request, gooien we een gepaste fout.
+3. Indien de header niet start met "Bearer " gooien we ook een gepast fout, dit moet zo per definitie.
+4. Vervolgens verwijderen we de "Bearer " van de token, zo hebben we enkel de JWT over.
+5. We wrappen alles in een try-catch om de fouten nog eens afzonderlijk te loggen. Alle fouten die gegooid worden, hebben te maken met de geldigheid van de JWT (verlopen, ongeldig signature...)
+6. We verifiëren de JWT. Als deze geldig is, dan krijgen we de payload van de token terug.
    - Merk op: de `sub` property van de payload bevat de id van de gebruiker maar als string. We zetten deze om naar een getal.
-6. Als laatste retourneren we alle sessie-informatie, alsook de token.
+7. Als laatste retourneren we alle sessie-informatie: het id van de gebruiker en de rollen.
+8. Als er een fout optreedt, loggen we deze alvast.
+9. We proberen de fout om te vormen naar een gepaste foutmelding. Als de token verlopen is, geven we een andere foutmelding dan als de token ongeldig is. We kunnen dit afleiden uit het type van de fout.
 
-De laatste functie in de user service (`src/service/user.js`) zal checken of een gegeven rol in de array van rollen voorkomT. De array bevat alle rollen van de gebRuiker (uit de JWT payload gehaald).
+De laatste functie in de user service zal checken of een gegeven rol in de array van rollen voorkomt. De array bevat alle rollen van de gebruiker (uit de JWT payload gehaald). De functie geeft niets terug, maar gooit een gepaste fout als de rol niet voorkomt.
 
-```js
-const checkRole = (role, roles) => {
+```ts
+// src/service/user.ts
+export const checkRole = (role: string, roles: string[]): void => {
   const hasPermission = roles.includes(role); // 👈 1
 
+  // 👇 2
   if (!hasPermission) {
     throw ServiceError.forbidden(
       'You are not allowed to view this part of the application',
-    ); // 👈 2
+    );
   }
 };
-
-// ...
-module.exports = {
-  checkRole,
-  // ...
-};
 ```
 
-1. Met de functie includes kunnen we controleren of de rol voorkomt in de array
-2. Als de rol niet in de array zit, wordt een Forbidden fout geworpen, die zal worden afgehandeld door de middleware
+1. Met de `includes` functie kunnen we controleren of de rol voorkomt in de array
+2. Als de rol niet in de array voorkomt, wordt een forbidden fout geworpen. Die zal worden afgehandeld door onze middleware uit het vorige hoofdstuk.
 
-**Hoe gebruiken we deze middlewares nu?**
+### Auth middlewares toevoegen aan de REST-laag
 
-Pas `src/rest/user.js` als volgt aan:
+Pas `src/rest/user.ts` als volgt aan:
 
-```js
-const { requireAuthentication, makeRequireRole } = require('../core/auth'); // 👈 2
-const Role = require('../core/roles'); // 👈 4
-// ...
+```ts
+// src/rest/user.ts
+// ... (imports)
+import { requireAuthentication, makeRequireRole } from '../core/auth'; // 👈 1
+import Role from '../core/roles'; // 👈 4
 
-module.exports = function installUsersRoutes(app) {
-  const router = new Router({
-    prefix: '/users',
-  });
+export default function installUsersRoutes(parent: KoaRouter) {
+  // ...
 
-  // Public routes
-  router.post('/login', validate(login.validationScheme), login); // 👈 1
-  router.post('/register', validate(register.validationScheme), register); // 👈 1
+  const requireAdmin = makeRequireRole(Role.ADMIN); // 👈 3
 
-  const requireAdmin = makeRequireRole(Role.ADMIN); // 👈 4
-
-  // Routes with authentication/authorization
   router.get(
     '/',
-    requireAuthentication,
-    requireAdmin,
+    requireAuthentication, // 👈 2
+    requireAdmin, // 👈 3
     validate(getAllUsers.validationScheme),
     getAllUsers,
-  ); // 👈 3 en 4
+  );
   router.get(
     '/:id',
-    requireAuthentication,
+    requireAuthentication, // 👈 2
     validate(getUserById.validationScheme),
     getUserById,
-  ); // 👈 3
+  );
   router.put(
     '/:id',
-    requireAuthentication,
+    requireAuthentication, // 👈 2
     validate(updateUserById.validationScheme),
     updateUserById,
-  ); // 👈 3
+  );
   router.delete(
     '/:id',
-    requireAuthentication,
+    requireAuthentication, // 👈 2
     validate(deleteUserById.validationScheme),
     deleteUserById,
-  ); // 👈 3
+  );
 
-  app.use(router.routes()).use(router.allowedMethods());
-};
+  // ...
+}
 ```
 
-1. `login` en `register` zijn twee publieke API calls, die laten we gerust.
-2. We importeren onze nieuwe middlewares.
-3. En dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn.
+1. We importeren onze nieuwe middlewares.
+2. En dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn.
    - Aangemeld zijn = `Authorization` header bevat een geldige JWT.
-4. We willen ook de `GET /api/users` enkel toegankelijk maken voor admins. Daarom maken we een middleware die op deze rol checkt en voegen deze toe aan de route.
+3. We willen ook de `GET /api/users` enkel toegankelijk maken voor admins. Daarom maken we een middleware die op deze rol checkt en voegen deze toe aan de route.
 
 ## Controleer of de aangemelde gebruiker toegang heeft tot de gegeven user info
 
 We dienen nog te controleren of de aangemelde gebruiker wel toegang heeft tot de gevraagde user informatie. Enkel de admin en de gebruiker zelf heeft daartoe toegang.
 
-Voeg toe aan `src/rest/user.js`:
+Voeg toe aan `src/rest/user.ts`:
 
-```js
-// ...
+```ts
+// src/rest/user.ts
+
 // 👇
-/**
- * Check if the signed in user can access the given user's information.
- */
-const checkUserId = (ctx, next) => {
+const checkUserId = (ctx: KoaContext<unknown, GetUserRequest>, next: Next) => {
   const { userId, roles } = ctx.state.session;
   const { id } = ctx.params;
 
   // You can only get our own data unless you're an admin
-  if (id !== userId && !roles.includes(Role.ADMIN)) {
+  if (id !== 'me' && id !== userId && !roles.includes(Role.ADMIN)) {
     return ctx.throw(
       403,
       "You are not allowed to view this user's information",
-      {
-        code: 'FORBIDDEN',
-      },
+      { code: 'FORBIDDEN' },
     );
   }
   return next();
 };
+
 // ...
+
 router.get(
   '/:id',
   requireAuthentication,
@@ -1060,17 +1077,47 @@ router.delete(
 );
 ```
 
+We passen ook de `getUserById` functie aan in `src/rest/user.ts` zodat we `me` kunnen gebruiken om de informatie van de aanmelde gebruiker op te vragen:
+
+```ts
+const getUserById = async (
+  ctx: KoaContext<GetUserByIdResponse, GetUserRequest>,
+) => {
+  // 👇
+  const user = await userService.getById(
+    ctx.params.id === 'me' ? ctx.state.session.userId : ctx.params.id,
+  );
+  ctx.status = 200;
+  ctx.body = user;
+};
+getUserById.validationScheme = {
+  params: { id: [Joi.number().integer().positive(), 'me'] }, // 👈
+};
+```
+
+Hierdoor moeten we ook het type van `GetUserRequest` aanpassen in `src/types/user.ts`:
+
+```ts
+// src/types/user.ts
+
+export interface GetUserRequest {
+  id: number | 'me'; // 👈
+}
+```
+
 ## Opmerking
 
-In de praktijk wil je liever externe services gebruiken voor authenticatie en autorisatie. Dit geeft minder problemen met o.a. GDPR en authenticatie en autorisatie is toch altijd hetzelfde...
+In de praktijk wil je liever externe services gebruiken voor authenticatie en autorisatie. Dit geeft minder problemen met o.a. veiligheid, GDPR... Authenticatie en autorisatie is ook altijd hetzelfde!
 
-Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazon.com/cognito/)...
+Voorbeelden zijn [Auth0](https://auth0.com/), [Userfront](https://userfront.com/), [SuperTokens (open source)](https://supertokens.com/), [Amazon Cognito](https://aws.amazon.com/cognito/)...
+
+Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implementeren. Bij Enterprise Web Development: C# zal je zien hoe je hiervoor Auth0 kan gebruiken.
 
 ## Oefening 3 - Authenticatie
 
 - Scherm de routes van de places af, authenticatie is vereist.
-- Doe hetzelfde voor de transactions. Pas indien nodig ook de andere lagan aan.
-- `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de service- en repositorylaag aan. Ook voor het tellen van het aantal rijen dient met de aangemelde gebruiker rekening gehouden te worden.
+- Doe hetzelfde voor de transactions. Pas, indien nodig, ook de andere lagan aan.
+- `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de servicelaag aan.
 - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
 - `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
 - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
@@ -1084,5 +1131,5 @@ Voorbeelden zijn [Auth0](https://auth0.com/), [Amazon Cognito](https://aws.amazo
 ## Extra's voor de examenopdracht
 
 - Gebruik van een externe authenticatieprovider (bv. [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
-- Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie
+- Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
 - Schrijf een custom validator voor Joi om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
