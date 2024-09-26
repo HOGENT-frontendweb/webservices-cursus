@@ -409,152 +409,149 @@ main();
 
 ### Wachtwoord opslaan in de databank
 
-<!-- TODO: hier verder nalezen -->
+Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. We voegen deze informatie toe aan onze User entiteit in het Prisma schema. We voegen ook een unique index toe op het e-mailadres, zodat we geen twee gebruikers met hetzelfde e-mailadres kunnen hebben.
 
-Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. Om deze extra informatie in onze databank toe te voegen, maken we een nieuwe **migratie** in `src/data/migrations/202309191630_addAuthInfoToUserTable.js`:
+```prisma
+// src/data/schema.prisma
+// ...
 
-```js
-const { tables } = require('..');
+model User {
+  @@map("users")               // Set the table name to "users"
 
-module.exports = {
-  up: async (knex) => {
-    await knex.schema.alterTable(tables.user, (table) => {
-      // 👈 1
-      table.string('email').notNullable(); // 👈 2
-
-      table.string('password_hash').notNullable(); // 👈 2
-
-      table.jsonb('roles').notNullable(); // 👈 2
-
-      table.unique('email', 'idx_user_email_unique'); // 👈 3
-    });
-  },
-  down: (knex) => {
-    // 👇 4
-    return knex.schema.alterTable(tables.user, (table) => {
-      table.dropColumns('email', 'password_hash', 'roles');
-    });
-  },
-};
+  id            Int            @id @default(autoincrement()) @db.UnsignedInt
+  name          String         @db.VarChar(255)
+  email         String         @unique(map: "idx_user_email_unique") @db.VarChar(255)
+  password_hash String         @db.VarChar(255)
+  roles         Json
+  transactions  Transaction[]
+}
 ```
 
-1. We wijzigen dus de `users` tabel.
-2. We voegen drie nieuwe kolommen toe: een e-mailadres een gehasht wachtwoord en de rollen van de gebruiker. Merk op: we slaan de rollen op als JSON, dit moeten we dus opvangen in de repository. De rollen gebruiken we straks voor de autorisatie.
-   - Je zou deze ook in een aparte tabel kunnen opslaan, maar dat laten we voor de eenvoud even achterwege hier.
-3. We zetten een UNIQUE index op het e-mailadres en geven deze index een naam voor beter error handling (zie later).
-4. In de `down` functie verwijderen we de aangemaakte kolommen.
+Vervolgens maken we een nieuwe migratie:
 
-Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen kunnen `user` en/of `admin` worden toegekend.
+```bash
+yarn prisma migrate dev --name addAuthInfoToUserTable
+```
+
+Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen wordt `user` en/of `admin` toegekend.
 
 <!-- cSpell: disable -->
 
-```js
-const { tables } = require('..');
+```ts
+// ... (imports)
+import { hashPassword } from '../core/password';
 
-module.exports = {
-  seed: async (knex) => {
-    // first delete all entries
-    await knex(tables.user).delete();
+const prisma = new PrismaClient();
 
-    // then add the fresh users (all passwords are 12345678)
-    await knex(tables.user).insert([
+async function main() {
+  // Seed users
+  // ==========
+  const passwordHash = await hashPassword('12345678');
+
+  await prisma.user.createMany({
+    data: [
       {
         id: 1,
         name: 'Thomas Aelbrecht',
         email: 'thomas.aelbrecht@hogent.be',
-        password_hash:
-          '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
-        roles: JSON.stringify(['user', 'admin']),
+        password_hash: passwordHash,
+        roles: ['admin', 'user'],
       },
       {
         id: 2,
         name: 'Pieter Van Der Helst',
         email: 'pieter.vanderhelst@hogent.be',
-        password_hash:
-          '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
-        roles: JSON.stringify(['user']),
+        password_hash: passwordHash,
+        roles: ['user'],
       },
       {
         id: 3,
         name: 'Karine Samyn',
         email: 'karine.samyn@hogent.be',
-        password_hash:
-          '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
-        roles: JSON.stringify(['user']),
+        password_hash: passwordHash,
+        roles: ['user'],
       },
-    ]);
-  },
-};
+    ],
+  });
+  // ...
+}
+
+// ...
 ```
 
 <!-- cSpell: enable -->
 
-De extra kolommen hebben als gevolg dat de user repository (in `src/repository/user.js`) nu ook een `email`, `passwordHash` en `roles` verwacht als parameter bij `create`.
+De extra kolommen hebben als gevolg dat de user service nu ook een `email`, `password` (geen hash!) en `roles` verwacht als parameter bij `create`.
 
-```js
-// ...
-const create = async ({
+We passen eerst het type aan en voegen meteen een type toe voor de publieke informatie van een gebruiker:
+
+```ts
+// src/types/user.ts
+export interface UserCreateInput {
+  name: string;
+  email: string;
+  password: string;
+  roles: string[];
+}
+
+export interface PublicUser extends Pick<User, 'id' | 'name' | 'email'> {}
+```
+
+En vervolgens passen we de user service aan. We hernoemen ook de `create` functie naar `register`:
+
+```ts
+// src/service/user.ts
+// ... (imports)
+import type {
+  // ...
+  PublicUser, // 👈 1
+} from '../types';
+import { hashPassword } from '../core/password'; // 👈 3
+
+// 👇 1
+const makeExposedUser = ({ id, name, email }: UserRecord): PublicUser => ({
+  id,
   name,
-  email, // 👈 1
-  passwordHash, // 👈 1
-  roles, // 👈 1
-}) => {
+  email,
+});
+
+export const register = async ({
+  name,
+  email, // 👈 2
+  password, // 👈 2
+  roles, // 👈 2
+}: UserCreateInput): Promise<User> => {
   try {
-    const [id] = await getKnex()(tables.user).insert({
-      id,
-      name,
-      email, // 👈 2
-      password_hash: passwordHash, // 👈 2
-      roles: JSON.stringify(roles), // 👈 3
+    const passwordHash = await hashPassword(password); // 👈 3
+
+    // 👇 3
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password,
+        roles: ['user'], // 👈 4
+      },
     });
-    return id;
+
+    return makeExposedUser(user); // 👈 5
   } catch (error) {
-    getLogger().error('Error in create', {
-      error,
-    });
-    throw error;
+    throw handleDBError(error); // 👈 6
   }
 };
 // ...
 ```
 
-1. We voegen de nieuwe kolommen toe als parameter.
-2. Deze geven we dan ook mee aan onze insert, we vormen de `passwordHash` om naar `password_hash`.
-3. Deze rollen moeten we omzetten naar JSON alvorens we ze opslaan in de databank (zie migratie). Bij het ophalen wordt deze kolom automatisch geparsed voor ons, m.a.w. we krijgen een array.
-
-Ook in de user service (in `src/service/user.js`) komen deze extra kolommen mee als parameter. Let wel op: hier komt het wachtwoord nog als plain text binnen!
-
-```js
-// ...
-const register = async ({
-  name,
-  email, // 👈 1
-  password, // 👈 1
-}) => {
-  try {
-    const passwordHash = await hashPassword(password); // 👈 2
-
-    const userId = await userRepository.create({
-      name,
-      email, // 👈 2
-      passwordHash, // 👈 2
-      roles: ['user'], // 👈 3
-    });
-    return await userRepository.findById(userId);
-  } catch (error) {
-    throw handleDBError(error);
-  }
-};
-// ...
-```
-
-1. We voegen e-mail en wachtwoord toe.
-2. We hashen het wachtwoord in de service-laag en geven het e-mailadres en hashed wachtwoord door aan de repository
-3. De rollen geven we als array mee. De repository zet deze voor ons om naar JSON
+1. We voegen een functie toe die een `UserRecord` omvormt naar een `PublicUser`. Deze functie zal gebruikt worden om enkel de publieke informatie van een gebruiker terug te geven.
+2. We voegen de nieuwe kolommen toe als parameter.
+3. We maken een hash van het wachtwoord voor we de gebruiker aanmaken.
+4. Standaard maken we nieuwe gebruikers enkel `user`.
+5. We geven enkel de publieke informatie van de gebruiker terug.
+6. We wrappen alles in een try/catch en gebruiken de `handleDBError` functie om de fouten af te handelen.
 
 ### Oefening 1
 
-- Pas ook de andere functies aan waar nodig (in de repository en service).
+- Pas de andere functies in user service aan waar nodig.
 - Pas ook de REST-laag van de users aan waar nodig.
 
 <!-- markdownlint-disable-next-line -->
@@ -565,171 +562,113 @@ const register = async ({
 
 ## Aanmelden
 
-We definiëren alle rollen in onze applicatie in een constant object. Zo is het eenvoudig om ze te wijzigen indien nodig. Voeg onderstaande code toe aan `src/core/roles.js`
+We definiëren alle rollen in onze applicatie in een constant object. Zo is het eenvoudig om ze te wijzigen indien nodig. Voeg onderstaande code toe aan `src/core/roles.ts`
 
-```js
-module.exports = Object.freeze({
+```ts
+// src/core/roles.ts
+
+export default {
   USER: 'user',
   ADMIN: 'admin',
-});
+};
 ```
 
 We updaten de **seed voor users** met deze nieuwe rollen:
 
 <!-- cSpell: disable -->
 
-```js
-const { tables } = require('..');
-const Role = require('../../core/roles'); // 👈
+```ts
+// src/data/seed.ts
+// ... (imports)
+import Role from '../core/roles'; // 👈
 
-module.exports = {
-  seed: async (knex) => {
-    // first delete all entries
-    await knex(tables.user).delete();
+const prisma = new PrismaClient();
 
-    // then add the fresh users (all passwords are 12345678)
-    await knex(tables.user).insert([
+async function main() {
+  // Seed users
+  // ==========
+  const passwordHash = await hashPassword('12345678');
+
+  await prisma.user.createMany({
+    data: [
       {
-        id: '7f28c5f9-d711-4cd6-ac15-d13d71abff80',
+        id: 1,
         name: 'Thomas Aelbrecht',
         email: 'thomas.aelbrecht@hogent.be',
-        password_hash:
-          '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
+        password_hash: passwordHash,
         roles: JSON.stringify([Role.ADMIN, Role.USER]), // 👈
       },
       {
-        id: '7f28c5f9-d711-4cd6-ac15-d13d71abff81',
+        id: 2,
         name: 'Pieter Van Der Helst',
         email: 'pieter.vanderhelst@hogent.be',
-        password_hash:
-          '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
+        password_hash: passwordHash,
         roles: JSON.stringify([Role.USER]), // 👈
       },
       {
-        id: '7f28c5f9-d711-4cd6-ac15-d13d71abff82',
+        id: 3,
         name: 'Karine Samyn',
         email: 'karine.samyn@hogent.be',
-        password_hash:
-          '$argon2id$v=19$m=131072,t=6,p=1$9AMcua9h7va8aUQSEgH/TA$TUFuJ6VPngyGThMBVo3ONOZ5xYfee9J1eNMcA5bSpq4',
+        password_hash: passwordHash,
         roles: JSON.stringify([Role.USER]), // 👈
       },
-    ]);
-  },
-};
+    ],
+  });
+
+  // ...
+}
+
+// ...
 ```
 
 <!-- cSpell: enable -->
 
-We passen `ServiceError` aan. Mogelijke nieuwe fouten zijn:
+Pas in de user service ook de hard gecodeerde rol in de `register` functie aan.
 
-- unauthorized: authenticatie faalt
-- forbidden: autorisatie faalt
+We definiëren eerst een type voor het request en response van onze login API call:
 
-`core/serviceError.js`
-
-```js
-const UNAUTHORIZED = 'UNAUTHORIZED'; // 👈 1
-const FORBIDDEN = 'FORBIDDEN'; // 👈 1
-
-class ServiceError extends Error {
-  // ...
-
-  // 👇 2
-  static unauthorized(message, details) {
-    return new ServiceError(UNAUTHORIZED, message, details);
-  }
-
-  // 👇 2
-  static forbidden(message, details) {
-    return new ServiceError(FORBIDDEN, message, details);
-  }
-
-  // ...
-
-  // 👇 3
-  get isUnauthorized() {
-    return this.code === UNAUTHORIZED;
-  }
-
-  // 👇 3
-  get isForbidden() {
-    return this.code === FORBIDDEN;
-  }
+```ts
+// src/types/user.ts
+export interface LoginRequest {
+  email: string;
+  password: string;
 }
 
-module.exports = ServiceError;
-```
-
-1. Voeg de constanten toe.
-2. Voorzie de static functies om een `ServiceError` te maken voor deze fouten.
-3. Voorzie de getters om te checken of een `ServiceError` een bepaalde fout bevat.
-
-In de middleware voor het afhandelen van de `ServiceError` (in `core/installMiddlewares.js`) voegen we de afhandeling van `isUnauthorized` en `isForbidden` toe:
-
-```js
-// ...
-if (error instanceof ServiceError) {
-  // ...
-
-  if (error.isUnauthorized) {
-    statusCode = 401;
-  }
-
-  if (error.isForbidden) {
-    statusCode = 403;
-  }
+export interface LoginResponse {
+  user: PublicUser;
+  token: string;
 }
-// ...
 ```
 
-Pas in de user service ook de hard gecodeerde rol in de `register` functie.
+We definiëren een functie `login` in `src/service/user.ts` die een gebruiker met een bepaald e-mailadres probeert aan te melden. Als de gebruiker is aangemeld, retourneren we het token en de publieke informatie van de gebruiker (id, naam, e-mail en rollen):
 
-We voegen in `src/repository/user.js` een functie toe die een gebruiker met een bepaald e-mailadres ophaalt:
-
-```js
-// ...
-
-// 👇 1
-const findByEmail = (email) => {
-  return getKnex()(tables.user).where('email', email).first();
-};
-
-module.exports = {
+```ts
+// src/service/user.ts
+// ... (imports)
+import type {
   // ...
-  findByEmail, // 👈 2
-};
-```
-
-1. Daarvoor schrijven we deze query. We kunnen veilig `first()` gebruiken aangezien er een UNIQUE index staat op de kolom `email`.
-2. Vergeet deze functie dan ook niet te exporteren.
-
-We definiëren een functie `login` in `src/service/user.js` die een gebruiker met een bepaald e-mailadres probeert aan te melden. Als de gebruiker is aangemeld, retourneren we het token en de publieke informatie van de gebruiker (id, naam, e-mail en rollen):
-
-```js
-// ...
-const { hashPassword, verifyPassword } = require('../core/password'); // 👈 4
-const { generateJWT } = require('../core/jwt'); // 👈 7
-
-// 👇 8
-const makeExposedUser = ({ id, name, email, roles }) => ({
-  id,
-  name,
-  email,
-  roles,
-});
+  LoginResponse, // 👈 1
+} from '../types';
+import { hashPassword, verifyPassword } from '../core/password'; // 👈 4
+import { generateJWT } from '../core/jwt'; // 👈 7
 
 // 👇 6
-const makeLoginData = async (user) => {
+const makeLoginData = async (user: UserRecord): Promise<LoginResponse> => {
   const token = await generateJWT(user); // 👈 7
+
+  // 👇 8
   return {
     user: makeExposedUser(user),
     token,
-  }; // 👈 8
+  };
 };
 
 // 👇 1
-const login = async (email, password) => {
-  const user = await userRepository.findByEmail(email); // 👈 2
+export const login = async (
+  email: string,
+  password: string,
+): Promise<LoginResponse> => {
+  const user = await prisma.user.findUnique({ where: { email } }); // 👈 2
 
   // 👇 3
   if (!user) {
@@ -739,7 +678,8 @@ const login = async (email, password) => {
     );
   }
 
-  const passwordValid = await verifyPassword(password, user.password_hash); // 👈 4
+  // 👇 4
+  const passwordValid = await verifyPassword(password, user.password_hash);
 
   // 👇 5
   if (!passwordValid) {
@@ -751,115 +691,127 @@ const login = async (email, password) => {
 
   return await makeLoginData(user); // 👈 6
 };
-
-module.exports = {
-  // ...
-  login, // 👈 9
-};
 ```
 
-1. De functie `login` krijgt een e-mailadres en wachtwoord als parameter.
-2. We kijken eerst of er een gebruiker met dit e-mailadres is.
+1. De functie `login` krijgt een e-mailadres en wachtwoord als parameter en geeft een `LoginResponse` terug.
+2. We kijken eerst of er een gebruiker met dit e-mailadres bestaat.
 3. Als die gebruiker niet bestaat, doen we alsof het e-mailadres en wachtwoord niet matchen. We willen niet laten blijken dat we de gebruiker kennen.
 4. Als we een gebruiker hebben, verifiëren we het opgegeven wachtwoord met de opgeslagen hash.
 5. Als het wachtwoord fout is, zeggen we opnieuw dat het e-mailadres en wachtwoord niet matchen.
-6. Vervolgens maken we de data die geretourneerd moet worden na login. We maken hiervoor een helperfunctie aangezien we die data ook nodig hebben bij het registreren.
+6. Vervolgens maken we de data die geretourneerd moet worden na login. We maken hiervoor een helperfunctie aangezien we diezelfde data ook nodig hebben bij het registreren.
 7. Eerst maken we een JWT voor die gebruiker.
-8. Vervolgens retourneren we de token en enkel de velden van de user die publiek zijn. Voor dit laatste maken we opnieuw een helperfunctie (we hebben deze nog nodig bij bv. `findById`).
+8. Vervolgens retourneren we de token en enkel de velden van de user die publiek zijn.
 9. Vergeet ook de `login` functie niet te exporteren.
 
 Vervolgens passen we de rest module voor alle routes m.b.t. de gebruikers aan (`src/rest/user.js`):
 
-```js
+```ts
+// ... (imports)
+import type {
+  // ...
+  LoginRequest, // 👈 1
+} from '../types';
+
 // ...
 
 // 👇 1
-const login = async (ctx) => {
-  const { email, password } = ctx.request.body; // 👈 2
+const login = async (ctx: KoaContext<LoginResponse, void, LoginRequest>) => {
+  // 👇 2
+  const { email, password } = ctx.request.body!;
   const token = await userService.login(email, password); // 👈 3
-  ctx.body = token; // 👈 4
+
+  // 👇 4
+  ctx.status = 200;
+  ctx.body = token;
 };
+// 👇 5
 login.validationScheme = {
-  // 👈 5
   body: {
     email: Joi.string().email(),
     password: Joi.string(),
   },
 };
 
-module.exports = function installUsersRoutes(app) {
-  const router = new Router({
+export default function installUsersRoutes(parent: KoaRouter) {
+  const router = new Router<BudgetAppState, BudgetAppContext>({
     prefix: '/users',
   });
+
   // ...
   router.post('/login', validate(login.validationScheme), login); // 👈 6
   // ...
-};
+}
 ```
 
 1. We definiëren een functie voor onze `login` route.
 2. We halen het e-mailadres en wachtwoord uit de HTTP body.
 3. We proberen de gebruiker aan te melden.
-4. Als dat gelukt is, geven we de token-informatie mee in de HTTP response body.
+4. Als dat gelukt is, stellen we de HTTP statuscode in en geven we de token-informatie mee in de HTTP response body.
 5. We voorzien ook een validatieschema voor de input.
 6. We geven deze functie mee aan de POST op `/login` en doen ook de invoervalidatie.
 
 ### Oefening 2
 
-Pas ook de overige functies aan:
+Pas ook de overige functies in de user service aan:
 
-- `register` retourneert enkel het token en de publieke user data
-- `getAll` en `getById` mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!)
+- `register` retourneert nu ook het token en de publieke user data.
+- `getAll` en `getById` mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!).
 
 ## Registreren
 
-We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.js` hebben we:
+We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.ts` hebben we:
 
 ```js
-// ...
-const { verifyPassword, hashPassword } = require('../core/password'); // 👈 2
-const Role = require('../core/roles'); // 👈 3
-
-const register = async ({
+export const register = async ({
   name,
-  email, // 👈 1
-  password, // 👈 1
-}) => {
-  const passwordHash = await hashPassword(password); // 👈 2
+  email,
+  password,
+}: RegisterUserRequest): Promise<LoginResponse> => { // 👈 1
+  try {
+    const passwordHash = await hashPassword(password);
 
-  // 👇 3
-  const userId = await userRepository.create({
-    name,
-    email,
-    passwordHash,
-    roles: [Role.USER],
-  });
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password_hash: passwordHash,
+        roles: [Role.USER],
+      },
+    })
 
-  const user = await userRepository.findById(userId); // 👈 4
-  return await makeLoginData(user); // 👈 5
+    // 👇 2
+    if (!user) {
+      throw ServiceError.internalServerError('An unexpected error occured when creating the user');
+    }
+
+    return await makeLoginData(user); // 👈 1
+  } catch (error: any) {
+    throw handleDBError(error);
+  }
 };
 ```
 
-1. We geven nu ook een e-mailadres en wachtwoord mee als we een nieuwe gebruiker toevoegen.
-2. Hierbij moeten we eerst het wachtwoord hashen.
-3. Vervolgens maken we de gebruiker met deze gegevens. We maken elke nieuwe gebruiker standaard enkel `USER`.
-4. Vervolgens halen we de zojuist gecreëerde gebruiker op.
-5. Dan maken we voor deze gebruiker ook token-informatie en de publieke user info aan. Zo is een geregistreerde gebruiker meteen aangemeld.
+1. We retourneren hetzelfde response als bij het aanmelden.
+2. We gooien een interne serverfout als de gebruiker niet gemaakt kon worden.
 
-We bekijken ook nog eens de request handler voor het registreren in `src/rest/_user.js`:
+We bekijken ook nog eens de request handler voor het registreren in `src/rest/user.ts`:
 
-```js
-const register = async (ctx) => {
-  const token = await userService.register(ctx.request.body); // 👈 1
-  ctx.body = token; // 👈 2
-  ctx.status = 200; // 👈 2
+```ts
+const register = async (
+  ctx: KoaContext<LoginResponse, void, RegisterUserRequest>,
+) => {
+  const token = await userService.register(ctx.request.body!); // 👈 1
+
+  // 👇 2
+  ctx.status = 200;
+  ctx.body = token;
 };
+// 👇 3
 register.validationScheme = {
-  // 👈 3
   body: {
     name: Joi.string().max(255),
     email: Joi.string().email(),
-    password: Joi.string().min(8).max(30),
+    password: Joi.string().min(12).max(128),
   },
 };
 
@@ -872,8 +824,10 @@ module.exports = function installUsersRoutes(app) {
 
 1. We registreren de nieuwe gebruiker (alle informatie zit in de HTTP body). We krijgen de token-informatie en publieke user informatie terug.
 2. We retourneren deze token-informatie en publieke user informatie in de HTTP response body, evenals een statuscode 200.
-3. We voorzien ook een validatieschema voor de input.
+3. We voorzien ook een validatieschema voor de input. We vereisen een wachtwoord van minimum 12 karakters en maximum 128 karakters.
 4. We geven deze functie mee aan de POST op `/register` en doen ook de invoervalidatie.
+
+<!-- TODO: hier verder nalezen -->
 
 ## Helpers voor authenticatie/autorisatie
 
