@@ -1,6 +1,7 @@
 # CI/CD
 
 <!-- TODO: JWT secret ? -->
+<!-- TODO: default config introduceren -->
 
 > **Startpunt voorbeeldapplicatie**
 >
@@ -70,7 +71,7 @@ Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](http
 
 ### MySQL databank in het VIC
 
-Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruik MySQL (naar analogie met het olod Databases I). *Feel free to switch, but you're on your own then.*
+Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruik MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
 
 Er bestaan heel wat gratis MySQL services online maar eigenlijk geen enkele degelijke waar je geen kredietkaart voor nodig hebt, ofwel zien ze er sketchy uit of zijn ze vaak down.
 

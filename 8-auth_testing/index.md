@@ -1,17 +1,6 @@
 # Authenticatie en autorisatie
 
-> **Startpunt voorbeeldapplicatie**
->
-> Het volstaat om uit te checken op de `authenticatie` branch en op commit `faf3c57`
->
-> ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-> cd webservices-budget
-> git checkout origin/authenticatie
-> git checkout -b les8 faf3c57
-> yarn install
-> yarn start
-> ```
+<!-- TODO: startpunt en oplossing toevoegen -->
 
 ## Jest
 
@@ -38,6 +27,7 @@ Voor elk van onze testen moeten we aangemeld zijn, dus dan zou het handig zijn a
 Maak een bestand `__tests__/global.setup.js` met volgende inhoud:
 
 <!-- cSpell: disable -->
+
 ```js
 const config = require('config'); // 👈 2
 const { initializeLogger } = require('../src/core/logging'); // 👈 2
@@ -78,6 +68,7 @@ module.exports = async () => {
   ]);
 };
 ```
+
 <!-- cSpell: enable -->
 
 1. Maak een bestand `global.setup.js` in de `__tests__` map. We moeten een async functie, die de globale setup bevat, exporteren.
@@ -138,7 +129,8 @@ const login = async (supertest) => {
 };
 
 // 👇 1
-const withServer = (setter) => { // 👈 4
+const withServer = (setter) => {
+  // 👈 4
   let server; // 👈 2
 
   beforeAll(async () => {
@@ -177,7 +169,8 @@ module.exports = {
 Definieer een helper genaamd `loginAdmin` die hetzelfde doet voor de admin user.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Voeg onderstaande code toe aan `__tests__/supertest.setup.js`:
 
@@ -222,7 +215,7 @@ const testAuthHeader = (requestFactory) => {
   test('it should 401 when invalid authorization token provided', async () => {
     const response = await requestFactory().set(
       'Authorization',
-      'INVALID TOKEN'
+      'INVALID TOKEN',
     );
 
     expect(response.statusCode).toBe(401);
@@ -271,10 +264,7 @@ describe('Transactions', () => {
   let request, knex, authHeader; // 👈 3
 
   // 👇 2
-  withServer(({
-    supertest,
-    knex: k,
-  }) => {
+  withServer(({ supertest, knex: k }) => {
     request = supertest;
     knex = k;
   });
@@ -300,15 +290,14 @@ describe('Transactions', () => {
     // ...
 
     test('it should 200 and return all transactions', async () => {
-      const response = await request.get(url)
-        .set('Authorization', authHeader); // 👈 4
+      const response = await request.get(url).set('Authorization', authHeader); // 👈 4
 
       // expects hier
     });
   });
   // ...
 
-  testAuthHeader(() => request.get(url));// 👈 5
+  testAuthHeader(() => request.get(url)); // 👈 5
 });
 ```
 
@@ -328,7 +317,8 @@ Herhaal hetzelfde voor alle andere testen van transactions, places en users:
 - Let bij de testen van gebruikers op dat je de gebruikers die je nodig hebt om aan te melden niet verwijdert.
 
 <!-- markdownlint-disable-next-line -->
-+ Oplossing +
+
+- Oplossing +
 
   Een voorbeeldoplossing is te vinden op <https://github.com/HOGENT-frontendweb/webservices-budget> in de branch `authenticatie`
 
