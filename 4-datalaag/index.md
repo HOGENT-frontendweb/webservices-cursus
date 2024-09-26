@@ -815,7 +815,7 @@ export interface BudgetAppContext<
   Query = unknown,
 > {
   request: {
-    body?: RequestBody;
+    body: RequestBody;
     query: Query;
   };
   params: Params;
@@ -973,7 +973,7 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 3. Vervolledig je repositories en services in je project met alle benodigde CRUD-operaties.
 4. Vervolledig ook de migrations en seeds.
 
-l> ws oplossing 2ba923c les4-opl
+l> ws oplossing fc8381d les4-opl
 
 ## Mogelijke extra's voor de examenopdracht
 

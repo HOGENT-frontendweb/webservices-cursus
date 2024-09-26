@@ -716,7 +716,7 @@ import type {
 // 👇 1
 const login = async (ctx: KoaContext<LoginResponse, void, LoginRequest>) => {
   // 👇 2
-  const { email, password } = ctx.request.body!;
+  const { email, password } = ctx.request.body;
   const token = await userService.login(email, password); // 👈 3
 
   // 👇 4
@@ -802,7 +802,7 @@ We bekijken ook nog eens de request handler voor het registreren in `src/rest/us
 const register = async (
   ctx: KoaContext<LoginResponse, void, RegisterUserRequest>,
 ) => {
-  const token = await userService.register(ctx.request.body!); // 👈 1
+  const token = await userService.register(ctx.request.body); // 👈 1
 
   // 👇 2
   ctx.status = 200;
