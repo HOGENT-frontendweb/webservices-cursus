@@ -130,7 +130,7 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 ```json
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll": true
+    "source.fixAll": "always"
   },
   "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
