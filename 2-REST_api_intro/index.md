@@ -34,7 +34,7 @@ Met het HTTP-protocol kunnen REST API’s software op het ene apparaat laten pra
 
 Het fundamentele concept van een RESTful API is de **resource**. Alle informatie die benoemd kan worden is een resource: een document, afbeelding, verzameling (= collection) van resources, niet-virtueel object (bv. een klant), enz. REST gebruikt een **resource identifier** om een resource te identificeren.
 
-De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie, zoals bvb `/api/klanten` verwijst naar de verzameling van de klant objecten. Gebruik hiervoor een **zelfstandig naamwoord in het meervoud**. Gebruik GEEN actiemethodes (een werkwoord), met uitzondering van `/api/users/login` en `/api/users/register` voor het aanmelden en registreren. De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
+De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie, zoals bvb `/api/klanten` verwijst naar de verzameling van de klant objecten. Gebruik hiervoor een **zelfstandig naamwoord in het meervoud**. Gebruik GEEN actiemethodes (een werkwoord). De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
 
 Bekijk onderstaand voorbeeld. Let op de opbouw van de databank (= ERD), van de URI bovenaan en van de response (geel). Je merkt een duidelijk verschil tussen het databankschema en de response. Het is dus niet altijd zo dat het databankschema overeenkomt met de response. De API-ontwikkelaar beslist hoe de response eruit ziet. Lek dus geen implementatiedetails in de response.
 
@@ -303,7 +303,7 @@ Door de jaren heen merkten we een aantal terugkomende fouten in het ontwerp van 
   - Denk vooraf goed na over de functionaliteiten van je applicatie en welke API calls je daarvoor nodig hebt
 - GET all request geeft alle relaties van een entiteit terug
   - Dit is vaak onnodig en kan de databank onnodig belasten
-  - In sommige gevallen is het wel nuttig, het hangt allemaal af van de verwachtngen van de client
+  - In sommige gevallen is het wel nuttig, het hangt allemaal af van de verwachtingen van de client
   - Aangezien je zelf de client ontwerpt in Front-end Web Development, kan je dit zelf bepalen o.b.v. wat je toont in bijvoorbeeld lijsten of tabellen van die entiteit
 
 ### ERD met veelgemaakte fouten
@@ -984,3 +984,5 @@ Teken een ERD van je databank m.b.v. <https://kroki.io>. Je vindt de syntax op <
 Definieer vervolgens de bijhorende endpoints in een markdown-document. Schrijf de URLs van de API calls neer en beschrijf kort wat ze verwachten als invoer en teruggeven als uitvoer. Gebruik hiervoor de best practices die je in dit hoofdstuk geleerd hebt. Je kan ook de API calls van de voorbeeldoplossing van de vorige oefening als leidraad gebruiken.
 
 Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository. Gebruik het template voor feedback en voeg hier zeker de code voor jouw ERD aan toe.
+
+Maak een webservice aan met de naam van je project in de map van je Git repository. Gebruik een zinnige naam zodat duidelijk is in welke map jouw webservice zich bevindt (bv. suffix -webservice). Volg de stapjes zoals hierboven beschreven.

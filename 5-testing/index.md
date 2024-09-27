@@ -61,10 +61,10 @@ yarn add --dev jest supertest env-cmd ts-node ts-jest @types/jest @types/superte
   - wij gaan dit enkel gebruiken om HTTP requests te kunnen sturen zonder een echte server te moeten opzetten
   - we gebruiken de in Jest ingebouwde functionaliteiten om het response te testen
 - [**env-cmd**](https://www.npmjs.com/package/env-cmd): een library om environment variabelen in te laden vanuit een bestand
-- [**ts-node**](https://www.npmjs.com/package/ts-node): een library voor jit compilatie van de typescript test bestanden
+- [**ts-node**](https://www.npmjs.com/package/ts-node): Typescript runtime
 - [**ts-jest**](https://www.npmjs.com/package/ts-jest): Typescript preprocessor voor Jest
-- @types/jest: types voor Jest global
-- @types/supertest: types voor supertest
+- @types/jest: Typescript definities voor Jest global
+- @types/supertest: Typescript definities voor supertest
 
 ### Configuratie
 
