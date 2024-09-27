@@ -958,7 +958,7 @@ Je kan VS Code zo instellen dat automatisch herstel van fouten wordt uitgevoerd 
 ```json
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": "explicit"
+    "source.fixAll": "always"
   },
   "eslint.validate": [
     "javascript",

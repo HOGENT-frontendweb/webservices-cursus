@@ -38,6 +38,7 @@ Pas de `package.json` aan, voeg onderstaand script toe:
 Maak een `.eslintrc.json` bestand in de root met een leeg JSON-object in. Dit bestand bevat onze configuratie voor linting en formatting.
 
 <!-- cspell:disable -->
+
 ```json
 {
   "env": {
@@ -70,6 +71,7 @@ Maak een `.eslintrc.json` bestand in de root met een leeg JSON-object in. Dit be
   } // 👈 5
 }
 ```
+
 <!-- cspell:enable -->
 
 1. Met `env` geven we aan welke JS-environments we gebruiken/nodig hebben, in ons geval: ES6 en ES2021 syntax, Node.js en Jest.
@@ -83,7 +85,7 @@ Je kan zelf nog rules toevoegen aan de `.eslintrc.json`. Je kan VS Code zo inste
 ```json
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll": "always"
   },
   "eslint.validate": ["javascript"]
 }
@@ -95,7 +97,7 @@ Run voor elke commit: `yarn lint`. Dit zal je code linten, sommige problemen zel
 
 Voeg regels toe voor volgende vereisten:
 
-- standaard gebruiken we 2 spaties om in te springen (= *indentation*), ook bij switch cases
+- standaard gebruiken we 2 spaties om in te springen (= _indentation_), ook bij switch cases
 - we willen alleen UNIX line endings
 - we willen alleen enkele quotes gebruiken, geen dubbele
 - elke lijn moet eindigen met een puntkomma
@@ -166,7 +168,7 @@ koa-helmet's Content Security Policy (CSP) is niet nodig in development, dit lev
 ```js
 // ...
 
-const isDevelopment = NODE_ENV==='development';
+const isDevelopment = NODE_ENV === 'development';
 
 // ...
 
@@ -175,7 +177,7 @@ app.use(
   koaHelmet({
     // Not needed in development (destroys Swagger UI)
     contentSecurityPolicy: isDevelopment ? false : undefined,
-  })
+  }),
 );
 
 // Add CORS
