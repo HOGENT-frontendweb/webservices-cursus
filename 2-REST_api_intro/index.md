@@ -973,7 +973,7 @@ Run voor elke commit `yarn lint`. Dit zal je code linten, sommige problemen zelf
 
 Indien je een foutmelding krijgt dat `typescript-eslint` jouw versie van TypeScript niet ondersteund. Pas dan de versie van TypeScript in `package.json` aan naar een ondersteunde versie. Soms helpt het ook om de `^` te vervangen door een `~` voor de versie van `typescript` in de `package.json`.
 
-l> ws oplossing 3166a61 les2
+l> ws oplossing 3acce6c les2
 
 ## Oefening - Je eigen project
 
