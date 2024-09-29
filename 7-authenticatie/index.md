@@ -1133,6 +1133,60 @@ export interface GetUserRequest {
 }
 ```
 
+## Willekeurige vertragingsfunctie
+
+Om zogenaamde [timing attacks](https://en.wikipedia.org/wiki/Timing_attack) te voorkomen, kunnen we een willekeurige vertragingsfunctie toevoegen aan onze authenticatie. Deze functie wacht een willekeurige tijd vooraleer het request effectief te verwerken. Zo kan een aanvaller niet aan de hand van de responstijd afleiden of een wachtwoord correct is of niet.
+
+We voegen een nieuwe middleware-functie toe aan `src/core/auth.ts`:
+
+```ts
+// src/core/auth.ts
+import config from 'config'; // 👈 1
+
+const AUTH_MAX_DELAY = config.get<number>('auth.maxDelay'); // 👈 1
+
+// 👇 2
+export const authDelay = async (_: KoaContext, next: Next) => {
+  // 👇 3
+  await new Promise((resolve) => {
+    const delay = Math.round(Math.random() * AUTH_MAX_DELAY);
+    setTimeout(resolve, delay);
+  });
+  // 👇 4
+  return next();
+};
+```
+
+1. We importeren de configuratie en halen de maximale vertraging op.
+   - Voeg zelf `auth.maxDelay` toe aan elk configuratiebestand. Stel dit default in op 5000 ms (= 5 seconden).
+2. We definiëren een middleware die een willekeurige vertraging toevoegt aan het request. De vertraging is tussen 0 en de maximale vertraging.
+3. We maken een Promise die na een willekeurige tijd opgelost wordt.
+4. We roepen de volgende middleware in de rij aan wanneer de Promise afgelopen is en de vertraging dus voorbij is.
+
+Voeg vervolgens deze middleware toe aan het request voor registreren in `src/rest/user.ts`:
+
+```ts
+// src/rest/user.ts
+import {
+  // ...
+  authDelay, // 👈
+} from '../core/auth';
+
+// ...
+
+router.post('/', authDelay, validate(register.validationScheme), register); // 👈
+```
+
+Herhaal hetzelfde voor de login route in `src/rest/session.ts`:
+
+```ts
+import { authDelay } from '../core/auth'; // 👈
+
+// ...
+
+router.post('/', authDelay, validate(login.validationScheme), login); // 👈
+```
+
 ## Opmerking
 
 In de praktijk wil je liever externe services gebruiken voor authenticatie en autorisatie. Dit geeft minder problemen met o.a. veiligheid, GDPR... Authenticatie en autorisatie is ook altijd hetzelfde!
