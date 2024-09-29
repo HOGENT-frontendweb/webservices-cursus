@@ -94,8 +94,8 @@ if __name__ == "__main__":
 
         print(file)
 
-        for [url, commit] in not_existing_commits:
-            print(f"\tCommit {commit} does not exist in {url}")
+        for url in not_existing_commits:
+            print(f"\tCommit does not exist: {url}")
 
         print("")
 
