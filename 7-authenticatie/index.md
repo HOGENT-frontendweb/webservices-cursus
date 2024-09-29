@@ -701,17 +701,22 @@ export const login = async (
 8. Vervolgens retourneren we de token en enkel de velden van de user die publiek zijn.
 9. Vergeet ook de `login` functie niet te exporteren.
 
-Vervolgens passen we de rest module voor alle routes m.b.t. de gebruikers aan:
+Vervolgens voegen we een nieuw bestand `src/rest/session.ts` toe voor de login route.
 
 ```ts
-// src/rest/user.ts
-// ... (imports)
+// src/rest/session.ts
+import Router from '@koa/router';
+import Joi from 'joi';
+import validate from '../core/validation';
+import { userService } from '../service';
 import type {
-  // ...
-  LoginRequest, // 👈 1
-} from '../types/user';
-
-// ...
+  KoaContext,
+  LoginResponse,
+  LoginRequest,
+  KoaRouter,
+  BudgetAppState,
+  BudgetAppContext,
+} from '../types';
 
 // 👇 1
 const login = async (ctx: KoaContext<LoginResponse, void, LoginRequest>) => {
@@ -731,14 +736,15 @@ login.validationScheme = {
   },
 };
 
-export default function installUsersRoutes(parent: KoaRouter) {
+// 👇 6
+export default function installSessionRoutes(parent: KoaRouter) {
   const router = new Router<BudgetAppState, BudgetAppContext>({
-    prefix: '/users',
+    prefix: '/sessions',
   });
 
-  // ...
-  router.post('/login', validate(login.validationScheme), login); // 👈 6
-  // ...
+  router.post('/', validate(login.validationScheme), login);
+
+  parent.use(router.routes()).use(router.allowedMethods());
 }
 ```
 
@@ -747,7 +753,28 @@ export default function installUsersRoutes(parent: KoaRouter) {
 3. We proberen de gebruiker aan te melden.
 4. Als dat gelukt is, stellen we de HTTP statuscode in en geven we de token-informatie mee in de HTTP response body.
 5. We voorzien ook een validatieschema voor de input.
-6. We geven deze functie mee aan de POST op `/login` en doen ook de invoervalidatie.
+6. We definiëren een nieuwe router en de route voor de login (inclusief de invoervalidatie).
+
+Als laatste voegen we deze nieuwe router toe aan onze applicatie in `src/rest/index.ts`:
+
+```ts
+// src/rest/index.ts
+// ... (imports)
+import installSessionRoutes from './session';
+
+export default function installRoutes(app: KoaApplication) {
+  // ... (router aanmaken + routes installeren)
+  installSessionRoutes(router);
+
+  // ... (router in app plaatsen)
+}
+```
+
+Waarom definiëren we een API call `POST /api/sessions` i.p.v. `POST /api/users/login`?
+
+- Antwoord +
+
+  Een API call moet altijd RESTful zijn. Dit betekent dat je geen werkwoorden of acties in je URL's steekt (dus ook geen `login`). Je werkt met resources en je voert acties uit op die resources. In dit geval is de resource een sessie en de actie is aanmelden. Daarom is `POST /api/sessions` correct en `POST /api/users/login` niet.
 
 ### Oefening 2
 
