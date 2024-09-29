@@ -15,7 +15,7 @@ Returns:
 """
 def list_markdown_files(directory="."):
     markdown_files = []
-    for root, dirs, files in os.walk(directory):
+    for root, _, files in os.walk(directory):
         # ignore node_modules
         if "node_modules" in root:
             continue
@@ -42,34 +42,32 @@ def fetch_commits_from_file(filepath):
     with open(filepath, "r") as f:
         content = f.read()
         # find git clone and git checkout commands
-        return re.findall(r">?\s?git clone (.*)\s+>?\s?git checkout -b .* ([a-z0-9]{7})", content)
+        return re.findall(r"l\>\s+(ws|fe)\s+(?:start|oplossing)\s+([0-9a-fA-F]{7})\s+.+", content)
 
 """
 Construct a commit URL from the given URL and commit.
 
 Args:
-    url (str): The URL of the repository.
+    course (str): The course the commit belongs to.
     commit (str): The commit hash.
 
 Returns:
     str: The commit URL.
 """
-def construct_commit_url(url, commit):
-    url = url.replace(".git", "")
+def construct_commit_url(course, commit):
+    url = f"https://github.com/HOGENT-frontendweb/{course == "ws" and "webservices" or "frontendweb"}-budget"
     return f"{url}/commit/{commit}"
 
 """
 Check if the given commit exists in the given repository.
 
 Args:
-    url (str): The URL of the repository.
-    commit (str): The commit hash.
+    url (str): The URL to the commit.
 
 Returns:
     bool: True if the commit exists, False otherwise.
 """
-def commit_exists(url, commit):
-    url = construct_commit_url(url, commit)
+def commit_exists(url):
     response = requests.get(url)
     return response.status_code == 200
 
@@ -85,10 +83,11 @@ if __name__ == "__main__":
 
         commits = fetch_commits_from_file(file)
 
-        for [url, commit] in commits:
-            if not commit_exists(url, commit):
+        for [course, commit] in commits:
+            url = construct_commit_url(course, commit)
+            if not commit_exists(url):
                 should_fail = True
-                not_existing_commits.append([url, commit])
+                not_existing_commits.append(url)
 
         if (len(not_existing_commits) == 0):
             continue

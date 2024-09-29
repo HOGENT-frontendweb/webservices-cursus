@@ -1,0 +1,7 @@
+services:
+  commit-verifier:
+    build: .
+    volumes:
+      - ..:/files
+    environment:
+      GITHUB_WORKSPACE: /files
