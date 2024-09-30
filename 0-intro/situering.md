@@ -65,7 +65,7 @@ Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 | week 5  | datalaag en CRUD                              |
 | week 6  | datalaag en CRUD                              |
 | week 7  | (geen nieuwe theorie, aan de opdracht werken) |
-| week 8  | testen, swagger, linter                       |
+| week 8  | testen, swagger                               |
 | week 9  | validatie en foutafhandeling                  |
 | week 10 | authenticatie / autorisatie (+ testen)        |
 | week 11 | CI/CD (= online zetten)                       |
