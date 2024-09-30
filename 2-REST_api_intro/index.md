@@ -65,7 +65,7 @@ In de kern betekent REST dat je met collecties werkt met daarin resources, die j
 
 Bovendien kunnen resources gemanipuleerd worden door hun voorstelling. Als een client een **voorstelling** van een resource heeft (inclusief eventuele metadata), heeft hij genoeg om resources aan te passen en die wijzigingen terug door te sturen naar de API.
 
-Er zijn nog een aantal HTTP request methods (PATCH, CONNECT, HEAD, OPTIONS, TRACE), maar die worden in de context van REST servers (bijna) niet gebruikt. PATCH kom je soms eens tegen, en HEAD wordt frequent gebruikt in de context van bv. CORS, maar dat is voor later.
+Er zijn nog een aantal HTTP request methods (PATCH, CONNECT, HEAD, OPTIONS, TRACE), maar die worden in de context van REST servers (bijna) niet gebruikt. PATCH kom je soms eens tegen, en OPTIONS wordt frequent gebruikt in de context van bv. CORS, maar dat is voor later.
 
 #### POST vs PUT
 
@@ -195,7 +195,7 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 - Gebruik Postman om most wanted list van de FBI op te vragen.
   - Stuur hiervoor een GET request naar <https://api.fbi.gov/wanted/v1/list>
 - Gebruik <https://kroki.io/erd/svg> om onderstaand ERD te creëren.
-  - Als je via de browser klikt op de link is het logisch dat je een 404 krijgt, je moet een POST uitvoeren via Postman.
+  - Als je via de browser klikt op de link is het logisch dat je een 405 krijgt, je moet een POST uitvoeren via Postman.
 
 ![ERD](./images/kroki_erd.svg)
 
