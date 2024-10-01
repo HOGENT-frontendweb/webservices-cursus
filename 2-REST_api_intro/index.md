@@ -795,7 +795,7 @@ Maak een bestand `launch.json` aan in de `.vscode` map en voeg volgende configur
 
 Dit zorgt ervoor dat VS Code de debugger zal koppelen aan <localhost:9001>. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
 
-Alvorens je aan het debuggen gaat, voeg aan jouw start-commando de optie `--inspect=0.0.0.0:9001` toe.
+Alvorens je aan het debuggen gaat, voeg aan jouw start-commando de optie `--inspect=0.0.0.0:9001` toe (voor `src/index.ts`).
 
 Start je applicatie met `yarn start:dev`. Je zou in de terminal moeten zien dat de debugger luistert op <0.0.0.0:9001>, of dus op poort 9001. Vervolgens kan je in VS Code debugger starten door op het play-icoontje (naast 'Attach to server') te klikken in de debug tab:
 
