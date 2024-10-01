@@ -154,9 +154,9 @@ Een vaak gebruikt programma hiervoor is [Postman](https://www.postman.com). Rece
 Postman is ooit begonnen als een simpele applicatie om API's te testen maar is ondertussen enorm gegroeid en een heus platform geworden. Je kan samenwerken met anderen en allerlei automatisaties uitvoeren. Het is zowel als losstaande applicatie als in een browser bruikbaar. Maar je kan gelukkig nog altijd gewoon wat requests uitvoeren, al heb je tegenwoordig wel een account nodig om iets te kunnen doen.
 
 Laten we een POST request uitvoeren in Postman. Kies de juiste method en typ de URL in het veld. We gebruiken hier een publieke API om afbeeldingen te generen:
-<https://kroki.io/plantuml/svg>.
+<https://kroki.io/plantuml/png>.
 
-Vervolgens moeten we nog onze data in de body doorsturen. We specifiëren eerst in de `Content-Type` header dat we plain text zullen doorsturen.
+Vervolgens moeten we nog onze data in de body doorsturen. Kies in bij het tabblad `Body` voor `raw` en wijzig `JSON` naar `text`.
 
 ![Een POST request in Postman](./images/postman1.png)
 
@@ -171,11 +171,11 @@ skinparam packageStyle rectangle
 skinparam monochrome true
 actor customer
 actor clerk
-rectangle checkout {
-customer -- (checkout)
-(checkout) .> (payment) : include
-(help) .> (checkout) : extends
-(checkout) -- clerk
+rectangle "Check out" {
+  customer -- (checkout)
+  (checkout) .> (payment) : include
+  (help) .> (checkout) : extends
+  (checkout) -- clerk
 }
 @enduml
 ```
