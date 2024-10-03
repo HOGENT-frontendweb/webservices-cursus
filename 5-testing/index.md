@@ -108,12 +108,13 @@ Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests_
 
 Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Zonder deze aanpassing probeert Jest ook ons configuratiebestand `test.ts` uit te voeren.
 
-Met de `preset` instelling zorgen we ervoor dat de ts bestanden getranspiled worden met `ts-jest`.
+Met de `preset` instelling zorgen we ervoor dat de ts bestanden vertaald worden met `ts-jest`.
 
 ```ts
 {
   preset: 'ts-jest',
 }
+```
 
 Je kan ervoor opteren om unit testen te maken voor bv. de servicelaag. In dat geval maak je een map `__tests__` aan in de `src/service` map en plaats je daar je unit testen in. We plaatsen onze testen in een map `__tests__` in de root map van onze applicatie, want het zijn integratietesten voor de hele applicatie.
 
@@ -225,7 +226,11 @@ import { getLogger } from './core/logging';
 import { initializeData, shutdownData } from './data';
 import installMiddlewares from './core/installMiddlewares';
 import installRest from './rest';
-import type { KoaApplication, BudgetAppContext, BudgetAppState } from './types/koa';
+import type {
+  KoaApplication,
+  BudgetAppContext,
+  BudgetAppState,
+} from './types/koa';
 
 // 👇 1
 export interface Server {
@@ -266,12 +271,12 @@ export default async function createServer(): Promise<Server> {
 }
 ```
 
-1. Definieer een interface voor het object dat we gaan returnen. Dit object bevat:
+1. Definieer een interface voor het object dat we gaan retourneren. Dit object bevat:
    - een functie `getApp` die de Koa applicatie teruggeeft
    - een functie `start` die de server start
    - een functie `stop` die de server stopt
 2. De functie retourneert een `Server` object, maar de functie is `async` dus het returntype is een `Promise<Server>`.
-3. We returnen een object met de drie functies die we hebben gedefinieerd.
+3. We retourneren een object met de drie functies die we hebben gedefinieerd.
    - `getApp` retourneert de Koa applicatie.
    - `start` start de server en retourneert een `Promise<void>`. Hier maken we zelf een `Promise` aan omdat `app.listen` geen `Promise` retourneert. Als de callback van `app.listen` aangeroepen wordt, luistert de server naar requests. We roepen in die callback de `resolve` functie aan.
    - `stop` stopt de server. We verwijderen eerst alle listeners van de app, sluiten de databankconnectie en loggen een afscheidsbericht. Zonder het sluiten van de databankconnectie, zal bv. Jest nooit stoppen met uitvoeren van de testen. Openstaande connecties is een van de dingen waarop een Node.js proces blijft wachten.
@@ -344,7 +349,7 @@ import type { Server } from '../../src/createServer'; // 👈 3
 describe('Transactions', () => {
   // 👇 3
   let server: Server;
-  let request : supertest.Agent;
+  let request: supertest.Agent;
 
   // 👇 4
   beforeAll(async () => {
@@ -465,9 +470,9 @@ describe('Transactions', () => {
   describe('GET /api/transactions', () => {
     // 👇 2
     beforeAll(async () => {
-      await prisma.place.createMany({data:data.places});
-      await prisma.user.createMany({data:data.users});
-      await prisma.transaction.createMany({data:data.transactions});
+      await prisma.place.createMany({ data: data.places });
+      await prisma.user.createMany({ data: data.users });
+      await prisma.transaction.createMany({ data: data.transactions });
     });
 
     // 👇 3
@@ -541,7 +546,7 @@ it('should 200 and should return all transactions', async () => {
 });
 ```
 
-Met `expect.arrayContaining` controleren we of de array `response.body.items` minstens de objecten bevat die we verwachten. De objecten moeten niet in dezelfen volgorde staan, maar ze moeten wel allemaal aanwezig zijn. Hier testen we of de transacties met id 2 en 3 aanwezig zijn in het response.
+Met `expect.arrayContaining` controleren we of de array `response.body.items` minstens de objecten bevat die we verwachten. De objecten moeten niet in dezelfde volgorde staan, maar ze moeten wel allemaal aanwezig zijn. Hier testen we of de transacties met id 2 en 3 aanwezig zijn in het response.
 
 Voer de test uit en controleer of hij slaagt.
 
@@ -555,8 +560,6 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 4. Voer de test uit:
    1. Check of de statuscode gelijk is aan 200.
    2. Check of de geretourneerde transactie zoals verwacht is.
-
-<!-- markdownlint-disable-next-line -->
 
 - Oplossing +
 
@@ -665,8 +668,6 @@ Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
    1. Check of de statuscode gelijk is aan 200.
    2. Check of de geretourneerde transactie zoals verwacht is.
 
-<!-- markdownlint-disable-next-line -->
-
 - Oplossing +
 
   TODO: oplossing toevoegen
@@ -687,8 +688,6 @@ Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
    1. Check of de statuscode gelijk is aan 204.
    2. Check of de body leeg is.
 
-<!-- markdownlint-disable-next-line -->
-
 - Oplossing +
 
   TODO: oplossing toevoegen
@@ -701,8 +700,6 @@ Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
 ### Oefening 4 - Testen voor de andere endpoints
 
 Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/api/health`. Denk na over de testen die je nu al kan schrijven en welke je pas kan schrijven als validatie is toegevoegd aan de back-end.
-
-<!-- markdownlint-disable-next-line -->
 
 - Oplossing +
 

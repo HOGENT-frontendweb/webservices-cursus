@@ -199,8 +199,6 @@ Maar er zijn nog veel meer publieke API's natuurlijk! Een uitgebreide (niet exha
 
 ![ERD](./images/kroki_erd.svg)
 
-<!-- markdownlint-disable-next-line -->
-
 - Oplossing +
 
   ```erd
@@ -312,8 +310,6 @@ Onderstaand ERD zou een oplossing zijn voor onze receptenapplicatie, vol met bov
 
 ![Oplossing met FME](https://kroki.io/erd/svg/eNqLDkpNzixIjeXSykvMTeXiivbMSy9KTclMzSuBiSXm5pfmlXCV5mWWAOVDi1OLgDKZKVxpmUXFJX4gFTmJUEZiSkpRanExFxdIlYKhrq6WAsR8LggFEUJYAVGnhaQOAI2aLp8=)
 
-<!-- markdownlint-disable-next-line -->
-
 - Broncode +
 
   Onderstaande code werd hiervoor gebruikt:
@@ -345,8 +341,6 @@ Wat is er fout aan dit ERD?
 Een mogelijke oplossing ziet eruit als volgt:
 
 ![Oplossing ERD](https://kroki.io/erd/svg/eNpNjjEOwjAMRXefonOqDL0CTF0YQEwVQ2g-KFKTVI6DxO1pSAWZ_GU9P__pjNmtuJFyloLxoH5mGIE9vImmMTwZ1iFIQxgfcxDKwQn1_L0f7QZfE7hiD8dJToVdzB6SMCAUsr-DaY1JzHKMFjQ7KZ8u5gX7K9PnzbVJVeMv-m7QWnUVozrq6l-04RonNblTWg-75AMGd1SG)
-
-<!-- markdownlint-disable-next-line -->
 
 - Broncode +
 

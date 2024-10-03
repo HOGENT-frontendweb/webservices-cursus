@@ -60,8 +60,6 @@ function getValue() {
 }
 ```
 
-<!-- markdownlint-disable-next-line -->
-
 - Antwoord +
 
   `value` is beschikbaar in de hele functie, dus op de plaatsen 1, 2, 3 en 4. Dit wordt **hoisting** genoemd.

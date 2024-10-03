@@ -552,8 +552,6 @@ export const register = async ({
 - Pas de andere functies in user service aan waar nodig.
 - Pas ook de REST-laag van de users aan waar nodig.
 
-<!-- markdownlint-disable-next-line -->
-
 - Oplossing +
 
   TODO: voorbeeldoplossing toevoegen
@@ -1203,8 +1201,6 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
 - `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
 - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
-
-<!-- markdownlint-disable-next-line -->
 
 - Oplossing +
 

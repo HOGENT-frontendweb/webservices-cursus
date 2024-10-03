@@ -852,8 +852,6 @@ export const getLogger = () => {
 };
 ```
 
-<!-- markdownlint-disable-next-line -->
-
 - Uitleg +
 
 1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
@@ -988,8 +986,6 @@ Voeg CORS toe aan je eigen project.
 In het vorige hoofdstuk hebben een voorbeeld uitgewerkt voor een recepten API waarbij een veelgemaakte fout was dat subroutes niet correct gedefinieerd worden. Hier geven we een praktisch voorbeeld van zo'n geneste route in onze budget app.
 
 Elke transactie heeft een plaats waar deze gebeurd is. We willen nu alle transacties van een bepaalde plaats opvragen. Welke URL gebruiken we hiervoor?
-
-<!-- markdownlint-disable-next-line -->
 
 - Antwoord +
 
