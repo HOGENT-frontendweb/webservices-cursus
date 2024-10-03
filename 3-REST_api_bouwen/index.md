@@ -347,7 +347,10 @@ app.listen(9000, () => {
 In wat volgt gaan we de code wat herstructureren zodat we een mooie gelaagde applicatie krijgen. We gaan de code (voorlopig) opsplitsen in 2 lagen:
 
 - **data**: beheert onze data (momenteel in-memory maar later in een databank)
-- **service**: de business logica
+- **service**: de business logica, de domeinlaag
+
+Verder in dit hoofdstuk voegen we nog een 3de laag toe
+- **REST API**: de presentatielaag
 
 ### Datalaag
 

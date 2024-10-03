@@ -77,7 +77,7 @@ DATABASE_URL=mysql://root:root@localhost:3306/budget_test
 
 Later gebruiken we dit bestand om ervoor te zorgen dat het juiste configuratiebestand wordt ingeladen.
 
-Maak alvast de database budget_test aan via migrations.
+**Maak alvast de database budget_test aan via migrations.**
 
 We laten Jest een leeg configuratiebestand aanmaken:
 
@@ -230,7 +230,7 @@ import type {
   KoaApplication,
   BudgetAppContext,
   BudgetAppState,
-} from './types/koa';
+} from './types/koa';// 👈 1
 
 // 👇 1
 export interface Server {
@@ -272,9 +272,10 @@ export default async function createServer(): Promise<Server> {
 ```
 
 1. Definieer een interface voor het object dat we gaan retourneren. Dit object bevat:
-   - een functie `getApp` die de Koa applicatie teruggeeft
+   - een functie `getApp` die de Koa applicatie teruggeeft.
    - een functie `start` die de server start
    - een functie `stop` die de server stopt
+   Importeer het type `KoaApplication`
 2. De functie retourneert een `Server` object, maar de functie is `async` dus het returntype is een `Promise<Server>`.
 3. We retourneren een object met de drie functies die we hebben gedefinieerd.
    - `getApp` retourneert de Koa applicatie.
@@ -341,7 +342,7 @@ Jest voorziet een aantal globale functies die je kan gebruiken in je testen. De 
 Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een folder rest met een bestand `transactions.spec.ts` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
 
 ```ts
-import supertest from 'supertest'; // 👈 3
+import supertest from 'supertest'; // 👈 1
 import createServer from '../../src/createServer'; // 👈 1
 import type { Server } from '../../src/createServer'; // 👈 3
 
