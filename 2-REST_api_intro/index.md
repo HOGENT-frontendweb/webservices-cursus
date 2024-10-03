@@ -704,7 +704,7 @@ De belangrijkste basis `compilerOptions` zijn:
 - `esModuleInterop`: of ES modules en CommonJS modules gemixt mogen worden, zorgt voor betere compatibiliteit met bestaande CommonJS modules
 - `forceConsistentCasingInFileNames`: of de bestandsnamen consistent moeten zijn (case sensitive)
 
-Daarnaat heb je nog een heleboel andere `compilerOptions` specifiek gericht op het typeren van je code:
+Daarnaast heb je nog een heleboel andere `compilerOptions` specifiek gericht op het typeren van je code:
 
 - `strict`: of alle strictness opties aan moeten staan, dit is een shortcut voor alle onderstaande opties
   - `noImplicitAny`: verbied dat variabelen impliciet van het type `any` zijn, en dus geen duidelijk type hebben

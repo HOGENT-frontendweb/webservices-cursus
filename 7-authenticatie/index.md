@@ -1103,7 +1103,7 @@ router.delete(
 );
 ```
 
-We passen ook de `getUserById` functie aan in `src/rest/user.ts` zodat we `me` kunnen gebruiken om de informatie van de aanmelde gebruiker op te vragen:
+We passen ook de `getUserById` functie aan in `src/rest/user.ts` zodat we `me` kunnen gebruiken om de informatie van de aangemelde gebruiker op te vragen:
 
 ```ts
 const getUserById = async (

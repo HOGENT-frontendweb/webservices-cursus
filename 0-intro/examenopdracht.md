@@ -10,7 +10,7 @@ Alle code moet in een GitHub classroom repository terecht komen (zie Chamilo voo
 
 Het is belangrijk dat de applicatie significant verschilt van de voorbeeldapplicatie die tijdens de les gemaakt wordt.
 
-Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Chamilo. Een template voor dit dossier (`dossier.md`) wordt ook aangeleverd als je de opdracht accepteert en dien je te gebruiken. **Je dient het dossier in als PDF!**
+Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Chamilo. Een template voor dit dossier (`dossier.md`) wordt ook aangeleverd als je de opdracht accepteert en dien je te gebruiken. **Je dient het dossier in als pdf!**
 
 ## 2. Minimumvereisten
 
@@ -75,14 +75,14 @@ Zorg dat de `dossier.md` van je repository aangevuld is, alle vereisten staan in
 
 In dit document staan lijnen die starten met een >, dit zijn instructies. Verwijder deze lijnen voor je het dossier indient!
 
-Dien enkel een PDF in op Chamilo, er zijn genoeg plugins voor VS Code om Markdown naar PDF om te zetten, zoals bv. <https://marketplace.visualstudio.com/items?itemName=yzane.markdown-pdf>.
+Dien enkel een pdf in op Chamilo, er zijn genoeg plugins voor VS Code om Markdown naar pdf om te zetten, zoals bv. <https://marketplace.visualstudio.com/items?itemName=yzane.markdown-pdf>.
 
 ## 4. Voorbeelden van extra’s
 
 Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox](https://nodejstoolbox.com/). Een aantal veelgebruikte extra's zijn:
 
 - Ander ORM voor de databank
-- Ander type databank (document based, column oriënted…)
+- Ander type databank (document based, column oriented...)
   - Let op: niet elk project is hiervoor geschikt!
 - Ander web framework (Express, Fastify, NestJS...)
   - Let op: nog steeds met het toepassen van de nodige best practices, aangepast aan het framework! We merken vaak dat studenten die afwijken op dit punt, ook de best practices vergeten (door online tutorials) waardoor het project niet voldoet aan meerdere minimumvereisten.
@@ -104,7 +104,7 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 
 - De code van je applicatie
   - Moet te vinden zijn in de GitHub classroom repository op de `main` branch
-- Het ingevulde dossier, als PDF ingediend op Chamilo
+- Het ingevulde dossier, als pdf ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
   - De demo mag maximaal 15 minuten duren (incl. demo Front-end Web Development)
   - De webcam moet aanstaan tijdens de demo

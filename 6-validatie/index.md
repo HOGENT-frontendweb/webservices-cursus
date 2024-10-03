@@ -25,7 +25,7 @@ Welke soorten invoer kan een HTTP request bevatten?
 
 Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoorbeeld in de `POST /api/transactions` moet het bedrag van de transactie een geldig getal zijn (geen string, object...) én is het verplicht op te geven. Indien aan de validatie niet voldaan is, retourneer je een status code 400 (= bad request) en geef je details over de fout. Zonder bijkomende informatie is de HTTP 400 nutteloos. Bij validatiefouten stop je onmiddellijk de verdere verwerking van het request en retourneer je een passende foutboodschap voor de client. Stuur het response zo snel mogelijk terug naar de client (= **fail-fast principe**). De oorzaak van de validatiefout moet goed worden uitgelegd en begrepen door de client. Technische aspecten mag je om veiligheidsredenen niet retourneren.
 
-?> In geen geval is het goed om een HTTP 500 terug te geven bij fouten die de client kan vermijden. De HTTP 500 dient enkel voor serverfouten die de client niet kan vermijden. Een HTTP 400 is een clientfout en moet dus ook door de client worden opgelost.
+?> In geen geval is het goed om een HTTP 500 terug te geven bij fouten die de client kan vermijden. De HTTP 500 dient enkel voor serverfouten die de client niet kan vermijden. Een HTTP 400 is een fout veroorzaakt door de client en moet dus ook door de client worden opgelost.
 
 We gebruiken voor invoervalidatie een [fluent validation API](https://en.wikipedia.org/wiki/Fluent_interface) genaamd [Joi](https://joi.dev/), installeer dit:
 
@@ -174,7 +174,7 @@ export default validate; // 👈 2
 8. Indien fouten: formatteer en bewaar de fouten (zie verder). Indien geen fouten: stel de params context-waarde gelijk aan de `value`, zo hebben we de genormaliseerde waarden.
 9. Indien we fouten hadden, gooit de context een status code 400 (= bad request) en worden de details van de fouten vermeld.
    - Merk op: we gaan nog steeds een HTTP 500 (= internal server error) krijgen als er een fout optreedt in de validatie middleware zelf. Dit komt omdat Koa niet weet hoe deze fout afgehandeld moet worden. We zullen dit verderop oplossen.
-10. We definieren een type `RequestValidationSchemeInput` en `RequestValidationScheme` om de validatieschema's te definiëren.
+10. We definiëren een type `RequestValidationSchemeInput` en `RequestValidationScheme` om de validatieschema's te definiëren.
     - `RequestValidationSchemeInput`: een object met optionele properties `params`, `body` en `query` die een `SchemaLike` object bevatten. `SchemaLike` is een type dat een schema kan zijn, Joi is in staat om van diverse types een schema te maken (bv. string, number, object...).
     - `RequestValidationScheme`: een object met properties `params`, `body` en `query` die een `Schema` object bevatten.
 
@@ -712,7 +712,7 @@ export const create = async ({
 
 1. Importeer `ServiceError` en `handleDBError`.
 2. We verwijderen de `null` uit onze returnwaarde. De `getById` functie retourneert nu altijd een transactie of gooit een fout als die niet bestaat.
-3. Als we geen transactie terugkregen, dan gooien we de gepaste `ServiceErrror`.
+3. Als we geen transactie terugkregen, dan gooien we de gepaste `ServiceError`.
 4. We hebben geen check meer nodig of de plaats bestaat, de databank doet dit voor ons. We wrappen de `create` functie in een try/catch.
 5. We vangen een foutmelding op en geven deze door aan `handleDBError`. Deze functie vormt de error om, indien gekend, of retourneert dezelfde fout. De returnwaarde van deze functie wordt opnieuw gegooid.
    - Onze [error handler](#middleware) (zie hierboven) zal de fout opvangen en een mooi response teruggeven.

@@ -73,7 +73,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
 
   Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `GET /api/places/:id` of `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
 
-  !> Kijk goed hoe de twee geneste routes gedefineerd zijn (`GET /api/places/:id/transactions` en `GET /api/users/:id/transactions`)! Hiertegen worden heel wat fouten gemaakt.
+  !> Kijk goed hoe de twee geneste routes gedefinieerd zijn (`GET /api/places/:id/transactions` en `GET /api/users/:id/transactions`)! Hiertegen worden heel wat fouten gemaakt.
 
 <!-- markdownlint-enable header-start-left -->
 
@@ -925,7 +925,7 @@ export default {
 1. Pas de config aan voor development en production, voeg de CORS settings toe.
 2. `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
    - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
-   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat losen we op in het hoofdstuk rond CI/CD.
+   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
 3. `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u).
 
 Installeer nu de CORS middleware in `src/index.ts`:

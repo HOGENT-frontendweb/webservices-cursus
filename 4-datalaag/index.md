@@ -200,7 +200,7 @@ Het is wel belangrijk dat je let op de volgorde van uitvoeren van de migraties o
 
 Prisma heeft een heleboel ingebouwde mechanismen om migraties automatisch uit te voeren. Het enige wat je moet doen is het schema aanpassen en vragen aan Prisma om een migratie te genereren. Prisma zal dan de nodige SQL genereren om de databank up-to-date te brengen.
 
-Wij hebben reeds ons schema gedefiniëerd. We kunnen nu een migratie genereren met volgend commando:
+Wij hebben reeds ons schema gedefinieerd. We kunnen nu een migratie genereren met volgend commando:
 
 ```bash
 yarn prisma migrate dev --name init
@@ -398,7 +398,7 @@ main()
 ```
 
 1. We importeren de Prisma client en maken een instantie aan.
-2. We definieren een `main` functie die de seeding zal uitvoeren. We seeden eerst de gebruikers, dan de plaatsen en tenslotte de transacties.
+2. We definiëren een `main` functie die de seeding zal uitvoeren. We seeden eerst de gebruikers, dan de plaatsen en tenslotte de transacties.
    - We maken hier gebruik van de Prisma client. Deze heeft één property per tabel, in dit geval `user`, `place` en `transaction`. Deze properties hebben functies zoals `createMany` om meerdere records toe te voegen.
    - Je zal merken dat Prisma suggesties geeft voor de velden die je kan invullen. Dit is de IntelliSense die we eerder vermeld hebben.
 3. We roepen de `main` functie aan en sluiten de connectie met de databank af na het uitvoeren van de seeding of bij een fout.
@@ -423,7 +423,7 @@ Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om 
 
 ### Oefening 2 - Je eigen project
 
-1. Configuur seeding voor je eigen project.
+1. Configureer seeding voor je eigen project.
 2. Maak seeds aan voor alle tabellen die je in de vorige oefening hebt gedefinieerd.
 
 ## Datalaag finaliseren
@@ -443,7 +443,7 @@ export async function initializeData(): Promise<void> {
 
   await prisma.$connect();
 
-  getLogger().info('Succesfully connected to the database');
+  getLogger().info('Successfully connected to the database');
 }
 
 // 👇 3
@@ -718,7 +718,7 @@ export interface PlaceCreateInput {
 export interface PlaceUpdateInput extends PlaceCreateInput {}
 ```
 
-We definieren een `PlaceCreateInput` en `PlaceUpdateInput` interface. De `PlaceUpdateInput` interface erft van de `PlaceCreateInput` interface. We kiezen er ook voor om alle velden voor de `PlaceCreateInput` interface opnieuw te definiëren. Je zou dit ook kunnen hergebruiken van een `Place` interface, maar dit is minder flexibel.
+We definiëren een `PlaceCreateInput` en `PlaceUpdateInput` interface. De `PlaceUpdateInput` interface erft van de `PlaceCreateInput` interface. We kiezen er ook voor om alle velden voor de `PlaceCreateInput` interface opnieuw te definiëren. Je zou dit ook kunnen hergebruiken van een `Place` interface, maar dit is minder flexibel.
 
 Vervolgens passen we de `create` en `updateById` functies aan in de `src/service/place.ts`:
 
@@ -754,7 +754,7 @@ Analoog kan je de types toevoegen voor een transactie en een gebruiker.
 
 Als laatste voegen we types toe aan onze REST-laag. Dit is de laatste laag waar we nog geen types hebben toegevoegd.
 
-We breiden onze gemeenschappelijke types uit met een `ListReponse` en een `IdParams` interface:
+We breiden onze gemeenschappelijke types uit met een `ListResponse` en een `IdParams` interface:
 
 ```ts
 // src/types/common.ts
@@ -902,7 +902,7 @@ const deletePlace = async (ctx: KoaContext<void, IdParams>) => {
 
 // 👇 6
 const getTransactionsByPlaceId = async (
-  ctx: KoaContext<GetAllTransactionsReponse, IdParams>,
+  ctx: KoaContext<GetAllTransactionsResponse, IdParams>,
 ) => {
   // ...
 };
@@ -923,7 +923,7 @@ export default (parent: KoaRouter) => {
 4. De `updatePlace` functie verwacht een `IdParams` object in de URL en een `UpdatePlaceRequest` object in de body van de request.
 5. De `deletePlace` functie geeft niets terug en verwacht enkel een `IdParams` object in de URL.
 6. De `getTransactionsByPlaceId` geeft een lijst van transacties terug en ontvangt een `IdParams` object in de URL.
-   - Probeer zelf de interface `GetAllTransactionsReponse` te schrijven in `src/types/transaction.ts`. Maak hierbij gebruik van de `ListResponse`.
+   - Probeer zelf de interface `GetAllTransactionsResponse` te schrijven in `src/types/transaction.ts`. Maak hierbij gebruik van de `ListResponse`.
 7. We gebruiken ook ons eigen `KoaRouter` type in plaats van de standaard Koa router.
    - We geven hier ook onze `BudgetAppState` en `BudgetAppContext` interfaces mee als extra types aan de Koa router.
 

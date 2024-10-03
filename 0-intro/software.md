@@ -20,6 +20,8 @@ Installeer Git via een package manager:
 
 Open een terminal (of bv. Git Bash op Windows) en voer onderstaande commando's uit. Je bent natuurlijk vrij om deze instellingen aan te passen naar jouw voorkeur.
 
+<!-- cspell: disable -->
+
 ```bash
 git config --global core.autocrlf true # <- enkel op Windows
 git config --global core.autocrlf input # <- enkel op macOS en Linux
@@ -38,6 +40,8 @@ git config --global push.default simple
 git config --global user.name "Voornaam Achternaam"
 git config --global user.email "Jouw e-mailadres"
 ```
+
+<!-- cspell: enable -->
 
 Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) om een SSH-key toe te voegen aan je GitHub-account. Dit is o.a. nodig om te kunnen pushen naar je repository.
 

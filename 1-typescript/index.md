@@ -28,7 +28,7 @@ Deze types worden enkel gebruikt tijdens het schrijven van de code en worden ver
 
 TypeScript is ontwikkeld door Microsoft en is open-source. Het is een populaire taal in de wereld van web development (zie <https://2023.stateofjs.com/en-US/usage/#js_ts_balance>). TypeScript wordt tegenwoordig meer gebruikt dan pure JavaScript omwille van de types, ES6+ features en soms OO features (als je hiervan houdt). Natuurlijk maakt TypeScript code soms complexer en langer, maar dit weegt niet op tegen de voordelen.
 
-Het vervolg van dit hoofdstuk zal bestaan uit een herhaling van JavaScript en een introductie tot TypeScript. We zullen de belangrijkste basisconcepten en -mogelijkheden van TypeScript overlopen. Daarnast zullen we ook enkele belangrijke concepten van functioneel programmeren in JavaScript/TypeScript overlopen.
+Het vervolg van dit hoofdstuk zal bestaan uit een herhaling van JavaScript en een introductie tot TypeScript. We zullen de belangrijkste basisconcepten en -mogelijkheden van TypeScript overlopen. Daarnaast zullen we ook enkele belangrijke concepten van functioneel programmeren in JavaScript/TypeScript overlopen.
 
 Een volledig overzicht van de mogelijkheden van TypeScript kan je vinden in de [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html).
 
