@@ -44,7 +44,7 @@ Snel bleek dat de manier om software snel in een stabiele staat te krijgen, was 
 
 Als iedereen door elkaar commit op deze branch, lukt dat nooit natuurlijk. Er is dus een andere git-strategie nodig.
 
-![Feature branch](./images/9_1_git_branches_merge.png ':size=50%')
+![Feature branch](./images/10_1_git_branches_merge.png ':size=50%')
 
 Een mogelijke methode is werken met **feature branches**. Het idee hierachter is dat de main branch altijd stabiel is. Als je aan een feature (of bugfix) start, creëer je een nieuwe branch. Je doet daar al je commits tot het werk af is, voegt testen toe, en merget uiteindelijk alles terug naar de main. Tussendoor kan je zelfs je feature branch rebasen met de main branch, om zo de nieuwste wijzigingen te hebben voor je de merge doet. Herhaal dit proces voor elke feature.
 
@@ -173,15 +173,15 @@ Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van 
 
 De volgende stap is het aanmaken van een Render account. Ga naar [Render](https://render.com/) en klik op "SIGN IN" rechtsboven.
 
-![Render account aanmaken](./images/9_2_render_homepage.png ':size=80%')
+![Render account aanmaken](./images/10_2_render_homepage.png ':size=80%')
 
 Kies voor "GitHub" als authenticatiemethode en volg de stappen van de wizard. Als je niet voor GitHub kiest, heb je geen toegang tot jouw repositories in onze classroom. Na het aanmaken van je account krijg je een verificatiemail, klik op de link.
 
-![Render aanmelden met GitHub](./images/9_3_sign_in_with_github.png ':size=80%')
+![Render aanmelden met GitHub](./images/10_3_sign_in_with_github.png ':size=80%')
 
 Na verificatie van je account kom je terecht op je dashboard.
 
-![Render dashboard](./images/9_4_render_dashboard.png ':size=80%')
+![Render dashboard](./images/10_4_render_dashboard.png ':size=80%')
 
 ## Back-end online zetten
 
@@ -189,50 +189,50 @@ Na verificatie van je account kom je terecht op je dashboard.
 
 We zetten eerst de back-end online, klik op "New Web Service".
 
-![Render new web service](./images/9_5_new_web_service.png ':size=80%')
+![Render new web service](./images/10_5_new_web_service.png ':size=80%')
 
 Kies op het volgende scherm voor "Build and deploy from a Git repository" en klik op "Next".
 
-![Render choose Git](./images/9_6_web_service_choose_github.png ':size=80%')
+![Render choose Git](./images/10_6_web_service_choose_github.png ':size=80%')
 
 We koppelen onze GitHub repository aan Render. Klik op "Connect account" bij GitHub.
 
-![Render connect account](./images/9_7_connect_github_account.png ':size=80%')
+![Render connect account](./images/10_7_connect_github_account.png ':size=80%')
 
 Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "HOGENT-frontendweb" toegang hebben tot Render.
 
-![Render pick organization](./images/9_8_pick_organization.png ':size=80%')
+![Render pick organization](./images/10_8_pick_organization.png ':size=80%')
 
 Zoek nu jouw **eigen** back-end repository op en klik op "Connect".
 
-![Render search back-end repo](./images/9_9_search_backend_repo.png ':size=80%')
+![Render search back-end repo](./images/10_9_search_backend_repo.png ':size=80%')
 
 Kies een unieke naam voor je service (hint: je repository-naam is uniek) en "Frankfurt" als regio. De rest zou normaal correct ingevuld moeten zijn, **controleer dit voor jouw situatie**.
 
 Merk op: we gebruiken `yarn` als build commando, we moeten nl. enkel onze dependencies installeren en niets builden.
 
-![Render back-end settings part 1](./images/9_10_backend_settings_part_1.png ':size=80%')
+![Render back-end settings part 1](./images/10_10_backend_settings_part_1.png ':size=80%')
 
 Laat het startcommando staan op `node src/index.js`. Het type plan zou correct ingesteld moeten zijn (gratis).
 **Nog niets aanmaken, er komt nog een belangrijke stap!**
 
 Merk op: we maken geen script voor ons commando in productie. Soms worden foutcodes van het proces niet goed opgevangen door bv. `npm` of `yarn`, daarom gebruiken we `node` rechtstreeks.
 
-![Render back-end settings part 2](./images/9_11_backend_settings_part_2.png ':size=80%')
+![Render back-end settings part 2](./images/10_11_backend_settings_part_2.png ':size=80%')
 
 Vul onder de instance types de nodige environment variabelen in. Check je mail voor de databank URL en de nodige credentials. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
 
 > Hint: voor de variabele `AUTH_JWT_SECRET` kan je een random string gebruiken. Klik op "Generate" om een random string te laten genereren door Render.
 
-![Render back-end settings part 3](./images/9_12_backend_settings_part_3.png ':size=80%')
+![Render back-end settings part 3](./images/10_12_backend_settings_part_3.png ':size=80%')
 
 Optioneel kan je een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit /api/health/ping.
 
-![Render back-end settings part 4](./images/9_13_backend_settings_part_4.png ':size=80%')
+![Render back-end settings part 4](./images/10_13_backend_settings_part_4.png ':size=80%')
 
 Klik vervolgens op "Create Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
 
-![Back-end is online](./images/9_14_backend_online.png ':size=80%')
+![Back-end is online](./images/10_14_backend_online.png ':size=80%')
 
 **Lees eerst de logs alvorens de lectoren te contacteren!** Krijg je het niet werkende? Maak een issue op jouw repository en tag jouw lector. Voeg een kopie van je logs toe, anders kunnen we niet helpen.
 
@@ -246,45 +246,45 @@ Het is tijd om onze frontend online te zetten. Onze frontend is (na het builden)
 
 Open het Render dashboard en klik rechtsboven op "New" en "Static Site".
 
-![Render new web service](./images/9_15_new_static_site.png ':size=80%')
+![Render new web service](./images/10_15_new_static_site.png ':size=80%')
 
 > **Let op!** Sla de volgende twee stappen over als je de back-end al online hebt gezet.
 
 We koppelen onze GitHub repository aan Render. Klik op "Connect account" bij GitHub.
 
-![Render connect account](./images/9_7_connect_github_account.png ':size=80%')
+![Render connect account](./images/10_7_connect_github_account.png ':size=80%')
 
 Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "HOGENT-frontendweb" toegang hebben tot Render.
 
-![Render pick organization](./images/9_8_pick_organization.png ':size=80%')
+![Render pick organization](./images/10_8_pick_organization.png ':size=80%')
 
 > Ga hier dus verder als je de back-end al online hebt gezet.
 
 Zoek nu jouw **eigen** frontend repository op en klik op "Connect"
 
-![Render search front-end repo](./images/9_16_search_frontend_repo.png ':size=80%')
+![Render search front-end repo](./images/10_16_search_frontend_repo.png ':size=80%')
 
 Kies een unieke naam voor je statische website (hint: je repository-naam is uniek). Vul `dist` in bij de "Publish directory". De rest zou normaal correct ingevuld moeten zijn, controleer dit voor jouw situatie.
 
 Merk op: we gebruiken `yarn; yarn build` als build commando. We installeren dus eerst onze dependencies en bouwen vervolgens onze applicatie.
 
-![Render front-end settings part 1](./images/9_17_frontend_settings_part_1.png ':size=80%')
+![Render front-end settings part 1](./images/10_17_frontend_settings_part_1.png ':size=80%')
 
 We moeten onze frontend nog vertellen waar onze backend draait. Dit doen we door een environment variabele in te stellen. Klik op "Advanced" en vul de nodige environment variable in. De URL van je backend vind je op het Render dashboard van jouw backend. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie.
 
 Klik vervolgens op "Create Static Site" en wacht geduldig af (het gratis plan kan trager zijn).
 
-![Render front-end settings part 2](./images/9_18_frontend_settings_part_2.png ':size=80%')
+![Render front-end settings part 2](./images/10_18_frontend_settings_part_2.png ':size=80%')
 
 Als alles goed is gegaan, zou je nu een werkende frontend moeten hebben. De URL van jouw frontend vind je linksboven.
 
-![Front-end is online](./images/9_19_frontend_online.png ':size=80%')
+![Front-end is online](./images/10_19_frontend_online.png ':size=80%')
 
 ### CORS probleem
 
 Je kan nu alvast naar jouw frontend gaan maar je zal merken dat er nog een probleem is - open de console. Je krijgt een CORS error, dit moeten we gaan fixen in de backend!
 
-![CORS error](./images/9_20_frontend_cors.png ':size=80%')
+![CORS error](./images/10_20_frontend_cors.png ':size=80%')
 
 CORS kan je enkel oplossen door in de backend de juiste headers te zetten. We hadden reeds ons CORS package geconfigureerd en moeten enkel de URL aanpassen in het bestand `config/production.js`. Vervang een reeds ingevulde URL door jouw eigen frontend URL.
 
@@ -307,11 +307,11 @@ Commit en push deze wijziging. Wacht tot de backend opnieuw online is en herlaad
 
 Probeer nu op jouw frontend rechtstreeks naar een URL verschillend van `/` te gaan. In ons voorbeeld gaan we naar `/transactions`. Je zal merken dat je een 404 krijgt. Dit moeten we oplossen in de frontend!
 
-![404 error](./images/9_21_frontend_not_found.png ':size=80%')
+![404 error](./images/10_21_frontend_not_found.png ':size=80%')
 
 Ga naar het Render dashboard van jouw frontend en klik op "Redirects/Rewrites". Voeg een nieuwe Rewrite-regel toe zoals op onderstaande afbeelding. Klik vervolgens op "Save Changes". Je kan meteen testen of het werkt! Deze regel zorgt ervoor dat alle requests naar de frontend die niet naar / gaan, als antwoord de index.html van de frontend krijgen. [Lees meer over het verschil tussen redirects en rewrites](https://render.com/docs/redirects-rewrites).
 
-![Front-end rewrite](./images/9_22_frontend_rewrite.png ':size=80%')
+![Front-end rewrite](./images/10_22_frontend_rewrite.png ':size=80%')
 
 ## Hosting remarks
 
