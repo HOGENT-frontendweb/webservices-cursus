@@ -1211,3 +1211,4 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 - Gebruik van een externe authenticatieprovider (bv. [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
 - Schrijf een custom validator voor Joi om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
+  - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.
