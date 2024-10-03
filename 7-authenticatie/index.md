@@ -1202,6 +1202,8 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 - `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
 - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
 
+<br/>
+
 - Oplossing +
 
   TODO: voorbeeldoplossing toevoegen
