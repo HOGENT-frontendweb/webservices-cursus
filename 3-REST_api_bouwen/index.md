@@ -1,6 +1,14 @@
 # REST API bouwen
 
-l> ws start 3acce6c les3
+## Startpunt voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les3 3acce6c
+yarn install
+yarn start:dev
+```
 
 ## De budget app
 
@@ -1039,4 +1047,12 @@ Hierin definiëren we onze geneste route. Vergeet niet deze router te installere
 
 Werk de routes van de entiteiten in je eigen project uit. Zorg ervoor dat je geneste routes correct definieert. Werk voorlopig met mock data.
 
-l> ws oplossing 4e63e94 les3-opl
+## Oplossing voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les3-opl 4e63e94
+yarn install
+yarn start:dev
+```

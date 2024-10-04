@@ -42,20 +42,20 @@ def fetch_commits_from_file(filepath):
     with open(filepath, "r") as f:
         content = f.read()
         # find git clone and git checkout commands
-        return re.findall(r"l\>\s+(ws|fe)\s+(?:start|oplossing)\s+([0-9a-fA-F]{7})\s+.+", content)
+        return re.findall(r">?\s?git clone (.*)\s+>?\s?git checkout -b .* ([a-z0-9]{7})", content)
 
 """
 Construct a commit URL from the given URL and commit.
 
 Args:
-    course (str): The course the commit belongs to.
+    url (str): The URL of the repository.
     commit (str): The commit hash.
 
 Returns:
     str: The commit URL.
 """
-def construct_commit_url(course, commit):
-    url = f"https://github.com/HOGENT-frontendweb/{course == "ws" and "webservices" or "frontendweb"}-budget"
+def construct_commit_url(url, commit):
+    url = url.replace(".git", "")
     return f"{url}/commit/{commit}"
 
 """
@@ -71,6 +71,7 @@ def commit_exists(url):
     response = requests.get(url)
     return response.status_code == 200
 
+
 if __name__ == "__main__":
     # read dir from env GITHUB_WORKSPACE
     directory = os.environ.get("GITHUB_WORKSPACE")
@@ -83,19 +84,19 @@ if __name__ == "__main__":
 
         commits = fetch_commits_from_file(file)
 
-        for [course, commit] in commits:
-            url = construct_commit_url(course, commit)
-            if not commit_exists(url):
+        for [repoUrl, commit] in commits:
+            commitUrl = construct_commit_url(repoUrl, commit)
+            if not commit_exists(commitUrl):
                 should_fail = True
-                not_existing_commits.append(url)
+                not_existing_commits.append([repoUrl, commit])
 
         if (len(not_existing_commits) == 0):
             continue
 
         print(file)
 
-        for url in not_existing_commits:
-            print(f"\tCommit does not exist: {url}")
+        for [repoUrl, commit] in not_existing_commits:
+            print(f"\tCommit {commit} does not exist in {repoUrl}")
 
         print("")
 

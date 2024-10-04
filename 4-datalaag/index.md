@@ -1,6 +1,14 @@
 # Datalaag en CRUD
 
-l> ws start 4e63e94 les4
+## Startpunt voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les4 4e63e94
+yarn install
+yarn start:dev
+```
 
 ## Gelaagde architectuur
 
@@ -973,7 +981,15 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 3. Vervolledig je repositories en services in je project met alle benodigde CRUD-operaties.
 4. Vervolledig ook de migrations en seeds.
 
-l> ws oplossing fc8381d les4-opl
+## Oplossing voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les4-opl fc8381d
+yarn install
+yarn start:dev
+```
 
 ## Mogelijke extra's voor de examenopdracht
 
