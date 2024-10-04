@@ -9,7 +9,7 @@
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > yarn install
-> yarn start
+> yarn start:dev
 > ```
 
 Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Services. Onderstaande tabel geeft aan welke secties van toepassing zijn voor welk olod. In de secties waar één olod niet van toepassing is, wordt dit ook nog eens expliciet vermeld.
