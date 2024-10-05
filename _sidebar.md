@@ -11,7 +11,7 @@
 - [2. REST API intro](/2-REST_api_intro/index.md)
 - [3. REST API bouwen](/3-REST_api_bouwen/index.md)
 - [4. Datalaag en CRUD](/4-datalaag/index.md)
-- [5. Testing (WIP)](/5-testing/index.md)
+- [5. Testing](/5-testing/index.md)
 - [6. Validatie en foutafhandeling (WIP)](/6-validatie/index.md)
 - [7. Authenticatie & autorisatie (WIP)](/7-authenticatie/index.md)
 - [8. Testen: authenticatie & autorisatie (WIP)](/8-auth_testing/index.md)

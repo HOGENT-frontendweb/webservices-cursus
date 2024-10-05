@@ -1,6 +1,14 @@
 # Testing
 
-<!-- TODO: startpunt en oplossing toevoegen -->
+## Startpunt voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les5 0eca476
+yarn install
+yarn start:dev
+```
 
 ## Soorten testen
 
@@ -68,16 +76,31 @@ yarn add --dev jest supertest env-cmd ts-node ts-jest @types/jest @types/superte
 
 ### Configuratie
 
-Eerst en vooral moeten we onze server configureerbaar maken in test modus. Maak een bestand `config/test.ts` aan en kopieer de inhoud van `config/development.ts` hiernaar. Maak vervolgens een `.env.test` aan in de root map, met volgende inhoud:
+Eerst en vooral moeten we onze server configureerbaar maken in test modus. Maak een bestand `config/testing.ts` aan en kopieer de inhoud van `config/development.ts` hiernaar. Maak vervolgens een `.env.test` aan in de root map, met volgende inhoud (pas aan waar nodig):
 
 ```ini
-NODE_ENV=test
-DATABASE_URL=mysql://root:root@localhost:3306/budget_test
+NODE_ENV=testing
+DATABASE_URL=mysql://<USERNAME>:<PASSWORD>@localhost:3306/budget_test
 ```
 
-Later gebruiken we dit bestand om ervoor te zorgen dat het juiste configuratiebestand wordt ingeladen.
+Later gebruiken we dit bestand om ervoor te zorgen dat het juiste configuratiebestand wordt ingeladen. Voor het gemak voegen we twee scripts toe aan onze `package.json`:
 
-**Maak alvast de database budget_test aan via migrations.**
+```json
+{
+  "scripts": {
+    "migrate:dev": "prisma migrate dev",
+    "migrate:test": "env-cmd -f .env.test prisma migrate dev --skip-seed"
+  }
+}
+```
+
+Hiermee kunnen we de databank migreren in development en test modus. Het commando `env-cmd -f .env.test` zorgt ervoor dat de environment variabelen in `.env.test` worden ingeladen alvorens `prisma migrate dev` wordt uitgevoerd. Bij onze migraties voor de testen slaan we ook de seeding over. We willen immers in onze testen de volledige controle hebben over de data die we in de databank plaatsen.
+
+Maak alvast de database budget_test aan via migrations:
+
+```bash
+yarn migrate:test
+```
 
 We laten Jest een leeg configuratiebestand aanmaken:
 
@@ -106,9 +129,7 @@ Jest zoekt standaard naar testen met volgende reguliere expressies: `**/__tests_
 }
 ```
 
-Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Zonder deze aanpassing probeert Jest ook ons configuratiebestand `test.ts` uit te voeren.
-
-Met de `preset` instelling zorgen we ervoor dat de ts bestanden vertaald worden met `ts-jest`.
+Hierdoor worden enkel testen uitgevoerd die zich in een map `__tests__` bevinden. Met de `preset` instelling zorgen we ervoor dat de TypeScript bestanden vertaald worden met `ts-jest`.
 
 ```ts
 {
@@ -118,7 +139,7 @@ Met de `preset` instelling zorgen we ervoor dat de ts bestanden vertaald worden 
 
 Je kan ervoor opteren om unit testen te maken voor bv. de servicelaag. In dat geval maak je een map `__tests__` aan in de `src/service` map en plaats je daar je unit testen in. We plaatsen onze testen in een map `__tests__` in de root map van onze applicatie, want het zijn integratietesten voor de hele applicatie.
 
-We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons `.env.test` bestand wordt ingeladen. Pas het `test` script in `package.json` aan als volgt en voeg een `test:coverage` script toe om de coverage te berekenen:
+We moeten wel nog het automatisch gegenereerde `test` script aanpassen zodat ons `.env.test` bestand wordt ingeladen. Pas het `test` script in `package.json` aan als volgt en voeg een `test:coverage` script toe om de coverage te berekenen. Je kan er ook voor kiezen om altijd coverage te berekenen door de `test` script of `jest.config.ts` aan te passen.
 
 ```json
 {
@@ -230,7 +251,7 @@ import type {
   KoaApplication,
   BudgetAppContext,
   BudgetAppState,
-} from './types/koa';// 👈 1
+} from './types/koa'; // 👈 1
 
 // 👇 1
 export interface Server {
@@ -275,7 +296,7 @@ export default async function createServer(): Promise<Server> {
    - een functie `getApp` die de Koa applicatie teruggeeft.
    - een functie `start` die de server start
    - een functie `stop` die de server stopt
-   Importeer het type `KoaApplication`
+     Importeer het type `KoaApplication`
 2. De functie retourneert een `Server` object, maar de functie is `async` dus het returntype is een `Promise<Server>`.
 3. We retourneren een object met de drie functies die we hebben gedefinieerd.
    - `getApp` retourneert de Koa applicatie.
@@ -339,7 +360,7 @@ Jest voorziet een aantal globale functies die je kan gebruiken in je testen. De 
 
 #### De opzet
 
-Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een folder rest met een bestand `transactions.spec.ts` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
+Maak een nieuwe map `__tests__` aan in de root map van je applicatie. Maak hierin een map `rest` met een bestand `transactions.spec.ts` aan. Voor we effectief kunnen testen, moeten we ervoor zorgen dat de server klaar is voor gebruik.
 
 ```ts
 import supertest from 'supertest'; // 👈 1
@@ -564,7 +585,7 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 
 - Oplossing +
 
-  TODO: oplossing toevoegen
+  Check uit op commit `b0e5bb4` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget).
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -573,36 +594,32 @@ Schrijf een test voor het endpoint `GET /api/transactions/:id`:
 
 ### POST /api/transactions
 
-Maak een nieuwe test suite aan voor het endpoint `POST /api/transactions`:
+Maak een nieuwe test suite aan voor het endpoint `POST /api/transactions` (in de overkoepelende `Transactions` test suite):
 
 ```ts
-describe('Transactions', () => {
-  // ...
+describe('POST /api/transactions', () => {
+  const transactionsToDelete: number[] = []; // 👈 2
 
-  describe('POST /api/transactions', () => {
-    const transactionsToDelete = []; // 👈 2
+  // 👇 1
+  beforeAll(async () => {
+    await prisma.place.createMany({ data: data.places });
+    await prisma.user.createMany({ data: data.users });
+  });
 
-    // 👇 1
-    beforeAll(async () => {
-      await prisma.place.create(data.places);
-      await prisma.place.create(data.users);
+  afterAll(async () => {
+    // 👇 2
+    await prisma.transaction.deleteMany({
+      where: { id: { in: transactionsToDelete } },
     });
 
-    afterAll(async () => {
-      // 👇 2
-      await prisma.transaction.deleteMany({
-        where: { id: { in: transactionsToDelete } },
-      });
+    // 👇 3
+    await prisma.place.deleteMany({
+      where: { id: { in: dataToDelete.places } },
+    });
 
-      // 👇 3
-      await prisma.place.deleteMany({
-        where: { id: { in: dataToDelete.places } },
-      });
-
-      // 👇 3
-      await prisma.user.deleteMany({
-        where: { id: { in: dataToDelete.users } },
-      });
+    // 👇 3
+    await prisma.user.deleteMany({
+      where: { id: { in: dataToDelete.users } },
     });
   });
 });
@@ -632,6 +649,7 @@ it('should 201 and return the created transaction', async () => {
   expect(response.body.place).toEqual({
     id: 1,
     name: 'Test place',
+    rating: 3,
   });
   // 👇 5
   expect(response.body.user).toEqual({
@@ -651,7 +669,7 @@ it('should 201 and return the created transaction', async () => {
 5. Controleer of het response de juiste place en user bevat.
 6. Voeg het id toe aan de array zodat we de transactie kunnen verwijderen na de testen.
 
-Voer de test uit en controleer of hij slaagt.
+Voer de test uit en controleer of hij slaagt. De test zou moeten falen omdat ons POST request een statuscode 200 retourneert. Pas de code aan zodat de test slaagt. Je moet waarschijnlijk de nog aanwezige testdata manueel verwijderen uit de databank voor je de test opnieuw uitvoert.
 
 Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -671,7 +689,7 @@ Schrijf een test voor het endpoint `PUT /api/transactions/:id`:
 
 - Oplossing +
 
-  TODO: oplossing toevoegen
+  Check uit op commit `201fba4` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget).
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
@@ -691,25 +709,43 @@ Schrijf een test voor het endpoint `DELETE /api/transactions/:id`:
 
 - Oplossing +
 
-  TODO: oplossing toevoegen
+  Check uit op commit `730fbaf` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget).
 
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
   - testen of de statuscode 400 is als het id geen nummer is
   - testen of de statuscode 404 is als de transactie niet bestaat
 
-### Oefening 4 - Testen voor de andere endpoints
+### Oefening 4 - Coverage
+
+Vraag de coverage op van je testen met `yarn test:coverage`. Bekijk de gegenereerde HTML pagina in het bestand `coverage/lcov-report/index.html`. Wat merk je op?
+
+- Oplossing +
+
+  Je ziet dat we al een coverage van 100% hebben op alle API call van de transacties.
+
+  In de service laag hebben we nog geen 100% omdat we bv. nog niet checken of een foutmelding wordt geretourneerd als de gevraagde entiteit niet bestaat. Dit zullen we oplossen in een volgend hoofdstuk.
+
+### Oefening 5 - Testen voor de andere endpoints
 
 Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/api/health`. Denk na over de testen die je nu al kan schrijven en welke je pas kan schrijven als validatie is toegevoegd aan de back-end.
 
 - Oplossing +
 
-  TODO: oplossing toevoegen
-
   Als we validatie toevoegen aan de back-end, moeten we nog volgende testen voorzien:
 
   - testen of de statuscode 400 is als de request body, URL... niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
   - testen of de statuscode 404 is als de place niet bestaat
+
+## Oplossing voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les5-opl acff12c
+yarn install
+yarn start:dev
+```
 
 ## Extra's voor de examenopdracht
 
