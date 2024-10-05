@@ -986,7 +986,7 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 ```bash
 git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 cd webservices-budget
-git checkout -b les4-opl fc8381d
+git checkout -b les4-opl a924748
 yarn install
 yarn start:dev
 ```
