@@ -549,11 +549,28 @@ De andere functies in de service kan je op dezelfde manier aanpassen:
 ```ts
 // ...
 export const getById = async (id: number) => {
-  return prisma.place.findUnique({
+  const place = await prisma.place.findUnique({
     where: {
       id,
     },
+    include: {
+      transactions: {
+        select: {
+          id: true,
+          amount: true,
+          date: true,
+          place: true,
+          user: true,
+        },
+      },
+    },
   });
+
+  if (!place) {
+    throw new Error('No place with this id exists');
+  }
+
+  return place;
 };
 
 export const create = async ({ name, rating }: any) => {
@@ -586,7 +603,7 @@ export const deleteById = async (id: number) => {
 };
 ```
 
-Na deze aanpassingen kan je de import van de mock data verwijderen, en moet je de REST-laag verder aanpassen zodat de CRUD endpoints ook beschikbaar zijn (werk met `await`).
+Merk op dat we een fout gooien als de place niet bestaat. Na deze aanpassingen kan je de import van de mock data verwijderen, en moet je de REST-laag verder aanpassen zodat de CRUD endpoints ook beschikbaar zijn (werk met `await`).
 
 Controleer of elk endpoint van de places correct werkt.
 
@@ -696,7 +713,7 @@ export const getAll = async (): Promise<Place[]> => {
   // ...
 };
 
-export const getById = async (id: number): Promise<Place | null> => {
+export const getById = async (id: number): Promise<Place> => {
   // ...
 };
 
@@ -708,8 +725,7 @@ export const deleteById = async (id: number): Promise<void> => {
 Aangezien alle functies asynchroon zijn, voegen we `Promise` toe aan de return types.
 
 1. De `getAll` functie geeft een array van `Place` objecten terug.
-2. De `getById` functie geeft een `Place` object terug of `null` indien de plaats niet gevonden is.
-   - Later verwijderen we die `null` en vervangen we dit door een degelijke foutmelding.
+2. De `getById` functie geeft een `Place` object terug.
 3. De `deleteById` functie geeft niets terug, dus `void`.
 
 Vervolgens definiëren we de types voor de parameters van de `create` en `updateById` functies:
@@ -926,7 +942,6 @@ export default (parent: KoaRouter) => {
 
 1. We vervangen de `Context` type door onze eigen `KoaContext` type. We geven ook het type van de response mee, in dit geval `GetAllPlacesResponse`.
 2. We geven ook het type van de parameters mee aan de `getPlaceById` functie. We verwachten een `IdParams` object als parameters in de URL.
-   - We negeren voorlopig de foutmelding die je krijgt op het instellen van `ctx.body`. Die lossen we op in hoofdstuk 6.
 3. De `createPlace` functie verwacht geen parameters in de URL, maar wel een `CreatePlaceRequest` object in de body van de request.
 4. De `updatePlace` functie verwacht een `IdParams` object in de URL en een `UpdatePlaceRequest` object in de body van de request.
 5. De `deletePlace` functie geeft niets terug en verwacht enkel een `IdParams` object in de URL.
@@ -986,7 +1001,7 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 ```bash
 git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 cd webservices-budget
-git checkout -b les4-opl a924748
+git checkout -b les4-opl 0eca476
 yarn install
 yarn start:dev
 ```
