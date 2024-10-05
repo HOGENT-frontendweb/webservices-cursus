@@ -988,3 +988,5 @@ Definieer vervolgens de bijhorende endpoints in een markdown-document. Schrijf d
 Vraag hulp/feedback aan je lector als je een eerste versie van het ERD hebt. Je kan dit doen tijdens de les of na de les via een issue op jouw GitHub repository. Gebruik het template voor feedback en voeg hier zeker de code voor jouw ERD aan toe.
 
 Maak een webservice aan met de naam van je project in de map van je Git repository. Gebruik een zinnige naam zodat duidelijk is in welke map jouw webservice zich bevindt (bv. suffix -webservice). Volg de stapjes zoals hierboven beschreven.
+
+Vul ook de `README.md` aan met de nodige instructies om de dependencies te installeren en de server te starten.

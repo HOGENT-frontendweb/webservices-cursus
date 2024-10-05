@@ -737,12 +737,16 @@ Maak de testen aan voor alle endpoints onder `/api/places`, `/api/users` en `/ap
   - testen of de statuscode 400 is als de request body, URL... niet geldig is (bv. een property ontbreekt of heeft een ongeldige waarde)
   - testen of de statuscode 404 is als de place niet bestaat
 
+## Oefening 6 - README
+
+Vervolledig je `README.md` met de nodige informatie over het testen van je applicatie.
+
 ## Oplossing voorbeeldapplicatie
 
 ```bash
 git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 cd webservices-budget
-git checkout -b les5-opl acff12c
+git checkout -b les5-opl 88651f0
 yarn install
 yarn start:dev
 ```

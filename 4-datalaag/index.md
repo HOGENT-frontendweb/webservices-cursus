@@ -995,6 +995,7 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 2. Gebruik deze types in je REST.
 3. Vervolledig je repositories en services in je project met alle benodigde CRUD-operaties.
 4. Vervolledig ook de migrations en seeds.
+5. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
 
 ## Oplossing voorbeeldapplicatie
 
