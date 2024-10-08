@@ -787,7 +787,7 @@ Maak een bestand `launch.json` aan in de `.vscode` map en voeg volgende configur
 }
 ```
 
-Dit zorgt ervoor dat VS Code de debugger zal koppelen aan <localhost:9001>. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
+Dit zorgt ervoor dat VS Code de debugger zal koppelen aan localhost:9001. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
 
 Alvorens je aan het debuggen gaat, voeg aan jouw start-commando de optie `--inspect=0.0.0.0:9001` toe (voor `src/index.ts`).
 
