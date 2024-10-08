@@ -1,14 +1,14 @@
 # Datalaag en CRUD
 
-## Startpunt voorbeeldapplicatie
-
-```bash
-git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-cd webservices-budget
-git checkout -b les4 4e63e94
-yarn install
-yarn start:dev
-```
+> **Startpunt voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les4 4e63e94
+> yarn install
+> yarn start:dev
+> ```
 
 ## Gelaagde architectuur
 
@@ -997,15 +997,15 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 4. Vervolledig ook de migrations en seeds.
 5. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
 
-## Oplossing voorbeeldapplicatie
-
-```bash
-git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-cd webservices-budget
-git checkout -b les4-opl 0eca476
-yarn install
-yarn start:dev
-```
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les4-opl 0eca476
+> yarn install
+> yarn start:dev
+> ```
 
 ## Mogelijke extra's voor de examenopdracht
 

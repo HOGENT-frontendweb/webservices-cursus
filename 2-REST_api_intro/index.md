@@ -967,15 +967,15 @@ Run voor elke commit `yarn lint`. Dit zal je code linten, sommige problemen zelf
 
 Indien je een foutmelding krijgt dat `typescript-eslint` jouw versie van TypeScript niet ondersteund. Pas dan de versie van TypeScript in `package.json` aan naar een ondersteunde versie. Soms helpt het ook om de `^` te vervangen door een `~` voor de versie van `typescript` in de `package.json`.
 
-## Oplossing voorbeeldapplicatie
-
-```bash
-git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-cd webservices-budget
-git checkout -b les2-opl 3acce6c
-yarn install
-yarn start:dev
-```
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les2-opl 3acce6c
+> yarn install
+> yarn start:dev
+> ```
 
 ## Oefening - Je eigen project
 
