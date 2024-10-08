@@ -453,6 +453,9 @@ Vervolgens kies je de meeste recente versie van Yarn (v4 op dit moment).
 yarn set version berry
 ```
 
+!> Yarn maakt standaard een git repository in de map, die hebben we niet nodig. Verwijder allereerst de `.git` map uit de map `webservices-budget` (of de map van je eigen back-end project, **niet** uit de root van jouw GitHub Classroom repository).
+!> Dit is een verborgen map. Dus je zal ervoor moeten zorgen dat je verborgen bestanden kan zien alvorens je deze kan verwijderen.
+
 Vervolgens maken we een `.yarnrc.yml` bestand aan in de root van je project. Dit bestand bevat de configuratie voor Yarn 2. In dit bestand zetten we de `nodeLinker` op `node-modules`. Dit zorgt ervoor dat Yarn 2 de packages installeert in de `node_modules` map. Er zjn nog andere opties, maar deze is de meest gebruikte en de meest compatibel met bestaande projecten. Voeg volgende lijn toe aan `.yarnrc.yml`:
 
 ```yaml
