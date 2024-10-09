@@ -224,7 +224,7 @@ Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD 
 
 Binnen onze middlewarefuncties bevat de context alle informatie over het request zoals die bij onze server toekomt.
 
-Voeg onderstaande code toe aan `index.js`:
+Voeg onderstaande code toe aan `index.ts`:
 
 ```ts
 // ...
@@ -363,9 +363,10 @@ Verder in dit hoofdstuk voegen we nog een 3de laag toe:
 
 ### Datalaag
 
-Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.js`, in een nieuwe `data` map.
+Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map.
 
 ```ts
+// src/data/mock_data.ts
 export const PLACES = [
   {
     id: 1,
@@ -465,9 +466,10 @@ export const deleteById = (id: number) => {
 
 Let al op de signatuur van de `create` en `updateById` functies. Als we data nodig hebben, gaan we ze als object doorgeven: `{ amount, date, placeId, user }`.
 
-De route aanpassen is nu niet veel werk. Pas aan in de `index.js`:
+De route aanpassen is nu niet veel werk. Pas aan in de `index.ts`:
 
-```js
+```ts
+// src/index.ts
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import Router from '@koa/router';
@@ -708,9 +710,10 @@ export default (app: Application) => {
 };
 ```
 
-Verwijder nu alle code omtrent routing uit `src/index.ts` en installeer de routes via de geëxporteerde functie uit het `rest/index.js` bestand.
+Verwijder nu alle code omtrent routing uit `src/index.ts` en installeer de routes via de geëxporteerde functie uit het `rest/index.ts` bestand.
 
-```js
+```ts
+// src/index.ts
 // andere imports...
 // Verwijder de @koa/router en service import 👈 1
 import installRest from './rest'; // 👈 2
