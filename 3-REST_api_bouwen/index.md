@@ -246,7 +246,7 @@ Het request object bevat alle informatie over het request, zoals de HTTP methode
 
 ```ts
 app.use(async (ctx) => {
-  logger.info(JSON.stringify(ctx.request));
+  getLogger().info(JSON.stringify(ctx.request));
   if (
     ctx.request.method === 'GET' && // 👈 1
     ctx.request.url === '/api/transactions'
@@ -728,7 +728,7 @@ app.use(bodyParser());
 installRest(app); // 👈 2
 
 app.listen(9000, () => {
-  logger.info('🚀 Server listening on http://localhost:9000');
+  getLogger().info('🚀 Server listening on http://localhost:9000');
 });
 ```
 

@@ -103,7 +103,7 @@ return {
     return new Promise((resolve) => {
       const port = config.get('port'); // 👈
       app.listen(port); // 👈
-      logger.info(`🚀 Server listening on http://localhost:${port}`); // 👈
+      getLogger().info(`🚀 Server listening on http://localhost:${port}`); // 👈
       resolve();
     });
   },
