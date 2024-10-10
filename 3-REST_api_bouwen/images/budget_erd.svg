@@ -24,20 +24,8 @@
 <polygon fill="none" stroke="black" points="211.25,-141.75 211.25,-169 327.75,-169 327.75,-141.75 211.25,-141.75"/>
 <text text-anchor="start" x="216.25" y="-150.7" font-family="Helvetica,sans-Serif" font-size="14.00">roles</text>
 </g>
-<!-- Place -->
-<g id="node2" class="node">
-<title>Place</title>
-<polygon fill="none" stroke="black" points="240.5,-85.75 240.5,-115.25 298.5,-115.25 298.5,-85.75 240.5,-85.75"/>
-<text text-anchor="start" x="245.5" y="-96.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">Place</text>
-<polygon fill="none" stroke="black" points="240.5,-58.5 240.5,-85.75 298.5,-85.75 298.5,-58.5 240.5,-58.5"/>
-<text text-anchor="start" x="245.5" y="-68.45" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
-<polygon fill="none" stroke="black" points="240.5,-31.25 240.5,-58.5 298.5,-58.5 298.5,-31.25 240.5,-31.25"/>
-<text text-anchor="start" x="245.5" y="-40.2" font-family="Helvetica,sans-Serif" font-size="14.00">name</text>
-<polygon fill="none" stroke="black" points="240.5,-4 240.5,-31.25 298.5,-31.25 298.5,-4 240.5,-4"/>
-<text text-anchor="start" x="245.5" y="-12.95" font-family="Helvetica,sans-Serif" font-size="14.00">rating</text>
-</g>
 <!-- Transaction -->
-<g id="node3" class="node">
+<g id="node2" class="node">
 <title>Transaction</title>
 <polygon fill="none" stroke="black" points="8,-195 8,-224.5 122.25,-224.5 122.25,-195 8,-195"/>
 <text text-anchor="start" x="13" y="-205.3" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">Transaction</text>
@@ -48,9 +36,9 @@
 <polygon fill="none" stroke="black" points="8,-113.25 8,-140.5 122.25,-140.5 122.25,-113.25 8,-113.25"/>
 <text text-anchor="start" x="13" y="-122.2" font-family="Helvetica,sans-Serif" font-size="14.00">date</text>
 <polygon fill="none" stroke="black" points="8,-86 8,-113.25 122.25,-113.25 122.25,-86 8,-86"/>
-<text text-anchor="start" x="13" y="-94.95" font-family="Helvetica,sans-Serif" font-size="14.00">user_id</text>
+<text text-anchor="start" x="13" y="-95.95" font-family="Helvetica,sans-Serif" font-style="italic" font-size="14.00">user_id</text>
 <polygon fill="none" stroke="black" points="8,-58.75 8,-86 122.25,-86 122.25,-58.75 8,-58.75"/>
-<text text-anchor="start" x="13" y="-67.7" font-family="Helvetica,sans-Serif" font-size="14.00">place_id</text>
+<text text-anchor="start" x="13" y="-68.7" font-family="Helvetica,sans-Serif" font-style="italic" font-size="14.00">place_id</text>
 </g>
 <!-- Transaction&#45;&#45;User -->
 <g id="edge2" class="edge">
@@ -58,6 +46,18 @@
 <path fill="none" stroke="#7f7f7f" stroke-dasharray="5,2" d="M130.16,-167.89C153.55,-177.48 180.02,-188.34 203.49,-197.96"/>
 <text text-anchor="start" x="194.49" y="-184.66" font-family="Times,serif" font-size="14.00">1</text>
 <text text-anchor="start" x="130.16" y="-154.59" font-family="Times,serif" font-size="14.00">0..N</text>
+</g>
+<!-- Place -->
+<g id="node3" class="node">
+<title>Place</title>
+<polygon fill="none" stroke="black" points="240.5,-85.75 240.5,-115.25 298.5,-115.25 298.5,-85.75 240.5,-85.75"/>
+<text text-anchor="start" x="245.5" y="-96.05" font-family="Helvetica,sans-Serif" font-weight="bold" font-size="16.00">Place</text>
+<polygon fill="none" stroke="black" points="240.5,-58.5 240.5,-85.75 298.5,-85.75 298.5,-58.5 240.5,-58.5"/>
+<text text-anchor="start" x="245.5" y="-68.45" font-family="Helvetica,sans-Serif" text-decoration="underline" font-size="14.00">id</text>
+<polygon fill="none" stroke="black" points="240.5,-31.25 240.5,-58.5 298.5,-58.5 298.5,-31.25 240.5,-31.25"/>
+<text text-anchor="start" x="245.5" y="-40.2" font-family="Helvetica,sans-Serif" font-size="14.00">name</text>
+<polygon fill="none" stroke="black" points="240.5,-4 240.5,-31.25 298.5,-31.25 298.5,-4 240.5,-4"/>
+<text text-anchor="start" x="245.5" y="-12.95" font-family="Helvetica,sans-Serif" font-size="14.00">rating</text>
 </g>
 <!-- Transaction&#45;&#45;Place -->
 <g id="edge1" class="edge">
