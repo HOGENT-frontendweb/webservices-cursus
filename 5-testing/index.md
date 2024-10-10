@@ -237,7 +237,7 @@ Start de server en controleer of alles nog werkt.
 
 ### Server starten zonder luisteren
 
-We hernoemen `src/index.ts` naar `src/createServer.ts`.
+We hernoemen `src/index.ts` naar `src/createServer.ts` en passen dit als volgt aan.
 
 ```ts
 // src/createServer.ts
@@ -297,8 +297,8 @@ export default async function createServer(): Promise<Server> {
    - een functie `start` die de server start
    - een functie `stop` die de server stopt
      Importeer het type `KoaApplication`
-2. De functie retourneert een `Server` object, maar de functie is `async` dus het returntype is een `Promise<Server>`.
-3. We retourneren een object met de drie functies die we hebben gedefinieerd.
+2. Geef de `main`- functie de naam `createServer` en exporteer. De functie retourneert nu een `Server` object, maar de functie is `async` dus het returntype is een `Promise<Server>`.
+3. I.p.v. de app te laten luisteren op poort 9000, retourneren we een object met de drie functies die we hebben gedefinieerd.
    - `getApp` retourneert de Koa applicatie.
    - `start` start de server en retourneert een `Promise<void>`. Hier maken we zelf een `Promise` aan omdat `app.listen` geen `Promise` retourneert. Als de callback van `app.listen` aangeroepen wordt, luistert de server naar requests. We roepen in die callback de `resolve` functie aan.
    - `stop` stopt de server. We verwijderen eerst alle listeners van de app, sluiten de databankconnectie en loggen een afscheidsbericht. Zonder het sluiten van de databankconnectie, zal bv. Jest nooit stoppen met uitvoeren van de testen. Openstaande connecties is een van de dingen waarop een Node.js proces blijft wachten.
