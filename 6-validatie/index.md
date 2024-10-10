@@ -382,9 +382,9 @@ app.use(bodyParser());
 2. Voeg deze middleware toe net voor de de installatie van de bodyParser middleware.
 3. We loggen alvast wanneer het request binnen komt. In Koa kan een request soms "uitsterven" door foutief gebruik van async/await, errors die "opgegeten" worden... Dan is het altijd handig om te weten of het request effectief binnen kwam of niet.
 4. We definiëren een inline functie om de juiste emoji te krijgen afhankelijk van de HTTP status code van het response.
-5. We wachten de request afhandeling af en loggen het resultaat.
-6. We voegen een try/catch toe om eventuele fouten tijdens de request afhandeling op te vangen. Indien er een error was, dan loggen we die ook. Gooi zeker de error opnieuw: deze middleware handelt hem niet af.
-   - Herinner je: **doe altijd maar één ding in een middleware!**
+5. We wachten de request afhandeling af.
+6. Daarna loggen we het resultaat.
+   - Herinner je: **doe altijd maar één ding in een middleware!** We loggen hier enkel, we veranderen niets aan de request of response.
 
 ## Error handling
 
@@ -576,8 +576,6 @@ app.use(async (ctx, next) => {
 
 ### ServiceError gebruiken
 
-<!-- TODO: voorbeeld geven van CONFLICT in handleDBError -->
-
 Nu moeten we enkel nog onze eigen `ServiceError` gebruiken in de servicelaag. We dienen alle errors op te vangen en om te vormen naar een `ServiceError`.
 
 Als we een record toevoegen aan de database, dan kan er van alles foutlopen:
@@ -668,7 +666,6 @@ import ServiceError from '../core/serviceError'; // 👈 1
 import handleDBError from './_handleDBError'; // 👈 1
 
 // ...
-// 👇 2
 export const getById = async (id: number): Promise<Transaction> => {
   const transaction = await prisma.transaction.findUnique({
     where: {
@@ -677,8 +674,8 @@ export const getById = async (id: number): Promise<Transaction> => {
     select: TRANSACTION_SELECT,
   });
 
-  // 👇 3
   if (!transaction) {
+    // 👇 2
     throw ServiceError.notFound('No transaction with this id exists');
   }
 
@@ -691,7 +688,7 @@ export const create = async ({
   placeId,
   userId,
 }: TransactionCreateInput): Promise<Transaction> => {
-  // 👇 4
+  // 👇 3
   try {
     return prisma.transaction.create({
       data: {
@@ -703,7 +700,7 @@ export const create = async ({
       select: TRANSACTION_SELECT,
     });
   } catch (error: any) {
-    // 👇 5
+    // 👇 4
     throw handleDBError(error);
   }
 };
@@ -711,10 +708,9 @@ export const create = async ({
 ```
 
 1. Importeer `ServiceError` en `handleDBError`.
-2. We verwijderen de `null` uit onze returnwaarde. De `getById` functie retourneert nu altijd een transactie of gooit een fout als die niet bestaat.
-3. Als we geen transactie terugkregen, dan gooien we de gepaste `ServiceError`.
-4. We hebben geen check meer nodig of de plaats bestaat, de databank doet dit voor ons. We wrappen de `create` functie in een try/catch.
-5. We vangen een foutmelding op en geven deze door aan `handleDBError`. Deze functie vormt de error om, indien gekend, of retourneert dezelfde fout. De returnwaarde van deze functie wordt opnieuw gegooid.
+2. Als we geen transactie terugkregen, dan gooien we nu de gepaste `ServiceError`.
+3. We hebben geen check meer nodig of de plaats bestaat, de databank doet dit voor ons. We wrappen de `create` functie in een try/catch.
+4. We vangen een foutmelding op en geven deze door aan `handleDBError`. Deze functie vormt de error om, indien gekend, of retourneert dezelfde fout. De returnwaarde van deze functie wordt opnieuw gegooid.
    - Onze [error handler](#middleware) (zie hierboven) zal de fout opvangen en een mooi response teruggeven.
 
 ## Query parameter validatie
