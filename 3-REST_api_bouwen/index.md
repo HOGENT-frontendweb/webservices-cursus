@@ -638,6 +638,7 @@ Alle endpoints in één bestand plaatsen voldoet niet aan de best practices. We 
 We typeren `ctx` als `Context` en `parent` als `Router`, beide types uit Koa. Zo krijgen we betere intellisense en foutmeldingen. Later zullen we de andere types ook verfijnen zodat die foutmeldingen ook verdwijnen.
 
 ```ts
+// src/rest/transaction.ts
 import Router from '@koa/router';
 import * as transactionService from '../service/transaction';
 import type { Context } from 'koa';
@@ -694,6 +695,7 @@ Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API
 Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
 
 ```ts
+// src/rest/index.ts
 import type Application from 'koa';
 
 import Router from '@koa/router';
@@ -752,6 +754,7 @@ We voorzien 2 endpoints:
 Creëer een `health.ts` bestand in de `service` map dat 2 functies bevat:
 
 ```ts
+// src/service/health.ts
 import config from 'config';
 import packageJson from '../../package.json';
 
@@ -773,6 +776,7 @@ export const getVersion = () => ({
 In de `rest` map maak je een nieuw bestand `health.ts` aan. Dit bevat de 2 endpoints:
 
 ```ts
+// src/rest/health.ts
 import Router from '@koa/router';
 import * as healthService from '../service/health';
 import type { Context } from 'koa';
@@ -806,6 +810,7 @@ Lees [Best practices for logging](https://betterstack.com/community/guides/loggi
 Als laatste refactoring gaan we onze logger een beetje uitbreiden. Pas het bestand `logging.ts` aan in een nieuwe map `core`. Voeg hierin onderstaande code toe. Bekijk de code en probeer zelf te achterhalen wat er gebeurt (een uitleg vind je verborgen onder de code).
 
 ```ts
+// src/core/logging.ts
 import config from 'config';
 import winston from 'winston';
 const { combine, timestamp, colorize, printf } = winston.format;
@@ -867,22 +872,24 @@ export const getLogger = () => {
 };
 ```
 
+<br/>
+
 - Uitleg +
 
-1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
-2. We definiëren binnen deze functie een functie voor het printen van logberichten die geen foutmelding bevatten.
-3. En een functie voor het printen van logberichten die wel een foutmelding bevatten.
-4. De volgende functie bepaalt welke van de vorige 2 functies gebruikt wordt, afhankelijk van de aanwezigheid van een foutmelding in het logbericht.
-   - We gebruiken in alle bovenstaande functies het type `winston.Logform.TransformableInfo` van `winston`. Dit is een interface die ons vertelt wat we allemaal standaard meekrijgen als informatie bij een logbericht.
-5. We checken binnen deze functie met optionele chaining of er een `error` property is in het logbericht. Als dit het geval is, gebruiken we de functie voor het printen van logberichten met foutmelding.
-6. Anders gebruiken we de functie voor het printen van logberichten zonder foutmelding.
-7. We breiden onze root logger ook wat uit met:
-   - Ons eigen formaat.
-   - De default meta informatie, die wordt toegevoegd aan elk logbericht. We voegen hier de `env` aan toe.
-   - We voorzien 2 transports:
-     - Een file transport voor de testomgeving. We schrijven de logs weg naar een bestand `test.log` omdat onze logs anders tussen de uitvoer van de testen komt. Later zal je zien waarom dit handig is.
-     - Een console transport voor alle andere omgevingen.
-     - We zetten de logging in beide gevallen uit als dit geconfigureerd is.
+  1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
+  2. We definiëren binnen deze functie een functie voor het printen van logberichten die geen foutmelding bevatten.
+  3. En een functie voor het printen van logberichten die wel een foutmelding bevatten.
+  4. De volgende functie bepaalt welke van de vorige 2 functies gebruikt wordt, afhankelijk van de aanwezigheid van een foutmelding in het logbericht.
+     - We gebruiken in alle bovenstaande functies het type `winston.Logform.TransformableInfo` van `winston`. Dit is een interface die ons vertelt wat we allemaal standaard meekrijgen als informatie bij een logbericht.
+  5. We checken binnen deze functie met optionele chaining of er een `error` property is in het logbericht. Als dit het geval is, gebruiken we de functie voor het printen van logberichten met foutmelding.
+  6. Anders gebruiken we de functie voor het printen van logberichten zonder foutmelding.
+  7. We breiden onze root logger ook wat uit met:
+     - Ons eigen formaat.
+     - De default meta informatie, die wordt toegevoegd aan elk logbericht. We voegen hier de `env` aan toe.
+     - We voorzien 2 transports:
+       - Een file transport voor de testomgeving. We schrijven de logs weg naar een bestand `test.log` omdat onze logs anders tussen de uitvoer van de testen komt. Later zal je zien waarom dit handig is.
+       - Een console transport voor alle andere omgevingen.
+       - We zetten de logging in beide gevallen uit als dit geconfigureerd is.
 
 Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 
