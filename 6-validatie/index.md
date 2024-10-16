@@ -415,10 +415,10 @@ We definiëren een klasse (de enige in deze cursus) die een error uit de service
 ```mermaid
 flowchart TD
   A(REST) --> B(Service)
-  B --> D(Data)
-  E(GraphQL) --> B
-  F(tRPC) --> B
-  G(gRPC) --> B
+  B --> C(Data)
+  D(GraphQL) --> B
+  E(tRPC) --> B
+  F(gRPC) --> B
 ```
 
 We definiëren deze klasse in `src/core/serviceError.ts`:

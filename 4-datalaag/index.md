@@ -506,7 +506,15 @@ Een repository is een abstractie voor de datalaag. Het definieert een aantal (CR
 
 Het repository patroon is niet altijd nodig. Maak zelf de afweging of de extra laag nut heeft. Een simpel "doorgeefluik" naar de databank heeft geen nut. Dit heeft bv. wel nut indien data omgevormd moet worden. Zorg voor één lijn in een applicatie: ofwel voor alles een repository ofwel voor niets.
 
-Meestal is deze laag niet nuttig bij het gebruik van een ORM want het ORM is zelf de repository. Aangezien wij Prisma gebruiken, is het niet nodig om een extra repositorylaag te voorzien.
+Meestal is deze laag niet nuttig bij het gebruik van een ORM want het ORM is zelf de repository. Aangezien wij Prisma gebruiken, is het niet nodig om een extra repositorylaag te voorzien. Onze lagen zien er dus als volgt uit:
+
+```mermaid
+flowchart TD
+  A(REST) --> B(Service)
+  B --> C(Data)
+```
+
+Een pijl van de ene naar de andere laag betekent dat de ene laag de andere laag gebruikt. In dit geval gebruikt de REST-laag de service-laag en de service-laag gebruikt de datalaag. Als je voor een repository zou kiezen, zou de service-laag de repository-laag gebruiken, en de repository-laag de datalaag.
 
 ## Services
 
