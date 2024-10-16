@@ -99,7 +99,7 @@ Maak een nieuw bestand `validation.ts` in de map `src/core` en voeg volgende cod
 // src/core/validation.ts
 import type { Schema, SchemaLike } from 'joi'; // 👈 10
 import Joi from 'joi'; // 👈 1
-import type { KoaContext } from '../types'; // 👈 4
+import type { KoaContext } from '../types/koa'; // 👈 4
 import type { Next } from 'koa'; // 👈 4
 
 // 👇 8
@@ -276,6 +276,7 @@ createTransaction.validationScheme = {
 ```
 
 1. Voeg het schema voor invoervalidatie toe.
+   - Merk op: Nu kan je ook de conversie met `Number(...)` en `new Date(...)` verwijderen uit `createTransaction` (Joi doet de conversie voor ons).
 2. Hier valideren we enkel de `body` van het HTTP request. Er zijn verder geen parameters voor dit HTTP request
    - `amount`: moet een getal zijn, maar mag niet 0 zijn.
    - `date`: moet in ISO formaat staan en moet voor vandaag liggen.
@@ -315,11 +316,11 @@ Zorg ervoor dat de validatie wordt uitgevoerd als het POST-request wordt uitgevo
   );
   ```
 
-### Validatie voor requests zonder invoer
+### GET /api/transactions
 
 Ook requests die geen invoer verwachten moeten de invoer valideren, nl. controleren of er effectief niks is meegegeven. Een gebruiker kan nl. meegeven wat hij wil en mogelijks wordt dit toch verwerkt (door bv. een programmeerfout). Dit kan leiden tot onverwachte resultaten of fouten.
 
-In onze validation middleware kan je simpelweg `null` meegeven als parameters als je helemaal geen invoer verwacht. Als je één van de parameters (`body`, `query` of `params`) niet verwacht, dan laat je die leeg en vul je enkel de parameters in die je wel verwacht.
+In onze validation middleware kan je simpelweg `null` meegeven als parameters als je helemaal geen invoer verwacht. Als je één van de parameters (`body`, `query` of `params`) niet verwacht, dan laat je die leeg en vul je enkel de parameters in die je wel verwacht. Dit is wat we in de twee vorige requests steeds gedaan hebben.
 
 Voeg volgende code toe in `src/rest/transactions.ts`:
 
@@ -337,7 +338,26 @@ router.get(
 );
 ```
 
-Controleer of je een foutmelding krijgt als je toch invoer meegeeft bij het request.
+Als laatste werken we onze `validate` functie af met query parameter validatie. Dit is de enige mogelijkheid die we nog niet hebben toegevoegd.
+
+```ts
+// src/core/validation.ts
+
+// ...
+
+const { error: queryErrors, value: queryValue } = parsedSchema.query.validate(
+  ctx.query,
+  JOI_OPTIONS,
+);
+
+if (queryErrors) {
+  errors.set('query', cleanupJoiError(queryErrors));
+} else {
+  ctx.query = queryValue;
+}
+```
+
+Controleer of je een foutmelding krijgt als je toch invoer meegeeft bij het request. Je kan bijvoorbeeld `GET /api/transactions?foo=bar` proberen.
 
 ## Request logging
 
@@ -483,9 +503,9 @@ export default class ServiceError extends Error {
 4. Daarnaast voorzien we enkele statische methodes om een specifieke fout te gooien.
 5. En enkele getters om te kijken welk type fout opgetreden is.
 
-### Middleware
+### Middlewares
 
-We voegen een extra middleware toe om fouten af te handelen. Voeg deze als laatste middleware toe in `src/core/installMiddleware.ts`:
+We voegen een twee extra middlewares toe om fouten af te handelen. Voeg deze als laatste middlewares toe in `src/core/installMiddleware.ts`:
 
 ```ts
 // src/core/installMiddleware.ts
@@ -572,7 +592,7 @@ app.use(async (ctx, next) => {
 8. Als laatste stellen we de `status` en `body` van het response in.
 9. Het enige geval waarbij we nog geen mooi error response hebben is een 404 van de Koa router. Dit vangen we op deze manier op.
 
-> 💡 Tip: kijk eens wat een mooi response we krijgen als we verkeerde invoer geven 🤩
+> 💡 Tip: kijk eens wat een mooi response we krijgen als we verkeerde invoer geven. Kijk ook in de console hoe mooi de fout geprint wordt door onze logger. 🤩
 
 ### ServiceError gebruiken
 
@@ -587,6 +607,7 @@ Als we een record toevoegen aan de database, dan kan er van alles foutlopen:
 Hiervoor maken we eerst een aparte functie `handleDBError`, zodat we deze binnen de verschillende modules kan gebruikt worden. Maak hiervoor een bestand `_handleDBError.ts` aan in de `src/service` map. We starten dit bestand met underscore aangezien dit bestand nergens anders nodig is, dat is een conventie.
 
 ```ts
+// src/service/_handleDBError.ts
 import ServiceError from '../core/serviceError'; // 👈 2
 
 // 👇 1
@@ -628,11 +649,11 @@ const handleDBError = (error: any) => {
     switch (true) {
       case message.includes('place_id'):
         throw ServiceError.conflict(
-          'This place is still linked to transactions',
+          'This place does not exist or is still linked to transactions',
         );
       case message.includes('user_id'):
         throw ServiceError.conflict(
-          'This user is still linked to transactions',
+          'This user does not exist or is still linked to transactions',
         );
     }
   }
@@ -690,7 +711,10 @@ export const create = async ({
 }: TransactionCreateInput): Promise<Transaction> => {
   // 👇 3
   try {
-    return prisma.transaction.create({
+    // 👇 4
+    await placeService.checkPlaceExists(placeId);
+
+    return await prisma.transaction.create({
       data: {
         amount,
         date,
@@ -700,7 +724,7 @@ export const create = async ({
       select: TRANSACTION_SELECT,
     });
   } catch (error: any) {
-    // 👇 4
+    // 👇 5
     throw handleDBError(error);
   }
 };
@@ -709,40 +733,23 @@ export const create = async ({
 
 1. Importeer `ServiceError` en `handleDBError`.
 2. Als we geen transactie terugkregen, dan gooien we nu de gepaste `ServiceError`.
-3. We hebben geen check meer nodig of de plaats bestaat, de databank doet dit voor ons. We wrappen de `create` functie in een try/catch.
-4. We vangen een foutmelding op en geven deze door aan `handleDBError`. Deze functie vormt de error om, indien gekend, of retourneert dezelfde fout. De returnwaarde van deze functie wordt opnieuw gegooid.
-   - Onze [error handler](#middleware) (zie hierboven) zal de fout opvangen en een mooi response teruggeven.
-
-## Query parameter validatie
-
-Als laatste werken we onze `validate` functie af met query parameter validatie:
-
-```ts
-// src/core/validation.ts
-
-// ...
-
-const { error: queryErrors, value: queryValue } = parsedSchema.query.validate(
-  ctx.query,
-  JOI_OPTIONS,
-);
-
-if (queryErrors) {
-  errors.set('query', cleanupJoiError(queryErrors));
-} else {
-  ctx.query = queryValue;
-}
-```
+3. We wrappen de `create` functie in een try/catch.
+   - **Let op!** We doen hier `return await` omdat we alle fouten hier willen opvangen. Zonder de `await` zou de fout opgevangen moeten worden in de functie die `create` aanroept (= REST-laag).
+4. We maken een nieuwe functie `checkPlaceExists` in `src/service/place.ts` die controleert of een place bestaat. Deze functie zal een `ServiceError` gooien als de plaats niet bestaat.
+   - Implementeer deze functie zelf. In deze functie tel je het aantal plaatsen met het gegeven id. Als dit 0 is, dan gooi je een `ServiceError.notFound`.
+5. We vangen een foutmelding op en geven deze door aan `handleDBError`. Deze functie vormt de error om, indien gekend, of retourneert dezelfde fout. De returnwaarde van deze functie wordt opnieuw gegooid.
+   - Onze [error handler](#middlewares) (zie hierboven) zal de fout opvangen en een mooi response teruggeven.
 
 ## Integratietesten
 
-<!-- TODO: commit updaten -->
-
-Check uit op commit `7c99494` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget/) en bekijk de code:
+Check uit op commit `19547fd` van onze [voorbeeldapplicatie](https://github.com/HOGENT-frontendweb/webservices-budget/) en bekijk de code:
 
 - Voor de overige endpoints werd een validatieschema toegevoegd.
+  - Kijk naar hoe we de validatie voor `GET /api/users/:id` hebben toegevoegd. Wat valt je op?
   - **Let op:** voorzie ook validatie voor requests die geen invoer verwachten!
 - Integratietesten werden toegevoegd om te checken op invoervalidatie.
+
+> 💡 Je moet ook niet overdrijven met integratietesten! Je merkt dat dit soort testen heel wat werk vereisen, dus je moet goed afwegen of het de moeite waard is om zoveel testen te schrijven.
 
 ## Koa Helmet
 
@@ -792,3 +799,15 @@ Werk aan je eigen project:
 - Voeg Koa Helmet toe.
 
 > 💡 Tip: als extra functionaliteit kan je een andere validatie library of middleware gebruiken. Zorg er wel voor dat deze library minstens ondersteuning heeft voor validatie van URL parameters, query parameters en request body.
+
+<br />
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les6-opl 098b979
+> yarn install
+> yarn start:dev
+> ```
