@@ -412,6 +412,15 @@ app.use(bodyParser());
 
 We definiëren een klasse (de enige in deze cursus) die een error uit de servicelaag voorstelt. Het is een bad practice om in de servicelaag een HTTP status code in een error te schrijven. Daarmee forceer je de applicatie richting HTTP (en dus REST), terwijl ook perfect GraphQL, gRPC, tRPC of iets anders kan draaien bovenop de servicelaag.
 
+```mermaid
+flowchart TD
+  A(REST) --> B(Service)
+  B --> D(Data)
+  E(GraphQL) --> B
+  F(tRPC) --> B
+  G(gRPC) --> B
+```
+
 We definiëren deze klasse in `src/core/serviceError.ts`:
 
 ```ts
