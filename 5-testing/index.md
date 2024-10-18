@@ -9,6 +9,8 @@
 > yarn install
 > yarn start:dev
 > ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Soorten testen
 
@@ -750,6 +752,8 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > yarn install
 > yarn start:dev
 > ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Extra's voor de examenopdracht
 

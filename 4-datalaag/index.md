@@ -9,6 +9,8 @@
 > yarn install
 > yarn start:dev
 > ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Gelaagde architectuur
 
@@ -1014,6 +1016,8 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 > yarn install
 > yarn start:dev
 > ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Mogelijke extra's voor de examenopdracht
 

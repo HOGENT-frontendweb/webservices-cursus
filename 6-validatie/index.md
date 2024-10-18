@@ -1,6 +1,16 @@
 # Validatie en foutafhandeling
 
-<!-- TODO: startpunt en oplossing toevoegen -->
+> **Startpunt voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les6 88651f0
+> yarn install
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 Heel wat REST API's die je online vindt, gaan er vanuit dat de invoer altijd correct is, geven totaal verkeerde foutmeldingen terug, of geven helemaal geen foutmeldingen. Dit is een bad practice! Een goede API geeft duidelijke foutmeldingen terug en valideert de invoer. Invoervalidatie is belangrijk voor de integriteit van de data en de veiligheid van de applicatie. Degelijke foutboodschappen helpen de gebruikers van de API om fouten te begrijpen en te corrigeren, indien mogelijk.
 
@@ -820,3 +830,5 @@ Werk aan je eigen project:
 > yarn install
 > yarn start:dev
 > ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
