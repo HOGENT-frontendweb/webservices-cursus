@@ -144,6 +144,7 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
   "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
   "errorLens.messageTemplate": "$severity $message $count ($source - $code)",
   "errorLens.severityText": ["❗️ ", "⚠️ ", "ℹ️ ", "💡 "],
+  "editor.guides.bracketPairs": "active",
   "editor.bracketPairColorization.enabled": true,
   "security.workspace.trust.enabled": false
 }
