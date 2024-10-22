@@ -1014,6 +1014,7 @@ Nu is onze applicatie volledig voorzien van de nodige types. Hier en daar moeten
 > cd webservices-budget
 > git checkout -b les4-opl 0eca476
 > yarn install
+> yarn prisma migrate dev
 > yarn start:dev
 > ```
 >

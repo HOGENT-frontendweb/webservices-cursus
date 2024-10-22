@@ -7,6 +7,7 @@
 > cd webservices-budget
 > git checkout -b les5 0eca476
 > yarn install
+> yarn prisma migrate dev
 > yarn start:dev
 > ```
 >
@@ -750,6 +751,7 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > cd webservices-budget
 > git checkout -b les5-opl 88651f0
 > yarn install
+> yarn prisma migrate dev
 > yarn start:dev
 > ```
 >

@@ -7,6 +7,7 @@
 > cd webservices-budget
 > git checkout -b les6 88651f0
 > yarn install
+> yarn prisma migrate dev
 > yarn start:dev
 > ```
 >
@@ -828,6 +829,7 @@ Werk aan je eigen project:
 > cd webservices-budget
 > git checkout -b les6-opl 098b979
 > yarn install
+> yarn prisma migrate dev
 > yarn start:dev
 > ```
 >
