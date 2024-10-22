@@ -72,7 +72,7 @@ In dit bestand definiëren we de algemene informatie over de API en de servers. 
 
 De `apis` array bevat de paden naar de bestanden die de OpenAPI specificatie genereren. In dit geval zijn dat de bestanden in de `src/rest` map.
 
-We stellen ook in dat een fout gegooid wordt indien er een foute specificatie wordt gegenereerd. Dit is handig om fouten in de documentatie snel op te sporen. Je maakt bijvoorbeeld heel snel fouten tegen de indentatieregels van YAML als je YAML in JSDoc commentaar schrijft. Jammer genoeg merkt het niet alle fouten op. Als je bv. verwijst naar een onbestaand schema, dan zal dit niet opgemerkt worden. Je kan dit wel testen door de JSON output (van <http://localhost:9000/swagger.json>) te plakken in <https://editor.swager.io>.
+We stellen ook in dat een fout gegooid wordt indien er een foute specificatie wordt gegenereerd. Dit is handig om fouten in de documentatie snel op te sporen. Je maakt bijvoorbeeld heel snel fouten tegen de indentatieregels van YAML als je YAML in JSDoc commentaar schrijft. Jammer genoeg merkt het niet alle fouten op. Als je bv. verwijst naar een onbestaand schema, dan zal dit niet opgemerkt worden. Je kan dit wel testen door de JSON output (van <http://localhost:9000/swagger.json>) te plakken in <https://editor.swagger.io>.
 
 ### Swagger UI middleware
 

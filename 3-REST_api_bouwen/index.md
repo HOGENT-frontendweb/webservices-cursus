@@ -492,7 +492,7 @@ router.get('/api/transactions', async (ctx) => {
 2. En vervangen de hardgecodeerde data door een `getAll()` aanroep, that's it!
    - Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een `items` property die de array bevat.
    - Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
-   - Dit heet [JSON Hijacking](https://portswigger.net/web-security/cross-site-scripting/json-hijacking). Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
+   - Dit heet [JSON Hijacking](https://docs.gitlab.com/ee/user/application_security/api_security_testing/checks/json_hijacking_check.html). Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
 
 ### Oefening 2 - Je eigen project
 
