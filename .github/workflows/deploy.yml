@@ -39,10 +39,11 @@ jobs:
           config_file: .markdownlint.json
           dot: false
 
-      - name: Check for dead links
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
+      - name: Check links in markdown files
+        uses: lycheeverse/lychee-action@v1
         with:
-          base-branch: "main"
+          args: "'./**/*.md' '*.md' --scheme https"
+          fail: true
 
       - name: Check for broken GitHub commit references
         uses: ./commit-verifier
