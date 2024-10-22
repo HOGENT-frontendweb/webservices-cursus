@@ -42,7 +42,7 @@ jobs:
       - name: Check links in markdown files
         uses: lycheeverse/lychee-action@v1
         with:
-          args: "'./**/*.md' '*.md' --scheme https --exclude kroki\\.io --exclude fbi\\.api\\.gov --exclude sciendirect\\.com"
+          args: "'./**/*.md' '*.md' --scheme https --exclude kroki\\.io --exclude api\\.fbi\\.gov --exclude sciencedirect\\.com"
           fail: true
 
       - name: Check for broken GitHub commit references
