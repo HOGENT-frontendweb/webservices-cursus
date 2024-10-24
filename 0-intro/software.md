@@ -5,6 +5,8 @@ Voor dit olod gaan we ervan uit dat je onderstaande **software installeert en co
 - [Git](#git)
 - [Node.js](#nodejs)
 - [Yarn](#yarn)
+- [MySQL](#mysql)
+- [MySQL Workbench](#mysql-workbench)
 - [Visual Studio Code](#visual-studio-code)
 - [Postman](#postman)
 
@@ -92,6 +94,26 @@ Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. D
 ```bash
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
+
+## MySQL
+
+Installeer MySQL via een package manager:
+
+- Windows: `winget install -e --id Oracle.MySQL`
+- macOS: `brew install mysql`
+- Linux: [distro afhankelijk](https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/linux-installation.html)
+
+?> Natuurlijk kan je ook MySQL draaien in een Docker container.
+
+## MySQL Workbench
+
+Installeer MySQL Workbench via een package manager of download het van de website:
+
+- Windows: <https://dev.mysql.com/downloads/workbench/>
+- macOS: `brew install --cask mysqlworkbench`
+- Linux: <https://dev.mysql.com/downloads/workbench/>
+
+?> Je bent vrij om een andere tool te gebruiken om met MySQL te werken.
 
 ## Visual Studio Code
 
