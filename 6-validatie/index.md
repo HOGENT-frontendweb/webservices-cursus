@@ -827,7 +827,7 @@ Werk aan je eigen project:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les6-opl 098b979
+> git checkout -b les6-opl ca4119d
 > yarn install
 > yarn prisma migrate dev
 > yarn start:dev

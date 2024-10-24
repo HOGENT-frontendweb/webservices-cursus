@@ -1,6 +1,17 @@
 # Authenticatie en autorisatie
 
-<!-- TODO: startpunt en oplossing toevoegen -->
+> **Startpunt voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les7 ca4119d
+> yarn install
+> yarn prisma migrate dev
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## JWT
 
@@ -76,23 +87,15 @@ De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen
 
 ## User types uitbreiden
 
-Voor we aan de slag gaan, definiëren we een aantal extra types voor onze entiteit gebruiker. We breiden de bestaande types ook een beetje uit. Voeg onderstaande code toe aan `src/types/user.ts`:
+Voor we aan de slag gaan, breiden we onze `User` interface een beetje uit:
 
 ```ts
-import type { Prisma } from '@prisma/client';
+// src/types/user.ts
+import type { Prisma } from '@prisma/client'; // 👈
 import type { Entity, ListResponse } from './common';
 
-// 👇 1
+// 👇
 export interface User extends Entity {
-  name: string;
-  email: string;
-  passwordHash: string;
-  roles: string[];
-}
-
-// 👇 2
-export interface UserRecord {
-  id: number;
   name: string;
   email: string;
   password_hash: string;
@@ -100,9 +103,9 @@ export interface UserRecord {
 }
 ```
 
-1. We voegen `email`, `passwordHash` en `roles` toe aan de `User` interface.
-2. We definiëren ook een interface die een record van een gebruiker voorstelt. Deze interface hebben we nodig omdat onze JWT helpers zullen werken met de raw data uit de databank.
-   - Later zal je zien dat we nooit de volledige `User` interface zullen teruggeven. Die bevat nl. `passwordHash` en dat willen we niet zomaar teruggeven.
+We voegen `email`, `password_hash` en `roles` toe aan de `User` interface. Later zal je zien dat we nooit de volledige `User` interface zullen teruggeven. Die bevat nl. `password_hash` en dat willen we niet zomaar teruggeven. Deze interface is voornamelijk voor intern gebruik in de code.
+
+Verderop zorgen we ervoor dat deze kolommen ook toegevoegd worden aan onze tabel in de databank.
 
 ## Helpers voor JWT's
 
@@ -112,7 +115,7 @@ We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtok
 yarn add jsonwebtoken
 ```
 
-We voegen wat configuratie toe voor jsonwebtoken in `config/development.ts`, `config/production.ts` en `config/test.ts`:
+We voegen wat configuratie toe voor `jsonwebtoken` in `config/development.ts`, `config/production.ts` en `config/test.ts`:
 
 <!-- cSpell: disable -->
 
@@ -120,11 +123,11 @@ We voegen wat configuratie toe voor jsonwebtoken in `config/development.ts`, `co
 export default {
   auth: {
     jwt: {
+      audience: 'budget.hogent.be',
+      issuer: 'budget.hogent.be',
+      expirationInterval: 60 * 60, // s (1 hour)
       secret:
         'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
-      expirationInterval: 60 * 60 * 1000, // ms (1 hour)
-      issuer: 'budget.hogent.be',
-      audience: 'budget.hogent.be',
     },
   },
 };
@@ -132,14 +135,15 @@ export default {
 
 <!-- cSpell: enable -->
 
+- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
+- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
 - `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
   - Dit secret is voor onze development omgeving, dus deze mag gewoon in onze code staan. Hoe we het secret voor onze productie-omgeving meegeven, zien we in een later hoofdstuk.
-- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
-- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
 
 We definiëren een module met een aantal helpers om een JWT te maken/controleren in `src/core/jwt.ts`:
 
 ```ts
+// src/core/jwt.ts
 import config from 'config'; // 👈 1
 import type {
   JwtPayload,
@@ -149,7 +153,7 @@ import type {
 } from 'jsonwebtoken'; // 👈 2
 import jwt from 'jsonwebtoken'; // 👈 2
 import util from 'node:util'; // 👈 3
-import type { UserRecord } from '../types/user';
+import type { User } from '../types/user';
 
 // 👇 1
 const JWT_AUDIENCE = config.get<string>('auth.jwt.audience');
@@ -171,12 +175,12 @@ const asyncJwtVerify = util.promisify<
 >(jwt.verify);
 
 // 👇 5
-export const generateJWT = async (user: UserRecord): Promise<string> => {
+export const generateJWT = async (user: User): Promise<string> => {
   const tokenData = { roles: user.roles }; // 👈 6
 
   // 👇 7
   const signOptions = {
-    expiresIn: Math.floor(JWT_EXPIRATION_INTERVAL / 1000),
+    expiresIn: Math.floor(JWT_EXPIRATION_INTERVAL),
     audience: JWT_AUDIENCE,
     issuer: JWT_ISSUER,
     subject: `${user.id}`,
@@ -274,7 +278,7 @@ async function main() {
     console.log('Verifying this JWT will throw an error:');
     valid = await verifyJWT(messedUpJwt);
   } catch (err: any) {
-    console.log('We expected an error:', err.message);
+    console.log('We got an error:', err.message);
   }
 }
 
@@ -326,6 +330,7 @@ De laatste twee opties bepalen de duur van de hashing: hoe groter deze getallen,
 Als laatste definiëren we een module met een aantal helpers om een wachtwoord te hashen/controleren in `src/core/password.ts`:
 
 ```ts
+// src/core/password.ts
 import config from 'config'; // 👈 1
 import argon2 from 'argon2'; // 👈 2
 
@@ -428,10 +433,12 @@ model User {
 Vervolgens maken we een nieuwe migratie:
 
 ```bash
-yarn prisma migrate dev --name addAuthInfoToUserTable
+yarn prisma migrate dev --name addAuthInfoToUserTable --create-only
 ```
 
-Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen wordt `user` en/of `admin` toegekend.
+We voegen hier de `--create-only` optie toe. Dit zorgt ervoor dat de migratie enkel aangemaakt wordt en nog niet uitgevoerd. We willen eerst onze seed aanpassen voor we de migratie uitvoeren. Het probleem is dat we kolommen toevoegen en dat er (waarschijnlijk) reeds data in de tabel zit. Aangezien we geen default waarde opgeven, zal de migratie falen als er reeds data in de tabel zit.
+
+Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen wordt `user` en/of `admin` toegekend. Negeer eventuele syntaxfouten over de nieuwe properties van de user.
 
 <!-- cSpell: disable -->
 
@@ -479,7 +486,17 @@ async function main() {
 
 <!-- cSpell: enable -->
 
-De extra kolommen hebben als gevolg dat de user service nu ook een `email`, `password` (geen hash!) en `roles` verwacht als parameter bij `create`.
+Aangezien we nog niet in productie draaien, kunnen we zonder problemen onze lokale databank droppen en opnieuw maken/vullen. Hierna zouden ook de syntaxfouten opgelost moeten zijn.
+
+```bash
+yarn prisma migrate reset
+```
+
+!> Voer dit commando enkel uit als je weet dat het geen problemen zal geven voor bv. je applicatie in productie. Dit kan desastreuze gevolgen hebben!
+
+### Types in servicelaag fixen
+
+De extra kolommen hebben als gevolg dat de user service nu ook een `email` en `password` (geen hash!) en `roles` verwacht als parameter bij `create` en **enkel** een `email` bij de `updateById` functie.
 
 We passen eerst het type aan en voegen meteen een type toe voor de publieke informatie van een gebruiker:
 
@@ -489,10 +506,12 @@ export interface UserCreateInput {
   name: string;
   email: string;
   password: string;
-  roles: string[];
 }
 
 export interface PublicUser extends Pick<User, 'id' | 'name' | 'email'> {}
+
+export interface UserUpdateInput
+  extends Pick<UserCreateInput, 'name' | 'email'> {}
 ```
 
 En vervolgens passen we de user service aan. We hernoemen ook de `create` functie naar `register`:
@@ -517,8 +536,7 @@ export const register = async ({
   name,
   email, // 👈 2
   password, // 👈 2
-  roles, // 👈 2
-}: UserCreateInput): Promise<User> => {
+}: UserCreateInput): Promise<PublicUser> => {
   try {
     const passwordHash = await hashPassword(password); // 👈 3
 
@@ -547,14 +565,31 @@ export const register = async ({
 5. We geven enkel de publieke informatie van de gebruiker terug.
 6. We wrappen alles in een try/catch en gebruiken de `handleDBError` functie om de fouten af te handelen.
 
-### Oefening 1
+### Oefening 1 - Publieke user data
 
 - Pas de andere functies in user service aan waar nodig.
+  - Denk hierbij aan het gebruik van `makeExposedUser`. Waar is dat allemaal nodig?
+  - Pas de `updateById` functie aan zodat je ook de `email` kan aanpassen.
 - Pas ook de REST-laag van de users aan waar nodig.
+  - Denk hierbij aan invoervalidatie.
+  - Controleer of er geen fouten zijn rond de types van de request en response.
+
+<br />
 
 - Oplossing +
 
-  TODO: voorbeeldoplossing toevoegen
+  Je vindt een voorbeeldoplossing in het voorbeelproject:
+
+  ```bash
+  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+  cd webservices-budget
+  git checkout -b les7-oef1-opl 2db1c8f
+  yarn install
+  yarn prisma migrate dev
+  yarn start:dev
+  ```
+
+  Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Aanmelden
 
@@ -631,7 +666,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  user: PublicUser;
   token: string;
 }
 ```
@@ -641,29 +675,14 @@ We definiëren een functie `login` in `src/service/user.ts` die een gebruiker me
 ```ts
 // src/service/user.ts
 // ... (imports)
-import type {
-  // ...
-  LoginResponse, // 👈 1
-} from '../types/user';
 import { hashPassword, verifyPassword } from '../core/password'; // 👈 4
-import { generateJWT } from '../core/jwt'; // 👈 7
-
-// 👇 6
-const makeLoginData = async (user: UserRecord): Promise<LoginResponse> => {
-  const token = await generateJWT(user); // 👈 7
-
-  // 👇 8
-  return {
-    user: makeExposedUser(user),
-    token,
-  };
-};
+import { generateJWT } from '../core/jwt'; // 👈 6
 
 // 👇 1
 export const login = async (
   email: string,
   password: string,
-): Promise<LoginResponse> => {
+): Promise<string> => {
   const user = await prisma.user.findUnique({ where: { email } }); // 👈 2
 
   // 👇 3
@@ -685,19 +704,16 @@ export const login = async (
     );
   }
 
-  return await makeLoginData(user); // 👈 6
+  return await generateJWT(user); // 👈 6
 };
 ```
 
-1. De functie `login` krijgt een e-mailadres en wachtwoord als parameter en geeft een `LoginResponse` terug.
+1. De (async) functie `login` krijgt een e-mailadres en wachtwoord als parameter en geeft een `string` terug.
 2. We kijken eerst of er een gebruiker met dit e-mailadres bestaat.
 3. Als die gebruiker niet bestaat, doen we alsof het e-mailadres en wachtwoord niet matchen. We willen niet laten blijken dat we de gebruiker kennen.
 4. Als we een gebruiker hebben, verifiëren we het opgegeven wachtwoord met de opgeslagen hash.
 5. Als het wachtwoord fout is, zeggen we opnieuw dat het e-mailadres en wachtwoord niet matchen.
-6. Vervolgens maken we de data die geretourneerd moet worden na login. We maken hiervoor een helperfunctie aangezien we diezelfde data ook nodig hebben bij het registreren.
-7. Eerst maken we een JWT voor die gebruiker.
-8. Vervolgens retourneren we de token en enkel de velden van de user die publiek zijn.
-9. Vergeet ook de `login` functie niet te exporteren.
+6. Vervolgens maken we een JWT voor die gebruiker en geven we die terug.
 
 Vervolgens voegen we een nieuw bestand `src/rest/session.ts` toe voor de login route.
 
@@ -706,15 +722,14 @@ Vervolgens voegen we een nieuw bestand `src/rest/session.ts` toe voor de login r
 import Router from '@koa/router';
 import Joi from 'joi';
 import validate from '../core/validation';
-import { userService } from '../service';
+import * as userService from '../service/user';
 import type {
   KoaContext,
-  LoginResponse,
-  LoginRequest,
   KoaRouter,
   BudgetAppState,
   BudgetAppContext,
-} from '../types';
+} from '../types/koa';
+import type { LoginResponse, LoginRequest } from '../types/user';
 
 // 👇 1
 const login = async (ctx: KoaContext<LoginResponse, void, LoginRequest>) => {
@@ -724,7 +739,7 @@ const login = async (ctx: KoaContext<LoginResponse, void, LoginRequest>) => {
 
   // 👇 4
   ctx.status = 200;
-  ctx.body = token;
+  ctx.body = { token };
 };
 // 👇 5
 login.validationScheme = {
@@ -735,7 +750,7 @@ login.validationScheme = {
 };
 
 // 👇 6
-export default function installSessionRoutes(parent: KoaRouter) {
+export default function installSessionRouter(parent: KoaRouter) {
   const router = new Router<BudgetAppState, BudgetAppContext>({
     prefix: '/sessions',
   });
@@ -750,6 +765,7 @@ export default function installSessionRoutes(parent: KoaRouter) {
 2. We halen het e-mailadres en wachtwoord uit de HTTP body.
 3. We proberen de gebruiker aan te melden.
 4. Als dat gelukt is, stellen we de HTTP statuscode in en geven we de token-informatie mee in de HTTP response body.
+   - Let op! We krijgen een string terug, dus we moeten dit nog omvormen naar een object zodat we een degelijk JSON object teruggeven.
 5. We voorzien ook een validatieschema voor de input.
 6. We definiëren een nieuwe router en de route voor de login (inclusief de invoervalidatie).
 
@@ -758,14 +774,14 @@ Als laatste voegen we deze nieuwe router toe aan onze applicatie in `src/rest/in
 ```ts
 // src/rest/index.ts
 // ... (imports)
-import installSessionRoutes from './session';
+import installSessionRouter from './session';
 
-export default function installRoutes(app: KoaApplication) {
+export default (app: KoaApplication) => {
   // ... (router aanmaken + routes installeren)
-  installSessionRoutes(router);
+  installSessionRouter(router);
 
   // ... (router in app plaatsen)
-}
+};
 ```
 
 Waarom definiëren we een API call `POST /api/sessions` i.p.v. `POST /api/users/login`?
@@ -774,24 +790,23 @@ Waarom definiëren we een API call `POST /api/sessions` i.p.v. `POST /api/users/
 
   Een API call moet altijd RESTful zijn. Dit betekent dat je geen werkwoorden of acties in je URL's steekt (dus ook geen `login`). Je werkt met resources en je voert acties uit op die resources. In dit geval is de resource een sessie en de actie is aanmelden. Daarom is `POST /api/sessions` correct en `POST /api/users/login` niet.
 
-### Oefening 2
+### Oefening 2 - Register
 
-Pas ook de overige functies in de user service aan:
-
-- `register` retourneert nu ook het token en de publieke user data.
-- `getAll` en `getById` mogen enkel de publieke user data retourneren (dus zeker geen wachtwoorden!).
+Pas ook de `register` functie in de user service aan. Deze functie retourneert nu ook een JWT token i.p.v. de publieke user data.
 
 ## Registreren
 
-We overlopen hier nog eens de belangrijkste code van het registreerproces. In `src/service/user.ts` hebben we:
+We overlopen hier nog eens de belangrijkste code van het registreerproces. Indien je oefening 2 gemaakt hebt, zou je deze oplossing min of meer moeten hebben.
+
+In `src/service/user.ts` hebben we:
 
 ```ts
 export const register = async ({
   name,
   email,
   password,
-}: RegisterUserRequest): Promise<LoginResponse> => {
-  // 👈 1
+}: RegisterUserRequest): Promise<string> => {
+  // 👆 1
   try {
     const passwordHash = await hashPassword(password);
 
@@ -811,30 +826,30 @@ export const register = async ({
       );
     }
 
-    return await makeLoginData(user); // 👈 1
+    return await generateJWT(user); // 👈 1
   } catch (error: any) {
     throw handleDBError(error);
   }
 };
 ```
 
-1. We retourneren hetzelfde response als bij het aanmelden.
+1. We retourneren, net zoals bij het aanmelden, een `string`.
 2. We gooien een interne serverfout als de gebruiker niet gemaakt kon worden.
 
 We bekijken ook nog eens de request handler voor het registreren in `src/rest/user.ts`:
 
 ```ts
-const register = async (
+const registerUser = async (
   ctx: KoaContext<LoginResponse, void, RegisterUserRequest>,
 ) => {
   const token = await userService.register(ctx.request.body); // 👈 1
 
   // 👇 2
   ctx.status = 200;
-  ctx.body = token;
+  ctx.body = { token };
 };
 // 👇 3
-register.validationScheme = {
+registerUser.validationScheme = {
   body: {
     name: Joi.string().max(255),
     email: Joi.string().email(),
@@ -842,14 +857,15 @@ register.validationScheme = {
   },
 };
 
-module.exports = function installUsersRoutes(app) {
+export default (parent: KoaRouter) => {
   // ...
-  router.post('/', validate(register.validationScheme), register); // 👈 4
+  router.post('/', validate(registerUser.validationScheme), registerUser); // 👈 4
   // ...
 };
 ```
 
 1. We registreren de nieuwe gebruiker (alle informatie zit in de HTTP body). We krijgen de token-informatie en publieke user informatie terug.
+   - We hebben de interface `RegisterResponse` niet meer nodig, die mag je weggooien uit `src/types/user.ts`.
 2. We retourneren deze token-informatie en publieke user informatie in de HTTP response body, evenals een statuscode 200.
 3. We voorzien ook een validatieschema voor de input. We vereisen een wachtwoord van minimum 12 karakters en maximum 128 karakters.
 4. We geven deze functie mee aan de POST op `/api/users` en doen ook de invoervalidatie.
@@ -866,7 +882,7 @@ We definiëren een module `src/core/auth.ts` die twee helpers exporteert.
 // src/core/auth.ts
 import type { Next } from 'koa'; // 👈 1
 import type { KoaContext } from '../types/koa'; // 👈 1
-import { userService } from '../service'; // 👈 1
+import * as userService from '../service/user'; // 👈 1
 
 // 👇 1
 export const requireAuthentication = async (ctx: KoaContext, next: Next) => {
@@ -925,6 +941,7 @@ Daarna definiëren we in `src/service/user.ts` een eerste functie om een JWT te 
 ```ts
 // src/service/user.ts
 import config from 'config'; // 👈 7
+import jwt from 'jsonwebtoken'; // 👈 9
 import { getLogger } from '../core/logging'; // 👈 4
 import { generateJWT, verifyJWT } from '../core/jwt'; // 👈 5
 import type { SessionInfo } from '../types/auth'; // 👈 1
@@ -959,7 +976,7 @@ export const checkAndParseSession = async (
     // 👇 8
     getLogger().error(error.message, { error });
 
-    // 👇 8
+    // 👇 9
     if (error instanceof jwt.TokenExpiredError) {
       throw ServiceError.unauthorized('The token has expired');
     } else if (error instanceof jwt.JsonWebTokenError) {
@@ -1010,36 +1027,39 @@ Pas `src/rest/user.ts` als volgt aan:
 ```ts
 // src/rest/user.ts
 // ... (imports)
-import { requireAuthentication, makeRequireRole } from '../core/auth'; // 👈 1
+import { requireAuthentication, makeRequireRole } from '../core/auth'; // 👈 2
 import Role from '../core/roles'; // 👈 4
 
 export default function installUsersRoutes(parent: KoaRouter) {
   // ...
 
-  const requireAdmin = makeRequireRole(Role.ADMIN); // 👈 3
+  // 👇 1
+  router.post('/', validate(registerUser.validationScheme), registerUser);
+
+  const requireAdmin = makeRequireRole(Role.ADMIN); // 👈 4
 
   router.get(
     '/',
-    requireAuthentication, // 👈 2
-    requireAdmin, // 👈 3
+    requireAuthentication, // 👈 3
+    requireAdmin, // 👈 4
     validate(getAllUsers.validationScheme),
     getAllUsers,
   );
   router.get(
     '/:id',
-    requireAuthentication, // 👈 2
+    requireAuthentication, // 👈 3
     validate(getUserById.validationScheme),
     getUserById,
   );
   router.put(
     '/:id',
-    requireAuthentication, // 👈 2
+    requireAuthentication, // 👈 3
     validate(updateUserById.validationScheme),
     updateUserById,
   );
   router.delete(
     '/:id',
-    requireAuthentication, // 👈 2
+    requireAuthentication, // 👈 3
     validate(deleteUserById.validationScheme),
     deleteUserById,
   );
@@ -1048,19 +1068,78 @@ export default function installUsersRoutes(parent: KoaRouter) {
 }
 ```
 
-1. We importeren onze nieuwe middlewares.
-2. En dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn.
+1. De register route laten we staan, daarvoor is geen authenticatie of autorisatie nodig.
+   - Het leest eenvoudiger als je dergelijke routes bovenaan zet.
+2. We importeren onze nieuwe middlewares.
+3. En dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn.
    - Aangemeld zijn = `Authorization` header bevat een geldige JWT.
-3. We willen ook de `GET /api/users` enkel toegankelijk maken voor admins. Daarom maken we een middleware die op deze rol checkt en voegen deze toe aan de route.
+4. We willen ook de `GET /api/users` enkel toegankelijk maken voor admins. Daarom maken we een middleware die op deze rol checkt en voegen deze toe aan de route.
+
+Bij onze routes voor transactions of places, kunnen we dit veel korter doen:
+
+```ts
+// src/rest/place.ts
+export default (parent: KoaRouter) => {
+  const router = new Router<BudgetAppState, BudgetAppContext>({
+    prefix: '/places',
+  });
+
+  router.use(requireAuthentication); // 👈
+
+  // ... (route definities)
+};
+```
+
+Op die manier dwingen we meteen authenticatie af voor alle routes in deze router.
+
+Nu merk je waarschijnlijk een type error op in de `requireAuthentication` middleware. Dit komt omdat we onze types voor `BudgetAppContext` en `KoaContext` foutief gedefinieerd hebben. Dat kom je wel eens vaker tegen bij het werken met TypeScript, soms is het onduidelijk hoe je een bepaald type moet gebruiken. We passen deze types aan in `src/types/koa.ts`:
+
+```ts
+// src/types/koa.ts
+export interface BudgetAppContext<
+  Params = unknown,
+  RequestBody = unknown,
+  Query = unknown,
+> {
+  request: {
+    body: RequestBody;
+    query: Query;
+  };
+  params: Params;
+}
+
+export type KoaContext<
+  ResponseBody = unknown,
+  Params = unknown,
+  RequestBody = unknown,
+  Query = unknown,
+> = ParameterizedContext<
+  BudgetAppState,
+  BudgetAppContext<Params, RequestBody, Query>,
+  ResponseBody
+>;
+```
+
+Wat is het verschil met de vorige versie?
+
+- Antwoord +
+
+  Hiervoor was `BudgetAppContext` leeg en was `KoaContext` een samenvoeging van `ParameterizedContext` en de inhoud van `BudgetAppContext`. Dit laatste is fout. We moeten de `ParameterizedContext` gebruiken en de `BudgetAppContext` als een type meegeven aan `ParameterizedContext`.
 
 ## Controleer of de aangemelde gebruiker toegang heeft tot de gegeven user info
 
-We dienen nog te controleren of de aangemelde gebruiker wel toegang heeft tot de gevraagde user informatie. Enkel de admin en de gebruiker zelf heeft daartoe toegang.
+We dienen nog te controleren of de aangemelde gebruiker wel toegang heeft tot de gevraagde user informatie. Enkel de admin en de gebruiker zelf hebben toegang tot de gegevens van een gebruiker. We voegen een nieuwe middleware toe die controleert of de aangemelde gebruiker toegang heeft tot de gevraagde user info.
 
 Voeg toe aan `src/rest/user.ts`:
 
 ```ts
 // src/rest/user.ts
+// ... (imports)
+import type { Next } from 'koa';
+import type {
+  // ...
+  GetUserRequest, // 👈
+} from '../types/user';
 
 // 👇
 const checkUserId = (ctx: KoaContext<unknown, GetUserRequest>, next: Next) => {
@@ -1103,11 +1182,13 @@ router.delete(
 );
 ```
 
+Je zou er ook voor kunnen kiezen om een HTTP 404 terug te geven om niet prijs te geven dat je de gebruiker kent. Dit is een veiligheidsmaatregel zijn. In dit geval geven we een HTTP 403 terug.
+
 We passen ook de `getUserById` functie aan in `src/rest/user.ts` zodat we `me` kunnen gebruiken om de informatie van de aangemelde gebruiker op te vragen:
 
 ```ts
 const getUserById = async (
-  ctx: KoaContext<GetUserByIdResponse, GetUserRequest>,
+  ctx: KoaContext<GetUserByIdResponse, GetUserRequest>, // 👈
 ) => {
   // 👇
   const user = await userService.getById(
@@ -1121,7 +1202,7 @@ getUserById.validationScheme = {
 };
 ```
 
-Hierdoor moeten we ook het type van `GetUserRequest` aanpassen in `src/types/user.ts`:
+Hierdoor moeten we ook het type van `GetUserRequest` toevoegen aan `src/types/user.ts`:
 
 ```ts
 // src/types/user.ts
@@ -1133,7 +1214,7 @@ export interface GetUserRequest {
 
 ## Willekeurige vertragingsfunctie
 
-Om zogenaamde [timing attacks](https://en.wikipedia.org/wiki/Timing_attack) te voorkomen, kunnen we een willekeurige vertragingsfunctie toevoegen aan onze authenticatie. Deze functie wacht een willekeurige tijd vooraleer het request effectief te verwerken. Zo kan een aanvaller niet aan de hand van de responstijd afleiden of een wachtwoord correct is of niet.
+Om zogenaamde [timing attacks](https://en.wikipedia.org/wiki/Timing_attack) te voorkomen, kunnen we een willekeurige vertragingsfunctie toevoegen aan onze authenticatie. Deze functie wacht een willekeurige tijd vooraleer het request effectief te verwerken. Zo kan een aanvaller bv. niet aan de hand van de responstijd afleiden of een wachtwoord correct is of niet.
 
 We voegen een nieuwe middleware-functie toe aan `src/core/auth.ts`:
 
@@ -1172,7 +1253,12 @@ import {
 
 // ...
 
-router.post('/', authDelay, validate(register.validationScheme), register); // 👈
+router.post(
+  '/',
+  authDelay, // 👈
+  validate(register.validationScheme),
+  register,
+);
 ```
 
 Herhaal hetzelfde voor de login route in `src/rest/session.ts`:
@@ -1182,7 +1268,12 @@ import { authDelay } from '../core/auth'; // 👈
 
 // ...
 
-router.post('/', authDelay, validate(login.validationScheme), login); // 👈
+router.post(
+  '/',
+  authDelay, // 👈
+  validate(login.validationScheme),
+  login,
+);
 ```
 
 ## Opmerking
@@ -1195,18 +1286,28 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 
 ## Oefening 3 - Authenticatie
 
-- Scherm de routes van de places af, authenticatie is vereist.
-- Doe hetzelfde voor de transactions. Pas, indien nodig, ook de andere lagan aan.
-- `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de servicelaag aan.
-- `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
-- `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
-- `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
+!> Dit is een zeer belangrijke oefening! Heel wat applicaties voegen simpel authenticatie en autorisatie op routeniveau toe, maar vergeten vaak autorisatie op entiteitsniveau. In ons project mag bv. niet elke gebruiker elke transactie zien. Denk hierover in je eigen project ook goed na!
 
-<br/>
+- Scherm de routes van transactions af. Authenticatie is overal vereist.
+- We passen ook volgende routes aan:
+  - `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de servicelaag aan.
+  - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
+  - `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
+  - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
+  - Pas, indien nodig, ook de transaction service aan.
 
-- Oplossing +
-
-  TODO: voorbeeldoplossing toevoegen
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les7-opl fc6b96b
+> yarn install
+> yarn prisma migrate dev
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Extra's voor de examenopdracht
 
