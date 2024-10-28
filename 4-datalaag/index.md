@@ -524,7 +524,7 @@ Nu moeten we enkel nog de Prisma client gebruiken in onze services.
 
 ### Places
 
-We passen allereerst de `src/service/place.ts` aan:
+We voegen allereerst een bestand `src/service/place.ts` toe:
 
 ```ts
 import { prisma } from '../data'; // 👈 1
