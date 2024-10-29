@@ -833,13 +833,12 @@ Vervolgens voegen we enkele types toe voor Koa. Maak een nieuw bestand `koa.ts` 
 ```ts
 // src/types/koa.ts
 import type { ParameterizedContext } from 'koa';
-import type { SessionInfo } from '.';
 import type Application from 'koa';
 import type Router from '@koa/router';
 
 // 👇 1
 export interface BudgetAppState {
-  session: SessionInfo;
+
 }
 
 // 👇 2
