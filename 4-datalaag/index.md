@@ -617,11 +617,11 @@ Merk op dat we een fout gooien als de place niet bestaat. Na deze aanpassingen k
 
 Controleer of elk endpoint van de places correct werkt.
 
+?> Merk op dat we zelden enkel informatie uit één tabel opvragen. Als het hele project services bevat die enkel informatie uit 'hun' tabel opvragen, dan is dit een vrij nutteloze laag. Het is de bedoeling dat de service-laag de data van de databank omvormt naar de gewenste vorm. Dit kan bv. zijn dat je de plaatsen opvraagt met de transacties erbij. Het kan ook zijn dat je nog allerlei berekeningen moet maken alvorens iets toe te voegen. Maak dus werk van een degelijke service-laag.
+
 ### Transactions
 
-Tot nu toe hebben we enkel data uit dezelfde tabel opgevraagd. Als alle services enkel uit "hun" tabel data ophalen, dan is het een vrij nutteloze service- of domeinlaag.
-
-We passen de functie `getAll` in `src/service/transaction.ts` aan:
+Als laatste voorbeeld passen we de functie `getAll` in `src/service/transaction.ts` aan:
 
 ```ts
 // 👇 1
