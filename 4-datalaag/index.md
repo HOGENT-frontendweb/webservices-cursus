@@ -185,9 +185,12 @@ Zoals je kan zien gebruikt Prisma een zeer leesbare syntax voor het databanksche
 Zoals je ziet definiëren we onze relaties ook in de schema, net alsof we objectgeoriënteerd aan het werk zijn. Prisma zal deze relaties automatisch voor ons afhandelen met bv. een tussentabel voor veel-op-veel relaties, enz.
 
 ### Veel op veel relaties
+
 Veel op veel-relaties kan je op twee manieren modelleren:
-1.	Gebruik [impliciete relaties](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations#implicit-many-to-many-relations) als de tussentabel enkel de ID’s van beide tabellen bevat. In dit geval hoef je geen model voor de tussentabel aan te maken in je schema. De tussentabel wordt door prisma zelf aangemaakt.
-2.	Gebruik [expliciete relaties](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations#explicit-many-to-many-relations) als de tussentabel extra kolommen bevat. In dit geval moet je wel een model voor de tussentabel definiëren in je schema.
+
+1. Gebruik [impliciete relaties](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations#implicit-many-to-many-relations) als de tussentabel enkel de ID’s van beide tabellen bevat. In dit geval hoef je geen model voor de tussentabel aan te maken in je schema. De tussentabel wordt door prisma zelf aangemaakt.
+2. Gebruik [expliciete relaties](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations#explicit-many-to-many-relations) als de tussentabel extra kolommen bevat. In dit geval moet je wel een model voor de tussentabel definiëren in je schema.
+
 Raadpleeg de [documentatie op Prisma ORM many-to-many-relations](https://www.prisma.io/docs/orm/prisma-schema/data-model/relations/many-to-many-relations) voor meer informatie over het modelleren van een veel op veel relatie en het opvragen en creëren van gerelateerde data.
 
 ### Configuratie connectie
@@ -843,9 +846,7 @@ import type Application from 'koa';
 import type Router from '@koa/router';
 
 // 👇 1
-export interface BudgetAppState {
-
-}
+export interface BudgetAppState {}
 
 // 👇 2
 export interface BudgetAppContext<
