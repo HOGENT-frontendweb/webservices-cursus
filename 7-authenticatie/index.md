@@ -1198,7 +1198,13 @@ const getUserById = async (
   ctx.body = user;
 };
 getUserById.validationScheme = {
-  params: { id: [Joi.number().integer().positive(), 'me'] }, // 👈
+  params: {
+    // 👇
+    id: Joi.alternatives().try(
+      Joi.number().integer().positive(),
+      Joi.string().valid('me'),
+    ),
+  },
 };
 ```
 
@@ -1301,7 +1307,7 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl bd8542e
+> git checkout -b les7-opl 42e1886
 > yarn install
 > yarn prisma migrate dev
 > yarn start:dev
