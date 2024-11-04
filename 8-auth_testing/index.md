@@ -80,45 +80,6 @@ export default function withServer(setter: (s: supertest.Agent) => void): void {
     await server.stop();
   });
 }
-
-// 👇 6
-const login = async (supertest) => {
-  // 👇 7
-  const response = await supertest.post('/api/users/login').send({
-    email: 'test.user@hogent.be',
-    password: '12345678',
-  });
-
-  // 👇 8
-  if (response.statusCode !== 200) {
-    throw new Error(response.body.message || 'Unknown error occured');
-  }
-
-  return `Bearer ${response.body.token}`; // 👈 9
-};
-
-const withServer = (setter) => {
-  // 👈 4
-  let server;
-
-  beforeAll(async () => {
-    server = await createServer();
-
-    setter({
-      knex: getKnex(),
-      supertest: supertest(server.getApp().callback()),
-    });
-  });
-
-  afterAll(async () => {
-    await server.stop();
-  });
-};
-
-module.exports = {
-  login,
-  withServer,
-}; // 👈 1 en 6
 ```
 
 1. Definieer en exporteer hierin een functie `withServer`. Deze heeft als taak om de juiste lifecycle hooks van Jest aan te roepen om de server starten/stoppen.
@@ -138,7 +99,7 @@ Vervolgens definiëren we een helper-functie om de toegevoegde gewone gebruiker 
 import type supertest from 'supertest';
 
 export const login = async (supertest: supertest.Agent): Promise<string> => {
-  const response = await supertest.post('/api/users/login').send({
+  const response = await supertest.post('/api/sessions').send({
     email: 'test.user@hogent.be',
     password: '12345678',
   });
@@ -170,7 +131,7 @@ Definieer een helper genaamd `loginAdmin` die hetzelfde doet voor de administrat
   export const loginAdmin = async (
     supertest: supertest.Agent,
   ): Promise<string> => {
-    const response = await supertest.post('/api/users/login').send({
+    const response = await supertest.post('/api/sessions').send({
       email: 'admin.user@hogent.be',
       password: '12345678',
     });
@@ -250,6 +211,7 @@ const dataToDelete = {
 
 describe('Transactions', () => {
   // ...
+  let request: supertest.Agent;
   let authHeader: string; // 👈 3
 
   // 👇 2
@@ -292,7 +254,9 @@ describe('Transactions', () => {
 2. Gebruik de nieuwe `withServer` helper om de server te starten. Stel via de `setter` de variabele `request` in. Vergeet de imports niet op te ruimen.
 3. Gebruik nu de `login` helper om aan te melden. De `login` header houden we bij voor later.
 4. Voeg aan elk request deze login header toe.
-5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is. Voeg dit toe aan elke test suite van de verschillende endpoints.
+5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
+6. Pas de PUT en POST requests aan: het userId moet niet langer worden opgegeven. De userId van de aangemelde gebruiker wordt gebruikt.
+Voeg dit toe aan elke test suite van de verschillende endpoints.
 
 ### Oefening 2 - Testen afwerken
 
