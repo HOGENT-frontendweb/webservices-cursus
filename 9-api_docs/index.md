@@ -83,8 +83,12 @@ Voeg vervolgens de middleware toe in `src/core/installMiddleware.ts`:
 // ...
 import { koaSwagger } from 'koa2-swagger-ui';
 import swaggerJsdoc from 'swagger-jsdoc';
-import swaggerOptions from '../swagger.config';
+import swaggerOptions from '../../swagger.config';
+// ...
 
+const isDevelopment = NODE_ENV === 'development';
+
+// ...
 // ... (voor 404 middleware)
 if (isDevelopment) {
   // 👇 1
@@ -112,10 +116,6 @@ koa-helmet's Content Security Policy (CSP) is niet nodig in development, dit lev
 
 ```ts
 // src/core/installMiddleware.ts
-// ...
-
-const isDevelopment = NODE_ENV === 'development';
-
 // ...
 
 // Add some security headers
@@ -176,6 +176,8 @@ Vervolgens definiëren we hoe een `id` URL parameter eruit ziet:
 Met Swagger kunnen we ook definiëren hoe gebruikers geauthenticeerd moeten worden. In dit voorbeeld definiëren we een authenticatie met een JWT token:
 
 ```ts
+// src/rest/index.ts
+
 /**
  * @swagger
  * components:
