@@ -1,8 +1,6 @@
 # Authenticatie en autorisatie
 
-<!-- TODO: oplossing toevoegen -->
-
-> **Oplossing voorbeeldapplicatie**
+> **Startpunt voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
