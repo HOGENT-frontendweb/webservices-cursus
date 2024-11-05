@@ -2,8 +2,6 @@
 
 Voor het schrijven van API documentatie bestaan wel wat tools. Swagger is een van de bekendste. Swagger is een set van open-source tools die samenwerken om REST API's te ontwerpen, builden, documenteren en consumeren. Swagger is gebaseerd op de OpenAPI specificatie. In dit hoofdstuk leer je hoe je een REST API documenteert met OpenAPI en Swagger.
 
-<!-- TODO: oplossing toevoegen -->
-
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
@@ -52,6 +50,7 @@ OpenAPI definities schrijf je in YAML of JSON. Wij maken hier gebruik van YAML. 
 
 - `Metadata`: bevat de OpenAPI versie en info over de API (title, version...).
 - `Servers`: de API servers en base URL.
+  - Hier kan je later de URL toevoegen van je productieomgeving. Voorlopig hebben we enkel een development omgeving.
 - `API tags`: tags worden gebruikt voor het groeperen van gerelateerde operaties bv. transactions en places.
 - `API components`: documentatie van de verschillende herbruikbare data modellen: schema's, parameters, beveiligingsschema's, request bodies, responses, headers, voorbeelden, koppelingen en callbacks.
 - `API paths`: paden naar de documentatie, relatief t.o.v. de root.
@@ -89,7 +88,7 @@ We stellen ook in dat een fout gegooid wordt indien er een foute specificatie wo
 
 ### Swagger UI middleware
 
-Voeg vervolgens de middleware toe in `src/core/installMiddleware.ts`:
+Vervolgens voegen we een middleware voor Swagger UI toe. Zo kunnen we op een bepaalde URL onze API documentatie bekijken. Voeg de middleware toe in `src/core/installMiddleware.ts`:
 
 ```ts
 // src/core/installMiddleware.ts
@@ -111,7 +110,7 @@ if (isDevelopment) {
   app.use(
     koaSwagger({
       routePrefix: '/swagger',
-      specPrefix: '/openapi.json',
+      specPrefix: '/swagger.json',
       exposeSpec: true,
       swaggerOptions: { spec },
     }),
@@ -129,19 +128,14 @@ koa-helmet's Content Security Policy (CSP) is niet nodig in development, dit lev
 
 ```ts
 // src/core/installMiddleware.ts
-// ...
-
-// Add some security headers
 app.use(
   koaHelmet({
-    // Not needed in development (destroys Swagger UI)
-    contentSecurityPolicy: isDevelopment ? false : true,
+    contentSecurityPolicy: !isDevelopment,
   }),
 );
-
-// Add CORS
-// ...
 ```
+
+Start de server en navigeer naar <http://localhost:9000/swagger> om de Swagger UI te zien (veel is er nog niet te zien natuurlijk). Je kan de JSON specificatie downloaden via <http://localhost:9000/swagger.json>.
 
 ## Algemene API documentatie
 
@@ -224,11 +218,13 @@ Als laatste definiëren we nog vier error responses:
 
 Zoals je ziet is de Open API specificatie enorm uitgebreid en veel schrijven. Het is belangrijk om de documentatie up-to-date te houden. De Swagger UI is een handige tool om de documentatie te bekijken en testen.
 
-Start de server en kijk eens naar de Swagger UI op <http://localhost:9000/swagger>.
+Je hoeft bovenstaande codefragmenten niet in afzonderlijke JSDoc commentaarblokken te zetten, je kan ze ook samenvoegen. Bekijk zelf wat ze gemeenschappelijk hebben en wat niet, en voeg ze samen. Het is wel een goed idee om verschillende types onderdelen van elkaar te scheiden, bv. `tags`, `components`...
+
+Bekijk de Swagger UI opnieuw via <http://localhost:9000/swagger>. Je zou een `Base` schema moeten zien onderaan, alsook een `Authorize` knop rechtsboven. Nu is het tijd om de documentatie voor de places API te definiëren.
 
 ## Documentatie voor de places
 
-In dit voorbeeld werken we de documentatie uit voor de `places` API. Voeg de volgende JSDoc commentaren toe aan het bestand `src/rest/places.ts` (bovenaan onder de imports).
+In dit voorbeeld werken we de documentatie uit voor de places API. Voeg de volgende JSDoc commentaren toe aan het bestand `src/rest/places.ts` (bovenaan onder de imports).
 
 ```ts
 // src/rest/places.ts
@@ -303,7 +299,7 @@ Je merkt dat we met `$ref` kunnen verwijzen naar andere onderdelen van de specif
 
 ### GET /api/places
 
-Voeg de volgende JSDoc commentaren toe aan de `getPlaces` functie in `src/rest/places.ts`.
+Voeg de volgende JSDoc commentaren toe boven de `getPlaces` functie in `src/rest/places.ts`.
 
 ```ts
 /**
@@ -331,7 +327,7 @@ Voeg de volgende JSDoc commentaren toe aan de `getPlaces` functie in `src/rest/p
 
 Hier definiëren we de documentatie voor de `GET /api/places` route. De route retourneert een lijst van plaatsen. De response bevat een lijst van plaatsen, gedefinieerd in het schema `PlacesList`. Bekijk de structuur van de OpenAPI documentatie, herken je bepaalde elementen?
 
-Bekijk de Swagger UI op <http://localhost:9000/swagger>. Je zou nu een onderdeel moeten zien voor de `places` API.
+Bekijk de Swagger UI op <http://localhost:9000/swagger>. Je zou nu een onderdeel moeten zien voor de places API.
 
 ### Oefening 1 - GET /api/places/:id
 
@@ -343,6 +339,122 @@ Bekijk de Swagger UI op <http://localhost:9000/swagger>. Je zou nu een onderdeel
 <br />
 
 - Oplossing +
+
+  Voeg een schema voor de transacties toe aan `src/rest/transactions.ts`:
+
+  ```ts
+  /**
+   * @swagger
+   * components:
+   *   schemas:
+   *     Transaction:
+   *       allOf:
+   *         - $ref: "#/components/schemas/Base"
+   *         - type: object
+   *           required:
+   *             - amount
+   *             - date
+   *             - user
+   *             - place
+   *           properties:
+   *             name:
+   *               type: "string"
+   *             date:
+   *               type: "string"
+   *               format: date-time
+   *             place:
+   *               $ref: "#/components/schemas/Place"
+   *             user:
+   *               $ref: "#/components/schemas/User"
+   *           example:
+   *             id: 123
+   *             amount: 3000
+   *             date: "2021-05-28T14:27:32.534Z"
+   *             place:
+   *               id: 123
+   *               name: Loon
+   *               rating: 4
+   *             user:
+   *               id: 123
+   *               name: "Thomas Aelbecht"
+   *               email: "thomas.aelbrecht@hogent.be"
+   */
+  ```
+
+  We voegen ook een schema voor de gebruikers toe in `src/rest/users.ts`:
+
+  ```ts
+  /**
+   * @swagger
+   * components:
+   *   schemas:
+   *     User:
+   *       allOf:
+   *         - $ref: "#/components/schemas/Base"
+   *         - type: object
+   *           required:
+   *             - name
+   *             - email
+   *           properties:
+   *             name:
+   *               type: "string"
+   *             email:
+   *               type: "string"
+   *               format: email
+   *           example:
+   *             id: 123
+   *             name: "Thomas Aelbecht"
+   *             email: "thomas.aelbrecht@hogent.be"
+   *     UsersList:
+   *       required:
+   *         - items
+   *       properties:
+   *         items:
+   *           type: array
+   *           items:
+   *             $ref: "#/components/schemas/User"
+   */
+  ```
+
+  Vervolgens definiëren we een nieuw `PlaceDetail` schema in `src/rest/places.ts`:
+
+  ```ts
+  /**
+   * ...
+   *
+   *     PlaceDetail:
+   *       allOf:
+   *         - $ref: "#/components/schemas/Place"
+   *         - type: object
+   *           required:
+   *             - transactions
+   *           properties:
+   *             transactions:
+   *               type: array
+   *               items:
+   *                 $ref: "#/components/schemas/Transaction"
+   *           example:
+   *             id: 123
+   *             name: Loon
+   *             rating: 4
+   *             transactions:
+   *               - id: 123
+   *                 amount: 3000
+   *                 date: "2021-05-28T14:27:32.534Z"
+   *                 place:
+   *                   id: 123
+   *                   name: Loon
+   *                   rating: 4
+   *                 user:
+   *                   id: 123
+   *                   name: "Thomas Aelbecht"
+   *                   email: "thomas.aelbrecht@hogent.be"
+   *
+   * ...
+   */
+  ```
+
+  En als laatste definiëren we de documentatie voor de `GET /api/places/:id` route:
 
   ```ts
   /**
@@ -362,7 +474,7 @@ Bekijk de Swagger UI op <http://localhost:9000/swagger>. Je zou nu een onderdeel
    *         content:
    *           application/json:
    *             schema:
-   *               $ref: "#/components/schemas/Place"
+   *               $ref: "#/components/schemas/PlaceDetail"
    *       400:
    *         $ref: '#/components/responses/400BadRequest'
    *       401:
@@ -479,7 +591,56 @@ We definiëren de request body m.b.v. `requestBody` en verwijzen naar de `Place`
    */
   ```
 
-### Oefening 5 - Andere routes
+## Documentatie voor inloggen
+
+In de Swagger UI kan je ook requests uitvoeren. Dat is handig om snel de API te testen. Omdat we voor praktisch elke API call aangemeld moeten zijn, moeten we ook de documentatie voor het inloggen definiëren. Voeg de volgende JSDoc commentaren toe aan het bestand `src/rest/sessions.ts`, net boven de `login` functie.
+
+```ts
+/**
+ * @swagger
+ * tags:
+ *   name: Sessions
+ *   description: User session management
+ */
+
+/**
+ * @swagger
+ * /api/sessions:
+ *   post:
+ *     summary: Try to login
+ *     tags:
+ *      - Sessions
+ *     requestBody:
+ *       description: The credentials of the user to login
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: A JWT token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *       400:
+ *         $ref: '#/components/responses/400BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/401Unauthorized'
+ */
+```
+
+## Oefening 5 - Andere routes
 
 Vervolledig zelf de documentatie voor alle overige routes in de applicatie.
 
@@ -488,6 +649,21 @@ Vervolledig zelf de documentatie voor alle overige routes in de applicatie.
 - Voeg Swagger toe aan je eigen project.
 - Definieer de algemene documentatie voor je API.
 - Definieer de documentatie voor **alle** routes in je API.
+
+Maak tijd om degelijke API documentatie te schrijven. Het is een belangrijk onderdeel van je project. Een goed gedocumenteerde API maakt het voor andere developers (en jou) eenvoudiger om de API te gebruiken.
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les9-opl TODO:
+> yarn install
+> yarn prisma migrate dev
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Mogelijke extra's voor de examenopdracht
 
