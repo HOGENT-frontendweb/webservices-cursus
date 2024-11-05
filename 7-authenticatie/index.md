@@ -1299,7 +1299,9 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 - Scherm de routes van transactions af. Authenticatie is overal vereist.
 - We passen ook volgende routes aan:
   - `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de servicelaag aan.
+    - Een admin mag wel alle transacties ophalen.
   - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
+    - Een admin mag wel alle transacties ophalen.
   - `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
   - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
   - Pas, indien nodig, ook de transaction service aan.
