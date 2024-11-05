@@ -580,7 +580,7 @@ export const register = async ({
 
 - Oplossing +
 
-  Je vindt een voorbeeldoplossing in het voorbeelproject:
+  Je vindt een voorbeeldoplossing in het voorbeeldproject:
 
   ```bash
   git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
