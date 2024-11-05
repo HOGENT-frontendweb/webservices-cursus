@@ -1,6 +1,7 @@
 # CI/CD
 
 <!-- TODO: JWT secret ? -->
+<!-- TODO: remove tests dir from build -->
 <!-- TODO: default config introduceren -->
 
 > **Startpunt voorbeeldapplicatie**
