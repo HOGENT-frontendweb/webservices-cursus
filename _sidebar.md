@@ -15,5 +15,5 @@
 - [6. Validatie en foutafhandeling](/6-validatie/index.md)
 - [7. Authenticatie & autorisatie](/7-authenticatie/index.md)
 - [8. Testen: authenticatie & autorisatie](/8-auth_testing/index.md)
-- [9. API documentatie (WIP)](/9-api_docs/index.md)
+- [9. API documentatie](/9-api_docs/index.md)
 - [10. CI/CD (WIP)](/10-cicd/index.md)

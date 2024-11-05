@@ -23,7 +23,7 @@ Voor het schrijven van API documentatie bestaan wel wat tools. Swagger is een va
 
 [OpenAPI Specification (OAS)](https://swagger.io/specification/), voorheen bekend als Swagger Specification, biedt een standaard, programmeertaal onafhankelijke beschrijving van een REST API in YAML- of JSON-formaat. Het geeft alleen aan welke functionaliteit de API biedt, niet welke implementatie of dataset achter die API schuilgaat.
 
-Met OAS 3.0 kunnen zowel mensen als machines de functionaliteit van een REST API bekijken, begrijpen en interpreteren, zonder toegang tot de broncode, aanvullende documentatie. Uit de documentatie kan de client code worden gegenereerd. Een voorbeeld van de basis structuur vind je hier: <https://swagger.io/docs/specification/basic-structure/>.
+Met OAS 3.0 kunnen zowel mensen als machines de functionaliteit van een REST API bekijken, begrijpen en interpreteren, zonder toegang tot de broncode, aanvullende documentatie. Uit de documentatie kan de client code worden gegenereerd. Een voorbeeld van de basis structuur vind je hier: <https://swagger.io/docs/specification/basic-structure/>. Hierdoor kan je bv. code die de API aanroept, of zelfs een basisstructuur voor een back-end, laten genereren
 
 **Een API is maar zo goed als jij (ja, jij) hem documenteert.**
 
@@ -405,14 +405,6 @@ Bekijk de Swagger UI op <http://localhost:9000/swagger>. Je zou nu een onderdeel
    *             id: 123
    *             name: "Thomas Aelbecht"
    *             email: "thomas.aelbrecht@hogent.be"
-   *     UsersList:
-   *       required:
-   *         - items
-   *       properties:
-   *         items:
-   *           type: array
-   *           items:
-   *             $ref: "#/components/schemas/User"
    */
   ```
 
@@ -640,6 +632,31 @@ In de Swagger UI kan je ook requests uitvoeren. Dat is handig om snel de API te 
  */
 ```
 
+### API calls testen
+
+Nu is het tijd om een API call uit te voeren.
+
+1. Open de Swagger UI op <http://localhost:9000/swagger>.
+2. Klik op de `POST /api/sessions` route en vervolgens op de `Try it out` knop.
+3. Voeg de volgende JSON toe in het veld `Request body`:
+
+```json
+{
+  "email": "thomas.aelbrecht@hogent.be",
+  "password": "12345678"
+}
+```
+
+<!-- markdownlint-disable ol-prefix -->
+
+4. Klik op `Execute`. Je zou een response moeten krijgen met een JWT token. Kopieer deze token.
+5. Klik op de `Authorize` knop rechtsboven in de Swagger UI. Voeg de gekopieerde JWT token toe in het veld `Value` en klik op `Authorize`.
+6. Klik op de `GET /api/places` route en vervolgens op de `Try it out` knop. Je zou een lijst van plaatsen moeten zien.
+
+<!-- markdownlint-enable ol-prefix -->
+
+Herhaal stap 6 voor de andere routes, soms moet je wel een request body of URL parameter toevoegen.
+
 ## Oefening 5 - Andere routes
 
 Vervolledig zelf de documentatie voor alle overige routes in de applicatie.
@@ -657,7 +674,7 @@ Maak tijd om degelijke API documentatie te schrijven. Het is een belangrijk onde
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9-opl TODO:
+> git checkout -b les9-opl d0306ba
 > yarn install
 > yarn prisma migrate dev
 > yarn start:dev
