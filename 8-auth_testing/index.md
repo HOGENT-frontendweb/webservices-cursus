@@ -1,8 +1,25 @@
 # Authenticatie en autorisatie
 
-<!-- TODO: startpunt en oplossing toevoegen -->
+<!-- TODO: oplossing toevoegen -->
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les8 42e1886
+> yarn install
+> yarn prisma migrate dev
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
+
+In dit hoofdstuk zullen we ervoor zorgen dat onze testen terug slagen. We zullen hiervoor authenticatie en autorisatie toevoegen aan alle testen.
 
 ## Jest
+
+Allereerst passen we een aantal dingen aan in Jest. We willen een betere output van de coverage en voorzien een aantal helpers om de testen te vereenvoudigen.
 
 ### Configuratie
 
@@ -13,7 +30,6 @@ Om betere coverage uitvoer te krijgen, passen we nog een aantal parameters aan i
 {
   // ...
   collectCoverageFrom: [
-    './src/repository/**/*.ts',
     './src/service/**/*.ts',
     './src/rest/**/*.ts',
   ],
@@ -22,8 +38,9 @@ Om betere coverage uitvoer te krijgen, passen we nog een aantal parameters aan i
 }
 ```
 
-- `collectCoverageFrom`: mappen waarvan we coverage willen zien. Hier enkel van de service en rest mappen - de rest is niet zo belangrijk. Je kan dit aanpassen naar eigen wensen.
+- `collectCoverageFrom`: mappen waarvan we coverage willen zien. Hier enkel van de service en rest mappen - de overige mappen zijn niet zo belangrijk. Je kan dit aanpassen naar eigen wensen.
 - `coverageDirectory`: map waar de coverage opgeslagen moet worden. Standaard komt dit in de root van je project terecht, we verplaatsen dit naar de map `__tests__`.
+  - Deze map mag niet op GitHub komen, deze wordt automatisch gegenereerd.
 
 ### Refactoring
 
@@ -86,8 +103,11 @@ export default function withServer(setter: (s: supertest.Agent) => void): void {
 2. Maak een variabele om de server bij te houden (binnen de functie).
 3. En maak een nieuwe server in de `beforeAll`.
 4. We voegen ook meteen een gewone gebruiker en een admin toe aan de databank. Dit is handig voor de testen.
-5. Nu hebben we nog een probleem: hoe krijgen we de instantie van supertest uit de functie (we kunnen geen return doen in `beforeAll`). Oplossing: geef een soort `setter`-functie mee aan de `withServer` functie en roep deze aan met de instantie van supertest als parameter.
-6. We verwijderen de gebruikers uit de databank na de testen.
+   - Hier voeg je best enkel testdata toe die je in **elke** test suite nodig hebt. Testdata die je enkel in één test (suite) nodig hebt, voeg je best toe in de test (suite) zelf.
+5. Nu hebben we nog een probleem: hoe krijgen we de instantie van supertest uit de functie (we kunnen geen return doen in `beforeAll`).
+   - Oplossing: geef een soort `setter`-functie mee aan de `withServer` functie en roep deze aan met de instantie van supertest als parameter.
+6. We verwijderen alle data uit de databank in de `afterAll`. Dit is belangrijk om te voorkomen dat test suites elkaar beïnvloeden.
+   - Je kan ook argumenteren om enkel de aangemaakte gebruikers te verwijderen. Op die manier moet elke test (suite) de eigen data verwijderen.
 7. We sluiten de server in de `afterAll`.
 
 ### Login helper
@@ -98,16 +118,20 @@ Vervolgens definiëren we een helper-functie om de toegevoegde gewone gebruiker 
 // __tests__/helpers/login.ts
 import type supertest from 'supertest';
 
+// 👇 1
 export const login = async (supertest: supertest.Agent): Promise<string> => {
+  // 👇 2
   const response = await supertest.post('/api/sessions').send({
     email: 'test.user@hogent.be',
     password: '12345678',
   });
 
+  // 👇 3
   if (response.statusCode !== 200) {
     throw new Error(response.body.message || 'Unknown error occured');
   }
 
+  // 👇 4
   return `Bearer ${response.body.token}`;
 };
 ```
@@ -119,7 +143,7 @@ export const login = async (supertest: supertest.Agent): Promise<string> => {
 
 ### Oefening 1 - Login admin helper
 
-Definieer een helper genaamd `loginAdmin` die hetzelfde doet voor de administrator. Je kan er ook voor opteren om de `login` functie aan te passen zodat je een parameter kan meegeven voor de email en het wachtwoord.
+Definieer een helper genaamd `loginAdmin` die hetzelfde doet voor de administrator. Je kan er ook voor opteren om de `login` functie aan te passen zodat je parameters kan meegeven voor het e-mailadres en het wachtwoord.
 
 - Oplossing +
 
@@ -144,18 +168,20 @@ Definieer een helper genaamd `loginAdmin` die hetzelfde doet voor de administrat
   };
   ```
 
-## Test: unauthorized
+### Test unauthorized
 
-We voegen een functie toe die de nagaat of voor een bepaalde URL de juiste statuscode geretourneerd wordt als de gebruiker niet is aangemeld of een ongeldig token wordt verstuurd. Aangezien deze testen voor elk van de endpoints dienen te gebeuren maken we hiervoor een aparte module aan in `__tests__/helpers/testAuthHeader.ts`:
+Als laatste voegen we een functie toe die de nagaat of voor een bepaalde URL de juiste statuscode geretourneerd wordt als de gebruiker niet is aangemeld of een ongeldig token wordt verstuurd. Aangezien deze testen voor elk van de endpoints dienen te gebeuren maken we hiervoor een aparte functie aan in `__tests__/helpers/testAuthHeader.ts`:
 
 ```ts
 // __tests__/helpers/testAuthHeader.ts
 import type supertest from 'supertest';
 
 // 👇 1
-export default function testAuthHeader(requestFactory: () => supertest.Test) {
+export default function testAuthHeader(
+  requestFactory: () => supertest.Test,
+): void {
   // 👇 2
-  test('it should 401 when no authorization token provided', async () => {
+  it('should 401 when no authorization token provided', async () => {
     const response = await requestFactory();
 
     expect(response.statusCode).toBe(401);
@@ -164,7 +190,7 @@ export default function testAuthHeader(requestFactory: () => supertest.Test) {
   });
 
   // 👇 3
-  test('it should 401 when invalid authorization token provided', async () => {
+  it('should 401 when invalid authorization token provided', async () => {
     const response = await requestFactory().set(
       'Authorization',
       'INVALID TOKEN',
@@ -183,11 +209,13 @@ export default function testAuthHeader(requestFactory: () => supertest.Test) {
 
 ## Transaction testen
 
-We zullen ervoor zorgen dat de testen voor onze transacties terug slagen. Pas hiervoor `__tests__/rest/transactions.spec.ts` aan:
+Als eerste zullen we ervoor zorgen dat de testen voor onze transacties terug slagen. Pas hiervoor `__tests__/rest/transactions.spec.ts` aan:
 
 ```ts
 // __tests__/rest/transactions.spec.ts
 // ...
+// import createServer from '../../src/createServer'; // 👈 2
+// import type { Server } from '../../src/createServer'; // 👈 2
 import withServer from '../helpers/withServer'; // 👈 2
 import { login } from '../helpers/login'; // 👈 3
 import testAuthHeader from '../helpers/testAuthHeader'; // 👈 5
@@ -221,7 +249,6 @@ describe('Transactions', () => {
     /* 👇 2
     server = await createServer();
     request = supertest(server.getApp().callback());
-    knex = getKnex();
     */
     authHeader = await login(request); // 👈 3
   });
@@ -237,38 +264,67 @@ describe('Transactions', () => {
   describe('GET /api/transactions', () => {
     // ...
 
-    test('it should 200 and return all transactions', async () => {
+    it('it should 200 and return all transactions', async () => {
       // 👇 4
       const response = await request.get(url).set('Authorization', authHeader);
 
       // expects hier
     });
+
+    testAuthHeader(() => request.get(url)); // 👈 5
   });
   // ...
-
-  testAuthHeader(() => request.get(url)); // 👈 5
 });
 ```
 
-1. Verwijder alle dummy data van users. Verwijder ook alle code die met Knex gebruikers toevoegt of verwijdert.
-2. Gebruik de nieuwe `withServer` helper om de server te starten. Stel via de `setter` de variabele `request` in. Vergeet de imports niet op te ruimen.
+1. Verwijder alle dummy data van users. Verwijder ook alle code die gebruikers toevoegt of verwijdert.
+2. Gebruik de nieuwe `withServer` helper om de server te starten. Stel via de `setter` de variabele `request` in. Vergeet de imports niet op te ruimen. Deze functie moet voor de `beforeAll` hook komen. Verwijder ook de `createServer` en `Server` import, en de `server` variabele.
 3. Gebruik nu de `login` helper om aan te melden. De `login` header houden we bij voor later.
 4. Voeg aan elk request deze login header toe.
 5. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
-6. Pas de PUT en POST requests aan: het userId moet niet langer worden opgegeven. De userId van de aangemelde gebruiker wordt gebruikt.
-Voeg dit toe aan elke test suite van de verschillende endpoints.
+6. Pas de PUT en POST requests aan: het `userId` moet niet langer worden opgegeven. Het `userId` van de aangemelde gebruiker wordt gebruikt.
+
+Je kan enkel de testen voor de transacties uitvoeren door het volgende commando uit te voeren:
+
+```bash
+yarn test "./__tests__/rest/transactions.spec.ts"
+```
+
+?> Probeer test per test te doen slagen i.p.v. allemaal tegelijk. Dit maakt het makkelijker om fouten te vinden. Je kan gebruik maken van [`describe.only`](https://jestjs.io/docs/api#describeonlyname-fn) of [`it.only`](https://jestjs.io/docs/api#testonlyname-fn-timeout) gebruiken om enkel bepaalde test suites of testen uit te voeren. Dit geldt wel enkel binnen het huidige testbestand. Daarom is het handig om nu slechts één testbestand uit te voeren.
+
+### Auth delay
+
+Soms merk je misschien dat de testen falen omdat de maximale duur van een Jest hook (5 seconden) overschreden wordt. Dit kan gebeuren omdat de `auth.maxDelay` instelling in `config/testing.ts` nog te hoog ingesteld staat. Pas deze aan naar `0`, tijdens de testen is geen vertraging nodig.
 
 ### Oefening 2 - Testen afwerken
 
-Herhaal hetzelfde voor alle andere testen van transactions, places en users:
+Herhaal hetzelfde voor alle andere testen van places en users:
 
 - Voeg de login header toe.
-- Pas de requests, indien nodig, aan. Bij sommige hoef je bv. het `userId` niet meer mee te geven.
+- Pas de requests, indien nodig, aan.
 - Test voor elke URL of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
 - Let bij er de testen van gebruikers op dat je de gebruikers die je nodig hebt om aan te melden niet verwijdert.
 
-<br/>
+Vergeet ook niet om testen toe te voegen voor de `POST /api/sessions`.
 
-- Oplossing +
+Pas vervolgens de testen voor de transacties aan:
 
-  TODO: voorbeeldoplossing toevoegen
+- `GET /api/transactions`: splits deze in twee:
+  - retourneert alle transacties in het geval van een admin
+  - in het andere geval enkel de transacties van de aangemelde gebruiker
+- `GET /api/transactions/:id`: splits deze in twee:
+  - retourneert eender welke transactie in het geval van een admin
+  - in het andere geval enkel als de transactie van de aangemelde gebruiker
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les8-opl ade4ff4
+> yarn install
+> yarn prisma migrate dev
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
