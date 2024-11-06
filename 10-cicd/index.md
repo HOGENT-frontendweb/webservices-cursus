@@ -3,6 +3,7 @@
 <!-- TODO: JWT secret ? -->
 <!-- TODO: remove tests dir from build -->
 <!-- TODO: default config introduceren -->
+<!-- TODO: oefening README updaten met productie info + nieuwe env vars -->
 
 > **Startpunt voorbeeldapplicatie**
 >
