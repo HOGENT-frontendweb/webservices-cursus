@@ -126,3 +126,5 @@ Clone de repository <https://github.com/HOGENT-frontendweb/webservices-ch1-exerc
 - [100+ JavaScript Concepts you Need to Know (Fireship)](https://www.youtube.com/watch?v=lkIFF4maKMU)
 - [JavaScript for the Haters (Fireship)](https://www.youtube.com/watch?v=aXOChLn5ZdQ)
 - [JS Is Weird](https://jsisweird.com/)
+- [Re-implementing JavaScript's == in JavaScript](https://evanhahn.com/re-implementing-javascript-double-equals-in-javascript/)
+  - Laat duidelijk zien waarom je `===` moet gebruiken i.p.v. `==`.
