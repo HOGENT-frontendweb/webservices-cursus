@@ -61,7 +61,7 @@ Het hele concept van CI/CD valt buiten de scope van dit olod. We proberen jullie
 Om de back-end en front-end online te zetten, zijn er een aantal services nodig:
 
 - [Render](https://render.com/)
-- [MySQL databank in het VIC](https://phpmyadmin-frontendweb.vichogent.be/) (= Virtual IT Company van HOGENT)
+- MySQL databank in het VIC (= Virtual IT Company van HOGENT): zie mail (ook spam) voor de inloggegevens
 
 ### Render
 
