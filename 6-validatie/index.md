@@ -786,13 +786,13 @@ Meer info op [https://github.com/helmetjs/helmet](https://github.com/helmetjs/he
 
 Samenvattend vereenvoudigt koa-helmet het proces van het instellen en beheren van beveiligingsheaders in Koa-applicaties, waardoor de algehele beveiligingspositie wordt verbeterd en bescherming wordt geboden tegen veelvoorkomende kwetsbaarheden op het web. Het helpt het risico op verschillende beveiligingsproblemen te minimaliseren en beschermt de gebruikers en de applicatie tegen mogelijke aanvallen.
 
-Installeer koa-helmet:
+Installeer `koa-helmet` en `helmet`:
 
 ```bash
-yarn add koa-helmet
+yarn add koa-helmet helmet
 ```
 
-Pas `src/core/installMiddleware.ts` en installeer koa-helmet in de middleware pipeline:
+Pas `src/core/installMiddleware.ts` en installeer `koa-helmet` in de middleware pipeline:
 
 ```ts
 // src/core/installMiddleware.ts
