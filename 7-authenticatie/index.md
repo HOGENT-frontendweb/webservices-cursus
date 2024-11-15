@@ -547,7 +547,7 @@ export const register = async ({
       data: {
         name,
         email,
-        password,
+        password_hash: passwordHash,
         roles: ['user'], // 👈 4
       },
     });
