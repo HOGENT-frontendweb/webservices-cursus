@@ -138,7 +138,7 @@ export default {
 <!-- cSpell: enable -->
 
 - We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
-- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor milliseconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
+- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor seconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
 - `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
   - Dit secret is voor onze development omgeving, dus deze mag gewoon in onze code staan. Hoe we het secret voor onze productie-omgeving meegeven, zien we in een later hoofdstuk.
 
@@ -216,7 +216,7 @@ export const verifyJWT = async (authToken: string): Promise<JwtPayload> => {
    - Let wel op: enkel controle op een rol doen in de frontend is niet voldoende. De backend moet altijd controleren of de gebruiker de actie mag uitvoeren. In de frontend wordt nl. de signature van de JWT niet geverifieerd, dus kan een gebruiker in principe zijn rol wijzigen.
    - Onze API calls zullen dus altijd de nodige rollen controleren.
 7. Daarnaast definiëren we enkele properties nodig voor het ondertekenen van de JWT:
-   - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` moet in seconden meegegeven worden en onze configuratie rekent in milliseconden, daarom moeten we dit omvormen.
+   - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` moet in seconden meegegeven worden
    - `audience`: welke servers de token mogen accepteren.
    - `issuer`: welke server(s) de token uitgeven.
    - `subject`: voor wie deze token dient (bv. het id van de gebruiker), dit moet een string zijn.
@@ -528,7 +528,7 @@ import type {
 import { hashPassword } from '../core/password'; // 👈 3
 
 // 👇 1
-const makeExposedUser = ({ id, name, email }: UserRecord): PublicUser => ({
+const makeExposedUser = ({ id, name, email }: User): PublicUser => ({
   id,
   name,
   email,
@@ -560,7 +560,7 @@ export const register = async ({
 // ...
 ```
 
-1. We voegen een functie toe die een `UserRecord` omvormt naar een `PublicUser`. Deze functie zal gebruikt worden om enkel de publieke informatie van een gebruiker terug te geven.
+1. We voegen een functie toe die een `User` omvormt naar een `PublicUser`. Deze functie zal gebruikt worden om enkel de publieke informatie van een gebruiker terug te geven.
 2. We voegen de nieuwe kolommen toe als parameter.
 3. We maken een hash van het wachtwoord voor we de gebruiker aanmaken.
 4. Standaard maken we nieuwe gebruikers enkel `user`.
