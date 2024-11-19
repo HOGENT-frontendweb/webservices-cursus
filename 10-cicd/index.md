@@ -1,12 +1,8 @@
 # CI/CD
 
-> **Startpunt **
->
->Je eigen project, de productie versie staat op de main branch
->
-
-
 Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Services. Onderstaande tabel geeft aan welke secties van toepassing zijn voor welk olod. In de secties waar één olod niet van toepassing is, wordt dit in de tekst ook nog eens expliciet vermeld.
+
+**In dit hoofdstuk werk je uitsluitend met je eigen applicatie.** Het is de bedoeling dat je jouw eigen applicatie online zet. Je kan de voorbeeldapplicatie wel gebruiken als referentie, maar je moet de stappen zelf uitvoeren op jouw eigen applicatie.
 
 | Sectie                                                             | Front-end Web Development | Web Services             |
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
@@ -172,11 +168,11 @@ Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van 
 }
 ```
 
-Nu zijn we klaar om onze back-end online te zetten. Commit en push deze wijziging.
+Nu zijn we klaar om onze back-end online te zetten. **Commit en push deze wijziging.**
 
 ### Front-end
 
-Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst. Commit en push deze wijziging!
+Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst. **Commit en push deze wijziging!**
 
 ```json
 {
@@ -219,7 +215,8 @@ Vul vervolgens alle nodige settings in:
 - Maak eventueel een project aan zodat alle resources van je applicatie gegroepeerd zijn.
 - Kies "Frankfurt (EU Central)" als regio.
 - Vul bij "Root Directory" de naam van de map in waar je back-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
-- Vul `corepack enable && yarn install && yarn build && yarn prisma migrate deploy` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je back-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies, bouwen vervolgens onze applicatie en migreren onze databank.Wens je de databank te resetten vervang dan het prisma commando door `yarn prisma migrate reset --force`
+- Vul `corepack enable && yarn install && yarn build && yarn prisma migrate deploy` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je back-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies, bouwen vervolgens onze applicatie en migreren onze databank.
+  - Wens je de databank te resetten? Voer dan lokaal `yarn prisma migrate reset --force` uit maar dan met de juiste `DATABASE_URL` in je `.env` bestand. **Gebruik dit commando NOOIT in de instellingen van Render!** Je gooit hiermee de hele databank weg en dat is niet de bedoeling.
 - Vul `node build/src/index.js` in bij "Start Command". Dit is het commando dat Render zal uitvoeren om je back-end te starten. We starten onze back-end vanuit de `build` directory.
 - Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
 
@@ -301,7 +298,7 @@ export default {
 };
 ```
 
-Commit en push deze wijziging. Wacht tot de back-end opnieuw online is en herlaad de front-end. De CORS error zou nu weg moeten zijn.
+**Commit en push deze wijziging.** Wacht tot de back-end opnieuw online is en herlaad de front-end. De CORS error zou nu weg moeten zijn.
 
 ### 404 probleem
 
