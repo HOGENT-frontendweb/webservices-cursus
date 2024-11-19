@@ -233,6 +233,10 @@ We zetten eerst de back-end online, klik op "New Web Service".
 
 ![Render new web service](./images/10_5_new_web_service.png ':size=80%')
 
+Zoek jouw **eigen** back-end repository op, selecteer deze en klik op "Connect".
+
+![Search backend repo](./images/10_6_search_backend_repo.png ':size=80%')
+
 Vul vervolgens alle nodige settings in:
 
 - Kies een unieke naam voor je service (hint: je repository-naam is uniek).
@@ -243,25 +247,25 @@ Vul vervolgens alle nodige settings in:
 - Vul `node build/src/index.js` in bij "Start Command". Dit is het commando dat Render zal uitvoeren om je back-end te starten. We starten onze back-end vanuit de `build` directory.
 - Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
 
-De rest zou normaal correct ingevuld moeten zijn, **controleer dit voor jouw situatie**.
+De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw situatie**.
 
-![Render back-end settings part 1](./images/10_6_backend_settings_part_1.png ':size=80%')
+![Render back-end settings part 1](./images/10_7_backend_settings_part_1.png ':size=80%')
 
-![Render back-end settings part 2](./images/10_7_backend_settings_part_2.png ':size=80%')
+![Render back-end settings part 2](./images/10_8_backend_settings_part_2.png ':size=80%')
 
 Vul onder de instance types de nodige environment variabelen in. Check je mail voor de nodige credentials voor jouw persoonlijke databank. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
 
 > Hint: voor de variabele `AUTH_JWT_SECRET` kan je een random string gebruiken. Klik op "Generate" om een random string te laten genereren door Render.
 
-![Render back-end settings part 3](./images/10_8_backend_settings_part_3.png ':size=80%')
+![Render back-end settings part 3](./images/10_9_backend_settings_part_3.png ':size=80%')
 
 Optioneel kan je onder "Advanced" een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit `/api/health/ping`.
 
-![Render back-end settings part 4](./images/10_9_backend_settings_part_4.png ':size=80%')
+![Render back-end settings part 4](./images/10_10_backend_settings_part_4.png ':size=80%')
 
 Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
 
-![Back-end is online](./images/10_10_backend_online.png ':size=80%')
+![Back-end is online](./images/10_11_backend_online.png ':size=80%')
 
 **Lees eerst de logs alvorens de lectoren te contacteren!** Krijg je het niet werkende? Maak een issue op jouw repository en tag jouw lector. Voeg een kopie van je logs en je settings (zonder secrets) toe, anders kunnen we niet helpen.
 
@@ -273,41 +277,33 @@ Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan ka
 
 Het is tijd om onze frontend online te zetten. Onze frontend is (na het builden) niet meer dan een statische website met wat HTML, JS, CSS... Veel hebben we hiervoor dus niet nodig.
 
-Open het Render dashboard en klik rechtsboven op "New" en "Static Site".
+Open het Render dashboard en klik rechtsboven op "+ New" en "Static Site" (of klik op "New Static Site" indien je geen back-end hebt).
 
-![Render new web service](./images/10_15_new_static_site.png ':size=80%')
-
-> **Let op!** Sla de volgende twee stappen over als je de back-end al online hebt gezet.
-
-We koppelen onze GitHub repository aan Render. Klik op "Connect account" bij GitHub.
-
-![Render connect account](./images/10_7_connect_github_account.png ':size=80%')
-
-Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "HOGENT-frontendweb" toegang hebben tot Render.
-
-![Render pick organization](./images/10_8_pick_organization.png ':size=80%')
-
-> Ga hier dus verder als je de back-end al online hebt gezet.
+![Render new web service](./images/10_12_new_static_site.png ':size=80%')
 
 Zoek nu jouw **eigen** frontend repository op en klik op "Connect"
 
-![Render search front-end repo](./images/10_16_search_frontend_repo.png ':size=80%')
+![Render search front-end repo](./images/10_13_search_frontend_repo.png ':size=80%')
 
-Kies een unieke naam voor je statische website (hint: je repository-naam is uniek). Vul `dist` in bij de "Publish directory". De rest zou normaal correct ingevuld moeten zijn, controleer dit voor jouw situatie.
+Vul vervolgens alle nodige settings in:
 
-Merk op: we gebruiken `yarn; yarn build` als build commando. We installeren dus eerst onze dependencies en bouwen vervolgens onze applicatie.
+- Kies een unieke naam voor je statische website (hint: je repository-naam is uniek).
+- Selecteer eventueel een project.
+- Vul bij "Root Directory" de naam van de map in waar je front-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
+- Vul `corepack enable && yarn install && yarn build` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je front-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies en bouwen vervolgens onze applicatie.
+- Vul `dist` in bij de "Publish directory".
 
-![Render front-end settings part 1](./images/10_17_frontend_settings_part_1.png ':size=80%')
+De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw situatie**.
 
-We moeten onze frontend nog vertellen waar onze backend draait. Dit doen we door een environment variabele in te stellen. Klik op "Advanced" en vul de nodige environment variable in. De URL van je backend vind je op het Render dashboard van jouw backend. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie.
+![Render front-end settings part 1](./images/10_14_frontend_settings_part_1.png ':size=80%')
 
-Klik vervolgens op "Create Static Site" en wacht geduldig af (het gratis plan kan trager zijn).
+We moeten onze frontend nog vertellen waar onze backend draait. Dit doen we door een environment variabele in te stellen. Kopieer de URL van jouw backend van het Render dashboard naar een environment variabele met naam `VITE_API_URL`. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie. Daarnaast voegen we ook `SKIP_INSTALL_DEPS` toe met waarde `true` zodat Render onze dependencies niet automatisch installeert. Indien dit wel zou gebeuren, zou dit een foutmelding geven omdat corepack nog niet ingeschakeld is.
 
-![Render front-end settings part 2](./images/10_18_frontend_settings_part_2.png ':size=80%')
+![Render front-end settings part 2](./images/10_15_frontend_settings_part_2.png ':size=80%')
 
-Als alles goed is gegaan, zou je nu een werkende frontend moeten hebben. De URL van jouw frontend vind je linksboven.
+Klik vervolgens op "Deploy Static Site" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende frontend moeten hebben. De URL van jouw frontend vind je linksboven.
 
-![Front-end is online](./images/10_19_frontend_online.png ':size=80%')
+![Front-end is online](./images/10_16_frontend_online.png ':size=80%')
 
 ### CORS probleem
 
