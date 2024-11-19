@@ -7,11 +7,10 @@
 
 > **Startpunt voorbeeldapplicatie**
 >
-> Het volstaat om uit te checken op de `main` branch:
->
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
+> git checkout -b les10 1a8f768
 > yarn install
 > yarn prisma migrate dev
 > yarn start:dev
@@ -24,6 +23,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/frontendweb-budget.git
 > cd frontendweb-budget
+> git checkout -b les10 b9f9671
 > yarn install
 > yarn dev
 > ```
@@ -111,40 +111,43 @@ Deze sectie is verdeeld in een stuk voor de [back-end](#back-end) en een stuk vo
 
 ### Back-end
 
+Allereerst moeten we ervoor zorgen dat onze back-end klaar is om in een productie-omgeving te draaien.
+
+#### Dynamisch poortnummer en JWT secret
+
 We moeten eerst een paar kleine aanpassingen doen aan onze code zodat deze werkt in onze productie-omgeving. Wij starten onze server altijd op poort 9000, maar op Render kan je de poort niet zomaar kiezen (je bent niet alleen op de server). Render kiest zelf een poort die het beschikbaar heeft, geeft die door aan je proces, en verwacht dan dat je je daaraan bindt.
 
-Pas daarom de code van de `start` functie uit `src/createServer.js` aan zodat de poort uit configuratie gelezen wordt:
+Pas daarom de code van de `start` functie uit `src/createServer.ts` aan zodat de poort uit configuratie gelezen wordt:
 
-```js
+```ts
+// ... (imports)
+import config from 'config'; // 👈
+
+const PORT = config.get<number>('port'); // 👈
+
 return {
-  getApp() {
-    return app;
-  },
+  // ...
 
   start() {
-    return new Promise((resolve) => {
-      const port = config.get('port'); // 👈
-      app.listen(port); // 👈
-      getLogger().info(`🚀 Server listening on http://localhost:${port}`); // 👈
+    return new Promise<void>((resolve) => {
+      app.listen(PORT); // 👈
+      getLogger().info(`🚀 Server listening on http://localhost:${PORT}`); // 👈
       resolve();
     });
   },
+
+  // ...
 };
 ```
 
-Controleer vervolgens of je de juiste configuratievariabelen vanuit environment variables kan invullen. Controleer of het bestand `config/custom-environment-variables.js` minstens onderstaande inhoud heeft:
+Vervolgens zorgen we ervoor dat we de environment variabele `PORT` mappen naar het configuratieproperty `port`. Daarnaast zorgen we er ook voor dat we de environment variabele `AUTH_JWT_SECRET` mappen naar het configuratieproperty `auth.jwt.secret` zodat we het JWT secret kunnen instellen vanuit environment variabelen. Je wil nl. het secret niet publiek in je code hebben staan.
 
-```js
-module.exports = {
+Controleer of het bestand `config/custom-environment-variables.ts` minstens onderstaande inhoud heeft. Je mag dit uiteraard uitbreiden met andere environment variabelen die je nodig hebt in je eigen project.
+
+```ts
+export default {
   env: 'NODE_ENV',
   port: 'PORT',
-  database: {
-    host: 'DATABASE_HOST',
-    port: 'DATABASE_PORT',
-    name: 'DATABASE_NAME',
-    username: 'DATABASE_USERNAME',
-    password: 'DATABASE_PASSWORD',
-  },
   auth: {
     jwt: {
       secret: 'AUTH_JWT_SECRET',
@@ -153,24 +156,42 @@ module.exports = {
 };
 ```
 
-Voeg vervolgens poort 9000 toe aan de development-configuratie (in `config/development.js`). Herhaal dit voor de productie- en test-configuratie.
+Voeg vervolgens poort 9000 toe aan de **alle** configuratiebestanden.
 
-```js
-module.exports = {
-  // ...
+```ts
+export default {
   port: 9000,
-  // ...
+  // ... (andere properties)
 };
 ```
 
-Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg!
+#### Default configuratie
+
+Je merkt dat we heel wat identieke configuratie op meerdere plekken hebben, dat is niet ideaal. Je kan dit oplossen door een bestand `config/default.ts` toe te voegen met de default configuratie. Vervolgens kan je in elk configuratiebestand enkel de verschillen met de default configuratie opgeven.
+
+Zonder alle gedeelde configuratie af in een bestand `config/default.ts` en pas de andere configuratiebestanden aan zodat ze enkel de verschillen bevatten. Deze properties moet je momenteel minimaal hebben in elk configuratiebestand:
+
+- `config/development.ts`
+  - `auth.jwt.expirationInterval`
+  - `auth.jwt.secret`
+- `config/production.ts`
+  - `auth.jwt.expirationInterval`
+- `config/testing.ts`:
+  - `auth.maxDelay`
+  - `auth.jwt.expirationInterval`
+  - `auth.jwt.secret`
+
+Het secret zetten we niet in de default configuratie omdat we willen dat dit in productie expliciet ingesteld wordt, of een fout oplevert als het niet ingesteld is.
+
+#### Versies van Node.js en Yarn
+
+Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst.
 
 ```json
 {
   "engines": {
-    "npm": ">=9.8.0",
-    "node": ">=20.6.0",
-    "yarn": ">=1.22.0"
+    "node": "20.6.0",
+    "yarn": "4.4.0"
   }
 }
 ```
@@ -179,21 +200,20 @@ Nu zijn we klaar om onze back-end online te zetten.
 
 ### Front-end
 
-Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg!
+Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst.
 
 ```json
 {
   "engines": {
-    "npm": ">=9.8.0",
-    "node": ">=20.6.0",
-    "yarn": ">=1.22.0"
+    "node": "20.6.0",
+    "yarn": "4.4.0"
   }
 }
 ```
 
 ## Render account aanmaken
 
-De volgende stap is het aanmaken van een Render account. Ga naar [Render](https://render.com/) en klik op "SIGN IN" rechtsboven.
+De volgende stap is het aanmaken van een Render account. Ga naar [Render](https://render.com/) en klik op "Sign In" rechtsboven.
 
 ![Render account aanmaken](./images/10_2_render_homepage.png ':size=80%')
 
@@ -207,62 +227,49 @@ Na verificatie van je account kom je terecht op je dashboard.
 
 ## Back-end online zetten
 
-> **Let op!** Deze sectie is **niet** van toepassing voor het olod Front-end Web Development.
+?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Front-end Web Development.
 
 We zetten eerst de back-end online, klik op "New Web Service".
 
 ![Render new web service](./images/10_5_new_web_service.png ':size=80%')
 
-Kies op het volgende scherm voor "Build and deploy from a Git repository" en klik op "Next".
+Vul vervolgens alle nodige settings in:
 
-![Render choose Git](./images/10_6_web_service_choose_github.png ':size=80%')
+- Kies een unieke naam voor je service (hint: je repository-naam is uniek).
+- Maak eventueel een project aan zodat alle resources van je applicatie gegroepeerd zijn.
+- Kies "Frankfurt (EU Central)" als regio.
+- Vul bij "Root Directory" de naam van de map in waar je back-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
+- Vul `corepack enable && yarn install && yarn build && yarn prisma migrate deploy` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je back-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies, bouwen vervolgens onze applicatie en migreren onze databank.
+- Vul `node build/src/index.js` in bij "Start Command". Dit is het commando dat Render zal uitvoeren om je back-end te starten. We starten onze back-end vanuit de `build` directory.
+- Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
 
-We koppelen onze GitHub repository aan Render. Klik op "Connect account" bij GitHub.
+De rest zou normaal correct ingevuld moeten zijn, **controleer dit voor jouw situatie**.
 
-![Render connect account](./images/10_7_connect_github_account.png ':size=80%')
+![Render back-end settings part 1](./images/10_6_backend_settings_part_1.png ':size=80%')
 
-Kies de juiste GitHub organisatie en volg de stappen. Normaal moet elke repository onder de organisatie "HOGENT-frontendweb" toegang hebben tot Render.
+![Render back-end settings part 2](./images/10_7_backend_settings_part_2.png ':size=80%')
 
-![Render pick organization](./images/10_8_pick_organization.png ':size=80%')
-
-Zoek nu jouw **eigen** back-end repository op en klik op "Connect".
-
-![Render search back-end repo](./images/10_9_search_backend_repo.png ':size=80%')
-
-Kies een unieke naam voor je service (hint: je repository-naam is uniek) en "Frankfurt" als regio. De rest zou normaal correct ingevuld moeten zijn, **controleer dit voor jouw situatie**.
-
-Merk op: we gebruiken `yarn` als build commando, we moeten nl. enkel onze dependencies installeren en niets builden.
-
-![Render back-end settings part 1](./images/10_10_backend_settings_part_1.png ':size=80%')
-
-Laat het startcommando staan op `node src/index.js`. Het type plan zou correct ingesteld moeten zijn (gratis).
-**Nog niets aanmaken, er komt nog een belangrijke stap!**
-
-Merk op: we maken geen script voor ons commando in productie. Soms worden foutcodes van het proces niet goed opgevangen door bv. `npm` of `yarn`, daarom gebruiken we `node` rechtstreeks.
-
-![Render back-end settings part 2](./images/10_11_backend_settings_part_2.png ':size=80%')
-
-Vul onder de instance types de nodige environment variabelen in. Check je mail voor de databank URL en de nodige credentials. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
+Vul onder de instance types de nodige environment variabelen in. Check je mail voor de nodige credentials voor jouw persoonlijke databank. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
 
 > Hint: voor de variabele `AUTH_JWT_SECRET` kan je een random string gebruiken. Klik op "Generate" om een random string te laten genereren door Render.
 
-![Render back-end settings part 3](./images/10_12_backend_settings_part_3.png ':size=80%')
+![Render back-end settings part 3](./images/10_8_backend_settings_part_3.png ':size=80%')
 
-Optioneel kan je een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit /api/health/ping.
+Optioneel kan je onder "Advanced" een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit `/api/health/ping`.
 
-![Render back-end settings part 4](./images/10_13_backend_settings_part_4.png ':size=80%')
+![Render back-end settings part 4](./images/10_9_backend_settings_part_4.png ':size=80%')
 
-Klik vervolgens op "Create Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
+Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
 
-![Back-end is online](./images/10_14_backend_online.png ':size=80%')
+![Back-end is online](./images/10_10_backend_online.png ':size=80%')
 
-**Lees eerst de logs alvorens de lectoren te contacteren!** Krijg je het niet werkende? Maak een issue op jouw repository en tag jouw lector. Voeg een kopie van je logs toe, anders kunnen we niet helpen.
+**Lees eerst de logs alvorens de lectoren te contacteren!** Krijg je het niet werkende? Maak een issue op jouw repository en tag jouw lector. Voeg een kopie van je logs en je settings (zonder secrets) toe, anders kunnen we niet helpen.
 
 ![Read the logs](https://imgs.xkcd.com/comics/rtfm.png ':size=30%')
 
 ## Front-end online zetten
 
-> **Let op!** Deze sectie is **niet** van toepassing voor het olod Web Services.
+?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Web Services.
 
 Het is tijd om onze frontend online te zetten. Onze frontend is (na het builden) niet meer dan een statische website met wat HTML, JS, CSS... Veel hebben we hiervoor dus niet nodig.
 
