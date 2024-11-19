@@ -1,9 +1,5 @@
 <!-- markdownlint-disable first-line-h1 -->
 
-<small>
-  Dit academiejaar wordt de cursus van dit olod stelselmatig omgevormd naar TypeScript. Alle hoofdstukken zullen dus sterk aangepast worden t.o.v. vorig jaar. Deze niet-afgewerkte hoofdstukken worden aangeduid met een "Work In Progress" label: WIP. Deze zullen zeker nog wijzigen, het is dus niet de bedoeling dat je deze hoofdstukken reeds doorneemt.
-</small>
-
 - [0. Algemene info](/0-intro/situering.md)
 - [0. Software](/0-intro/software.md)
 - [0. Examenopdracht](/0-intro/examenopdracht.md)
@@ -16,4 +12,4 @@
 - [7. Authenticatie & autorisatie](/7-authenticatie/index.md)
 - [8. Testen: authenticatie & autorisatie](/8-auth_testing/index.md)
 - [9. API documentatie](/9-api_docs/index.md)
-- [10. CI/CD (WIP)](/10-cicd/index.md)
+- [10. CI/CD](/10-cicd/index.md)
