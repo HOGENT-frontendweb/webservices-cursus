@@ -1,29 +1,10 @@
 # CI/CD
 
-> **Startpunt voorbeeldapplicatie**
+> **Startpunt **
 >
-> ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-> cd webservices-budget
-> git checkout -b les10 1a8f768
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
-> ```
+>Je eigen project, de productie versie staat op de main branch
 >
-> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
->
-> In dit hoofdstuk heb je ook de bijhorende front-end nodig. Het volstaat om uit te checken op de `main` branch:
->
-> ```bash
-> git clone https://github.com/HOGENT-frontendweb/frontendweb-budget.git
-> cd frontendweb-budget
-> git checkout -b les10 b9f9671
-> yarn install
-> yarn dev
-> ```
->
-> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/frontendweb-budget?tab=readme-ov-file#budget-app) voor meer informatie.
+
 
 Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Services. Onderstaande tabel geeft aan welke secties van toepassing zijn voor welk olod. In de secties waar één olod niet van toepassing is, wordt dit in de tekst ook nog eens expliciet vermeld.
 
@@ -191,11 +172,11 @@ Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van 
 }
 ```
 
-Nu zijn we klaar om onze back-end online te zetten.
+Nu zijn we klaar om onze back-end online te zetten. Commit en push deze wijziging.
 
 ### Front-end
 
-Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst.
+Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst. Commit en push deze wijziging!
 
 ```json
 {
@@ -238,7 +219,7 @@ Vul vervolgens alle nodige settings in:
 - Maak eventueel een project aan zodat alle resources van je applicatie gegroepeerd zijn.
 - Kies "Frankfurt (EU Central)" als regio.
 - Vul bij "Root Directory" de naam van de map in waar je back-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
-- Vul `corepack enable && yarn install && yarn build && yarn prisma migrate deploy` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je back-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies, bouwen vervolgens onze applicatie en migreren onze databank.
+- Vul `corepack enable && yarn install && yarn build && yarn prisma migrate deploy` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je back-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies, bouwen vervolgens onze applicatie en migreren onze databank.Wens je de databank te resetten vervang dan het prisma commando door `yarn prisma migrate reset --force`
 - Vul `node build/src/index.js` in bij "Start Command". Dit is het commando dat Render zal uitvoeren om je back-end te starten. We starten onze back-end vanuit de `build` directory.
 - Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
 
