@@ -1,10 +1,5 @@
 # CI/CD
 
-<!-- TODO: JWT secret ? -->
-<!-- TODO: remove tests dir from build -->
-<!-- TODO: default config introduceren -->
-<!-- TODO: oefening README updaten met productie info + nieuwe env vars -->
-
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
@@ -263,7 +258,7 @@ Optioneel kan je onder "Advanced" een "Health Check Path" invullen. Dit is een U
 
 ![Render back-end settings part 4](./images/10_10_backend_settings_part_4.png ':size=80%')
 
-Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende backend moeten hebben. De URL van jouw back-end vind je linksboven.
+Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende back-end moeten hebben. De URL van jouw back-end vind je linksboven.
 
 ![Back-end is online](./images/10_11_backend_online.png ':size=80%')
 
@@ -275,13 +270,13 @@ Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan ka
 
 ?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Web Services.
 
-Het is tijd om onze frontend online te zetten. Onze frontend is (na het builden) niet meer dan een statische website met wat HTML, JS, CSS... Veel hebben we hiervoor dus niet nodig.
+Het is tijd om onze front-end online te zetten. Onze front-end is (na het builden) niet meer dan een statische website met wat HTML, JS, CSS... Veel hebben we hiervoor dus niet nodig.
 
 Open het Render dashboard en klik rechtsboven op "+ New" en "Static Site" (of klik op "New Static Site" indien je geen back-end hebt).
 
 ![Render new web service](./images/10_12_new_static_site.png ':size=80%')
 
-Zoek nu jouw **eigen** frontend repository op en klik op "Connect"
+Zoek nu jouw **eigen** front-end repository op en klik op "Connect"
 
 ![Render search front-end repo](./images/10_13_search_frontend_repo.png ':size=80%')
 
@@ -297,53 +292,76 @@ De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw sit
 
 ![Render front-end settings part 1](./images/10_14_frontend_settings_part_1.png ':size=80%')
 
-We moeten onze frontend nog vertellen waar onze backend draait. Dit doen we door een environment variabele in te stellen. Kopieer de URL van jouw backend van het Render dashboard naar een environment variabele met naam `VITE_API_URL`. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie. Daarnaast voegen we ook `SKIP_INSTALL_DEPS` toe met waarde `true` zodat Render onze dependencies niet automatisch installeert. Indien dit wel zou gebeuren, zou dit een foutmelding geven omdat corepack nog niet ingeschakeld is.
+We moeten onze front-end nog vertellen waar onze back-end draait. Dit doen we door een environment variabele in te stellen. Kopieer de URL van jouw back-end van het Render dashboard naar een environment variabele met naam `VITE_API_URL`. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie. Daarnaast voegen we ook `SKIP_INSTALL_DEPS` toe met waarde `true` zodat Render onze dependencies niet automatisch installeert. Indien dit wel zou gebeuren, zou dit een foutmelding geven omdat corepack nog niet ingeschakeld is.
 
 ![Render front-end settings part 2](./images/10_15_frontend_settings_part_2.png ':size=80%')
 
-Klik vervolgens op "Deploy Static Site" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende frontend moeten hebben. De URL van jouw frontend vind je linksboven.
+Klik vervolgens op "Deploy Static Site" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende front-end moeten hebben. De URL van jouw front-end vind je linksboven.
 
 ![Front-end is online](./images/10_16_frontend_online.png ':size=80%')
 
 ### CORS probleem
 
-Je kan nu alvast naar jouw frontend gaan maar je zal merken dat er nog een probleem is - open de console. Je krijgt een CORS error, dit moeten we gaan fixen in de backend!
+Je kan nu alvast naar jouw front-end gaan maar je zal merken dat er nog een probleem is. Probeer bijvoorbeeld een gebruiker te registreren (of een ander request uit te voeren) en bekijk de console. Je krijgt een CORS error, dit moeten we gaan fixen in de back-end!
 
-![CORS error](./images/10_20_frontend_cors.png ':size=80%')
+![CORS error](./images/10_17_frontend_cors.png ':size=80%')
 
-CORS kan je enkel oplossen door in de backend de juiste headers te zetten. We hadden reeds ons CORS package geconfigureerd en moeten enkel de URL aanpassen in het bestand `config/production.js`. Vervang een reeds ingevulde URL door jouw eigen frontend URL.
+CORS kan je enkel oplossen door in de back-end de juiste headers te zetten. We hadden reeds ons CORS package geconfigureerd en moeten enkel de URL aanpassen in het bestand `config/production.ts`. Voeg jouw eigen front-end URL toe aan de `cors.origins` array.
 
-> Merk dus op dat je een CORS-probleem niet kan oplossen in de frontend of als je geen toegang hebt tot de backend!
+> Merk dus op dat je een CORS-probleem niet kan oplossen in de front-end of als je geen toegang hebt tot de back-end!
 
 ```js
-module.exports = {
-  // ...
+// config/production.ts
+export default {
   cors: {
-    origins: ['https://frontendweb-budget.onrender.com'], // 👈
-    maxAge: 3 * 60 * 60, // 3h in seconds
+    origins: ['https://frontendweb-budget-dna5.onrender.com'], // 👈
   },
   // ...
 };
 ```
 
-Commit en push deze wijziging. Wacht tot de backend opnieuw online is en herlaad de frontend. De CORS error zou nu weg moeten zijn.
+Commit en push deze wijziging. Wacht tot de back-end opnieuw online is en herlaad de front-end. De CORS error zou nu weg moeten zijn.
 
 ### 404 probleem
 
-Probeer nu op jouw frontend rechtstreeks naar een URL verschillend van `/` te gaan. In ons voorbeeld gaan we naar `/transactions`. Je zal merken dat je een 404 krijgt. Dit moeten we oplossen in de frontend!
+Probeer nu op jouw front-end rechtstreeks naar een URL verschillend van `/` te gaan. In ons voorbeeld gaan we naar `/transactions`. Je zal merken dat je een 404 krijgt. Dit moeten we oplossen in de front-end!
 
-![404 error](./images/10_21_frontend_not_found.png ':size=80%')
+Ga naar het Render dashboard van jouw front-end en klik op "Redirects/Rewrites". Voeg een nieuwe Rewrite-regel toe zoals op onderstaande afbeelding. Klik vervolgens op "Save Changes". Je kan meteen testen of het werkt! Deze regel zorgt ervoor dat alle requests naar de front-end die niet naar `/` gaan, als antwoord de `index.html` van de front-end krijgen. [Lees meer over het verschil tussen redirects en rewrites](https://render.com/docs/redirects-rewrites).
 
-Ga naar het Render dashboard van jouw frontend en klik op "Redirects/Rewrites". Voeg een nieuwe Rewrite-regel toe zoals op onderstaande afbeelding. Klik vervolgens op "Save Changes". Je kan meteen testen of het werkt! Deze regel zorgt ervoor dat alle requests naar de frontend die niet naar / gaan, als antwoord de index.html van de frontend krijgen. [Lees meer over het verschil tussen redirects en rewrites](https://render.com/docs/redirects-rewrites).
-
-![Front-end rewrite](./images/10_22_frontend_rewrite.png ':size=80%')
+![Front-end rewrite](./images/10_18_frontend_rewrite.png ':size=80%')
 
 ## Hosting remarks
 
 Dit was maar een (eenvoudig) voorbeeld om je applicatie online te zetten. Onze hoofdbekommernis was bovendien om alles 100% gratis te kunnen regelen, wat niet altijd het eenvoudigst of handigst is.
 
-Hier testen we onze applicatie ook niet voor we deze online zetten. We merken het dus niet op als onze applicatie een bug heeft die door de testen opgevangen zou worden.
+Hier linten of testen we onze applicatie ook niet voor we deze online zetten. We merken het dus niet op als onze applicatie een bug heeft die door de testen opgevangen zou worden.
 
 Als je ooit echte applicaties online wil zetten, kijk dan eerst eens rond. Er zijn veel opties, en vaak helemaal niet duur meer maar zelden helemaal gratis. Vaak zal de CI/CD pipeline veel meer omvatten dan louter builden en online plaatsen.
 
 Op Render wordt ook de complexiteit van de CI/CD pipeline niet getoond. Je moet slechts een paar veldjes invullen en Render doet alle magie voor jou. Dit is natuurlijk niet realistisch. Als je ooit een echte applicatie online zet, zal je zelf een CI/CD pipeline moeten opzetten. Dit is een hele klus en je zal er veel tijd in moeten steken. Het is echter wel de moeite waard, want het zal je veel tijd besparen in de toekomst.
+
+Denk bij het online zetten van een applicatie ook altijd na over reproduceerbaarheid. Als je een applicatie online zet, moet je ervoor zorgen dat je dit opnieuw kan doen. Dit betekent dat je alles moet documenteren en automatiseren. Als je dit niet doet, zal je in de toekomst veel tijd verliezen. In dit hoofdstuk hebben we alles manueel gedaan, maar in een realistisch project zal je dit automatiseren met bv. [Terraform](https://www.terraform.io/), [Ansible](https://www.ansible.com/) of een andere tool. Zo kan je met één commando de hele infrastructuur opzetten.
+
+## Oefening 1 - README
+
+Pas vervolgens jouw README aan met de nodige commando's... om de applicatie in productie op te starten. Je kan inspiratie opdoen in de README's van de voorbeeldapplicaties.
+
+## Oefening 2 - Optimalisatie TypeScript build back-end
+
+Je zal zien dat onze build van de back-end onze testbestanden en de Jest configuratie bevat. Dit is niet nodig in productie. Pas de `tsconfig.json` aan zodat deze bestanden niet in de build terechtkomen.
+
+- Oplossing +
+
+  Voeg een `exclude` property toe in `tsconfig.json` (of pas deze aan):
+
+  ```json
+  {
+    "exclude": ["jest.config.ts", "__tests__"]
+  }
+  ```
+
+> **Eindpunt voorbeeldapplicatie**
+>
+> De `main` branch bevat de finale versie van de voorbeeldapplicatie voor beide olods.
+
+<iframe src="https://giphy.com/embed/3otPoS81loriI9sO8o" width="480" height="269" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
