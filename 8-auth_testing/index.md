@@ -1,4 +1,4 @@
-# Authenticatie en autorisatie
+# Testen: authenticatie en autorisatie
 
 > **Startpunt voorbeeldapplicatie**
 >
