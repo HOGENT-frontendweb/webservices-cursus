@@ -49,13 +49,13 @@ Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/conn
 
 ## Node.js
 
-Installeer Node.js (**minimaal versie 20.6.0**) via een package manager:
+Installeer Node.js (**minimaal versie 22.9.0**) via een package manager:
 
-- Windows: `winget install -e --id OpenJS.NodeJS`
-- macOS: `brew install node`
+- Windows: `winget install -e --id OpenJS.NodeJS.LTS`
+- macOS: `brew install node@22`
 - Linux: [distro afhankelijk](https://nodejs.org/en/download/package-manager)
 
-Of kies voor een manuele installatie door **minimaal v20.6.0** te downloaden vanaf de website: <https://nodejs.org/en/>.
+Of kies voor een manuele installatie door **minimaal v22.9.0** te downloaden vanaf de website: <https://nodejs.org/en/>.
 
 Check na de installatie of Node.js correct geïnstalleerd is door volgend commando uit te voeren:
 
