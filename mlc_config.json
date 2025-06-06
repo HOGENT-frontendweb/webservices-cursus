@@ -1,6 +1,7 @@
 {
   "ignorePatterns": [
     "./*",
-    "https://kroki.io/*"
+    "https://kroki.io/*",
+    "https://dev.mysql.com/*"
   ]
 }

@@ -37,7 +37,7 @@ Er zijn ook enkele types voor de OO-mensen onder ons:
 
 `interface` en `type` zijn het meest nuttig om te onthouden. Ze lijken op elkaar, maar hebben enkele verschillen: <https://react-typescript-cheatsheet.netlify.app/docs/basic/getting-started/basic_type_example#useful-table-for-types-vs-interfaces>
 
-Een goeie regel is: gebruik een `interface` tot je een `type` nodig hebt (bron: [orta](https://x.com/orta/status/1356129195835973632?s=20))
+Een goeie regel is: gebruik een `interface` tot je een `type` nodig hebt.
 
 ## var, let, const
 
