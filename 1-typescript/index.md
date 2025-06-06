@@ -50,8 +50,6 @@ JavaScript heeft ook diverse kleine handigheidjes, we vullen deze lijst stelselm
 
 Bij het aanmaken van objecten moet je steeds `key: value` geven per attribuut in het object. Maar wat als de attributen (en de waarde) uit een variabele komen én de naam van het attribuut is gelijk aan de naam van de variabele? Dan kan je gebruik maken van een verkorte syntax:
 
-<div data-runkit>
-
 ```javascript
 const name = 'John';
 const age = 42;
@@ -72,8 +70,6 @@ const person2 = {
 console.log(person);
 console.log(person2);
 ```
-
-</div>
 
 ## Oefeningen
 

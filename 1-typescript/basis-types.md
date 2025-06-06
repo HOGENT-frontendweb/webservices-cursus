@@ -68,8 +68,6 @@ Het wordt aangeraden om `let` en `const` te gebruiken, omdat dit de scope van de
 
 Welke waarde zal er geprint worden in onderstaande code?
 
-<div data-runkit>
-
 ```javascript
 function getValueWithVar() {
   var value = 5;
@@ -90,8 +88,6 @@ function getValueWithLet() {
 getValueWithVar();
 getValueWithLet();
 ```
-
-</div>
 
 ## Type inference
 

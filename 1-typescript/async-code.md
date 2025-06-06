@@ -14,8 +14,6 @@ Tegenwoordig wordt er meer en meer gebruik gemaakt van Promises. Een Promise is 
 
 Laten we een voorbeeld met callbacks bekijken:
 
-<div data-runkit>
-
 ```javascript
 // stel we maken een functie die na een bepaalde tijd een callback functie uitvoert
 function waitFor(timeInMs, callback) {
@@ -39,18 +37,12 @@ function waitForPromise(timeInMs) {
   });
 }
 
-// je zal zien dat Runkit de Promise uitprint
-// daarop kan je de status van de Promise volgen
 waitForPromise(2000).then(() => {
   console.log('Hello world from Promise!');
 });
 ```
 
-</div>
-
 Je kan ook een Promise maken die een fout teruggeeft:
-
-<div data-runkit>
 
 ```javascript
 function immediatelyFail(timeInMs) {
@@ -64,8 +56,6 @@ immediatelyFail().catch((error) => {
 });
 ```
 
-</div>
-
 Callbacks leiden vaak tot **callback hell**: je moet een callback functie meegeven aan een functie die een callback functie verwacht, die op zijn beurt een callback functie verwacht... Daarom werden in de eerste plaats Promises geïntroduceerd en later ook async/await.
 
 Async/await zijn keywords die toelaten om asynchrone code te schrijven die er synchroon uitziet. Je kan een functie als `async` markeren. Deze functie kan dan `await` gebruiken om te wachten op het resultaat van een Promise. Je kan ook een `try`/`catch` blok gebruiken om fouten op te vangen. Een `async` functie geeft **altijd** een Promise terug, ook al doe je geen expliciete `return`. Met async/await los je dus het probleem van callback hell op.
@@ -73,8 +63,6 @@ Async/await zijn keywords die toelaten om asynchrone code te schrijven die er sy
 We raden dus aan om altijd async/await te gebruiken. Je kan nog steeds callbacks gebruiken, maar dit is niet meer nodig.
 
 Laten we een voorbeeld bekijken:
-
-<div data-runkit>
 
 ```javascript
 // we maken een functie die een bepaalde REST API aanspreekt
@@ -100,5 +88,3 @@ console.log(joke);
 const jokeWithoutAwait = getMeSomethingFunny();
 console.log(jokeWithoutAwait);
 ```
-
-</div>
