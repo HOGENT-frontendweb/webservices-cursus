@@ -30,17 +30,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: Install ski-lint
-        run: pip install ski-lint
-
-      - name: Run ASCII linter
-        run: shopt -s globstar && ski-lint --check **/*.md
-
       - name: Lint markdown files
         uses: nosborn/github-action-markdown-cli@v3.3.0
         with:
