@@ -1,5 +1,13 @@
 # REST API intro
 
+## Leerdoelen
+
+- Je kent de basisprincipes van een API en REST.
+- Je kan een REST API ontwerpen en implementeren.
+- Je kan een REST API aanspreken met Postman.
+- Je kent de basisprincipes van Node.js.
+- Je kan een eenvoudige REST API server opzetten met NestJS.
+
 ## Wat is een API?
 
 <iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/s7wmiS2mSXY?si=7u14hhoBHVRS5Rqk" frameborder="0" referrerpolicy="no-referrer" allowfullscreen></iframe>
@@ -34,9 +42,9 @@ Met het HTTP-protocol kunnen REST API’s software op het ene apparaat laten pra
 
 Het fundamentele concept van een RESTful API is de **resource**. Alle informatie die benoemd kan worden is een resource: een document, afbeelding, verzameling (= collection) van resources, niet-virtueel object (bv. een klant), enz. REST gebruikt een **resource identifier** om een resource te identificeren.
 
-De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie, zoals bvb `/api/klanten` verwijst naar de verzameling van de klant objecten. Gebruik hiervoor een **zelfstandig naamwoord in het meervoud**. Gebruik GEEN actiemethodes (een werkwoord). De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen.
+De resources bevinden zich in een **collectie**, die een verzameling van objecten representeert. De **Uniform Resource Identifier (URI)** verwijst naar een collectie, zoals bvb `/api/klanten` verwijst naar de verzameling van de klant objecten. De data is dus opgebouwd uit resources en collecties, maar het is geen relationele databank! Je bouwt zelf links tussen deze resources en collecties om de juiste informatie op te halen. Gebruik altijd een **zelfstandig naamwoord in het meervoud** als naam voor een collectie. Gebruik GEEN actiemethodes (een werkwoord), zoals `/api/klanten/getAll`.
 
-Bekijk onderstaand voorbeeld. Let op de opbouw van de databank (= ERD), van de URI bovenaan en van de response (geel). Je merkt een duidelijk verschil tussen het databankschema en de response. Het is dus niet altijd zo dat het databankschema overeenkomt met de response. De API-ontwikkelaar beslist hoe de response eruit ziet. Lek dus geen implementatiedetails in de response.
+Bekijk onderstaand voorbeeld. Let op de opbouw van de databank (= ERD), van de URI bovenaan en van de response (geel). Je merkt een duidelijk verschil tussen het databankschema en de response. Het is dus niet altijd zo dat het databankschema overeenkomt met de response. De API-ontwikkelaar beslist hoe de response eruit ziet. Lek dus geen implementatiedetails in de response, **het response is zelden een 1-op-1 kopie van de databank**.
 
 ![Een voorbeeld](./images/rest_resources.png)
 
@@ -61,7 +69,7 @@ Voor de resource uit ons klantenvoorbeeld hebben we volgende URI's. Merk op dat 
 
 Een ander voorbeeld: [de brewery API](https://www.openbrewerydb.org/documentation)
 
-In de kern betekent REST dat je met collecties werkt met daarin resources, die je op een gestructureerde manier hebt opgebouwd, zodat de structuur voor iedere gebruiker helder is.
+In de kern betekent REST dat je met collecties van resources werkt, die je op een gestructureerde manier hebt opgebouwd, zodat de structuur voor iedere gebruiker helder is.
 
 Bovendien kunnen resources gemanipuleerd worden door hun voorstelling. Als een client een **voorstelling** van een resource heeft (inclusief eventuele metadata), heeft hij genoeg om resources aan te passen en die wijzigingen terug door te sturen naar de API.
 
@@ -76,8 +84,6 @@ Als je een nieuw enkelvoudig element toevoegt (bv. een klant), is het duidelijk 
 Soms lees je wel eens dat je een POST gebruikt als het request resulteert in een nieuwe entry in de databank, en anders een PUT. Maar dat impliceert dat je de databank layout kent, en daar wil je niet op steunen natuurlijk.
 
 Als het een situatie is waar het niet vanzelfsprekend is wat je best gebruikt, doet het er niet echt toe ook. Technisch maakt het helemaal niets uit, het is gewoon een kwestie van afspraken. Het is wel belangrijk dat je eenduidig bent, niet de ene keer PUT en de andere keer POST voor eenzelfde situatie met een andere resource.
-
-Gebruik in geen geval een GET, bv. `GET /employee/create?name=rudy&age=27`, zoals je pre-REST soms wel eens zag (of nu jammer genoeg nog altijd).
 
 #### PUT vs PATCH
 
@@ -112,9 +118,11 @@ Bij een foutmelding wordt een van de volgende status codes teruggegeven. Een cod
 | **501** | Not Implemented       | Het endpoint is niet geïmplementeerd.                                                                                                     |
 | **503** | Service Unavailable   | De server is tijdelijk niet beschikbaar.                                                                                                  |
 
+Een volledige lijst van HTTP status codes kan je vinden op [developer.mozilla.org](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status).
+
 ### REST architectuurstijl
 
-REST is een reeks principes die een ontwikkelaar moet volgen voordat die zijn API als “RESTful” kan beschouwen. De principes zeggen niets over hoe de API moet worden geïmplementeerd.
+REST is [een reeks principes](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_1_7) die een ontwikkelaar moet volgen voordat die zijn API als "RESTful" kan beschouwen. De principes zeggen niets over hoe de API moet worden geïmplementeerd.
 
 <!-- markdownlint-disable ol-prefix -->
 
