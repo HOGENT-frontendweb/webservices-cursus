@@ -23,3 +23,13 @@
 [Debugging](./debugging.md ':include')
 
 [Oefening](./oefening.md ':include')
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les2-opl TODO:
+> pnpm install
+> pnpm start:dev
+> ```

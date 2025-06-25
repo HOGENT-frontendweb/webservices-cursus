@@ -11,7 +11,7 @@ Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet i
 Er bestaan gelukkig veel degelijke third party log libraries, we gebruiken [Winston](https://github.com/winstonjs/) in deze cursus. We installeren deze met:
 
 ```bash
-yarn add winston
+pnpm add winston
 ```
 
 Vervolgens maken we een map `core` in de `src` map. Deze map bevat alle core functionaliteit van onze applicatie, zoals de logger. In deze map maken we een bestand `logging.ts` aan en voegen we volgende code toe:

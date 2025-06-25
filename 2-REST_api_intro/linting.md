@@ -15,7 +15,7 @@ Voeg, indien nog niet gedaan, de [ESLint extensie](https://marketplace.visualstu
 Installeer ESLint in het project:
 
 ```bash
-yarn add --dev eslint @eslint/js typescript-eslint @stylistic/eslint-plugin
+pnpm add --dev eslint @eslint/js typescript-eslint @stylistic/eslint-plugin
 ```
 
 - [`eslint`](https://www.npmjs.com/package/eslint): de ESLint linter
@@ -103,7 +103,7 @@ Je kan VS Code zo instellen dat automatisch herstel van fouten wordt uitgevoerd 
 }
 ```
 
-Run voor elke commit `yarn lint`. Dit zal je code linten, sommige problemen zelf oplossen en fouten geven omtrent manueel op te lossen problemen.
+Run voor elke commit `pnpm lint`. Dit zal je code linten, sommige problemen zelf oplossen en fouten geven omtrent manueel op te lossen problemen.
 
 Indien je een foutmelding krijgt dat `typescript-eslint` jouw versie van TypeScript niet ondersteund. Pas dan de versie van TypeScript in `package.json` aan naar een ondersteunde versie. Soms helpt het ook om de `^` te vervangen door een `~` voor de versie van `typescript` in de `package.json`.
 
@@ -113,6 +113,6 @@ Indien je een foutmelding krijgt dat `typescript-eslint` jouw versie van TypeScr
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > git checkout -b les2-opl 3acce6c
-> yarn install
-> yarn start:dev
+> pnpm install
+> pnpm start:dev
 > ```

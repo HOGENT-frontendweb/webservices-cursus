@@ -92,7 +92,7 @@ Dit bestand vermijdt versieconflicten aangezien in de `package.json` niet altijd
 
 ### .gitignore
 
-Merk op dat er een `.gitignore` bestand aanwezig is in de root van het project. Dit bestand zorgt ervoor dat bepaalde bestanden en mappen niet naar GitHub gepusht worden. Dit is handig om te voorkomen dat je onnodige bestanden of mappen in je repository hebt, zoals de `node_modules` map die alle geïnstalleerde packages bevat. Je kan nl. de dependencies eenvoudig opnieuw installeren d.m.v. `yarn install`.
+Merk op dat er een `.gitignore` bestand aanwezig is in de root van het project. Dit bestand zorgt ervoor dat bepaalde bestanden en mappen niet naar GitHub gepusht worden. Dit is handig om te voorkomen dat je onnodige bestanden of mappen in je repository hebt, zoals de `node_modules` map die alle geïnstalleerde packages bevat. Je kan nl. de dependencies eenvoudig opnieuw installeren d.m.v. `pnpm install`.
 
 Kijk gerust eens welke bestanden er allemaal genegeerd worden. Je kan dit bestand ook aanpassen naar eigen wens, maar dit is een vrij complete voor een Node.js project. Een vrij uitgebreide `.gitignore` voor Node.JS projecten is te vinden op GitHub: <https://github.com/github/gitignore/blob/main/Node.gitignore>.
 

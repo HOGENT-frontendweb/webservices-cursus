@@ -1,10 +1,10 @@
 # Software <!-- omit in toc -->
 
-Voor dit olod gaan we ervan uit dat je onderstaande **software installeert en configureert voor de eerste les**. Tijdens de les wordt geen tijd meer voorzien om dit te doen, dus zorg ervoor dat je dit op voorhand in orde brengt. Indien je problemen ondervindt, kan je deze melden via een issue op je eigen repository.
+Voor dit OLOD gaan we ervan uit dat je onderstaande **software installeert en configureert vóór de eerste les**. Tijdens de les wordt geen tijd voorzien om dit te doen, dus zorg ervoor dat je dit op voorhand in orde brengt. Indien je problemen ondervindt, kan je deze melden via een issue op je eigen repository.
 
 - [Git](#git)
 - [Node.js](#nodejs)
-- [Yarn](#yarn)
+- [pnpm](#pnpm)
 - [MySQL](#mysql)
 - [MySQL Workbench](#mysql-workbench)
 - [Visual Studio Code](#visual-studio-code)
@@ -20,7 +20,7 @@ Installeer Git via een package manager:
 
 ### Configuratie Git <!-- omit in toc -->
 
-Open een terminal (of bv. Git Bash op Windows) en voer onderstaande commando's uit. Je bent natuurlijk vrij om deze instellingen aan te passen naar jouw voorkeur.
+Open een terminal (of bijvoorbeeld Git Bash op Windows) en voer onderstaande commando's uit. Je bent natuurlijk vrij om deze instellingen aan te passen naar jouw voorkeur.
 
 <!-- cspell: disable -->
 
@@ -45,7 +45,7 @@ git config --global user.email "Jouw e-mailadres"
 
 <!-- cspell: enable -->
 
-Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) om een SSH-key toe te voegen aan je GitHub-account. Dit is o.a. nodig om te kunnen pushen naar je repository.
+Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) om een SSH-key toe te voegen aan je GitHub-account. Dit is onder andere nodig om te kunnen pushen naar je repository.
 
 ## Node.js
 
@@ -57,41 +57,24 @@ Installeer Node.js (**minimaal versie 22.9.0**) via een package manager:
 
 Of kies voor een manuele installatie door **minimaal v22.9.0** te downloaden vanaf de website: <https://nodejs.org/en/>.
 
-Check na de installatie of Node.js correct geïnstalleerd is door volgend commando uit te voeren:
+Controleer na de installatie of Node.js correct geïnstalleerd is door het volgende commando uit te voeren:
 
 ```bash
-$ node --version
-v20.6.0
+node --version
+v22.17.0
 ```
 
-## Yarn
+## pnpm
 
-Installeer `yarn` als alternatieve package manager voor `npm`:
+Installeer `pnpm` als alternatieve package manager voor `npm`:
 
 ```bash
-npm install -g yarn
+npm install -g pnpm@latest-10
 ```
 
-Schakel vervolgens [Corepack](https://nodejs.org/api/corepack.html) in:
+Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. De fout heeft de vorm van `... cannot be loaded because running scripts is disabled on this system`. Indien dit het geval is, open een PowerShell terminal in Administrator-modus. Voer vervolgens het volgende commando uit en antwoord met `A` op de vraag:
 
-```bash
-# Administrator rechten zijn nodig op Windows!
-corepack enable
-```
-
-Corepack is een package manager die de installatie van `yarn` en andere packages versnelt. Het kan automatisch de versie van `yarn` installeren die in het `package.json`-bestand staat. Wij werken met Yarn v4, Corepack is dus een vereiste.
-
-Test of `yarn` correct geïnstalleerd is en kan gebruikt worden:
-
-```bash
-yarn --version
-```
-
-Dit zou een versienummer moeten opleveren.
-
-Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. De fout is in de vorm van `yarn.ps1 cannot be loaded because running scripts is disabled on this system`. Indien dit het geval is, open een PowerShell terminal in Administrator modus. Voer vervolgens het volgende commando uit en antwoord met `A` op de vraag:
-
-```bash
+```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
 
@@ -103,7 +86,7 @@ Installeer MySQL via een package manager:
 - macOS: `brew install mysql`
 - Linux: [distro afhankelijk](https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/linux-installation.html)
 
-?> Natuurlijk kan je ook MySQL draaien in een Docker container.
+?> Natuurlijk kan je ook MySQL uitvoeren in een [Docker container](https://hub.docker.com/_/mysql).
 
 ## MySQL Workbench
 
@@ -125,16 +108,16 @@ Installeer Visual Studio Code via een package manager:
 
 Of kies voor een manuele installatie door de laatste versie te downloaden vanaf de website: <https://code.visualstudio.com/download>.
 
-### Visual Studio Code: plugins <!-- omit in toc -->
+### Visual Studio Code: extensies <!-- omit in toc -->
 
-Een aantal **verplichte** plugins voor VS Code:
+Een aantal **verplichte** extensies voor VS Code:
 
 - [Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [Path Intellisense](https://marketplace.visualstudio.com/items?itemName=christian-kohler.path-intellisense)
 - [Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
 
-Een aantal optionele, maar toch handige plugins:
+Een aantal optionele, maar wel handige extensies:
 
 - [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 - [Git Blame](https://marketplace.visualstudio.com/items?itemName=waderyan.gitblame)
@@ -149,9 +132,9 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 
 1. Open de zoekfunctie via de toets `F1`
 2. Zoek op "settings" en kies voor `Preferences: Open User Settings (JSON)`
-3. Kopieer onderstaande JSON-code en voeg toe aan het JSON-bestand dat geopend werd. Zorg ervoor dat je een geldig JSON-object maakt!
+3. Kopieer uit onderstaande JSON-code enkel de properties en voeg deze toe aan het JSON-bestand dat geopend werd. Zorg ervoor dat je een geldig JSON-object maakt!
 
-> Merk op: de laatste setting schakelt de "Trusted workspaces" uit. Indien je dit niet wenst, verwijder deze setting.
+> **Opmerking**: de laatste setting schakelt de "Trusted workspaces" uit. Indien je dit niet wenst, verwijder deze setting.
 
 ```json
 {
@@ -172,7 +155,7 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 }
 ```
 
-Een thema kan je uiteraard zelf kiezen, maar [One Dark Pro](https://marketplace.visualstudio.com/items?itemName=zhuangtongfa.Material-theme) is wel een overzichtelijk thema.
+Een thema kan je uiteraard zelf kiezen, maar [One Dark Pro](https://marketplace.visualstudio.com/items?itemName=zhuangtongfa.Material-theme) is een overzichtelijk thema.
 
 ### Fira Code lettertype <!-- omit in toc -->
 
@@ -181,13 +164,13 @@ Fira Code is een gratis monospace lettertype met speciale karakters voor develop
 Installeer het lettertype via een package manager:
 
 - Windows: `choco install firacode`
-  - Winget is nog niet beschikbaar voor Fira Code, manuele installatie is ook mogelijk: <https://github.com/tonsky/FiraCode/wiki/Installing#windows>
+  - **Let op**: Winget is nog niet beschikbaar voor Fira Code, manuele installatie is ook mogelijk: <https://github.com/tonsky/FiraCode/wiki/Installing#windows>
 - macOS: `brew install firacode`
 - Linux: [distro afhankelijk](https://github.com/tonsky/FiraCode/wiki/Linux-instructions#installing-with-a-package-manager)
 
 Of volg de instructies op de [GitHub van Fira Code](https://github.com/tonsky/FiraCode/wiki/Installing).
 
-Voeg nadien volgende JSON-configuratie toe aan de settings van VS Code (zie hierboven hoe je daar komt):
+Voeg daarna de properties uit onderstaande JSON-configuratie toe aan de settings van VS Code (zie hierboven hoe je daar komt):
 
 ```json
 {
@@ -206,4 +189,4 @@ Installeer Postman via een package manager:
 - macOS: `brew install --cask postman`
 - Linux: [distro afhankelijk](https://www.postman.com/downloads/)
 
-Open Postman en maak een account aan. Je kan er natuurlijk ook voor kiezen om eenvoudigweg met Google aan te melden.
+Open Postman en maak een account aan. Je kan er natuurlijk ook voor kiezen om je eenvoudig aan te melden met Google.
