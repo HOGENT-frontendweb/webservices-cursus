@@ -480,7 +480,8 @@ import { Transaction } from './entities/transaction.entity';
 export const TRANSACTIONS : Transaction []= [...]
 }
 ```
-TODO VRAAG : HIER EEN ENTITY TRANSACTION VOORZIEN OF TRANSACTIONDTO?
+TODO VRAAG : HIER EEN INTERFACE TRANSACTION VOORZIEN OF TRANSACTIONDTO?
+TODO : RETURNTYPES TOEVOEGEN
 Binnen de service voorzien we alle CRUD acties die we later vanuit de Controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
 
 ```typescript
@@ -679,6 +680,7 @@ NestJS voorziet bvb in volgende built-in pipes:
 Gebruik in een controller:
 ```typescript
 //src/transaction/transaction.controller.ts
+  import {  ..., ParseIntPipe} from '@nestjs/common';
   @Get(':id')
   getTransactionById(@Param('id', ParseIntPipe) id: number) {
     console.log(typeof id);
@@ -918,93 +920,82 @@ Het is een goed idee om steeds eerst de module aan te maken en dan de controller
 
 TODO : vanaf hier nog bekijken! Plaatsen we dit nog in dit hoofdstuk?
 
-### Logging
+## Logging
 
 Lees [Best practices for logging](https://betterstack.com/community/guides/logging/nodejs-logging-best-practices/).
 
-Als laatste refactoring gaan we onze logger een beetje uitbreiden. Pas het bestand `logging.ts` aan in een nieuwe map `core`. Voeg hierin onderstaande code toe. Bekijk de code en probeer zelf te achterhalen wat er gebeurt (een uitleg vind je verborgen onder de code).
+Manueel links en rechts wat console.logs toevoegen om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om eenvoudig meer of minder te loggen al naargelang we in productie of development draaien.
+
+Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. En nog veel meer..., een goede logger is best een uitgebreid stuk software.
+
+NestJS bevat een ingebouwde tekstlogger via de `Logger`klasse uit `@nestjs/common`.
+Neem [Logging](https://docs.nestjs.com/techniques/logger) door.
+
+We maken een eigen `CustomLogger` aan. In de `src` folder maak je een `core` folder aan. Voeg een bestand `customLogger.ts` toe.
 
 ```ts
-// src/core/logging.ts
-import config from 'config';
-import winston from 'winston';
-const { combine, timestamp, colorize, printf } = winston.format;
+// src/core/customLogger.ts
+import type { LoggerService } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 
-const NODE_ENV = config.get<string>('env');
-const LOG_LEVEL = config.get<string>('log.level');
-const LOG_DISABLED = config.get<boolean>('log.disabled');
+export class CustomLogger extends ConsoleLogger implements LoggerService {
+  log(message: string) {
+    super.log('📢 ' + message);
+  }
 
-// 👇 1
-const loggerFormat = () => {
-  // 👇 2
-  const formatMessage = ({
-    level,
-    message,
-    timestamp,
-    ...rest
-  }: winston.Logform.TransformableInfo) => {
-    return `${timestamp} | ${level} | ${message} | ${JSON.stringify(rest)}`;
-  };
+  error(message: string, trace: string) {
+    super.error('❌  ' + message, trace);
+  }
 
-  // 👇 3
-  const formatError = ({
-    error: { stack },
-    ...rest
-  }: winston.Logform.TransformableInfo) =>
-    `${formatMessage(rest)}\n\n${stack}\n`;
+  warn(message: string) {
+    super.warn('⚠️  ' + message);
+  }
 
-  // 👇 4
-  const format = (info: winston.Logform.TransformableInfo) => {
-    // 👇 5
-    if (info?.['error'] instanceof Error) {
-      return formatError(info);
-    }
+  debug(message: string) {
+    super.debug('🐞 ' + message);
+  }
 
-    return formatMessage(info); // 👈 6
-  };
+  verbose(message: string) {
+    super.verbose('📖 ' + message);
+  }
+}
 
-  return combine(colorize(), timestamp(), printf(format));
-};
+```
+Deze code definieert een eigen loggerklasse, genaamd `CustomLogger`.  `CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Dit zorgt ervoor dat `CustomLogger` werkt als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit. In deze klasse worden de logmethodes (log, error, warn, debug, verbose) overschreven om elk logbericht te voorzien van een emoji, zodat je in de console direct het type bericht herkent:
 
-// 👇 7
-const rootLogger: winston.Logger = winston.createLogger({
-  level: LOG_LEVEL,
-  format: loggerFormat(),
-  defaultMeta: { env: NODE_ENV },
-  transports:
-    NODE_ENV === 'testing'
-      ? [
-          new winston.transports.File({
-            filename: 'test.log',
-            silent: LOG_DISABLED,
-          }),
-        ]
-      : [new winston.transports.Console({ silent: LOG_DISABLED })],
+- log: 📢 voor algemene logs
+- error: ❌ voor fouten
+- warn: ⚠️ voor waarschuwingen
+- debug: 🐞 voor debugberichten
+- verbose: 📖 voor gedetailleerde logs
+
+Elke methode roept de overeenkomstige methode van de `ConsoleLogger` aan, maar voegt eerst de emoji toe aan het bericht. Zo krijg je visueel onderscheid tussen verschillende soorten logberichten in je console.
+
+Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opstarten van de applicatie. Dit doe je in het entrypoint-bestand, main.ts.
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe, Logger } from '@nestjs/common';// 👈 3
+import { CustomLogger } from './core/customLogger'; // 👈 1
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useLogger(new CustomLogger());  //👈 2
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted:true,
+    transform: true}));
+  await app.listen(process.env.PORT ?? 9000, () => {
+    new Logger().log('🚀 Server listening on http://127.0.0.1:9000');//👈 3
 });
-
-export const getLogger = () => {
-  return rootLogger;
-};
+}
+bootstrap();
 ```
 
-<br/>
-
-- Uitleg +
-
-  1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
-  2. We definiëren binnen deze functie een functie voor het printen van logberichten die geen foutmelding bevatten.
-  3. En een functie voor het printen van logberichten die wel een foutmelding bevatten.
-  4. De volgende functie bepaalt welke van de vorige 2 functies gebruikt wordt, afhankelijk van de aanwezigheid van een foutmelding in het logbericht.
-     - We gebruiken in alle bovenstaande functies het type `winston.Logform.TransformableInfo` van `winston`. Dit is een interface die ons vertelt wat we allemaal standaard meekrijgen als informatie bij een logbericht.
-  5. We checken binnen deze functie met optionele chaining of er een `error` property is in het logbericht. Als dit het geval is, gebruiken we de functie voor het printen van logberichten met foutmelding.
-  6. Anders gebruiken we de functie voor het printen van logberichten zonder foutmelding.
-  7. We breiden onze root logger ook wat uit met:
-     - Ons eigen formaat.
-     - De default meta informatie, die wordt toegevoegd aan elk logbericht. We voegen hier de `env` aan toe.
-     - We voorzien 2 transports:
-       - Een file transport voor de testomgeving. We schrijven de logs weg naar een bestand `test.log` omdat onze logs anders tussen de uitvoer van de testen komt. Later zal je zien waarom dit handig is.
-       - Een console transport voor alle andere omgevingen.
-       - We zetten de logging in beide gevallen uit als dit geconfigureerd is.
+1. Importeer de CustomLogger
+2. In de app gebruik je een aangepaste logger (CustomLogger)  in plaats van de standaard logger van NestJS
+3. We loggen een bericht wanneer de server opgestart is. Nu worden alle logs van je applicatie via de CustomLogger verwerkt, inclusief de emoji’s.
 
 Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 
@@ -1013,7 +1004,7 @@ Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 Doe dezelfde refactoring in je eigen project:
 
 - REST laag toevoegen
-- Health checks toevoegen
+- Service laag toevoegen
 - Logging uitbreiden
 
 ## CORS
@@ -1035,89 +1026,31 @@ Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aan
 1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. Dit heet het preflight request.
 2. De werkelijke aanvraag, gemaakt op de gewenste resource.
 
-Voeg het CORS package en de bijbehorende types toe:
+Lees [Cors] (https://docs.nestjs.com/security/cors)
 
-```bash
-yarn add @koa/cors
-yarn add --dev @types/koa__cors
-```
-
-`@koa/cors` handelt het hele CORS-verhaal voor ons af, zoals bv. preflight request.
-
-Voeg wat configuratie toe in `config/development.ts` en `config/production.ts`:
+Pas de code in `main.ts` aan
 
 ```ts
-export default {
-  log: {
-    // ...
-  },
-  cors: {
-    // 👈 1
-    origins: ['http://localhost:5173'], // 👈 2
-    maxAge: 3 * 60 * 60, // 👈 3
-  },
-};
+...
+ app.enableCors({
+    origins: ['http://localhost:5173'],
+    maxAge: 3 * 60 * 60,
+  })
+...
 ```
 
-1. Pas de config aan voor development en production, voeg de CORS settings toe.
-2. `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
+Deze code zorgt ervoor dat je NestJS-backend CORS toestaat
+-`origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
    - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
    - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
-3. `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u).
+- `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming hoeft te worden gevraagd
 
-Installeer nu de CORS middleware in `src/index.ts`:
-
-```ts
-// ...
-// 👇 1
-import config from 'config';
-import koaCors from '@koa/cors';
-
-// ...
-const CORS_ORIGINS = config.get<string[]>('cors.origins'); // 👈 2
-const CORS_MAX_AGE = config.get<number>('cors.maxAge'); // 👈 2
-
-// ...
-
-const app = new Koa();
-
-// 👇 3
-app.use(
-  koaCors({
-    // 👇 4
-    origin: (ctx) => {
-      // 👇 5
-      if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) {
-        return ctx.request.header.origin!;
-      }
-      // Not a valid domain at this point, let's return the first valid as we should return a string
-      return CORS_ORIGINS[0] || ''; // 👈 6
-    },
-    // 👇 7
-    allowHeaders: ['Accept', 'Content-Type', 'Authorization'],
-    maxAge: CORS_MAX_AGE, // 👈 8
-  }),
-);
-
-app.use(bodyParser());
-
-// ...
-```
-
-1. Importeer CORS en de configuratie.
-2. Haal de configuratievariabelen op.
-3. Definieer de CORS middleware.
-4. `origin`: gebruik een functie om te checken of het request origin in onze array voorkomt. Door een functie te gebruiken, kan je meerdere domeinen toelaten. Je mag nl. maar één domein of string teruggeven in de CORS header `Access-Control-Allow-Origin`.
-5. We controleren of het request origin in onze array voorkomt. Indien ja, dan geven we het request origin terug (dit is toch geldig).
-   - Merk de `!` op. Dit is een non-null assertion operator. Dit vertelt TypeScript dat je zeker bent dat `ctx.request.header.origin` niet `null` of `undefined` is.
-6. We moeten iets teruggeven indien het niet in de array voorkomt. Het request origin is ongeldig en we mogen dit absoluut niet teruggeven. Daarom geven we het eerste toegelaten domein terug, of een lege string als er geen toegelaten domeinen zijn.
-7. `allowHeaders`: de toegelaten headers in het request.
-8. `maxAge`: de maximum cache leeftijd (voor browsers).
 
 ### Oefening 6 - Je eigen project
 
 Voeg CORS toe aan je eigen project.
 
+TODO - aanpassen
 ## Geneste routes
 
 In het vorige hoofdstuk hebben een voorbeeld uitgewerkt voor een recepten API waarbij een veelgemaakte fout was dat subroutes niet correct gedefinieerd worden. Hier geven we een praktisch voorbeeld van zo'n geneste route in onze budget app.
