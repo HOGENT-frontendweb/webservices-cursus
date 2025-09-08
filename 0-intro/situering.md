@@ -73,21 +73,50 @@ Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 | week 11 | testen authenticatie / autorisatie + Swagger  |
 | week 12 | CI/CD (= online zetten)                       |
 
-## Help, ik zit vast?
+## Help, ik zit vast!
 
-Lees de foutboodschappen, copy-paste ze in Google. Vaak 'helpen' we studenten door de fout te copy-pasten en de eerste link in Google te kopiëren.
+Heb je vragen over de opdracht of loop je vast tijdens de ontwikkeling? Lees de foutboodschappen, copy-paste ze in Google (of een AI tool). Vaak 'helpen' we studenten door de fout te copy-pasten en de eerste link in Google te kopiëren.
 
-### Het werkt niet maar geen error te zien?
+Als dat niets oplevert, kan je op twee manieren hulp krijgen:
 
-- eerst en vooral stappen vinden die het probleem reproduceren
-- dan het probleem proberen isoleren (databank? back-end? front-end?)
-- gebruik een debugger, log statements; denk even na
+**Tijdens de les:**
 
-### Nog altijd vast?
+- Stel je vraag rechtstreeks tijdens de lessen
+- We plannen bewust tijd in om vragen te beantwoorden en hulp te bieden
 
-- maak een GitHub issue op jouw repository
-- vul een van de gegeven templates in
-  - **let op:** dit is NIET een bestand in de map `.github/ISSUE_TEMPLATE` aanpassen, deze laat je gewoon staan!
-  - lees dit: <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>
-- link jouw lector aan dit issue (als assignee en/of getagd)
-  - anders krijgen we geen melding van jouw issue en kunnen we je niet helpen
+**Buiten de les:**
+
+- Maak een GitHub issue aan in jouw repository
+  - **Let op:** dit is niet een bestand in de map `.github/ISSUE_TEMPLATE` aanpassen, deze laat je gewoon staan!
+  - Meer info over het aanmaken van een GitHub issue: <https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue>
+- Koppel jouw lector aan het issue als assignee
+- Gebruik het voorziene template dat automatisch wordt geladen
+- Geef voldoende context en details over je probleem
+
+**Belangrijk:** Technische vragen via e-mail worden niet beantwoord. Gebruik altijd de bovenstaande kanalen voor de beste en snelste hulp.
+
+## Mag ik AI gebruiken?
+
+?> Voor dit olod hanteren we level 3 van de [AI Assessment Scale](https://arxiv.org/pdf/2412.09029). Probeer wel eerst zelf een oplossing te vinden m.b.v. traditionele bronnen alvorens AI tools te gebruiken, zie bv. <https://www.vaia.be/nl/blog/hoe-vervuilend-is-ai>.
+
+**Wat mag je met AI tools:**
+
+- Code genereren en laten uitleggen
+- Documentatie schrijven (dossier, README)
+- Testdata genereren
+- Concepten laten uitleggen die je niet begrijpt
+- Brainstormen over ideeën voor je project
+- Debugging hulp en foutboodschappen laten uitleggen
+
+**Belangrijke voorwaarden:**
+
+- Je moet alle gegenereerde code grondig begrijpen
+- Je bent volledig verantwoordelijk voor de kwaliteit en correctheid
+- Je moet de code kunnen uitleggen tijdens de demo (bv. je extra technologie)
+- Je mag niet blindelings code kopiëren zonder te begrijpen wat het doet
+
+**Tijdens de evaluatie:**
+
+- Je moet kunnen uitleggen hoe je code werkt
+- Je moet kunnen aantonen dat je de gebruikte technologieën begrijpt
+- AI-hulp vermelden in je dossier wordt gewaardeerd maar is niet verplicht

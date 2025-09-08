@@ -6,6 +6,10 @@ Gedurende het semester maak je een API in Node.js. Als je ook het olod Front-end
 
 Je bent volledig vrij om te kiezen welke API je ontwikkelt. Indien je twijfelt over jouw idee, mag je tijdens de les altijd overleggen met je lector of achteraf via een GitHub issue op jouw repository.
 
+?> Er wordt enkel feedback gegeven op ideeën tijdens semester 1. Indien je een idee hebt dat je graag wil bespreken, doe dit dan tijdig.
+
+Voor de examenopdracht mag je optioneel per 2 samenwerken. Zie [sectie 7](#7-groepswerk-optioneel) voor meer informatie.
+
 Alle code moet in een GitHub classroom repository terechtkomen (zie Chamilo voor een link naar de classroom). Enkel de `main` branch van deze repository zal geëvalueerd worden. Er wordt automatisch een template van de `README.md` aangemaakt als je de opdracht accepteert, vul deze correct in. Je gebruikt dezelfde repository voor zowel Web Services als Front-end Web Development.
 
 Het is belangrijk dat de applicatie significant verschilt van de voorbeeldapplicatie die tijdens de les gemaakt wordt.
@@ -99,7 +103,9 @@ Naast het dossier dien je ook een demo van jouw applicatie op te nemen en te del
 - De demo moet opgenomen zijn vóór de deadline
 - De demo moet minstens de volgende onderdelen bevatten/tonen:
   - **Context van de applicatie**: leg uit wat de applicatie doet, wat het doel is en waarom je dit onderwerp gekozen hebt
-  - **Projectstructuur overlopen**: overloop kort de mappenstructuur van je project en leg eventuele speciale ontwerpkeuzes uit (waarom bepaalde mappen/bestanden georganiseerd zijn zoals ze zijn)
+  - **Projectstructuur overlopen (optioneel)**:
+    - Leg eventuele speciale ontwerpkeuzes uit (waarom bepaalde mappen/bestanden georganiseerd zijn zoals ze zijn)
+    - Dit hoef je niet te doen als de projectstructuur identiek is aan de voorbeeldapplicatie
   - **Demo van de applicatie**:
     - Gebruik uitsluitend de online versie van je applicatie (geen localhost)
     - Indien je zowel Web Services als Front-end Web Development volgt:
@@ -139,23 +145,19 @@ Bij het toevoegen van een extra technologie is het belangrijk dat deze ook echt 
 
 ?> Jouw project moet gebruik maken van NestJS als web framework. Andere frameworks zijn niet toegelaten.
 
-## 7. Vragen
+## 7. Groepswerk (optioneel)
 
-Heb je vragen over de opdracht of loop je vast tijdens de ontwikkeling? Je kan op twee manieren hulp krijgen:
+In het geval je voor de examenopdracht per 2 wil samenwerken, kan dit. Je maakt in dat geval één repository aan in de GitHub classroom en werkt samen aan dezelfde codebase. Volg de instructies op Chamilo voor het aanmaken van een repository.
 
-**Tijdens de les:**
+Jullie worden samen geëvalueerd en krijgen (normaal) dezelfde score. Zorg ervoor dat jullie beiden voldoende commits maken zodat duidelijk is dat jullie beiden aan het project gewerkt hebben. Indien niet iedereen voldoende bijgedragen heeft, kan dit gevolgen hebben voor de score van de persoon die minder bijgedragen heeft.
 
-- Stel je vraag rechtstreeks tijdens de lessen
-- We plannen bewust tijd in om vragen te beantwoorden en hulp te bieden
+Maak gebruik van branches en pull requests om samen te werken aan de codebase. Dit helpt om de bijdragen van elke teamgenoot duidelijk te maken en simuleert een professionele werkomgeving.
 
-**Buiten de les:**
+Werkt de samenwerking niet goed, dan kan je dit altijd via mail melden aan de lector. We kunnen in dat geval eventueel beslissen om jullie apart te evalueren. Het spreekt voor zich dat slechts één persoon verder kan gaan met het bestaande idee, de andere persoon moet dan een nieuw idee uitwerken.
 
-- Maak een GitHub issue aan in jouw repository
-- Koppel jouw lector aan het issue als assignee
-- Gebruik het voorziene template dat automatisch wordt geladen
-- Geef voldoende context en details over je probleem
+Na de deadline bekijken we de activiteit in de repository en kunnen we zien wie wat en hoeveel heeft bijgedragen.
 
-**Belangrijk:** Technische vragen via e-mail worden niet beantwoord. Gebruik altijd de bovenstaande kanalen voor de beste en snelste hulp.
+Voor de demo neem je best samen een video op. Jullie verdelen zelf wie wat demonstreert, maar zorg ervoor dat beide personen evenveel aan bod komen in de video.
 
 ## 8. Evaluatie
 
