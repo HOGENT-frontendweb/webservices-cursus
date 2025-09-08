@@ -10,6 +10,18 @@
 > yarn start:dev
 > ```
 
+## Leerdoelen
+
+- Inzicht krijgen in de werking van controllers in NestJS, hoe routes worden gedefinieerd en hoe je meerdere routes binnen één controller groepeert.
+
+- Begrijpen hoe je toegang krijgt tot HTTP-aanvraaggegevens (zoals headers, body, params, etc.) in NestJS met behulp van decoratoren en hoe je verschillende HTTP-methoden implementeert in controllers.
+
+- Inzicht krijgen in Providers, dependency injection, Services
+
+- Gebruik maken van DTO's voor invoervalidatie.
+
+- Inzicht krijgen in de werking van modules in NestJS
+
 ## De budget app
 
 In de olods Front-end Web Development en Web Services maken we een budgetapplicatie. Deze applicatie bestaat uit een front-end en back-end. De front-end is een Single Page Application (SPA) in React, de back-end is een REST API in Node.js m.b.v. Koa. In deze les beginnen we met het bouwen van de REST API.
@@ -85,134 +97,7 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
 
 <!-- markdownlint-enable header-start-left -->
 
-## Configuratie
-
-Voor we aan de API beginnen, moeten we onze server beter configureerbaar maken. Typisch wil je verschillende instellingen al naargelang je in een development, productie of test omgeving bent. Hiermee bedoelen we instellingen zoals databankgegevens (locatie, poort, gebruikersnaam, wachtwoord..), op welke poort de server luistert, logging niveau, enzovoort.
-
-De configuratie doen we liefst op 1 plaats. In `src/index.ts` verwijzen we bv. naar poort 9000, dit zetten we best niet in code. In `src/core/logging.ts` staat het level op `info`, maar dit willen we enkel in productie - in development willen we level `debug`.
-
-Eerst installeren het [config](https://www.npmjs.com/package/config) en de bijhorende types. Dit package laat toe om eenvoudig configuratie te switchen op basis van de environment variabele `NODE_ENV`.
-
-```bash
-yarn add config
-yarn add --dev @types/config
-```
-
-Het package `config` vereist dat de `NODE_ENV` environment variabele gedefinieerd is. Deze stel je typisch in op bv. 'development' of 'production'. De library zoekt in de `config` map naar een bestand met de naam uit `NODE_ENV` (bv. `config/development.ts`).
-
-Eventueel kan je een extra bestand `config/custom-environment-variables.ts` definiëren. Dit bestand bevat mappings om andere environment variabelen ook via de config in de app te laden. Dit maakt het eenvoudig om configuratie tijdelijk aan te passen zonder dat je het specifieke configuratiebestand moet aanpassen.
-
-Maak een `.env` bestand aan in de root met onderstaande code
-
-```ini
-NODE_ENV=production
-```
-
-Dit `.env` bestand zal niet in GitHub komen door onze `.gitignore` (en dat is de bedoeling!). Dus het is ook de ideale plaats om 'geheimen' (API keys, JWT secrets...) in op te nemen, later meer hierover.
-
-We passen ons `start:dev` script in de `package.json` aan zodat het `.env` bestand ingelezen wordt. Node.js heeft [sinds v20.6.0](https://nodejs.org/en/blog/release/v20.6.0) ondersteuning voor `.env` bestanden, je kan ze inlezen met de `--env-file` optie.
-
-```json
-{
-  "scripts": {
-    "start:dev": "tsx watch --env-file .env --inspect=0.0.0.0:9001 src/index.ts"
-  }
-}
-```
-
-We definiëren een paar log configuratievariabelen zodat we iets kunnen testen. Maak hiervoor `config/development.ts`
-aan met volgende inhoud
-
-```ts
-export default {
-  log: {
-    level: 'silly',
-    disabled: false,
-  },
-};
-```
-
-Doe hetzelfde voor productie, nl. in `config/production.ts`, met net iets andere waarden natuurlijk, anders zien we het verschil niet.
-
-```ts
-export default {
-  log: {
-    level: 'info',
-    disabled: false,
-  },
-};
-```
-
-We gebruiken `export default` om een object te exporteren uit het bestand. Het `default` keyword zorgt ervoor dat je het object kan importeren zonder accolades, bv. `import config from 'config/development'`. Automatisch kiest TypeScript de default export als je `import` zonder accolades gebruikt. Het `config` package verplicht om de configuratiebestanden te exporteren als een object in de default export.
-
-Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. Pas `src/core/logging.ts` aan:
-
-```ts
-// src/core/logging.ts
-import { env } from 'node:process'; // 👈 4
-import winston from 'winston';
-import config from 'config'; // 👈 1
-
-const NODE_ENV = env['NODE_ENV']; // 👈 4
-const LOG_LEVEL = config.get<string>('log.level'); // 👈 2
-const LOG_DISABLED = config.get<boolean>('log.disabled'); // 👈 2
-
-// 👇 7
-console.log(
-  `node env: ${NODE_ENV}, log level ${LOG_LEVEL}, logs enabled: ${
-    LOG_DISABLED !== true
-  }`,
-);
-
-const rootLogger: winston.Logger = winston.createLogger({
-  level: LOG_LEVEL, // 👈 3
-  format: winston.format.simple(),
-  transports: [new winston.transports.Console({ silent: LOG_DISABLED })], // 👈 3
-});
-
-export const getLogger = () => {
-  return rootLogger;
-};
-```
-
-1. We vragen het config object op
-2. Alle gedefinieerde configuratievariabelen zijn beschikbaar via een `.get()`. Je kan een syntax met punten gebruiken om dieper in de structuur te gaan, bv. `log.level` om het property `level` binnen het object `log` op te vragen.
-   - Let op dat je de types meegeeft tussen de `<>` haakjes. Dit zijn generieke types, je kan ze zien als een soort van argumenten die je meegeeft aan een functie. In dit geval geef je het type van de waarde die je verwacht terug te krijgen mee. TypeScript zorgt er vervolgens voor dat de returnwaarde van `config.get` van dat type is.
-   - Als je bv. `config.get('log.level')` zou schrijven, zou TypeScript klagen bij het instellen van het `level` dat het type van de variabele `LOG_LEVEL` niet overeenkomt met het type dat de optie `level` verwacht. Probeer dit eens uit.
-3. Pas ook de hardgecodeerde waarden aan, zodat we de config gebruiken. We schakelen de logging uit als `log.disabled` de waarde `true` heeft.
-4. Je kan de environment variabelen ook expliciet opvragen, via het `env` uit `node:process`.
-   - `node:process` is een ingebouwde module om informatie op te vragen over het proces, zoals de omgevingsvariabelen via `env`.
-   - `env` is een object met alle omgevingsvariabelen. Omdat je niet weet wat in het object zit, kan je de waarde opvragen via de key, bv. `env['NODE_ENV']`.
-   - Dat is natuurlijk een beetje onhandig, je moet weten welke configuratie via het environment binnenkomt, en welke via de configuratiebestanden. En wat als iets in beide gedefinieerd is? Het is beter om alles via de configuratie te laten lopen, dit lossen we op in de volgende stap.
-5. Start de app en controleer dat alles werkt. We moeten dus 'info' zien, want `NODE_ENV` is gelijk aan 'production'.
-6. Pas de waarde van `NODE_ENV` aan in je `.env` bestand aan naar `development` en start de app opnieuw. Je zou nu 'development' moeten zien.
-7. Verwijder de `console.log` als alles werkt, deze hebben we enkel gebruikt om te testen.
-
-Gelukkig heeft `config` een manier om environment variabelen mee in te lezen in de configuratie zodat we alles kunnen opvragen via `config.get()`. Op die manier staat **alle configuratie centraal**, dit is een best practice! Maak een bestand binnen de `config` map met de naam `custom-environment-variables.ts`. Let op de schrijfwijze, een schrijffout zal ervoor zorgen dat het niet werkt.
-
-Zet daarin volgende inhoud:
-
-```ts
-export default {
-  env: 'NODE_ENV',
-};
-```
-
-In dit bestand definieer je welke configuratievariabelen gedefinieerd worden door welke environment variabele. In dit voorbeeld krijgt `config.get('env')` de waarde van `env['NODE_ENV']`. Als iets zowel binnen een configuratiebestand gedefinieerd is als via een environment variabele, zal de environment variabele gebruikt worden. Environment variabelen overschrijven dus steeds de configuratiebestanden. Dit zal zeer handig zijn voor bv. geheime sleutels die je niet in je code wil hebben.
-
-Dus we kunnen de `env['NODE_ENV']` vervangen door een `config.get(...)`:
-
-```ts
-// src/core/logging.ts
-import winston from 'winston';
-import config from 'config';
-
-const NODE_ENV = config.get<string>('env'); // 👈
-
-// ...
-```
-
-## CRUD operaties
+## CRUD operaties voor transacties
 
 Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor transacties, d.w.z.:
 
@@ -222,675 +107,934 @@ Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD 
 - `PUT /api/transactions/:id`: een transactie aanpassen
 - `DELETE /api/transactions/:id`: een transactie verwijderen
 
-Binnen onze middlewarefuncties bevat de context alle informatie over het request zoals die bij onze server toekomt.
+TODO VRAAG Werken we nog met /api of houden we dit voor swagger? Momenteel zonder /api geimplementeerd
 
-Voeg onderstaande code toe aan `index.ts`:
+NestJS biedt de tools om de inkomende requests af te handelen en een response terug te sturen.
 
-```ts
-// ...
-app.use(async (ctx) => {
-  getLogger().info(JSON.stringify(ctx.request));
-  ctx.body = 'Hello World from TypeScript';
-});
+![Tools](./images/transactionsoverview.png)
 
-// ...
-```
+## Datalaag
 
-Start de server en voer een request uit naar `http://localhost:9000` (bv. via Postman). Je zou volgende output moeten zien:
-
-```text
-info: {"method":"GET","url":"/","header":{"host":"localhost:9000", ... }}
-```
-
-Het request object bevat alle informatie over het request, zoals de HTTP methode, de URL, de headers, de body... Je kan dus eigenlijk controleren welk request binnenkomt en op basis daarvan een response sturen. Pas de middleware als volgt aan:
+Deze beheert onze data. Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in het volgende hoofdstuk toegevoegd.
 
 ```ts
-app.use(async (ctx) => {
-  getLogger().info(JSON.stringify(ctx.request));
-  if (
-    ctx.request.method === 'GET' && // 👈 1
-    ctx.request.url === '/api/transactions'
-  ) {
-    ctx.body =
-      '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 2
-  } else {
-    ctx.body = 'Hello World from TypeScript'; // 👈 3
-  }
-});
-```
-
-1. Identificeer op basis van de method en URL de juiste actie.
-2. Geef de data in de body mee, zodat de gebruiker een lijst van transacties krijgt.
-3. We laten de 'Hello World from TypeScript' staan voor alle andere requests.
-
-Probeer dit uit door een request te versturen naar <http://localhost:9000/api/transactions> (bv. via Postman). Je zou de lijst van transacties moeten zien.
-
-## Router
-
-Je zou op deze manier een hele server kunnen bouwen maar je voelt al dat veel werk altijd hetzelfde zal zijn. Voor zo'n simpele GET request valt het mee, maar wat als je ook de body/headers moet parsen, authenticatie moet afhandelen... Dus, zoals zo vaak, een goede library is het halve werk. Bij programmeren anno 2023 is het vaak belangrijker om een goede library te kennen/kunnen vinden dan algoritmes uit te denken en te implementeren.
-
-We voegen [@koa/router](https://www.npmjs.com/package/koa-router) [koa-bodyparser](https://www.npmjs.com/package/koa-body-parser), en hun types toe om requests makkelijker af te handelen.
-
-```bash
-yarn add @koa/router koa-bodyparser
-yarn add --dev @types/koa__router @types/koa-bodyparser
-```
-
-- **koa-bodyparser** is een middleware die we moeten toevoegen voor Koa bij onze routes aankomt. Het zal de request body parsen voor ons. Het heeft ondersteuning voor JSON, form en text bodies.
-- **@koa/router** is ook een middleware en zal de routing op zich nemen. Met andere woorden het zal de juiste code uitvoeren als bv. een `POST /api/transactions` toekomt op de server.
-  - Het package voor de types is `@types/koa__router` (let op de dubbele underscore). De dubbele underscore is nodig aangezien je maar één / in een package naam mag hebben.
-
-We voegen alvast de bodyparser toe.
-
-```ts
-// src/index.ts
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser'; // 👈 1
-import { getLogger } from './core/logging';
-
-const app = new Koa();
-
-app.use(bodyParser()); // 👈 2
-
-app.use(async (ctx) => {
-  getLogger().info(JSON.stringify(ctx.request));
-  getLogger().info(JSON.stringify(ctx.request.body)); // 👈 3
-  if (ctx.request.method === 'GET' && ctx.request.url === '/api/transactions') {
-    ctx.body =
-      '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]';
-  } else {
-    ctx.body = 'Hello World from TypeScript';
-  }
-});
-
-app.listen(9000, () => {
-  getLogger().info('🚀 Server listening on http://127.0.0.1:9000');
-});
-```
-
-1. Importeer de bodyparser.
-2. Geef deze mee aan het Koa object. Doe dit vóór je eigen middlewarefuncties, anders is deze nog niet uitgevoerd (en in dit geval zal de body dus nog niet geparsed).
-3. Log de request body.
-4. Je kan dit snel testen door een POST request -met body- via Postman te sturen. Open postman en doe een POST naar <http://localhost:9000/api/transactions> en geef als JSON body `{ "message": "Hello world" }` in en voer uit. Verwijder dan eens de bodyparser middleware en bekijk dan het resultaat van de POST. Je kan de middleware eens uitschakelen om het verschil te zien.
-
-We willen nu ook gebruik maken van de router.
-
-```ts
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import Router from '@koa/router'; // 👈 1
-import { getLogger } from './core/logging';
-
-const app = new Koa();
-
-app.use(bodyParser());
-
-const router = new Router(); // 👈 2
-
-// 👇 3
-router.get('/api/transactions', async (ctx) => {
-  ctx.body =
-    '[{"user": "Benjamin", "amount": 100, "place": "Irish Pub", "date": "2021-08-15" }]'; // 👈 4
-});
-
-app
-  .use(router.routes()) // 👈 4
-  .use(router.allowedMethods()); // 👈 4
-
-app.listen(9000, () => {
-  getLogger().info('🚀 Server listening on http://127.0.0.1:9000');
-});
-```
-
-1. Verwijder ons manueel gepruts en importeer de Koa Router.
-2. Dan creëren we een instantie van deze router.
-3. Daarna kunnen we routes definiëren, elke route is een 'werkwoord' met een path op ons router object. Dus je kan `router.get`, `router.put`... gebruiken. Na het path geef je de middlewares die uitgevoerd moeten worden bij dit request. In ons geval is dit slechts één middleware, maar meerdere kunnen zeker (denk aan authenticatie, validatie...).
-4. We zorgen ervoor dat de response body ingesteld wordt. De overige code van onze middleware van daarnet mag weg.
-5. Om te zorgen dat onze app alle routes gebruikt voegen we `routes()` en `allowedMethods()` toe als middlewares.
-   - `routes()` zorgt voor de routing.
-   - `allowedMethods()` zorgt voor een HTTP 405 indien een HTTP method niet toegelaten is, en antwoordt op OPTIONS requests met een `Allow` header.
-
-## Mappenstructuur
-
-In wat volgt gaan we de code wat herstructureren zodat we een mooie gelaagde applicatie krijgen. We gaan de code (voorlopig) opsplitsen in 2 lagen:
-
-- **data**: beheert onze data (momenteel in-memory maar later in een databank)
-- **service**: de business logica, de domeinlaag
-
-Verder in dit hoofdstuk voegen we nog een 3de laag toe:
-
-- **REST API**: de presentatielaag
-
-### Datalaag
-
-Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map.
-
-```ts
-// src/data/mock_data.ts
-export const PLACES = [
-  {
-    id: 1,
-    name: 'Dranken Geers',
-    rating: 3,
-  },
-  {
-    id: 2,
-    name: 'Irish Pub',
-    rating: 2,
-  },
-  {
-    id: 3,
-    name: 'Loon',
-    rating: 4,
-  },
-];
-
 export const TRANSACTIONS = [
   {
     id: 1,
     amount: -2000,
-    date: '2021-05-08T00:00:00.000Z',
-    user: {
-      id: 1,
-      name: 'Thomas Aelbrecht',
-    },
-    place: {
-      id: 2,
-      name: 'Irish Pub',
-    },
+    date: new Date(),
+    user:  'Thomas Aelbrecht',
+    place: 'Irish Pub',
   },
   {
     id: 2,
     amount: -74,
-    date: '2021-05-21T12:30:00.000Z',
-    user: {
-      id: 1,
-      name: 'Thomas Aelbrecht',
-    },
-    place: {
-      id: 2,
-      name: 'Irish Pub',
-    },
+    date: new Date(new Date().getDate() - 2), // 2 days ago
+    user: 'Thomas Aelbrecht',
+    place: 'Irish Pub',
   },
   {
     id: 3,
     amount: 3500,
-    date: '2021-05-25T17:40:00.000Z',
-    user: {
-      id: 1,
-      name: 'Thomas Aelbrecht',
-    },
-    place: {
-      id: 3,
-      name: 'Loon',
-    },
+    date: new Date(new Date().getDate() - 3),
+    user: 'Thomas Aelbrecht',
+    place: 'Loon',
   },
 ];
 ```
 
-We houden hier voorlopig een variabele bij met onze transactions en places. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies of klassen beschikbaar te maken voor andere bestanden. In dit geval maken we de variabelen `PLACES` en `TRANSACTIONS` beschikbaar voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
+We houden hier voorlopig een variabele bij met onze transactions. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies of klassen beschikbaar te maken voor andere bestanden. In dit geval maken we de variabelen `TRANSACTIONS` beschikbaar voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
 
-Als we ook de transactions willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Ook aan de places voegen we een uniek id toe. Bij toevoegen van transactions/places moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de transaction/place te zoeken en aan te passen.
+Als we ook de transactions willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Bij toevoegen van transactions moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de transaction te zoeken en aan te passen.
 
-### Servicelaag
+## Transaction controller
 
-We creëren een nieuw bestand `transaction.ts`, in een nieuwe `service` map. Voorlopig hebben we enkel de functie `getAll()` nodig, de rest implementeren we later. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden. Voor de functies `create` en `updateById` geven we een object mee met de nodige data. Voor de eenvoud gebruiken we nu `any` als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
+Controllers zijn verantwoordelijk voor het verwerken van binnenkomende verzoeken en het terugsturen van een antwoord naar de client. Het routingmechanisme bepaalt welke controller elk verzoek afhandelt. Vaak heeft een controller meerdere routes, en elke route kan een andere actie uitvoeren. Onze controller zal alle bovenstaande routes bevatten.
 
-```ts
-// src/service/transaction.ts
-import { TRANSACTIONS, PLACES } from '../data/mock_data';
+### Generatie controller
 
-export const getAll = () => {
-  return TRANSACTIONS;
-};
+NestJS biedt een CLI commando om automatisch een controller te genereren:
 
-export const getById = (id: number) => {
-  throw new Error('Not implemented yet!');
-};
-
-export const create = ({ amount, date, placeId, user }: any) => {
-  throw new Error('Not implemented yet!');
-};
-
-export const updateById = (
-  id: number,
-  { amount, date, placeId, user }: any,
-) => {
-  throw new Error('Not implemented yet!');
-};
-
-export const deleteById = (id: number) => {
-  throw new Error('Not implemented yet!');
-};
+```bash
+nest generate controller transaction
 ```
 
-Let al op de signatuur van de `create` en `updateById` functies. Als we data nodig hebben, gaan we ze als object doorgeven: `{ amount, date, placeId, user }`.
+Dit commando maakt de volgende bestanden aan:
 
-De route aanpassen is nu niet veel werk. Pas aan in de `index.ts`:
+- `src/transaction/transaction.controller.ts`: de controller zelf
+- `src/transaction/transaction.controller.spec.ts`: test bestand voor de controller
 
-```ts
-// src/index.ts
-import Koa from 'koa';
-import bodyParser from 'koa-bodyparser';
-import Router from '@koa/router';
-import { getLogger } from './core/logging';
-import * as transactionService from './service/transaction'; // 👈 1
+De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging zou de controller niet beschikbaar zijn in de applicatie.
 
-// ...
+Open het bestand `src/transaction/transaction.controller.ts`. De `@Controller('transactions')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/transactions`.
 
-// 👇 2
-router.get('/api/transactions', async (ctx) => {
-  ctx.body = {
-    items: transactionService.getAll(),
-  };
-});
+### Overzicht van de decorators
 
-// ...
-```
+Elke route in je applicatie wordt afgehandeld door een specifieke methode in je controller. Met behulp van HTTP-decoratoren `Get()`, `@Post()`,... decoreer je de methode met een routepad.
 
-1. We importeren de service. We gebruiken hier `import *` om alle exports van de module te importeren in één object. Dit is een handige manier om niet steeds opnieuw een functie te moeten importeren als je een nieuwe functie nodig hebt uit hetzelfde bestand.
-2. En vervangen de hardgecodeerde data door een `getAll()` aanroep, that's it!
-   - Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een `items` property die de array bevat.
-   - Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
-   - Dit heet [JSON Hijacking](https://docs.gitlab.com/ee/user/application_security/api_security_testing/checks/json_hijacking_check.html). Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
+### Static routes: `GET /transactions`
 
-### Oefening 2 - Je eigen project
+Voeg onderstaande inhoud toe aan de Controller.
 
-Doe nu hetzelfde in je eigen project:
-
-- Installeer alle packages:
-  - `config`
-  - `koa-router`
-  - `koa-bodyparser`
-  - `@types/config`
-  - `@types/koa__router`
-  - `@types/koa-bodyparser`
-- Zorg dat je de configuratie kan lezen.
-- Gebruiker de bodyparser en test uit.
-- Maak een GET route aan voor het opvragen van alle resources (van een entiteit naar keuze) en test uit.
-- Zorg voor een degelijke mappenstructuur met mock data en een service laag.
-
-## De POST route
-
-De POST route om een nieuwe transactie toe te voegen is zeer gelijkaardig.
-
-```ts
-// src/index.ts
-// 👇 1
-router.post('/api/transactions', async (ctx) => {
-  const newTransaction = transactionService.create({
-    ...ctx.request.body, // 👈 2
-    placeId: Number(ctx.request.body.placeId),
-    date: new Date(ctx.request.body.date),
-  });
-  ctx.body = newTransaction; // 👈 3
-});
-
-app.use(router.routes()).use(router.allowedMethods());
-```
-
-1. Voeg de POST route toe. We negeren even de foutmeldingen die TypeScript geeft, die lossen we later op.
-2. Roep de `create` functie van de service aan. We destructuren de `request.body` (waarin de transaction als JSON verwacht wordt) om onze datum alvast om te zetten naar een `Date` type, en de `placeId` naar een `Number` type. In het hoofdstuk rond validatie volgt hiervoor een betere oplossing!
-3. Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
-
-Dan moeten we nog onze `create` implementeren in de servicelaag.
-
-```ts
-// src/service/transaction.ts
-export const create = ({ amount, date, placeId, user }: any) => {
-  // 👇 1
-  const existingPlace = PLACES.find((place) => place.id === placeId);
-
-  // 👇 1
-  if (!existingPlace) {
-    throw new Error(`There is no place with id ${placeId}.`);
+```typescript
+  @Get('')
+  getAllTransactions(): string {
+    return 'this action returns all transactions';
   }
-
-  // 👇 2
-  const maxId = Math.max(...TRANSACTIONS.map((i) => i.id));
-
-  const newTransaction = {
-    id: maxId + 1, // 👈 2
-    amount,
-    date: date.toISOString(),
-    place: existingPlace,
-    user: { id: Math.floor(Math.random() * 100000), name: user }, // 👈 3
-  };
-  TRANSACTIONS.push(newTransaction); // 👈 4
-  return newTransaction; // 👈 5
-};
 ```
 
-1. We halen de place met bijhorend id op. Indien niet gevonden, gooien we voorlopig een fout.
-2. We genereren een nieuw id voor onze transactie door het hoogste id te zoeken en er 1 bij op te tellen.
-3. In de definitieve applicatie is de user de aangemelde gebruiker. Momenteel geven we een string door en maken we de gebruiker aan. Een gebruiker heeft een uniek id. We dienen een uniek id te genereren en maken hiervoor gebruik van `Math.random` (later zullen we dit degelijker implementeren).
-4. We voegen gewoon een nieuw element aan onze TRANSACTIONS array toe, weliswaar met een uniek id. Dan creëren we onze transactie, met het id erbij en voegen ze toe aan onze array.
-5. We geven deze nieuwe transactie terug.
+Importeer `@Get` uit de `@nestjs/common` package.
 
+De `@Get('')` decorator geeft aan dat de `getAllTransactions()` methode reageert op GET verzoeken op de route `/transactions`.
+
+Het routepad is het resultaat van `@controller-pad + @methode-pad`. Hier dus `/transactions`.
+
+De methodenaam `getAllTransactions` is willekeurig. Je kan even goed de methodenaam listAllTransactions(),... gebruiken.
+
+De methode `getAllTransactions()` retourneert momenteel een string.
+
+Start de server (als deze nog niet draait) en open de url <http://localhost:3000/transactions> in je browser of Postman. Je zou de string "this action returns all transactions" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. De request retourneert ook een statuscode 200 (d.i. de standaard).
+
+### Route parameters: `GET /transaction/:id`
+
+Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/transactions/15` of `/transactions/43` om een transactie met een bepaald id op te vragen.
+
+Een request bestaat uit een aantal lijnen met een specifieke betekenis. A.d.h.v. decorators kan NestJS specifieke informatie uit de request extraheren.
+
+![Decorators](./images/decorators.png)
+
+Hiervoor gebruik je `route parameters` – stukjes in de URL die dynamisch kunnen zijn, zoals een id.
+
+Lees eerst volgende secties in de documentatie:
+
+- [Request objects](https://docs.nestjs.com/controllers#request-object)
+- [Route parameters](https://docs.nestjs.com/controllers#route-parameters)
+
+Voeg onderstaande inhoud toe aan de Controller.
+
+```typescript
+  @Get(':id')
+  getTransactionById(@Param() params: any): string {
+    return `This action returns a #${params.id} transaction`;
+  }
+```
+
+Zorg dat je ``@Param`` importeert uit `@nestjs/common`.
+
+- `@Get(':id')`: Dit betekent dat elk verzoek naar /transactions/{id} door deze handler wordt afgehandeld.
+- `@Param()`: Maakt de routeparameter beschikbaar in de methode.
+- `params.id`: Hiermee haal je de waarde van de :id uit de URL op.
+
+Je kan de id ook direct ophalen door de parameter direct te benoemen in `@Param()`. Zo is de code korter en duidelijker.
+
+```typescript
+  @Get(':id')
+  getTransactionById(@Param('id') id:string): string {
+    return `This action returns a #${id} transaction`;
+  }
+```
+
+Belangrijk: Zet routes met parameters na de statische routes in je controller.
+
+Waarom?
+Als je een route zoals @Get(':id') vóór een statische route @Get('places') plaatst, dan zal een verzoek naar /transactions/places behandeld worden alsof places een id is.
+
+### Request Body: `POST /transactions`
+
+Een POST-handler gebruik je om nieuwe data te creëren, hier een transactie. De data voor de transactie wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
+
+Voeg onderstaande inhoud toe aan de Controller.
+
+```typescript
+  @Post('')
+  createTransaction(@Body() body: any): string {
+    console.log(body);
+    return `This action adds a new transaction for ${body.user}`;
+  }
+```
+
+- `@Post()`: Handelt een POST-verzoek af. Importeer uit `@nestjs/common`
+- `@Body() body`: any: Haalt de volledige body op als object. Importeer uit `@nestjs/common`. Voor de eenvoud gebruiken we nu any als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
+- `body.user`: Benader de waarden rechtstreeks.
+
+### Status Codes
+
+In een RESTful API geven HTTP status codes aan of een verzoek geslaagd is, wat er gebeurd is, of waarom iets is mislukt.
+
+Lees eerst volgende secties in de documentatie:
+
+- [Status Code](https://docs.nestjs.com/controllers#status-code)
+
+Standaard retourneert NestJS 200 OK, maar bij een succesvolle POST zou je expliciet 201 Created moeten teruggeven, omdat je iets nieuws aanmaakt.
+
+```typescript
+  @Post('')
+  @HttpCode(HttpStatus.CREATED)
+  createTransaction(@Body() body): string {
+    console.log(body);
+    return `This action adds a new transaction for ${body.user}`;
+  }
+```
+
+@HttpCode en HttpStatus importeer je uit `@nestjs/common`
+
+Als je meer controle wenst over de response kan je `@Res()` gebruiken. Een voorbeeld:
+
+```typescript
+  @Post('')
+  createTransaction(@Body() body,  @Res() res: Response): string {
+    console.log(body);
+    res.status(HttpStatus.CREATED).json({
+      message: 'Transaction successfully created',
+      data: body,
+    });
+    return `This action adds a new transaction for ${body.user}`;
+  }
+```
+
+Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `Response` importeer je uit de `express` namespace.
+
+### Best practice: gebruik DTO's
+
+Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in een NestJS-app.
+
+In NestJS gebruik je DTO’s vooral om de structuur en validatie van binnenkomende gegevens te definiëren, bijvoorbeeld bij POST- of PUT-verzoeken.
+
+Lees eerst volgende secties in de documentatie:
+
+- [DTO](https://docs.nestjs.com/controllers#request-payloads)
+
+Maak in de `transactions`folder en daarbinnen een bestand `transaction.dto.ts`. Hierin plaatsen we alle DTO's die binnen transactions gebruikt worden.
+
+```typescript
+export class CreateTransactionRequest {
+  amount: number;
+  date: Date;
+  user: string;
+  place: string;
+}
+```
+
+TODO VRAAG: GEbruiken we CreateTransactionDTO of CreateTransactionRequest (zie code Georgiana)?????
+
+Importeer deze klasse in de `TransactionController` en pas de code voor de `createTransaction` aan.
+
+```typescript
+  @Post('')
+  @HttpCode(HttpStatus.CREATED)
+  createTransaction(@Body() createTransactionDto: CreateTransactionRequest): string {
+    return `This action adds a new transaction for ${createTransactionDto.user}`;
+  }
+```
+
+De validatie komt later aan bod.
 Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 
 ```json
 {
-  "placeId": 1,
-  "user": "Karine",
-  "date": "2023-09-17T15:12:39.856Z",
+  "place": "HoGent",
+  "user": "Thomas Aelbrecht",
+  "date": "2025-09-17T15:12:39.856Z",
   "amount": 100
 }
 ```
 
-Je zou de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/api/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart. Dit wordt opgelost in een volgend hoofdstuk.
+### Query Parameters: `GET /transactions?page=2&limit=10`
 
-### Oefening 3 - Je eigen project
+Lees [Query parameters](https://docs.nestjs.com/controllers#query-parameters)
 
-Maak een create route aan in je project en test uit.
+In de meeste apps wordt gebruik gemaakt van grote (1000den transacties) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren,  de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. BIj paginatie haal je slechts een deel (een pagina) van de dataset op. Met `GET /transactions?offset=2&limit=10` haal je pagina 2 op met 10 transacties op de pagina.
 
-## Routes met een parameter
-
-Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/transactions/15` of `/api/transactions/43` om een transactie met een bepaald id op te vragen.
-
-In @koa/router doen we dit door `:naam_van_de_parameter` in de URL op te nemen. De variabele is dan beschikbaar in `ctx.params.naam_van_de_parameter`. Merk op dat een URL nooit een ":" kan bevatten, behalve die in `http://`. Dus er kan nooit dubbelzinnigheid optreden of het ":" deel uitmaakt van de URL of een parameter aankondigt.
-
-We willen dus een transactie kunnen opvragen op basis van zijn id, via bv. `/api/transactions/15`.
-
-Voeg een nieuwe route toe:
-
-```ts
-// src/index.ts
-router.get('/api/transactions/:id', async (ctx) => {
-  // 👇 1
-  ctx.body = transactionService.getById(Number(ctx.params.id)); // 👈 2
-});
+```typescript
+  @Get()
+  getAllTransactions(
+    @Query('offset') offset = 1,
+    @Query('limit') limit = 10) {
+    return `This action returns all transactions. Limit ${limit}, offset: ${offset}`;
+  }
 ```
 
-1. We doen dit door opnieuw een GET request te definiëren, maar nu met een `:id` parameter erbij.
-2. Wat er in de URL stond op die plaats kan je terugvinden in `ctx.params.id`. Dat id gebruiken we vervolgens om onze `getById` aan te spreken. We moeten de parameter omzetten naar een getal aangezien de URL een string is, zo is ook de parameter een string. In het hoofdstuk rond validatie volgt hiervoor een betere oplossing!
-   - Negeer opnieuw een eventuele foutmelding van TypeScript.
+Query parameters worden vaak ook gebruikt voor search. Bvb `GET /transactions?search=xxx`
 
-In de servicelaag implementeer je de `getById` functie:
+### Oefening: Implementeer PUT en DELETE
 
-```ts
-// src/service/transaction.ts
-export const getById = (id: number) => {
-  return TRANSACTIONS.find((t) => t.id === id);
-};
+<!-- markdownlint-disable header-start-left -->
+
+- Oplossing +
+
+```typescript
+  //de controller
+  updateTransaction(@Param('id') id: string, @Body() updateTransactionDto:UpdateTransactionRequest) {
+    return `This action updates the transaction with #${id} for user ${updateTransactionDto.user}`;
+  }
+
+  @Delete(':id')
+  deleteTransaction(@Param('id') id: string) {
+    return `This action removes the transaction with id #${id}`;
+  }
+
+  //En de implementatie van UpdateTransactionREquest in transaction.dto.ts
+  export class UpdateTransactionRequest extends CreateTransactionRequest {}
+```
+<!-- markdownlint-enable header-start-left -->
+
+### Oefening: Maak een dto aan voor de paginatie
+
+- Oplossing +
+
+```typescript
+  // src/common/common.dto.ts
+  export class PaginationQuery {
+    page?: number = 1;
+    limit?: number = 10;
+  }
 ```
 
-Test opnieuw via Postman. Doe een GET request naar <http://localhost:9000/api/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 204 response (No Content) of dus een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+## Providers
 
-### Oefening 4 - Je eigen project
+Een provider is elk stuk logica dat NestJS kan instantiëren en injecteren, zoals services, repositories, helpers,...
+In NestJS zijn providers klassen die via de `@Injectable()` decorator beschikbaar worden gemaakt voor `dependency injection`.
 
-- Implementeer in je project een "get by id" endpoint en de bijhorende `getById` in de servicelaag en test uit.
-- Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
-  - `PUT /api/transactions/:id`:
-    - een transactie aanpassen
-    - geeft de aangepaste transactie terug
-  - `DELETE /api/transactions/:id`:
-    - een transactie verwijderen
-    - geeft niets terug: `ctx.body` moet je dus niet invullen
-    - vul de status in: `ctx.status = 204` - anders krijg je een 404 (Not Found) als antwoord
+Lees [Providers](https://docs.nestjs.com/providers)
+
+Dependency Injection (DI) is een design pattern waarbij de afhankelijkheden van een klasse van buitenaf worden binnengebracht, hier door NestJS, in plaats van dat de klasse ze zelf aanmaakt. Dit maakt testen makkelijker, bevordert loskoppeling en herbruikbare en configureerbare code.
+
+## Services
+
+Controllers moeten HTTP-verzoeken afhandelen en complexere taken delegeren aan providers. Een service in NestJS is bedoeld om logica en functionaliteit van je applicatie op een centrale, herbruikbare en testbare manier te organiseren. Services bevatten de domein logica (zoals businesslogica, data ophalen, berekeningen,...), zijn onze domeinlaag. Ze zijn herbruikbaar in andere onderdelen van de app zoals controllers of andere services. En ze kunnen via dependency injection gebruikt worden, zijn dus providers.
+
+### Generatie service
+
+NestJS biedt een CLI commando om automatisch een service te genereren:
+
+```bash
+nest generate service transaction --no-spec
+```
+
+Dit commando maakt het volgende bestand aan:
+
+- `src/transaction/transaction.service.ts`: de service zelf
+
+--no-spec zorgt ervoor dat er geen testbestand wordt aangemaakt
+De service wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `providers` array). Zonder deze toevoeging zou de service niet beschikbaar zijn in de applicatie en niet injecteerbaar zijn.
+
+De Service
+
+```typescript
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class TransactionService {}
+```
+
+De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat TransactionService een klasse is die beheerd kan worden door de Nest IoC-container (zie verder).
+
+### Dependency injection
+
+We passen de TransactionController aan om van de Service gebruik te maken.
+
+```typescript
+import {
+  Body,  Controller,  Delete,  Get,  Param,  Put,   Post,  Query, HttpStatus, HttpCode} from '@nestjs/common';
+import { TransactionService } from './transaction.service';
+import { CreateTransactionRequest, UpdateTransactionRequest } from './transaction.dto';
+
+@Controller('transactions')
+export class TransactionController {
+  constructor(private readonly transactionService: TransactionService) {}
+```
+
+We injecteren de service in de constructor
+
+- `private`:  TypeScript maakt daar automatisch een attribuut van en vult deze in. Het attribuut is bovendien enkel toegankelijk in de klasse.
+- `readonly`: is een best practice. Dit verzekert dat we de service reference niet aanpassen
+-`TransactionService`: het type is belangrijk!
+
+Om een instantie van een klasse aan te maken dienen we normaalgezien deze code te schrijven
+
+```typescript
+const transactionController = new TransactionController(new TransactionService())
+```
+
+Maar NestJS fungeert als een DI Container of IoC-containers (Inversion of control). Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de TransactionService aanmaken en doorgeven aan de TRansactionController. Of i.g.v. een Singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
+
+Een DI Container bevat 2 sets van informatie
+
+- een lijst met alle Provider klassen uit onze app en hun dependencies
+- een lijst van alle instanties die deze container reeds gecreëerd heeft
+
+Providers hebben meestal een levensduur (of scope) die overeenkomt met de levenscyclus van de applicatie. Dat betekent dat ze worden geïnstantieerd wanneer de applicatie opstart, en weer worden vernietigd bij het afsluiten. Het is echter ook mogelijk om een provider request-scoped te maken. In dat geval wordt de provider aangemaakt en beheerd per individuele aanvraag, in plaats van één keer voor de hele applicatie. Zo kun je meer controle krijgen over afhankelijkheden die specifieke context of data per verzoek nodig hebben.
+
+In onderstaand voorbeeld gaan we ervan uit dat de Service een afhankelijkheid heeft met een Repository (wat we later zullen toevoegen aan de Rest API)
+![DI Container](./images/container.png)
+
+Bij dependency injection noem je het object dat de afhankelijkheid ontvangt de client, en het object dat wordt doorgegeven (de geïnjecteerde afhankelijkheid) de service. De code die deze service aan de client levert, heet de injector. In plaats van dat jij in de client expliciet aangeeft welke service je wil gebruiken, bepaalt de injector dat voor jou. Injection verwijst dus naar het proces waarbij een afhankelijkheid (de service) wordt doorgegeven aan de client die ze nodig heeft.
+
+Meer info, lees  [Dependency injection](https://docs.nestjs.com/providers#dependency-injection)
+
+### Implementatie service
+
+Voor de implementatie van de service maken we gebruik van de in-memory data TRANSACTIONS. Dit is onze data source. In het volgende hoofdstuk vervangen we dit door een database.
+
+We maken eerst een Entity `Transaction` aan zodat de data getypeerd kan worden. Entiteiten definiëren het domein. In de map `src/transactions/entities` maak je de file `transaction.entity.ts` aan met onderstaande inhoud
+
+```typescript
+//src/transactions/entities/transaction.entity.ts
+export class Transaction {
+  id:number
+  amount: number;
+  date: Date;
+  user: string;
+  place: string;
+}
+```
+
+Pas `mock-data.ts` aan
+
+```typescript
+import { Transaction } from './entities/transaction.entity';
+export const TRANSACTIONS : Transaction []= [...]
+}
+```
+
+TODO VRAAG : HIER EEN INTERFACE TRANSACTION VOORZIEN OF TRANSACTIONDTO?
+TODO : RETURNTYPES TOEVOEGEN
+Binnen de service voorzien we alle CRUD acties die we later vanuit de Controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
+
+```typescript
+//src/transaction/transaction.service.ts
+import { Injectable } from '@nestjs/common';
+import { TRANSACTIONS } from '../data/mock-data.ts';
+import { CreateTransactionRequest, UpdateTransactionRequest } from './transaction.dto';
+
+@Injectable()
+export class TransactionService {
+
+  getAll() {
+    return TRANSACTIONS;
+  }
+
+  getById(id: number) {
+    return TRANSACTIONS.find(item => item.id === id);
+  }
+
+  create({amount, date, user, place}: CreateTransactionRequest) {
+    const newTransaction = {id:Math.max(...TRANSACTIONS.map(item => item.id))+1, amount, date, user, place};
+    TRANSACTIONS.push(newTransaction);
+    return newTransaction;
+  }
+
+  updateById(id: number, {amount, date, user, place}: UpdateTransactionRequest) {
+   throw new Error('not yet implemented');
+  }
+
+  deleteById(id: number) {
+   throw new Error('not yet implemented');
+  }
+}
+```
+
+`create`: We creëren een nieuwe transactie, met het id erbij en voegen ze toe aan onze array. We genereren een nieuw id voor onze transactie door het hoogste id te zoeken en er 1 bij op te tellen.
+
+### Implementatie controller
+
+In de controller kunnen we nu gebruik maken van de TransactionService. De code wordt
+
+```typescript
+//src/transaction/transaction.controller.ts
+import {
+  Body,  Controller,  Delete,  Get,  Param,  Put,   Post,  Query, HttpStatus, HttpCode} from '@nestjs/common';
+import { TransactionService } from './transaction.service';
+import { CreateTransactionRequest, UpdateTransactionRequest } from './transaction.dto';
+
+@Controller('transactions')
+export class TransactionController {
+  constructor(private readonly transactionService: TransactionService) {}
+
+  @Get()
+  getAllTransactions() {
+    return { items:this.transactionService.getAll()}
+  }
+
+  @Get(':id')
+  getTransactionById(@Param('id') id: string) {
+    return this.transactionService.getById(+id);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  createTransaction(@Body() createTransactionDto:CreateTransactionRequest) {
+    return this.transactionService.create(createTransactionDto);
+  }
+
+  ...
+}
+```
+
+Vervang de hardgecodeerde data door de aanroep van de methodes in de transactionService, that's it!
+Merk op:
+
+- `getAllTransactions`: Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een items property die de array bevat.
+Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
+Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
+- `getTransactionById`: De service verwacht een number, vandaar `+id`
+- `create`: Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
+
+Test alle endpoints uit in POSTMAN.
+
+- Doe een GET request naar <http://localhost:9000/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+- Bij de POST request zou je de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart.
+
+### Oefening
+
+ Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
+
+- `PUT /api/transactions/:id`:
+  - een transactie aanpassen
+  - geeft de aangepaste transactie terug
+- `DELETE /api/transactions/:id`:
+  - een transactie verwijderen
+  - geeft niets terug
+  - De status 204 : NO CONTENT wordt teruggegeven
 - Extra (voor de ervaren JavaScript'ers): maak alle servicefuncties async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
 
-## Time to refactor
+- Oplossing +
 
-### De REST-laag
+```typescript
+  //de service
+ updateById(id: number, { amount, date, user, place }: UpdateTransactionRequest) {
+    let existingTransaction = this.getById(id);
+    if (existingTransaction) {
+      existingTransaction = {id:id, amount, date, user, place}
+    }
+    return existingTransaction;
+  }
 
-Alle endpoints in één bestand plaatsen voldoet niet aan de best practices. We voorzien een aparte REST-laag voor het ontvangen van de requests. Hiervoor voorzien we een map `rest`. Maak het bestand `transaction.ts` aan. Dit bevat de endpoints voor onze transacties. We voorzien een functie voor elk van de endpoints en definiëren vervolgens de routes in één functie die we exporteren. Deze laatste functie krijgt een router mee als parameter. In deze functie hangen we onze transactions-router aan de meegegeven router. Hier maken we gebruik van geneste routers. Dit is een manier om onze routes te groeperen. We kunnen dan bv. een prefix meegeven aan de router. Deze prefix wordt dan voor elke route geplaatst. We kunnen hieraan ook een of meerdere middlewares meegeven die dan voor elke route uitgevoerd worden (bv. authenticatie - maar zie later).
+  deleteById(id: number) {
+    const index = TRANSACTIONS.findIndex(item => item.id === id);
+    if (index >= 0) {
+      TRANSACTIONS.splice(index, 1);
+    }
+  }
 
-We typeren `ctx` als `Context` en `parent` als `Router`, beide types uit Koa. Zo krijgen we betere intellisense en foutmeldingen. Later zullen we de andere types ook verfijnen zodat die foutmeldingen ook verdwijnen.
+ //De controller
+  @Put(':id')
+  updateTransaction(@Param('id') id: string, @Body() updateTransactionDto:UpdateTransactionRequest) {
+    return this.transactionService.updateById(+id, updateTransactionDto);
+  }
 
-```ts
-// src/rest/transaction.ts
-import Router from '@koa/router';
-import * as transactionService from '../service/transaction';
-import type { Context } from 'koa';
-
-const getAllTransactions = async (ctx: Context) => {
-  ctx.body = {
-    items: transactionService.getAll(),
-  };
-};
-
-const createTransaction = async (ctx: Context) => {
-  const newTransaction = transactionService.create({
-    ...ctx.request.body,
-    placeId: Number(ctx.request.body.placeId),
-    date: new Date(ctx.request.body.date),
-  });
-  ctx.body = newTransaction;
-};
-
-const getTransactionById = async (ctx: Context) => {
-  ctx.body = transactionService.getById(Number(ctx.params.id));
-};
-
-const updateTransaction = async (ctx: Context) => {
-  ctx.body = transactionService.updateById(Number(ctx.params.id), {
-    ...ctx.request.body,
-    placeId: Number(ctx.request.body.placeId),
-    date: new Date(ctx.request.body.date),
-  });
-};
-
-const deleteTransaction = async (ctx: Context) => {
-  transactionService.deleteById(Number(ctx.params.id));
-  ctx.status = 204;
-};
-
-export default (parent: Router) => {
-  const router = new Router({
-    prefix: '/transactions',
-  });
-
-  router.get('/', getAllTransactions);
-  router.post('/', createTransaction);
-  router.get('/:id', getTransactionById);
-  router.put('/:id', updateTransaction);
-  router.delete('/:id', deleteTransaction);
-
-  parent.use(router.routes()).use(router.allowedMethods());
-};
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  deleteTransaction(@Param('id') id: string) {
+     this.transactionService.deleteById(+id);
+  }
 ```
 
-Voeg een bestand `index.ts` toe in de `rest` map. Hierin definiëren we alle API routes. We exporteren opnieuw maar één functie om alle routes in een gegeven Koa applicatie te installeren (= idem als hiervoor). We gebruiken hier het `Application` type van Koa omdat we de router willen installeren op de Koa applicatie en niet op een subrouter.
+### Oefening - Je eigen project
 
-Merk de `import type` op. Dit is een manier om enkel de types te importeren en niet de code zelf. Dit is handig als je enkel de types nodig hebt en niet de code.
+- Maak alle CRUD endpoints aan voor 1 entiteit uit je project
+- Voorzie ook mock data.
 
-```ts
-// src/rest/index.ts
-import type Application from 'koa';
+## Exception handling
 
-import Router from '@koa/router';
-import installTransactionRouter from './transaction';
+Als de gebruiker een transactie probeert op te vragen waarvan de id niet bestaat, dan wensen we een 404 NOT FOUND terug te geven.
 
-export default (app: Application) => {
-  const router = new Router({
-    prefix: '/api',
-  });
+`NotFoundException` is een ingebouwde HTTP-exception in NestJS die je gebruikt om aan te geven dat een bepaald item niet gevonden is. Wanneer je deze exception gooit, stuurt NestJS automatisch een HTTP-response terug met: statuscode 404 en
+een duidelijke foutboodschap
 
-  installTransactionRouter(router);
+```typescript
+//src/transaction/transaction.service.ts
+  import { Injectable, NotFoundException } from '@nestjs/common';// 👈1
 
-  app.use(router.routes()).use(router.allowedMethods());
-};
+  getById(id: number) {
+    const transaction = TRANSACTIONS.find(item => item.id === id);// 👈2
+    if (!transaction) {
+      throw new NotFoundException(`Transaction #${id} not found`);
+    }// 👈3
+    return transaction;// 👈3
+  }
 ```
 
-Verwijder nu alle code omtrent routing uit `src/index.ts` en installeer de routes via de geëxporteerde functie uit het `rest/index.ts` bestand.
+1. Importeer `NotFoundException` uit de `@nestjs/common`namespace.
+2. Definieer een constante die de de opgevraagde transactie bevat.
+3. Als geen transactie gevonden, throw dan `NotFoundException`, anders retourneer de gevonden transactie.
+Probeer uit in POSTMAN.
 
-```ts
-// src/index.ts
-// andere imports...
-// Verwijder de @koa/router en service import 👈 1
-import installRest from './rest'; // 👈 2
+Nest heeft helpermethodes voor alle mogelijke status codes, zoals InternalServerError (500), BadRequestException (404),...
 
-//...
+Probeer uit in POSTMAN.
 
-const app = new Koa();
+## Validatie
 
-// ...
+### Invoervalidatie
 
-app.use(bodyParser());
+Een belangrijk principe bij het ontwikkelen van een API is het valideren van de invoer. Dit is belangrijk om de integriteit van de data te garanderen. Het is ook belangrijk om de gebruiker van de API te beschermen tegen zichzelf. Als de gebruiker een fout maakt, dan moet de API dit opvangen en een duidelijke foutmelding terugsturen.
 
-// verwijder de routing code 👈 1
+Je mag geen aannames maken over de invoer die je ontvangt. **Je moet er vanuit gaan dat de invoer altijd fout kan zijn.** Enkel validatie in de front-end is onvoldoende, dit is eenvoudig te omzeilen. Ooit zal iemand een verzoek sturen dat iets zal breken.
 
-installRest(app); // 👈 2
+Welke soorten invoer kan een HTTP request bevatten?
 
-app.listen(9000, () => {
-  getLogger().info('🚀 Server listening on http://localhost:9000');
-});
+- Antwoord +
+
+  - **URL parameters:** je kan bijvoorbeeld het id van een transactie meegeven in de URL, bv. `/api/transactions/1`.
+  - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/places?name=loon`.
+  - **Body:** als je een nieuwe transactie maakt, dan geef je de nodige gegevens mee in de body van het request.
+  - **Headers:** in het volgende hoofdstuk gaan we zien hoe we een token meegeven in de headers van een request, zo kunnen we de gebruiker authenticeren.
+
+  In ons voorbeeldproject voegen we invoervalidatie toe voor de URL parameters, query parameters en de body van het request.
+
+Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoorbeeld in de `POST /api/transactions` moet het bedrag van de transactie een geldig getal zijn (geen string, object...) én is het verplicht op te geven. Indien aan de validatie niet voldaan is, retourneer je een status code 400 (= bad request) en geef je details over de fout. Zonder bijkomende informatie is de HTTP 400 nutteloos. Bij validatiefouten stop je onmiddellijk de verdere verwerking van het request en retourneer je een passende foutboodschap voor de client. Stuur het response zo snel mogelijk terug naar de client (= **fail-fast principe**). De oorzaak van de validatiefout moet goed worden uitgelegd en begrepen door de client. Technische aspecten mag je om veiligheidsredenen niet retourneren.
+
+?> In geen geval is het goed om een HTTP 500 terug te geven bij fouten die de client kan vermijden. De HTTP 500 dient enkel voor serverfouten die de client niet kan vermijden. Een HTTP 400 is een fout veroorzaakt door de client en moet dus ook door de client worden opgelost.
+
+### Pipes
+
+Lees [Pipes](https://docs.nestjs.com/pipes)
+
+In NestJS zijn pipes een soort middleware die gebruikt worden om:
+
+- Data te transformeren – bv. een string "123" omzetten naar een number.
+- Data te valideren – bv. checken of een parameter een geldig e-mailadres is.
+
+👉 Concreet: pipes werken voordat je data in je controller terechtkomt. Ze pakken de inkomende request-gegevens, passen transformaties en/of validaties toe, en geven het resultaat door aan je endpoint. Als de data ongeldig is, kan een pipe meteen een exception gooien.
+
+NestJS voorziet bvb in volgende built-in pipes:
+
+- ParseIntPipe → zet een string query param "5" om naar een getal 5.
+- ParseBoolPipe → zet "true" om naar true.
+- ValidationPipe → valideert data met behulp van class-validator.
+
+Gebruik in een controller:
+
+```typescript
+//src/transaction/transaction.controller.ts
+  import {  ..., ParseIntPipe} from '@nestjs/common';
+  @Get(':id')
+  getTransactionById(@Param('id', ParseIntPipe) id: number) {
+    console.log(typeof id);
+    return this.transactionService.getById(id);
+  }
 ```
 
-1. Verwijder alle code omtrent routing, ook de imports. Doordat we een `export default` gebruiken, kunnen we de functie importeren zoals we willen en zonder accolades.
-2. Installeer dan de app router via de zonet gedefinieerde functie.
+Het type van de id parameter wordt nu een number. We hoeven de id niet langer naar een number om te zetten bij aanroep van de methode getById uit de transactionService.
 
-Test uit en controleer of alles nog werkt.
+Pas nu ook de overige methodes aan.
 
-### Health checks
+### ValidationPipe
 
-Een statuscheck is een manier waarop een service kan rapporteren of deze goed werkt of niet. Web services maken dit meestal zichtbaar via een `/health` HTTP endpoint. Vervolgens ondervragen orkestratiecomponenten, zoals load balancers of service-ontdekkingssystemen, dat endpoint om de gezondheid van een reeks services te monitoren en een aantal belangrijke beslissingen te nemen.
+In NestJS gebruik je DTO’s vooral om:
 
-We voorzien 2 endpoints:
+- Te bepalen welke velden een request mag bevatten.
+- Validatie toe te passen op binnenkomende data.
+- De structuur van data duidelijk en voorspelbaar te maken.
 
-- `/api/health/ping` : retourneert pong als de server actief is
-- `/api/health/version` : retourneert info over de versie van de web service
+Lees [Validation](https://docs.nestjs.com/techniques/validation)
 
-Creëer een `health.ts` bestand in de `service` map dat 2 functies bevat:
+Validatie voeg je toe door gebruik te maken van `class validators`. Je kunt decorators van class-validator gebruiken om regels op te leggen.
 
-```ts
-// src/service/health.ts
-import config from 'config';
-import packageJson from '../../package.json';
-
-// 👇 1
-export const ping = () => ({ pong: true });
-
-// 👇 2
-export const getVersion = () => ({
-  env: config.get<string>('env'),
-  version: packageJson.version,
-  name: packageJson.name,
-});
+```bash
+pnpm i class-validator
 ```
 
-1. `ping` : retourneert een object met een property `pong` gelijk aan `true`
-2. `getVersion` : retourneert info over de versie van de web service
-   - We halen de `env` uit de configuratie en de versie en naam van de web service uit het `package.json` bestand.
+Pas de CreateTransactionRequest class aan
 
-In de `rest` map maak je een nieuw bestand `health.ts` aan. Dit bevat de 2 endpoints:
+```typescript
+//src/transactions/transaction.dto.ts
+import { IsString, IsNumber, Min} from 'class-validator';
 
-```ts
-// src/rest/health.ts
-import Router from '@koa/router';
-import * as healthService from '../service/health';
-import type { Context } from 'koa';
-
-const ping = async (ctx: Context) => {
-  ctx.status = 200;
-  ctx.body = healthService.ping();
-};
-
-const getVersion = async (ctx: Context) => {
-  ctx.status = 200;
-  ctx.body = healthService.getVersion();
-};
-
-export default (parent: Router) => {
-  const router = new Router({ prefix: '/health' });
-
-  router.get('/ping', ping);
-  router.get('/version', getVersion);
-
-  parent.use(router.routes()).use(router.allowedMethods());
-};
+export class CreateTransactionRequest {
+    @IsNumber()
+    @Min(1)
+    amount: number;
+    date: Date;
+    @IsString()
+    user: string;
+    @IsString()
+    place: string;
+}
 ```
 
-Pas `src/rest/index.ts` aan zodat de health routes ook geïnstalleerd worden.
+De `ValidationPipe` zorgt ervoor dat alle DTO’s automatisch worden gevalideerd a.d.h.v. de decorators uit `class-validator`. Als een request niet voldoet, geeft NestJS een duidelijke foutmelding terug.
+De ValidationPipe dien je te activeren in `main.ts` zodat deze wordt toegepast op alle inkomende requests.
 
-### Logging
+```typescript
+//src/main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';// 👈
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe());// 👈
+  await app.listen(process.env.PORT ?? 9000);
+}
+bootstrap();
+```
+
+`Whitelisting` is een functie van de ValidationPipe in NestJS die ervoor zorgt dat alleen de velden die je expliciet hebt gedefinieerd in je DTO worden geaccepteerd. Alle andere (onverwachte) velden worden automatisch verwijderd. De request gaat gewoon door, maar zonder de extra velden. Als je ook nog `forbidNonWhitelisted: true` toevoegt dan wordt er een fout gegooid als er ongewenste velden zijn. De request wordt geweigerd met een duidelijke error.
+
+Probeer een POST request uit en verwijder user uit de JSON en geef een datum op die in de toekomst ligt, voeg een extra veld toe. We krijgen een 400 BAD REQUEST terug en de reden van de fout.
+
+### Auto transform payloads naar DTO's
+
+In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte class-instanties, zodat je bijvoorbeeld methodes kunt gebruiken, of zodat validatie en andere decorators goed werken. Class-transformers zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
+
+Pas de `create` methode aan en doe een POST request. Bekijk de console.
+
+```typescript
+  //src/transaction/transaction.controller.ts
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  createTransaction(@Body() createTransactionDto:CreateTransactionRequest) {
+    console.log( createTransactionDto instanceof CreateTransactionRequest);// 👈
+    return this.transactionService.create(createTransactionDto);
+  }
+```
+
+Om ervoor te zorgen dat dit een instantie is van de DTO klasse:
+
+```bash
+pnpm i class-transformer
+```
+
+En voeg in main.ts onderstaande optie toe.
+
+```typescript
+//serc/main.ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted:true,
+    transform: true}));// 👈
+  await app.listen(process.env.PORT ?? 9000);
+}
+bootstrap();
+```
+
+Voer een POST request uit en bekijk het type.
+
+Als we de decorator `IsDate()` toevoegen aan de date-member dan krijgen we een 400 BAD REQUEST.
+
+```typescript
+//src/transaction/transaction.dto.ts
+import { IsString, IsNumber, Min, isDate} from 'class-validator';// 👈
+
+export class CreateTransactionRequest {
+    @IsNumber()
+    @Min(1)
+    amount: number;
+    @IsDate()// 👈
+    date: Date;
+    @IsString()
+    user: string;
+    @IsString()
+    place: string;
+}
+```
+
+De `ValidationPipe` (met class-validator) behandelt inkomende JSON-data als "plain objects" met strings. `@IsDate()` verwacht een echte Date-instantie, maar uit je JSON komt date als string. Vandaar "date must be a Date instance". Je moet dus NestJS vertellen om de date-string in het request om te zetten naar een Date-object. Dit doe je met: `@Type(() => Date)` van class-transformer. Via de `@MaxDate()` decorator leggen we op dat de datum kleiner of gelijk moet zijn aan de datum van vandaag.
+
+```typescript
+//src/transactions/transaction.dto.ts
+import { IsString, IsNumber, IsDate, MaxDate, Min} from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class CreateTransactionRequest {
+    @IsNumber()
+    @Min(1)
+    amount: number;
+    @Type(() => Date)// 👈
+    @IsDate()
+    @MaxDate(() => new Date())// 👈
+    date: Date;
+    @IsString()
+    user: string;
+    @IsString()
+    place: string;
+}
+```
+
+Class-transformers kunnen ook primitieve types omzetten. Alles wat via @Param() of @Query()... binnenkomt is van type string. Als we in de `getTransactionById`methode het type van de id veranderen in Number zal ValidationPipe dit proberen om te zetten. We hoeven het +-teken niet langer te gebruiken.
+
+```typescript
+//src/transaction/transaction.controller.ts
+  @Get(':id')
+  getTransactionById(@Param('id') id: number) {
+    console.log(typeof id);
+    return this.transactionService.getById(id);
+  }
+```
+
+Doe dit ook voor PUT en DELETE.
+Merk op dat deze feature invloed heeft op de performantie van je applicatie.
+
+### Samenvatting
+
+![Validatie](./images/validationpipe.png)
+
+### Oefening: Annoteer de dto voor de paginatie
+
+Page en offset zijn optioneel.
+
+- Oplossing +
+
+```typescript
+  // pagination.dto.ts
+  import { Type } from 'class-transformer';
+  import { IsInt, Min, IsOptional } from 'class-validator';
+
+  export class PaginationQuery {
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    page?: number = 1;
+
+    @IsOptional()
+    @Type(() => Number)
+    @IsInt()
+    @Min(1)
+    limit?: number = 10;
+  }
+```
+
+## Modules
+
+In NestJS is een module een manier om je applicatie op te delen in overzichtelijke, goed georganiseerde stukken. Een module is eigenlijk een TypeScript-klasse met de @Module()-decorator. Binnen zo’n module geef je aan welke controllers, services en andere providers erbij horen.
+
+Je kunt het zien als een container die alles groepeert wat bij een bepaald domein of functie hoort. Bijvoorbeeld: je maakt een TransactionModule om alles rond transactionssbeheer (controllers, services, repositories) bij elkaar te houden.
+
+Modules helpen je applicatie modulair en schaalbaar te maken. Ze zorgen ervoor dat je code gestructureerd is, makkelijk te onderhouden en herbruikbaar. Elke NestJS-applicatie heeft minstens één root module (meestal AppModule), maar je kunt er zoveel maken als je wil om je app logisch op te splitsen.
+
+Lees [Modules] (<https://docs.nestjs.com/modules>)
+
+NestJS biedt een CLI commando om automatisch een module te genereren:
+
+```bash
+nest g module transaction
+```
+
+De module klasse wordt toegevoegd aan de `transaction` folder en wordt geïmporteerd in de AppModule.
+
+```typescript
+//src/transaction/transaction.module.ts
+import { Module } from '@nestjs/common';
+
+@Module({})
+export class TransactionModule {}
+```
+
+De @Module()-decorator maakt van een TypeScript-klasse een NestJS-module. Hierin geef je aan wat bij deze module hoort. Het is als een container die controllers, services en andere dependencies groepeert.
+
+- `imports`: Hier geef je andere modules op die je nodig hebt in deze module.
+- `controllers`: Dit is een lijst van controllers die bij deze module horen.
+- `providers`: Dit zijn services of andere providers die NestJS beschikbaar maakt in de dependency injection container.
+- `exports`: Hiermee deel je providers met andere modules.
+
+Pas de code aan:
+
+```typescript
+//src/transaction/transaction.module.ts
+import { Module } from '@nestjs/common';
+import { TransactionController } from './transaction.controller';// 👈
+import { TransactionService } from './transaction.service';// 👈
+
+@Module({// 👈
+  imports: [],// 👈
+  controllers: [TransactionController],// 👈
+  providers: [TransactionService],// 👈
+})// 👈
+export class TransactionModule {}
+```
+
+Verwijder dan de TransactionController en TransactionService uit AppModule.
+
+Het is een goed idee om steeds eerst de module aan te maken en dan de controllers en services. Dan wordt alles in de correcte module geplaatst.
+
+TODO : vanaf hier nog bekijken! Plaatsen we dit nog in dit hoofdstuk?
+
+## Logging
 
 Lees [Best practices for logging](https://betterstack.com/community/guides/logging/nodejs-logging-best-practices/).
 
-Als laatste refactoring gaan we onze logger een beetje uitbreiden. Pas het bestand `logging.ts` aan in een nieuwe map `core`. Voeg hierin onderstaande code toe. Bekijk de code en probeer zelf te achterhalen wat er gebeurt (een uitleg vind je verborgen onder de code).
+Manueel links en rechts wat console.logs toevoegen om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om eenvoudig meer of minder te loggen al naargelang we in productie of development draaien.
+
+Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. En nog veel meer..., een goede logger is best een uitgebreid stuk software.
+
+NestJS bevat een ingebouwde tekstlogger via de `Logger`klasse uit `@nestjs/common`.
+Neem [Logging](https://docs.nestjs.com/techniques/logger) door.
+
+We maken een eigen `CustomLogger` aan. In de `src` folder maak je een `core` folder aan. Voeg een bestand `customLogger.ts` toe.
 
 ```ts
-// src/core/logging.ts
-import config from 'config';
-import winston from 'winston';
-const { combine, timestamp, colorize, printf } = winston.format;
+// src/core/customLogger.ts
+import type { LoggerService } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 
-const NODE_ENV = config.get<string>('env');
-const LOG_LEVEL = config.get<string>('log.level');
-const LOG_DISABLED = config.get<boolean>('log.disabled');
+export class CustomLogger extends ConsoleLogger implements LoggerService {
+  log(message: string) {
+    super.log('📢 ' + message);
+  }
 
-// 👇 1
-const loggerFormat = () => {
-  // 👇 2
-  const formatMessage = ({
-    level,
-    message,
-    timestamp,
-    ...rest
-  }: winston.Logform.TransformableInfo) => {
-    return `${timestamp} | ${level} | ${message} | ${JSON.stringify(rest)}`;
-  };
+  error(message: string, trace: string) {
+    super.error('❌  ' + message, trace);
+  }
 
-  // 👇 3
-  const formatError = ({
-    error: { stack },
-    ...rest
-  }: winston.Logform.TransformableInfo) =>
-    `${formatMessage(rest)}\n\n${stack}\n`;
+  warn(message: string) {
+    super.warn('⚠️  ' + message);
+  }
 
-  // 👇 4
-  const format = (info: winston.Logform.TransformableInfo) => {
-    // 👇 5
-    if (info?.['error'] instanceof Error) {
-      return formatError(info);
-    }
+  debug(message: string) {
+    super.debug('🐞 ' + message);
+  }
 
-    return formatMessage(info); // 👈 6
-  };
+  verbose(message: string) {
+    super.verbose('📖 ' + message);
+  }
+}
 
-  return combine(colorize(), timestamp(), printf(format));
-};
-
-// 👇 7
-const rootLogger: winston.Logger = winston.createLogger({
-  level: LOG_LEVEL,
-  format: loggerFormat(),
-  defaultMeta: { env: NODE_ENV },
-  transports:
-    NODE_ENV === 'testing'
-      ? [
-          new winston.transports.File({
-            filename: 'test.log',
-            silent: LOG_DISABLED,
-          }),
-        ]
-      : [new winston.transports.Console({ silent: LOG_DISABLED })],
-});
-
-export const getLogger = () => {
-  return rootLogger;
-};
 ```
 
-<br/>
+Deze code definieert een eigen loggerklasse, genaamd `CustomLogger`.  `CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Dit zorgt ervoor dat `CustomLogger` werkt als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit. In deze klasse worden de logmethodes (log, error, warn, debug, verbose) overschreven om elk logbericht te voorzien van een emoji, zodat je in de console direct het type bericht herkent:
 
-- Uitleg +
+- log: 📢 voor algemene logs
+- error: ❌ voor fouten
+- warn: ⚠️ voor waarschuwingen
+- debug: 🐞 voor debugberichten
+- verbose: 📖 voor gedetailleerde logs
 
-  1. We definiëren ons eigen formaat voor logberichten in de functie `loggerFormat`.
-  2. We definiëren binnen deze functie een functie voor het printen van logberichten die geen foutmelding bevatten.
-  3. En een functie voor het printen van logberichten die wel een foutmelding bevatten.
-  4. De volgende functie bepaalt welke van de vorige 2 functies gebruikt wordt, afhankelijk van de aanwezigheid van een foutmelding in het logbericht.
-     - We gebruiken in alle bovenstaande functies het type `winston.Logform.TransformableInfo` van `winston`. Dit is een interface die ons vertelt wat we allemaal standaard meekrijgen als informatie bij een logbericht.
-  5. We checken binnen deze functie met optionele chaining of er een `error` property is in het logbericht. Als dit het geval is, gebruiken we de functie voor het printen van logberichten met foutmelding.
-  6. Anders gebruiken we de functie voor het printen van logberichten zonder foutmelding.
-  7. We breiden onze root logger ook wat uit met:
-     - Ons eigen formaat.
-     - De default meta informatie, die wordt toegevoegd aan elk logbericht. We voegen hier de `env` aan toe.
-     - We voorzien 2 transports:
-       - Een file transport voor de testomgeving. We schrijven de logs weg naar een bestand `test.log` omdat onze logs anders tussen de uitvoer van de testen komt. Later zal je zien waarom dit handig is.
-       - Een console transport voor alle andere omgevingen.
-       - We zetten de logging in beide gevallen uit als dit geconfigureerd is.
+Elke methode roept de overeenkomstige methode van de `ConsoleLogger` aan, maar voegt eerst de emoji toe aan het bericht. Zo krijg je visueel onderscheid tussen verschillende soorten logberichten in je console.
+
+Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opstarten van de applicatie. Dit doe je in het entrypoint-bestand, main.ts.
+
+```ts
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe, Logger } from '@nestjs/common';// 👈 3
+import { CustomLogger } from './core/customLogger'; // 👈 1
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  app.useLogger(new CustomLogger());  //👈 2
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true,
+    forbidNonWhitelisted:true,
+    transform: true}));
+  await app.listen(process.env.PORT ?? 9000, () => {
+    new Logger().log('🚀 Server listening on http://127.0.0.1:9000');//👈 3
+});
+}
+bootstrap();
+```
+
+1. Importeer de CustomLogger
+2. In de app gebruik je een aangepaste logger (CustomLogger)  in plaats van de standaard logger van NestJS
+3. We loggen een bericht wanneer de server opgestart is. Nu worden alle logs van je applicatie via de CustomLogger verwerkt, inclusief de emoji’s.
 
 Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 
@@ -899,7 +1043,7 @@ Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 Doe dezelfde refactoring in je eigen project:
 
 - REST laag toevoegen
-- Health checks toevoegen
+- Service laag toevoegen
 - Logging uitbreiden
 
 ## CORS
@@ -921,88 +1065,31 @@ Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aan
 1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. Dit heet het preflight request.
 2. De werkelijke aanvraag, gemaakt op de gewenste resource.
 
-Voeg het CORS package en de bijbehorende types toe:
+Lees [Cors] (<https://docs.nestjs.com/security/cors>)
 
-```bash
-yarn add @koa/cors
-yarn add --dev @types/koa__cors
-```
-
-`@koa/cors` handelt het hele CORS-verhaal voor ons af, zoals bv. preflight request.
-
-Voeg wat configuratie toe in `config/development.ts` en `config/production.ts`:
+Pas de code in `main.ts` aan
 
 ```ts
-export default {
-  log: {
-    // ...
-  },
-  cors: {
-    // 👈 1
-    origins: ['http://localhost:5173'], // 👈 2
-    maxAge: 3 * 60 * 60, // 👈 3
-  },
-};
+...
+ app.enableCors({
+    origins: ['http://localhost:5173'],
+    maxAge: 3 * 60 * 60,
+  })
+...
 ```
 
-1. Pas de config aan voor development en production, voeg de CORS settings toe.
-2. `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
-   - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
-   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
-3. `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u).
+Deze code zorgt ervoor dat je NestJS-backend CORS toestaat
+-`origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
 
-Installeer nu de CORS middleware in `src/index.ts`:
-
-```ts
-// ...
-// 👇 1
-import config from 'config';
-import koaCors from '@koa/cors';
-
-// ...
-const CORS_ORIGINS = config.get<string[]>('cors.origins'); // 👈 2
-const CORS_MAX_AGE = config.get<number>('cors.maxAge'); // 👈 2
-
-// ...
-
-const app = new Koa();
-
-// 👇 3
-app.use(
-  koaCors({
-    // 👇 4
-    origin: (ctx) => {
-      // 👇 5
-      if (CORS_ORIGINS.indexOf(ctx.request.header.origin!) !== -1) {
-        return ctx.request.header.origin!;
-      }
-      // Not a valid domain at this point, let's return the first valid as we should return a string
-      return CORS_ORIGINS[0] || ''; // 👈 6
-    },
-    // 👇 7
-    allowHeaders: ['Accept', 'Content-Type', 'Authorization'],
-    maxAge: CORS_MAX_AGE, // 👈 8
-  }),
-);
-
-app.use(bodyParser());
-
-// ...
-```
-
-1. Importeer CORS en de configuratie.
-2. Haal de configuratievariabelen op.
-3. Definieer de CORS middleware.
-4. `origin`: gebruik een functie om te checken of het request origin in onze array voorkomt. Door een functie te gebruiken, kan je meerdere domeinen toelaten. Je mag nl. maar één domein of string teruggeven in de CORS header `Access-Control-Allow-Origin`.
-5. We controleren of het request origin in onze array voorkomt. Indien ja, dan geven we het request origin terug (dit is toch geldig).
-   - Merk de `!` op. Dit is een non-null assertion operator. Dit vertelt TypeScript dat je zeker bent dat `ctx.request.header.origin` niet `null` of `undefined` is.
-6. We moeten iets teruggeven indien het niet in de array voorkomt. Het request origin is ongeldig en we mogen dit absoluut niet teruggeven. Daarom geven we het eerste toegelaten domein terug, of een lege string als er geen toegelaten domeinen zijn.
-7. `allowHeaders`: de toegelaten headers in het request.
-8. `maxAge`: de maximum cache leeftijd (voor browsers).
+- Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
+- Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
+- `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming hoeft te worden gevraagd
 
 ### Oefening 6 - Je eigen project
 
 Voeg CORS toe aan je eigen project.
+
+TODO - aanpassen
 
 ## Geneste routes
 
