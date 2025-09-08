@@ -18,10 +18,10 @@ Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal
 
 - Het dossier is volledig en tijdig ingediend (zie [sectie 4](#4-dossier-vereisten) voor de vereisten)
 - Er werden voldoende (kleine) commits gemaakt
+- De applicatie is gemaakt in NodeJS en TypeScript met NestJS als web framework
 - De applicatie draait online
 - De applicatie start zonder problemen op gebruik makend van de instructies in de README
 - De applicatie wijkt voldoende af van de voorbeeldapplicatie
-- De applicatie is gemaakt in NodeJS en TypeScript met NestJS als web framework
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
 - Er is een extra technologie gebruikt (zie [sectie 6](#6-voorbeelden-van-extras) voor voorbeelden)
 - Er werden een aantal niet-triviale en werkende integratietesten gemaakt (naast de testen voor user)
@@ -96,19 +96,24 @@ Naast het dossier dien je ook een demo van jouw applicatie op te nemen en te del
 - De webcam moet aanstaan tijdens de demo zodat je gezicht zichtbaar is
 - Je deelt de demo via Panopto met jouw lector(en) - zorg ervoor dat de toegangsrechten correct ingesteld zijn
 - Dit is geen commerciële presentatie, maar een technische demo gericht op de implementatie
-- De demo moet opgenomen zijn vóór de deadline (vrijdag 20 december 2024, 23u59)
+- De demo moet opgenomen zijn vóór de deadline
 - De demo moet minstens de volgende onderdelen bevatten/tonen:
   - **Context van de applicatie**: leg uit wat de applicatie doet, wat het doel is en waarom je dit onderwerp gekozen hebt
   - **Projectstructuur overlopen**: overloop kort de mappenstructuur van je project en leg eventuele speciale ontwerpkeuzes uit (waarom bepaalde mappen/bestanden georganiseerd zijn zoals ze zijn)
   - **Demo van de applicatie**:
-    - Gebruik de online versie (niet localhost)
-    - Toon verschillende functionaliteiten van je API
-    - Demonstreer de webservice in Postman door verschillende endpoints uit te testen
-    - Toon dat jouw front-end responsive is (indien van toepassing)
+    - Gebruik uitsluitend de online versie van je applicatie (geen localhost)
+    - Indien je zowel Web Services als Front-end Web Development volgt:
+      - Demonstreer de webservice door verschillende API endpoints uit te testen in Postman (GET, POST, PUT, DELETE operaties)
+      - Toon je front-end applicatie en demonstreer dat deze responsive is door het scherm te verkleinen/vergroten of verschillende apparaatgroottes te simuleren
+      - Demonstreer de werking van je front-end applicatie
+    - Indien je enkel Web Services volgt:
+      - Focus op het demonstreren van je API endpoints in Postman
+      - Toon verschillende CRUD operaties voor je entiteiten
   - **Demo van de extra technologie**:
     - Toon de werking van de extra technologie in actie
     - Laat de code zien waar je de extra technologie geïmplementeerd hebt
     - Leg uit waarom je voor deze technologie gekozen hebt
+    - Doe dit voor beide olods (Web Services en Front-end Web Development indien van toepassing)
   - **Testen demonstreren**:
     - Laat alle testen lopen via de command line
     - Toon dat ze succesvol slagen
@@ -136,9 +141,21 @@ Bij het toevoegen van een extra technologie is het belangrijk dat deze ook echt 
 
 ## 7. Vragen
 
-Als je vragen of hulp nodig hebt: maak altijd een GitHub issue aan en tag je lector. Gebruik het voorziene template voor het GitHub issue. Uiteraard kan je dit ook gewoon na de les vragen.
+Heb je vragen over de opdracht of loop je vast tijdens de ontwikkeling? Je kan op twee manieren hulp krijgen:
 
-Mails worden niet beantwoord.
+**Tijdens de les:**
+
+- Stel je vraag rechtstreeks tijdens de lessen
+- We plannen bewust tijd in om vragen te beantwoorden en hulp te bieden
+
+**Buiten de les:**
+
+- Maak een GitHub issue aan in jouw repository
+- Koppel jouw lector aan het issue als assignee
+- Gebruik het voorziene template dat automatisch wordt geladen
+- Geef voldoende context en details over je probleem
+
+**Belangrijk:** Technische vragen via e-mail worden niet beantwoord. Gebruik altijd de bovenstaande kanalen voor de beste en snelste hulp.
 
 ## 8. Evaluatie
 
@@ -149,7 +166,7 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 - Het ingevulde dossier, als pdf ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
 
-Zorg ervoor dat jouw applicatie aan alle minimumvereisten voldoet op het moment van de deadline. We staan toe dat maximaal één minimumvereiste met een gewicht van 2, of twee minimumvereisten met een gewicht van 1, niet worden nageleefd. In alle andere gevallen wordt een score van 0 toegekend. Indien je op Chamilo geen dossier indient, dan krijg je de score AFW.
+Zorg ervoor dat jouw applicatie aan alle ontvankelijkheidscriteria voldoet op het moment van de deadline. Indien dit niet het geval is, krijg je een score van 0/20.
 
 **De deadline voor het portfolio is het einde van week 13 (vrijdag 19 december 2025, 23u59).**
 
