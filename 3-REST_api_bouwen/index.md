@@ -97,7 +97,6 @@ De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaan
 
 <!-- markdownlint-enable header-start-left -->
 
-
 ## CRUD operaties voor transacties
 
 Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor transacties, d.w.z.:
@@ -170,6 +169,7 @@ De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `c
 Open het bestand `src/transaction/transaction.controller.ts`. De `@Controller('transactions')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/transactions`.
 
 ### Overzicht van de decorators
+
 Elke route in je applicatie wordt afgehandeld door een specifieke methode in je controller. Met behulp van HTTP-decoratoren `Get()`, `@Post()`,... decoreer je de methode met een routepad.
 
 ### Static routes: `GET /transactions`
@@ -218,7 +218,9 @@ Voeg onderstaande inhoud toe aan de Controller.
     return `This action returns a #${params.id} transaction`;
   }
 ```
+
 Zorg dat je ``@Param`` importeert uit `@nestjs/common`.
+
 - `@Get(':id')`: Dit betekent dat elk verzoek naar /transactions/{id} door deze handler wordt afgehandeld.
 - `@Param()`: Maakt de routeparameter beschikbaar in de methode.
 - `params.id`: Hiermee haal je de waarde van de :id uit de URL op.
@@ -289,10 +291,11 @@ Als je meer controle wenst over de response kan je `@Res()` gebruiken. Een voorb
     return `This action adds a new transaction for ${body.user}`;
   }
 ```
+
 Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `Response` importeer je uit de `express` namespace.
 
-
 ### Best practice: gebruik DTO's
+
 Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in een NestJS-app.
 
 In NestJS gebruik je DTO’s vooral om de structuur en validatie van binnenkomende gegevens te definiëren, bijvoorbeeld bij POST- of PUT-verzoeken.
@@ -323,6 +326,7 @@ Importeer deze klasse in de `TransactionController` en pas de code voor de `crea
     return `This action adds a new transaction for ${createTransactionDto.user}`;
   }
 ```
+
 De validatie komt later aan bod.
 Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 
@@ -352,12 +356,12 @@ In de meeste apps wordt gebruik gemaakt van grote (1000den transacties) datasets
 
 Query parameters worden vaak ook gebruikt voor search. Bvb `GET /transactions?search=xxx`
 
-
 ### Oefening: Implementeer PUT en DELETE
 
 <!-- markdownlint-disable header-start-left -->
 
 - Oplossing +
+
 ```typescript
   //de controller
   updateTransaction(@Param('id') id: string, @Body() updateTransactionDto:UpdateTransactionRequest) {
@@ -377,6 +381,7 @@ Query parameters worden vaak ook gebruikt voor search. Bvb `GET /transactions?se
 ### Oefening: Maak een dto aan voor de paginatie
 
 - Oplossing +
+
 ```typescript
   // src/common/common.dto.ts
   export class PaginationQuery {
@@ -386,6 +391,7 @@ Query parameters worden vaak ook gebruikt voor search. Bvb `GET /transactions?se
 ```
 
 ## Providers
+
 Een provider is elk stuk logica dat NestJS kan instantiëren en injecteren, zoals services, repositories, helpers,...
 In NestJS zijn providers klassen die via de `@Injectable()` decorator beschikbaar worden gemaakt voor `dependency injection`.
 
@@ -393,12 +399,12 @@ Lees [Providers](https://docs.nestjs.com/providers)
 
 Dependency Injection (DI) is een design pattern waarbij de afhankelijkheden van een klasse van buitenaf worden binnengebracht, hier door NestJS, in plaats van dat de klasse ze zelf aanmaakt. Dit maakt testen makkelijker, bevordert loskoppeling en herbruikbare en configureerbare code.
 
-
 ## Services
+
 Controllers moeten HTTP-verzoeken afhandelen en complexere taken delegeren aan providers. Een service in NestJS is bedoeld om logica en functionaliteit van je applicatie op een centrale, herbruikbare en testbare manier te organiseren. Services bevatten de domein logica (zoals businesslogica, data ophalen, berekeningen,...), zijn onze domeinlaag. Ze zijn herbruikbaar in andere onderdelen van de app zoals controllers of andere services. En ze kunnen via dependency injection gebruikt worden, zijn dus providers.
 
-
 ### Generatie service
+
 NestJS biedt een CLI commando om automatisch een service te genereren:
 
 ```bash
@@ -413,15 +419,18 @@ Dit commando maakt het volgende bestand aan:
 De service wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `providers` array). Zonder deze toevoeging zou de service niet beschikbaar zijn in de applicatie en niet injecteerbaar zijn.
 
 De Service
+
 ```typescript
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class TransactionService {}
 ```
+
 De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat TransactionService een klasse is die beheerd kan worden door de Nest IoC-container (zie verder).
 
 ### Dependency injection
+
 We passen de TransactionController aan om van de Service gebruik te maken.
 
 ```typescript
@@ -434,18 +443,23 @@ import { CreateTransactionRequest, UpdateTransactionRequest } from './transactio
 export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 ```
+
 We injecteren de service in de constructor
+
 - `private`:  TypeScript maakt daar automatisch een attribuut van en vult deze in. Het attribuut is bovendien enkel toegankelijk in de klasse.
 - `readonly`: is een best practice. Dit verzekert dat we de service reference niet aanpassen
 -`TransactionService`: het type is belangrijk!
 
 Om een instantie van een klasse aan te maken dienen we normaalgezien deze code te schrijven
+
 ```typescript
 const transactionController = new TransactionController(new TransactionService())
 ```
+
 Maar NestJS fungeert als een DI Container of IoC-containers (Inversion of control). Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de TransactionService aanmaken en doorgeven aan de TRansactionController. Of i.g.v. een Singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
 
 Een DI Container bevat 2 sets van informatie
+
 - een lijst met alle Provider klassen uit onze app en hun dependencies
 - een lijst van alle instanties die deze container reeds gecreëerd heeft
 
@@ -459,6 +473,7 @@ Bij dependency injection noem je het object dat de afhankelijkheid ontvangt de c
 Meer info, lees  [Dependency injection](https://docs.nestjs.com/providers#dependency-injection)
 
 ### Implementatie service
+
 Voor de implementatie van de service maken we gebruik van de in-memory data TRANSACTIONS. Dit is onze data source. In het volgende hoofdstuk vervangen we dit door een database.
 
 We maken eerst een Entity `Transaction` aan zodat de data getypeerd kan worden. Entiteiten definiëren het domein. In de map `src/transactions/entities` maak je de file `transaction.entity.ts` aan met onderstaande inhoud
@@ -475,11 +490,13 @@ export class Transaction {
 ```
 
 Pas `mock-data.ts` aan
+
 ```typescript
 import { Transaction } from './entities/transaction.entity';
 export const TRANSACTIONS : Transaction []= [...]
 }
 ```
+
 TODO VRAAG : HIER EEN INTERFACE TRANSACTION VOORZIEN OF TRANSACTIONDTO?
 TODO : RETURNTYPES TOEVOEGEN
 Binnen de service voorzien we alle CRUD acties die we later vanuit de Controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
@@ -516,6 +533,7 @@ export class TransactionService {
   }
 }
 ```
+
 `create`: We creëren een nieuwe transactie, met het id erbij en voegen ze toe aan onze array. We genereren een nieuw id voor onze transactie door het hoogste id te zoeken en er 1 bij op te tellen.
 
 ### Implementatie controller
@@ -555,6 +573,7 @@ export class TransactionController {
 
 Vervang de hardgecodeerde data door de aanroep van de methodes in de transactionService, that's it!
 Merk op:
+
 - `getAllTransactions`: Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een items property die de array bevat.
 Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
 Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
@@ -562,22 +581,25 @@ Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar
 - `create`: Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
 
 Test alle endpoints uit in POSTMAN.
--  Doe een GET request naar <http://localhost:9000/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+
+- Doe een GET request naar <http://localhost:9000/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
 - Bij de POST request zou je de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart.
 
 ### Oefening
+
  Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
-  - `PUT /api/transactions/:id`:
-    - een transactie aanpassen
-    - geeft de aangepaste transactie terug
-  - `DELETE /api/transactions/:id`:
-    - een transactie verwijderen
-    - geeft niets terug
-    - De status 204 : NO CONTENT wordt teruggegeven
+
+- `PUT /api/transactions/:id`:
+  - een transactie aanpassen
+  - geeft de aangepaste transactie terug
+- `DELETE /api/transactions/:id`:
+  - een transactie verwijderen
+  - geeft niets terug
+  - De status 204 : NO CONTENT wordt teruggegeven
 - Extra (voor de ervaren JavaScript'ers): maak alle servicefuncties async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
 
-
 - Oplossing +
+
 ```typescript
   //de service
  updateById(id: number, { amount, date, user, place }: UpdateTransactionRequest) {
@@ -614,6 +636,7 @@ Test alle endpoints uit in POSTMAN.
 - Voorzie ook mock data.
 
 ## Exception handling
+
 Als de gebruiker een transactie probeert op te vragen waarvan de id niet bestaat, dan wensen we een 404 NOT FOUND terug te geven.
 
 `NotFoundException` is een ingebouwde HTTP-exception in NestJS die je gebruikt om aan te geven dat een bepaald item niet gevonden is. Wanneer je deze exception gooit, stuurt NestJS automatisch een HTTP-response terug met: statuscode 404 en
@@ -631,6 +654,7 @@ een duidelijke foutboodschap
     return transaction;// 👈3
   }
 ```
+
 1. Importeer `NotFoundException` uit de `@nestjs/common`namespace.
 2. Definieer een constante die de de opgevraagde transactie bevat.
 3. Als geen transactie gevonden, throw dan `NotFoundException`, anders retourneer de gevonden transactie.
@@ -641,7 +665,9 @@ Nest heeft helpermethodes voor alle mogelijke status codes, zoals InternalServer
 Probeer uit in POSTMAN.
 
 ## Validatie
+
 ### Invoervalidatie
+
 Een belangrijk principe bij het ontwikkelen van een API is het valideren van de invoer. Dit is belangrijk om de integriteit van de data te garanderen. Het is ook belangrijk om de gebruiker van de API te beschermen tegen zichzelf. Als de gebruiker een fout maakt, dan moet de API dit opvangen en een duidelijke foutmelding terugsturen.
 
 Je mag geen aannames maken over de invoer die je ontvangt. **Je moet er vanuit gaan dat de invoer altijd fout kan zijn.** Enkel validatie in de front-end is onvoldoende, dit is eenvoudig te omzeilen. Ooit zal iemand een verzoek sturen dat iets zal breken.
@@ -662,6 +688,7 @@ Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoor
 ?> In geen geval is het goed om een HTTP 500 terug te geven bij fouten die de client kan vermijden. De HTTP 500 dient enkel voor serverfouten die de client niet kan vermijden. Een HTTP 400 is een fout veroorzaakt door de client en moet dus ook door de client worden opgelost.
 
 ### Pipes
+
 Lees [Pipes](https://docs.nestjs.com/pipes)
 
 In NestJS zijn pipes een soort middleware die gebruikt worden om:
@@ -678,6 +705,7 @@ NestJS voorziet bvb in volgende built-in pipes:
 - ValidationPipe → valideert data met behulp van class-validator.
 
 Gebruik in een controller:
+
 ```typescript
 //src/transaction/transaction.controller.ts
   import {  ..., ParseIntPipe} from '@nestjs/common';
@@ -687,12 +715,15 @@ Gebruik in een controller:
     return this.transactionService.getById(id);
   }
 ```
+
 Het type van de id parameter wordt nu een number. We hoeven de id niet langer naar een number om te zetten bij aanroep van de methode getById uit de transactionService.
 
 Pas nu ook de overige methodes aan.
 
 ### ValidationPipe
+
 In NestJS gebruik je DTO’s vooral om:
+
 - Te bepalen welke velden een request mag bevatten.
 - Validatie toe te passen op binnenkomende data.
 - De structuur van data duidelijk en voorspelbaar te maken.
@@ -706,6 +737,7 @@ pnpm i class-validator
 ```
 
 Pas de CreateTransactionRequest class aan
+
 ```typescript
 //src/transactions/transaction.dto.ts
 import { IsString, IsNumber, Min} from 'class-validator';
@@ -741,10 +773,10 @@ bootstrap();
 
 `Whitelisting` is een functie van de ValidationPipe in NestJS die ervoor zorgt dat alleen de velden die je expliciet hebt gedefinieerd in je DTO worden geaccepteerd. Alle andere (onverwachte) velden worden automatisch verwijderd. De request gaat gewoon door, maar zonder de extra velden. Als je ook nog `forbidNonWhitelisted: true` toevoegt dan wordt er een fout gegooid als er ongewenste velden zijn. De request wordt geweigerd met een duidelijke error.
 
-
 Probeer een POST request uit en verwijder user uit de JSON en geef een datum op die in de toekomst ligt, voeg een extra veld toe. We krijgen een 400 BAD REQUEST terug en de reden van de fout.
 
 ### Auto transform payloads naar DTO's
+
 In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte class-instanties, zodat je bijvoorbeeld methodes kunt gebruiken, of zodat validatie en andere decorators goed werken. Class-transformers zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
 
 Pas de `create` methode aan en doe een POST request. Bekijk de console.
@@ -758,11 +790,13 @@ Pas de `create` methode aan en doe een POST request. Bekijk de console.
     return this.transactionService.create(createTransactionDto);
   }
 ```
+
 Om ervoor te zorgen dat dit een instantie is van de DTO klasse:
 
 ```bash
 pnpm i class-transformer
 ```
+
 En voeg in main.ts onderstaande optie toe.
 
 ```typescript
@@ -781,8 +815,8 @@ async function bootstrap() {
 }
 bootstrap();
 ```
-Voer een POST request uit en bekijk het type.
 
+Voer een POST request uit en bekijk het type.
 
 Als we de decorator `IsDate()` toevoegen aan de date-member dan krijgen we een 400 BAD REQUEST.
 
@@ -802,6 +836,7 @@ export class CreateTransactionRequest {
     place: string;
 }
 ```
+
 De `ValidationPipe` (met class-validator) behandelt inkomende JSON-data als "plain objects" met strings. `@IsDate()` verwacht een echte Date-instantie, maar uit je JSON komt date als string. Vandaar "date must be a Date instance". Je moet dus NestJS vertellen om de date-string in het request om te zetten naar een Date-object. Dit doe je met: `@Type(() => Date)` van class-transformer. Via de `@MaxDate()` decorator leggen we op dat de datum kleiner of gelijk moet zijn aan de datum van vandaag.
 
 ```typescript
@@ -824,7 +859,6 @@ export class CreateTransactionRequest {
 }
 ```
 
-
 Class-transformers kunnen ook primitieve types omzetten. Alles wat via @Param() of @Query()... binnenkomt is van type string. Als we in de `getTransactionById`methode het type van de id veranderen in Number zal ValidationPipe dit proberen om te zetten. We hoeven het +-teken niet langer te gebruiken.
 
 ```typescript
@@ -835,16 +869,20 @@ Class-transformers kunnen ook primitieve types omzetten. Alles wat via @Param() 
     return this.transactionService.getById(id);
   }
 ```
+
 Doe dit ook voor PUT en DELETE.
 Merk op dat deze feature invloed heeft op de performantie van je applicatie.
 
 ### Samenvatting
+
 ![Validatie](./images/validationpipe.png)
 
 ### Oefening: Annoteer de dto voor de paginatie
 
 Page en offset zijn optioneel.
+
 - Oplossing +
+
 ```typescript
   // pagination.dto.ts
   import { Type } from 'class-transformer';
@@ -866,19 +904,21 @@ Page en offset zijn optioneel.
 ```
 
 ## Modules
+
 In NestJS is een module een manier om je applicatie op te delen in overzichtelijke, goed georganiseerde stukken. Een module is eigenlijk een TypeScript-klasse met de @Module()-decorator. Binnen zo’n module geef je aan welke controllers, services en andere providers erbij horen.
 
 Je kunt het zien als een container die alles groepeert wat bij een bepaald domein of functie hoort. Bijvoorbeeld: je maakt een TransactionModule om alles rond transactionssbeheer (controllers, services, repositories) bij elkaar te houden.
 
 Modules helpen je applicatie modulair en schaalbaar te maken. Ze zorgen ervoor dat je code gestructureerd is, makkelijk te onderhouden en herbruikbaar. Elke NestJS-applicatie heeft minstens één root module (meestal AppModule), maar je kunt er zoveel maken als je wil om je app logisch op te splitsen.
 
-Lees [Modules] (https://docs.nestjs.com/modules)
+Lees [Modules] (<https://docs.nestjs.com/modules>)
 
 NestJS biedt een CLI commando om automatisch een module te genereren:
 
 ```bash
 nest g module transaction
 ```
+
 De module klasse wordt toegevoegd aan de `transaction` folder en wordt geïmporteerd in de AppModule.
 
 ```typescript
@@ -888,7 +928,9 @@ import { Module } from '@nestjs/common';
 @Module({})
 export class TransactionModule {}
 ```
+
 De @Module()-decorator maakt van een TypeScript-klasse een NestJS-module. Hierin geef je aan wat bij deze module hoort. Het is als een container die controllers, services en andere dependencies groepeert.
+
 - `imports`: Hier geef je andere modules op die je nodig hebt in deze module.
 - `controllers`: Dit is een lijst van controllers die bij deze module horen.
 - `providers`: Dit zijn services of andere providers die NestJS beschikbaar maakt in de dependency injection container.
@@ -913,10 +955,6 @@ export class TransactionModule {}
 Verwijder dan de TransactionController en TransactionService uit AppModule.
 
 Het is een goed idee om steeds eerst de module aan te maken en dan de controllers en services. Dan wordt alles in de correcte module geplaatst.
-
-
-
-
 
 TODO : vanaf hier nog bekijken! Plaatsen we dit nog in dit hoofdstuk?
 
@@ -961,6 +999,7 @@ export class CustomLogger extends ConsoleLogger implements LoggerService {
 }
 
 ```
+
 Deze code definieert een eigen loggerklasse, genaamd `CustomLogger`.  `CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Dit zorgt ervoor dat `CustomLogger` werkt als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit. In deze klasse worden de logmethodes (log, error, warn, debug, verbose) overschreven om elk logbericht te voorzien van een emoji, zodat je in de console direct het type bericht herkent:
 
 - log: 📢 voor algemene logs
@@ -1026,7 +1065,7 @@ Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aan
 1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. Dit heet het preflight request.
 2. De werkelijke aanvraag, gemaakt op de gewenste resource.
 
-Lees [Cors] (https://docs.nestjs.com/security/cors)
+Lees [Cors] (<https://docs.nestjs.com/security/cors>)
 
 Pas de code in `main.ts` aan
 
@@ -1041,16 +1080,17 @@ Pas de code in `main.ts` aan
 
 Deze code zorgt ervoor dat je NestJS-backend CORS toestaat
 -`origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
-   - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
-   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
-- `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming hoeft te worden gevraagd
 
+- Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
+- Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
+- `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming hoeft te worden gevraagd
 
 ### Oefening 6 - Je eigen project
 
 Voeg CORS toe aan je eigen project.
 
 TODO - aanpassen
+
 ## Geneste routes
 
 In het vorige hoofdstuk hebben een voorbeeld uitgewerkt voor een recepten API waarbij een veelgemaakte fout was dat subroutes niet correct gedefinieerd worden. Hier geven we een praktisch voorbeeld van zo'n geneste route in onze budget app.
