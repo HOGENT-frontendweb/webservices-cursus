@@ -1,4 +1,4 @@
-# Authenticatie en autorisatie
+# Authenticatie en autorisatie (WIP)
 
 > **Startpunt voorbeeldapplicatie**
 >
