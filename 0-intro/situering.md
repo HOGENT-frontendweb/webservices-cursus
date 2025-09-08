@@ -12,7 +12,7 @@ Indien je in het keuzepakket `Development` zit, dan volg je waarschijnlijk Front
 
 Concreet maken we een back-end met JavaScript, meer specifiek TypeScript. Er zijn ontzettend veel frameworks en libraries om een back-end te maken, elk met hun eigen voor- en nadelen.
 
-Wij hebben gekozen voor Koa. Waarom? Het is van de makers van het populaire Express. Jammer genoeg wachten we al jaren op versie 5 van Express en heeft die nog steeds geen native ondersteuning voor async/await. Koa heeft dit wel en bevat standaard niks. Daarom is dit een goeie library om met niets te starten en enkel de nodige dingen toe te voegen.
+Wij hebben gekozen voor [NestJS](https://nestjs.com/). Waarom? NestJS is een modern framework dat gebouwd is met en voor TypeScript. Het is geïnspireerd door Angular (vooral qua structuur) en maakt gebruik van de nieuwste JavaScript features. Het is modulair opgebouwd, wat het makkelijk maakt om te schalen. Daarnaast heeft het een grote community en veel ingebouwde functionaliteiten zoals dependency injection, wat de ontwikkeling versnelt. Je kan relatief snel een robuuste en onderhoudbare back-end opzetten met NestJS.
 
 ## Wat gaan jullie doen?
 
@@ -20,11 +20,11 @@ Programmeren leer je enkel door het te doen, niet door onze cursus te lezen. Je 
 
 Voor dit olod is er een [examenopdracht](0-intro/examenopdracht.md). Kort gezegd moet je een Node.js back-end maken tegen week 13. De voorwaarden van deze back-end en de examenvorm staan duidelijk in de opdracht. De bijbehorende front-end maak je, indien van toepassing, in het olod Front-end Web Development.
 
-De Chamilo-cursus vind je [hier](https://chamilo.hogent.be/index.php?application=Chamilo%5CApplication%5CWeblcms&go=CourseViewer&course=61464). Hierin komen alle belangrijke aankondigingen, een link naar de cursus en een uploadmodule voor de examenopdracht. Op de cursus zal je ook een link naar de GitHub-classroom zien verschijnen. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.
+De Chamilo-cursus voor dit olod zal weinig bevatten. Hierin komen enkel de belangrijke aankondigingen, een link naar deze cursus en een uploadmodule voor de examenopdracht. Op de Chamilo-cursus zal je ook een link naar de GitHub-classroom zien. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.
 
 ### Deadline
 
-> Week 13: vrijdag 20 december 2024 om 23u59
+> Week 13: vrijdag 19 december 2025 om 23u59
 
 Je weet de deadline, plan je werk goed in! Wacht niet tot de laatste paar weken om te starten, dan zal je gegarandeerd in tijdsnood komen. Tijdens de lessen is ook voldoende tijd om aan de applicatie te werken, maak hier gebruik van!
 
@@ -48,11 +48,13 @@ Er is een voorbeeldapplicatie (stap per stap opgebouwd, zoals in de cursus): <ht
 
 De bijhorende front-end is te vinden op: <https://github.com/HOGENT-frontendweb/frontendweb-budget>.
 
-Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stelselmatig omgevormd naar TypeScript. Het merendeel van de hoofdstukken is al omgezet, maar nog niet alles. We geven duidelijk aan wanneer een hoofdstuk nog niet omgezet is (`WIP` naast de titel). Wees dus niet verrast als een hoofdstuk nog in JavaScript is of er plots helemaal anders uitziet.
+Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stelselmatig omgevormd naar NestJS. Een deel van de hoofdstukken is al omgezet, maar nog niet alles. We geven duidelijk aan wanneer een hoofdstuk nog niet omgezet is (`WIP` naast de titel). Wees dus niet verrast als een hoofdstuk nog Koa gebruikt of er plots helemaal anders uitziet.
 
 > Suggesties voor verbeteringen of aanpassingen van schrijffouten zijn altijd welkom! Maak hiervoor een issue of pull request op de GitHub-repository van de cursus: <https://github.com/HOGENT-frontendweb/webservices-cursus>.
 
 ## Planning
+
+<!-- TODO: planning updaten -->
 
 Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 

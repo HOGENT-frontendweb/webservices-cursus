@@ -111,3 +111,6 @@ dist
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# macOS files
+.DS_Store
