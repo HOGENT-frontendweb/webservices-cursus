@@ -108,8 +108,6 @@ Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD 
 - `PUT /api/transactions/:id`: een transactie aanpassen
 - `DELETE /api/transactions/:id`: een transactie verwijderen
 
-TODO VRAAG Werken we nog met /api of houden we dit voor swagger? Momenteel zonder /api geimplementeerd
-
 NestJS biedt de tools om de inkomende requests af te handelen en een response terug te sturen.
 
 ![Tools](./images/transactionsoverview.png)
@@ -175,12 +173,12 @@ Dit commando maakt de volgende bestanden aan:
 
 De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging zou de controller niet beschikbaar zijn in de applicatie.
 
-Open het bestand `src/transaction/transaction.controller.ts`. De `@Controller('transactions')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/transactions`.
+Open het bestand `src/transaction/transaction.controller.ts`. De `@Controller('transactions')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/api/transactions`.
 
 ### Overzicht van de decorators
 Elke route in je applicatie wordt afgehandeld door een specifieke methode in je controller. Met behulp van HTTP-decoratoren `Get()`, `@Post()`,... decoreer je de methode met een routepad.
 
-### Static routes: `GET /transactions`
+### Static routes: `GET /api/transactions`
 
 Voeg onderstaande inhoud toe aan de Controller.
 
@@ -193,19 +191,19 @@ Voeg onderstaande inhoud toe aan de Controller.
 
 Importeer `@Get` uit de `@nestjs/common` package.
 
-De `@Get('')` decorator geeft aan dat de `getAllTransactions()` methode reageert op GET verzoeken op de route `/transactions`.
+De `@Get('')` decorator geeft aan dat de `getAllTransactions()` methode reageert op GET verzoeken op de route `/api/transactions`.
 
-Het routepad is het resultaat van `@controller-pad + @methode-pad`. Hier dus `/transactions`.
+Het routepad is het resultaat van `@controller-pad + @methode-pad`. Hier dus `/api/transactions`.
 
 De methodenaam `getAllTransactions` is willekeurig. Je kan even goed de methodenaam listAllTransactions(),... gebruiken.
 
 De methode `getAllTransactions()` retourneert momenteel een string.
 
-Start de server (als deze nog niet draait) en open de url <http://localhost:3000/transactions> in je browser of Postman. Je zou de string "this action returns all transactions" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. De request retourneert ook een statuscode 200 (d.i. de standaard).
+Start de server (als deze nog niet draait) en open de url <http://localhost:3000/api/transactions> in je browser of Postman. Je zou de string "this action returns all transactions" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. De request retourneert ook een statuscode 200 (d.i. de standaard).
 
 ### Route parameters: `GET /transaction/:id`
 
-Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/transactions/15` of `/transactions/43` om een transactie met een bepaald id op te vragen.
+Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/transactions/15` of `/api/transactions/43` om een transactie met een bepaald id op te vragen.
 
 Een request bestaat uit een aantal lijnen met een specifieke betekenis. A.d.h.v. decorators kan NestJS specifieke informatie uit de request extraheren.
 
@@ -227,7 +225,7 @@ Voeg onderstaande inhoud toe aan de Controller.
   }
 ```
 Zorg dat je ``@Param`` importeert uit `@nestjs/common`.
-- `@Get(':id')`: Dit betekent dat elk verzoek naar /transactions/{id} door deze handler wordt afgehandeld.
+- `@Get(':id')`: Dit betekent dat elk verzoek naar /api/transactions/{id} door deze handler wordt afgehandeld.
 - `@Param()`: Maakt de routeparameter beschikbaar in de methode.
 - `params.id`: Hiermee haal je de waarde van de :id uit de URL op.
 
@@ -243,9 +241,9 @@ Je kan de id ook direct ophalen door de parameter direct te benoemen in `@Param(
 Belangrijk: Zet routes met parameters na de statische routes in je controller.
 
 Waarom?
-Als je een route zoals @Get(':id') vóór een statische route @Get('places') plaatst, dan zal een verzoek naar /transactions/places behandeld worden alsof places een id is.
+Als je een route zoals @Get(':id') vóór een statische route @Get('places') plaatst, dan zal een verzoek naar /api/transactions/places behandeld worden alsof places een id is.
 
-### Request Body: `POST /transactions`
+### Request Body: `POST /api/transactions`
 
 Een POST-handler gebruik je om nieuwe data te creëren, hier een transactie. De data voor de transactie wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
 
@@ -341,11 +339,11 @@ Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 }
 ```
 
-### Query Parameters: `GET /transactions?page=2&limit=10`
+### Query Parameters: `GET /api/transactions?page=2&limit=10`
 
 Lees [Query parameters](https://docs.nestjs.com/controllers#query-parameters)
 
-In de meeste apps wordt gebruik gemaakt van grote (1000den transacties) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren,  de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. BIj paginatie haal je slechts een deel (een pagina) van de dataset op. Met `GET /transactions?offset=2&limit=10` haal je pagina 2 op met 10 transacties op de pagina.
+In de meeste apps wordt gebruik gemaakt van grote (1000den transacties) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren,  de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. BIj paginatie haal je slechts een deel (een pagina) van de dataset op. Met `GET /api/transactions?offset=2&limit=10` haal je pagina 2 op met 10 transacties op de pagina.
 
 ```typescript
   @Get()
@@ -356,7 +354,7 @@ In de meeste apps wordt gebruik gemaakt van grote (1000den transacties) datasets
   }
 ```
 
-Query parameters worden vaak ook gebruikt voor search. Bvb `GET /transactions?search=xxx`
+Query parameters worden vaak ook gebruikt voor search. Bvb `GET /api/transactions?search=xxx`
 
 
 ### Oefening: Implementeer PUT en DELETE
@@ -562,8 +560,8 @@ Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar
 - `create`: Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
 
 Test alle endpoints uit in POSTMAN.
--  Doe een GET request naar <http://localhost:9000/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
-- Bij de POST request zou je de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart.
+-  Doe een GET request naar <http://localhost:9000/api/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+- Bij de POST request zou je de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/api/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart.
 
 ### Oefening
  Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
@@ -687,8 +685,6 @@ Gebruik in een controller:
   }
 ```
 Het type van de id parameter wordt nu een number. We hoeven de id niet langer naar een number om te zetten bij aanroep van de methode getById uit de transactionService.
-
-Pas nu ook de overige methodes aan.
 
 ### ValidationPipe
 In NestJS gebruik je DTO’s vooral om:
@@ -822,18 +818,17 @@ export class CreateTransactionRequestDto {
 }
 ```
 
-TODO : Onderstaande vermelden of werken we met de ParseInPipe
-Class-transformers kunnen ook primitieve types omzetten. Alles wat via @Param() of @Query()... binnenkomt is van type string. Als we in de `getTransactionById` methode het type van de id veranderen in Number zal ValidationPipe dit proberen om te zetten. We hoeven het +-teken niet langer te gebruiken.
+Class-transformers kunnen ook primitieve types omzetten. Alles wat via @Param() of @Query()... binnenkomt is van type string. Als we in de `getTransactionById` methode het type van de id veranderen in Number zal ValidationPipe dit proberen om te zetten. Verwijder de ParseIntPipe en pas aan.
 
 ```typescript
 //src/transaction/transaction.controller.ts
   @Get(':id')
-  getTransactionById(@Param('id') id: number): TransactionResponseDto {
+  getTransactionById(@Param('id') id: number): TransactionResponseDto {// 👈
     console.log(typeof id);
     return this.transactionService.getById(id);
   }
 ```
-Doe dit ook voor PUT en DELETE.
+Doe dit ook voor PUT en DELETE. We hoeven het +-teken niet langer te gebruiken.
 Merk op dat deze feature invloed heeft op de performantie van je applicatie.
 
 ### Samenvatting
@@ -1048,69 +1043,3 @@ Deze code zorgt ervoor dat je NestJS-backend CORS toestaat
 Voeg CORS toe aan je eigen project.
 
 
-TODO MOET VERHUIZEN NAAR EEN ANDER HOOFDSTUK WANT NOG GEEN ID's voor place in MOCKDATA
-
-## Geneste routes
-
-In het vorige hoofdstuk hebben een voorbeeld uitgewerkt voor een recepten API waarbij een veelgemaakte fout was dat subroutes niet correct gedefinieerd worden. Hier geven we een praktisch voorbeeld van zo'n geneste route in onze budget app.
-
-Elke transactie heeft een plaats waar deze gebeurd is. We willen nu alle transacties van een bepaalde plaats opvragen. Welke URL gebruiken we hiervoor?
-
-- Antwoord +
-
-  We gebruiken `/places/:id/transactions`. Hierbij is `:id` de id van de plaats.
-
-  Heel vaak wordt dit verkeerd geïmplementeerd zoals bv. `/transactions/place/:id`. Dit is niet correct omdat we hier geen duidelijk pad volgen. We willen alle transacties van een plaats opvragen, dus is het logischer om eerst de plaats op te geven en dan de transacties van die plaats op te vragen.
-
-We definiëren een nieuwe functie in `src/service/transaction.ts`:
-
-```ts
-// src/service/transaction.ts
-// ...
-export const getTransactionsByPlaceId = async (placeId: number) => {
-  return TRANSACTIONS.filter((t) => t.place.id === placeId);
-};
-```
-
-Deze functie filtert alle transacties op basis van de plaats id en geeft deze terug. Vervolgens maken we een nieuwe router aan in `src/rest/place.ts`:
-
-```ts
-import Router from '@koa/router';
-import * as transactionService from '../service/transaction';
-import type { Context } from 'koa';
-
-const getTransactionsByPlaceId = async (ctx: Context) => {
-  const transactions = await transactionService.getTransactionsByPlaceId(
-    Number(ctx.params.id),
-  );
-  ctx.body = {
-    items: transactions,
-  };
-};
-
-export default (parent: Router) => {
-  const router = new Router({
-    prefix: '/places',
-  });
-
-  router.get('/:id/transactions', getTransactionsByPlaceId);
-
-  parent.use(router.routes()).use(router.allowedMethods());
-};
-```
-
-Hierin definiëren we onze geneste route. Vergeet niet deze router te installeren in `src/rest/index.ts`.
-
-### Oefening 7 - Je eigen project
-
-Werk de routes van de entiteiten in je eigen project uit. Zorg ervoor dat je geneste routes correct definieert. Werk voorlopig met mock data.
-
-> **Oplossing voorbeeldapplicatie**
->
-> ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-> cd webservices-budget
-> git checkout -b les3-opl 4e63e94
-> yarn install
-> yarn start:dev
-> ```
