@@ -41,7 +41,6 @@ jobs:
         uses: lycheeverse/lychee-action@v2.0.2
         with:
           args: "'./**/*.md' '*.md' --scheme https --exclude kroki\\.io --exclude api\\.fbi\\.gov --exclude sciencedirect\\.com --exclude youtube-nocookie\\.com --exclude dev\\.mysql\\.com --exclude jwt\\.io"
-          fail: true
 
       - name: Check for broken GitHub commit references
         uses: ./commit-verifier
