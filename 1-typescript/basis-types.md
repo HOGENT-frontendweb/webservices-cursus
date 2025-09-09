@@ -39,6 +39,74 @@ Er zijn ook enkele types voor de OO-mensen onder ons:
 
 Een goeie regel is: gebruik een `interface` tot je een `type` nodig hebt.
 
+### Voorbeeld van een interface
+
+Stel dat we een interface willen maken voor de basis wiskundige operaties (som, aftrekken, vermenigvuldigen, delen).
+Hierbij weten we dat we tweemaal een `number` als input willen, en dat we een `number` als output willen.
+
+Dit zouden we zowel als interface als type kunnen maken, zoals te zien is in het onderstaande voorbeeld.
+Hierbij is ook meteen duidelijk dat de syntax van de interface en het type zeer gelijkaardig zijn, mits enkele kleine verschillen.
+
+Hierbij zien we dat de ronde haakjes aangeven dat a en b de parameters zijn van het type `number`. 
+De functie zelf zal dan een `number` teruggeven.
+
+```typescript
+interface BinaryOperationInterface {
+  (a: number, b: number): number;
+}
+
+type BinaryOperationType = (a: number, b: number) => number;
+```
+
+Deze kunnen we vervolgens gebruiken om functies te definiëren. 
+Let op, wanneer we gebruik maken van het keyword `function`, moeten we nog steeds de parameters en het return type opgeven.
+
+```typescript
+function sum(a: number, b: number): number {
+  return a + b;
+}
+```
+
+Wanneer we nu deze functie als een variabele willen gebruiken, dan kunnen we wel het volledige nut van de interface of het type gebruiken.
+Hierbij beschrijven we dus wat het type van de variabele is, waarbij we ons gedefinieerd type/interface gebruiken. 
+Vervolgens zetten we het "="-teken, waarbij we de parameters nogmaals moeten herhalen, en de implementatie van de functie volgt.
+Hierdoor zal typescript afdwingen dat we dezelfde parameters en return type gebruiken als in de interface/type.
+
+```typescript
+const sum: BinaryOperationInterface = (a: number, b: number) => {
+  return a + b;
+}
+```
+
+### Gevorderd voorbeeld
+
+Stel dat we nu zouden willen zorgen dat we eenvoudig reeksen van getallen kunnen vermenigvuldigen, zodat we bijvoorbeeld de tafel-van-twee, of de tafel-van-drie, kunnen berekenen.
+Daarvoor willen we een vermenigvuldig-functie maken, waarbij we moeten zeggen dat we een getal willen vermenigvuldigen met een andere getal, maar we willen niet telkens de 2 (of 3) opnieuw moeten opgeven.
+Hiervoor willen we dus een functie, die een andere functie teruggeeft.
+Het onderstaande voorbeeld heeft dus als beschrijven dat we een functie hebben met één parameter (waarbij wij dus willen opgeven dat we willen vermenigvuldigen met 2), en een andere functie als return type, zodat we kunnen meegeven waarmee we willen vermenigvuldigen.
+
+```typescript
+type MultiplyFunction = (a: number) => (b: number) => number;
+```
+
+Dit kunnen we dan als volgt gebruiken om de tafel van twee te berekenen:
+
+```typescript
+const multiply: MultiplyFunction = (a: number) => (b: number) => {
+  return a * b;
+};
+
+const multiplyByTwo = multiply(2);
+
+for (let i = 0; i < 10; i++) {
+  console.log(multiplyByTwo(i));
+}
+```
+
+Op een volledig analoge manier kunnen we ook de tafel van drie berekenen.
+
+**Deze techniek heet currying.**
+
 ## var, let, const
 
 In TypeScript kan je variabelen declareren met `var`, `let` of `const`. `let` en `const` zijn block-scoped, `var` is function-scoped. Dit wil zeggen dat een `var`-variabele overal in de functie beschikbaar is, terwijl een `let`-variabele enkel beschikbaar is in het blok waarin ze gedeclareerd is (bv. binnen een `if` statement).
@@ -187,8 +255,24 @@ class Persoon2 {
 }
 ```
 
-De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework. In de olods Web Services en Front-end Web Development zal er echter enkel gebruik gemaakt worden van interfaces.
+De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework. In de olods Web Services en Front-end Web Development zal er echter enkel gebruik gemaakt worden van interfaces/types.
 
 Je kan hier dus ook keywords als `extends` en `implements` gebruiken om respectievelijk te erven van een klasse/interface of een interface te implementeren.
 
 Je kan aan de constructor van een klasse `private`, `public`, `protected` argumenten meegeven. Dit is syntactic sugar voor het aanmaken van properties met dezelfde naam en het toekennen van de argumenten aan de properties (zie `Persoon2` hierboven).
+
+### Sidenote Arrays
+
+In de bovenstaande voorbeelden hebben we gezien dat we een array kunnen typeren met de volgende syntax:
+
+```typescript
+type GetallenArray = number[];
+```
+
+In typescript is er echter ook een specifiek type voor arrays:
+
+```typescript
+type GetallenArray = Array<number>;
+```
+
+Hierbij is er geen echte voorkeur over dewelke gebruikt wordt.
