@@ -768,13 +768,16 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted:true,
-    transform: true}));// 👈
+    whitelist: true, //verwijdert de properties die niet in de DTO staan
+    forbidNonWhitelisted:true,//gooit error als er foute properties binnenkomen
+    transform: true}));// 👈 zet inkomende JSON om naar instantie van DTO-klasse
   await app.listen(process.env.PORT ?? 9000);
 }
 bootstrap();
 ```
+
+`transform:true`: zet de inkomende JSON om naar een instance van de DTO-klasse m.b.v. `plainToInstance` methode van `class-transformer`.
+
 Voer een POST request uit en bekijk het type.
 
 
