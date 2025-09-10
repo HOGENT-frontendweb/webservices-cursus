@@ -4,10 +4,10 @@
 
 ### Spread operator
 
-De spread operator (`...`) is een operator die je toelaat om een expressie uit te breiden. 
+De spread operator (`...`) is een operator die je toelaat om een expressie uit te breiden.
 Je kan de spread operator gebruiken om bv. een array te maken met de elementen van een andere array, een object uit te breiden met de attributen van een ander object...
 
-Laten we een voorbeeld voor arrays bekijken. 
+Laten we een voorbeeld voor arrays bekijken.
 Let hierbij op de types, deze zijn optioneel (omdat deze via type inference gekend zijn), maar zijn in dit voorbeeld bijgevoegd ter verduidelijking:
 
 ```typescript
@@ -79,8 +79,8 @@ Net daarom is Typescript een goede optie om dit te verhelpen, zodat we dankzij d
 
 ### Destructuring
 
-Destructuring is een techniek die je toelaat om een object of array te ontleden in variabelen. 
-Je kan destructuring gebruiken om bv. een of meerdere keys uit een object te halen en deze op te slaan in variabelen. 
+Destructuring is een techniek die je toelaat om een object of array te ontleden in variabelen.
+Je kan destructuring gebruiken om bv. een of meerdere keys uit een object te halen en deze op te slaan in variabelen.
 Je kan ook bv. het eerste element uit een array halen en de rest van de array opslaan in een variabele.
 
 Laten we een voorbeeld bekijken:
