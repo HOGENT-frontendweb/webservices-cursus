@@ -32,21 +32,21 @@ De applicatie die we gaan maken bevat volgende pagina's:
 
 <!-- tabs:start -->
 
-### **Transaction pagina**
+### **Transactions pagina**
 
-Deze pagina geeft een overzicht van alle plaatsen van alle gebruikers. Later toont deze enkel de plaatsen van de ingelogde gebruiker.
+Deze pagina geeft een overzicht van alle transacties van alle gebruikers. Later toont deze enkel de transacties van de ingelogde gebruiker.
 
 ![Transactions pagina](./images/transactions.png)
 
 ### **Places pagina**
 
-Deze pagina toont een overzicht van alle plaatsen waar je plaatsen kan doen.
+Deze pagina toont een overzicht van alle plaatsen waar je transacties kan doen.
 
 ![Places pagina](./images/places.png)
 
 ### **Add/edit transaction pagina**
 
-De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande aan te passen.
+De laatste pagina laat toe om een nieuwe transactie toe te voegen of een bestaande aan te passen.
 
 ![Add/edit transaction pagina](./images/add-transaction.png)
 
@@ -59,7 +59,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
 2. Definieer de endpoints die we moeten voorzien in de REST API.
    - Denk na over de HTTP-methoden die je nodig hebt (GET, POST, PUT, DELETE,...)
    - Denk na over de opbouw van de URL's
-   - Hebben we geneste routes nodig (bv. de plaatsen van een plaats opvragen)?
+   - Hebben we geneste routes nodig (bv. de transacties van een plaats opvragen)?
 
 <!-- markdownlint-disable header-start-left -->
 
@@ -73,7 +73,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
 
   #### Transactions
 
-  - `GET /api/transactions`: alle plaatsen opvragen
+  - `GET /api/transactions`: alle transacties opvragen
   - `GET /api/transactions/:id`: een specifieke transactie opvragen
   - `POST /api/transactions`: een nieuwe transactie aanmaken
   - `PUT /api/transactions/:id`: een transactie aanpassen
@@ -86,7 +86,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
   - `POST /api/places`: een nieuwe plaats aanmaken
   - `PUT /api/places/:id`: een plaats aanpassen
   - `DELETE /api/places/:id`: een plaats verwijderen
-  - `GET /api/places/:id/transactions`: plaatsen van een specifieke plaats opvragen
+  - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
 
   #### Users
 
@@ -95,7 +95,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
   - `POST /api/users`: een nieuwe gebruiker aanmaken
   - `PUT /api/users/:id`: een gebruiker aanpassen
   - `DELETE /api/users/:id`: een gebruiker verwijderen
-  - `GET /api/users/:id/transactions`: plaatsen van een specifieke gebruiker opvragen
+  - `GET /api/users/:id/transactions`: transacties van een specifieke gebruiker opvragen
 
   Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `GET /api/places/:id` of `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
 
@@ -103,55 +103,63 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
 
 <!-- markdownlint-enable header-start-left -->
 
-## CRUD operaties voor plaatsen
+## CRUD operaties voor transacties
 
-Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor places, d.w.z.:
+Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor transacties, d.w.z.:
 
-- `GET /api/places`: alle plaatsen opvragen
-- `GET /api/places/:id`: een specifieke plaats opvragen
-- `POST /api/places`: een nieuwe plaats aanmaken
-- `PUT /api/places/:id`: een plaats aanpassen
-- `DELETE /api/places/:id`: een plaats verwijderen
+- `GET /api/transactions`: alle transacties opvragen
+- `GET /api/transactions/:id`: een specifieke transactie opvragen
+- `POST /api/transactions`: een nieuwe transactie aanmaken
+- `PUT /api/transactions/:id`: een transactie aanpassen
+- `DELETE /api/transactions/:id`: een transactie verwijderen
 
 NestJS biedt de tools om de inkomende requests af te handelen en een response terug te sturen.
 
-![Tools](./images/placesoverview.png)
+![Tools](./images/transactionsoverview.png)
 
 ## Datalaag
 
-Deze beheert onze data. Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in het volgende hoofdstuk toegevoegd. We definiëren ook een interface `Place` die het contract vastlegt.
+Deze beheert onze data. Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in het volgende hoofdstuk toegevoegd. We definiëren ook een interface `Transaction` die het contract vastlegt.
 
 ```ts
-export interface Place {
+export interface Transaction {
   id:number
-  name: string;
-  rating: number;
+  amount: number;
+  date: Date;
+  user: string;
+  place: string;
 }
 
-export const PLACES = [
+export const TRANSACTIONS = [
   {
     id: 1,
-    name: 'Dranken Geers',
-    rating: 3,
+    amount: -2000,
+    date: new Date(),
+    user:  'Thomas Aelbrecht',
+    place: 'Irish Pub',
   },
   {
     id: 2,
-    name: 'Irish Pub',
-    rating: 2,
+    amount: -74,
+    date: new Date(new Date().getDate() - 2), // 2 days ago
+    user: 'Thomas Aelbrecht',
+    place: 'Irish Pub',
   },
   {
     id: 3,
-    name: 'Loon',
-    rating: 4,
+    amount: 3500,
+    date: new Date(new Date().getDate() - 3),
+    user: 'Thomas Aelbrecht',
+    place: 'Loon',
   },
 ];
 ```
 
-We houden hier voorlopig een variabele `PLACES` bij met onze places. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies of klassen beschikbaar te maken voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
+We houden hier voorlopig een variabele `TRANSACTIONS` bij met onze transactions. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies of klassen beschikbaar te maken voor andere bestanden. We maken de interface `Transaction`en de  constante `TRANSACTIONS` beschikbaar voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
 
-Als we ook de PLACES willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Bij toevoegen van een plaats moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de plaats te zoeken en aan te passen.
+Als we ook de transactions willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Bij toevoegen van transactions moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de transaction te zoeken en aan te passen.
 
-## Place controller
+## Transaction controller
 
 Controllers zijn verantwoordelijk voor het verwerken van binnenkomende verzoeken en het terugsturen van een antwoord naar de client. Het routingmechanisme bepaalt welke controller elk verzoek afhandelt. Vaak heeft een controller meerdere routes, en elke route kan een andere actie uitvoeren. Onze controller zal alle bovenstaande routes bevatten.
 
@@ -160,50 +168,48 @@ Controllers zijn verantwoordelijk voor het verwerken van binnenkomende verzoeken
 NestJS biedt een CLI commando om automatisch een controller te genereren:
 
 ```bash
-nest generate controller place
+nest generate controller transaction
 ```
 
-Dit commando maakt een folder place aan en de volgende bestanden:
+Dit commando maakt de volgende bestanden aan:
 
-- `src/place/place.controller.ts`: de controller zelf
-- `src/place/place.controller.spec.ts`: test bestand voor de controller
-
-Wens je geen test bestand, gebruik dan de flag `--no-spec`.
+- `src/transaction/transaction.controller.ts`: de controller zelf
+- `src/transaction/transaction.controller.spec.ts`: test bestand voor de controller
 
 De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging zou de controller niet beschikbaar zijn in de applicatie.
 
-Open het bestand `src/place/place.controller.ts`. De `@Controller('place')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/api/place`. De Best Practices geven aan dat alle routes zelfstandige naamwoorden in het meervoud dienen te zijn. Pas de naam van de route aan `@Controller('places')`
+Open het bestand `src/transaction/transaction.controller.ts`. De `@Controller('transactions')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/api/transactions`.
 
 ### Overzicht van de decorators
 
 Elke route in je applicatie wordt afgehandeld door een specifieke methode in je controller. Met behulp van HTTP-decoratoren `Get()`, `@Post()`,... decoreer je de methode met een routepad.
 
-### Static routes: `GET /api/places`
+### Static routes: `GET /api/transactions`
 
 Voeg onderstaande inhoud toe aan de Controller.
 
 ```typescript
   @Get('')
-  getAllPlaces(): string {
-    return 'this action returns all places';
+  getAllTransactions(): string {
+    return 'this action returns all transactions';
   }
 ```
 
 Importeer `@Get` uit de `@nestjs/common` package.
 
-De `@Get('')` decorator geeft aan dat de `getAllPlaces()` methode reageert op GET verzoeken op de route `/api/places`.
+De `@Get('')` decorator geeft aan dat de `getAllTransactions()` methode reageert op GET verzoeken op de route `/api/transactions`.
 
-Het routepad is het resultaat van `@controller-pad + @methode-pad`. Hier dus `/api/places`.
+Het routepad is het resultaat van `@controller-pad + @methode-pad`. Hier dus `/api/transactions`.
 
-De methodenaam `getAllPlaces` is willekeurig. Je kan even goed de methodenaam listAllPlaces(),... gebruiken.
+De methodenaam `getAllTransactions` is willekeurig. Je kan even goed de methodenaam listAllTransactions(),... gebruiken.
 
-De methode `getAllPlaces()` retourneert momenteel een string.
+De methode `getAllTransactions()` retourneert momenteel een string.
 
-Start de server (als deze nog niet draait) en open de url <http://localhost:3000/api/places> in je browser of Postman. Je zou de string "this action returns all places" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. De request retourneert ook een statuscode 200 (d.i. de standaard).
+Start de server (als deze nog niet draait) en open de url <http://localhost:3000/api/transactions> in je browser of Postman. Je zou de string "this action returns all transactions" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. De request retourneert ook een statuscode 200 (d.i. de standaard).
 
-### Route parameters: `GET /api/places/:id`
+### Route parameters: `GET /transaction/:id`
 
-Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/places/15` of `/api/places/43` om een plaats met een bepaald id op te vragen.
+Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/transactions/15` of `/api/transactions/43` om een transactie met een bepaald id op te vragen.
 
 Een request bestaat uit een aantal lijnen met een specifieke betekenis. A.d.h.v. decorators kan NestJS specifieke informatie uit de request extraheren.
 
@@ -220,14 +226,14 @@ Voeg onderstaande inhoud toe aan de Controller.
 
 ```typescript
   @Get(':id')
-  getPlaceById(@Param() params: any): string {
-    return `This action returns a #${params.id} place`;
+  getTransactionById(@Param() params: any): string {
+    return `This action returns a #${params.id} transaction`;
   }
 ```
 
 Zorg dat je ``@Param`` importeert uit `@nestjs/common`.
 
-- `@Get(':id')`: Dit betekent dat elk verzoek naar /api/places/{id} door deze handler wordt afgehandeld.
+- `@Get(':id')`: Dit betekent dat elk verzoek naar /api/transactions/{id} door deze handler wordt afgehandeld.
 - `@Param()`: Maakt de routeparameter beschikbaar in de methode.
 - `params.id`: Hiermee haal je de waarde van de :id uit de URL op.
 
@@ -235,33 +241,33 @@ Je kan de id ook direct ophalen door de parameter direct te benoemen in `@Param(
 
 ```typescript
   @Get(':id')
-  getPlaceById(@Param('id') id:string): string {
-    return `This action returns a #${id} place`;
+  getTransactionById(@Param('id') id:string): string {
+    return `This action returns a #${id} transaction`;
   }
 ```
 
 Belangrijk: Zet routes met parameters na de statische routes in je controller.
 
 Waarom?
-Als je een route zoals @Get(':id') vóór een statische route @Get('transactions') plaatst, dan zal een verzoek naar /api/places/transactions behandeld worden alsof places een id is.
+Als je een route zoals @Get(':id') vóór een statische route @Get('places') plaatst, dan zal een verzoek naar /api/transactions/places behandeld worden alsof places een id is.
 
-### Request Body: `POST /api/places`
+### Request Body: `POST /api/transactions`
 
-Een POST-handler gebruik je om nieuwe data te creëren, hier een plaats. De data voor de plaats wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
+Een POST-handler gebruik je om nieuwe data te creëren, hier een transactie. De data voor de transactie wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
 
 Voeg onderstaande inhoud toe aan de Controller.
 
 ```typescript
   @Post('')
-  createPlace(@Body() body: any): string {
+  createTransaction(@Body() body: any): string {
     console.log(body);
-    return `This action adds a new place for ${body.name}`;
+    return `This action adds a new transaction for ${body.user}`;
   }
 ```
 
 - `@Post()`: Handelt een POST-verzoek af. Importeer uit `@nestjs/common`
 - `@Body() body`: any: Haalt de volledige body op als object. Importeer uit `@nestjs/common`. Voor de eenvoud gebruiken we nu any als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
-- `body.name`: Benader de waarden rechtstreeks.
+- `body.user`: Benader de waarden rechtstreeks.
 
 ### Status Codes
 
@@ -276,9 +282,9 @@ Standaard retourneert NestJS 200 OK, maar bij een succesvolle POST zou je explic
 ```typescript
   @Post('')
   @HttpCode(HttpStatus.CREATED) // 👈
-  createPlace(@Body() body): string {
+  createTransaction(@Body() body): string {
     console.log(body);
-    return `This action adds a new place ${body.name}`;
+    return `This action adds a new transaction for ${body.user}`;
   }
 ```
 
@@ -288,13 +294,13 @@ Als je meer controle wenst over de response kan je `@Res()` gebruiken. Een voorb
 
 ```typescript
   @Post('')
-  createPlace(@Body() body,  @Res() res: Response): string {
+  createTransaction(@Body() body,  @Res() res: Response): string {
     console.log(body);
     res.status(HttpStatus.CREATED).json({
-      message: 'place successfully created',
+      message: 'Transaction successfully created',
       data: body,
     });// 👈
-    return `This action adds a new place ${body.name}`;
+    return `This action adds a new transaction for ${body.user}`;
   }
 ```
 
@@ -302,7 +308,7 @@ Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `
 
 ### Best practice: gebruik DTO's
 
-Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in een NestJS.
+Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in een NestJS-app.
 
 In NestJS gebruik je DTO’s vooral om de structuur en validatie van binnenkomende en uitgaande gegevens te definiëren, bijvoorbeeld bij POST- of PUT-verzoeken.
 
@@ -310,22 +316,24 @@ Lees eerst volgende secties in de documentatie:
 
 - [DTO](https://docs.nestjs.com/controllers#request-payloads)
 
-Maak in de `places`folder een bestand `place.dto.ts`. Hierin plaatsen we alle DTO's die binnen places gebruikt worden.
+Maak in de `transactions`folder en daarbinnen een bestand `transaction.dto.ts`. Hierin plaatsen we alle DTO's die binnen transactions gebruikt worden.
 
 ```typescript
-export class CreatePlaceRequestDto {
-  name: string;
-  rating: number;
+export class CreateTransactionRequestDto {
+  amount: number;
+  date: Date;
+  user: string;
+  place: string;
 }
 ```
 
-Importeer deze klasse in de `PlaceController` en pas de code voor de `CreatePlace` aan.
+Importeer deze klasse in de `TransactionController` en pas de code voor de `createTransaction` aan.
 
 ```typescript
   @Post('')
   @HttpCode(HttpStatus.CREATED)
-  CreatePlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
-    return `This action adds a new place ${createPlaceDto.name}`;
+  createTransaction(@Body() createTransactionDto: CreateTransactionRequestDto): string {
+    return `This action adds a new transaction for ${createTransactionDto.user}`;
   }
 ```
 
@@ -334,27 +342,29 @@ Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 
 ```json
 {
-  "name": "HoGent",
-  "rating": 4,
+  "place": "HoGent",
+  "user": "Thomas Aelbrecht",
+  "date": "2025-09-17T15:12:39.856Z",
+  "amount": 100
 }
 ```
 
-### Query Parameters: `GET /api/places?page=2&limit=10`
+### Query Parameters: `GET /api/transactions?page=2&limit=10`
 
 Lees [Query parameters](https://docs.nestjs.com/controllers#query-parameters)
 
-In de meeste apps wordt gebruik gemaakt van grote (1000den plaatsen) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren,  de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. Bij paginatie haal je slechts een deel (een pagina) van de dataset op. Met `GET /api/places?offset=2&limit=10` haal je pagina 2 op met 10 plaatsen op de pagina.
+In de meeste apps wordt gebruik gemaakt van grote (1000den transacties) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren,  de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. BIj paginatie haal je slechts een deel (een pagina) van de dataset op. Met `GET /api/transactions?offset=2&limit=10` haal je pagina 2 op met 10 transacties op de pagina.
 
 ```typescript
   @Get()
-  getAllPlaces(
+  getAllTransactions(
     @Query('offset') offset = 1,
     @Query('limit') limit = 10) {
-    return `This action returns all places. Limit ${limit}, offset: ${offset}`;
+    return `This action returns all transactions. Limit ${limit}, offset: ${offset}`;
   }
 ```
 
-Query parameters worden vaak ook gebruikt voor search. Bvb `GET /api/places?search=xxx`
+Query parameters worden vaak ook gebruikt voor search. Bvb `GET /api/transactions?search=xxx`
 
 ### Oefening: Implementeer PUT en DELETE
 
@@ -364,17 +374,17 @@ Query parameters worden vaak ook gebruikt voor search. Bvb `GET /api/places?sear
 
 ```typescript
   //de controller
-  updatePlace(@Param('id') id: string, @Body() updatePlaceDto:UpdatePlaceRequestDto) {
-    return `This action updates the place ${updatePlaceDto.name} with #${id}`;
+  updateTransaction(@Param('id') id: string, @Body() updateTransactionDto:CreateTransactionRequestDto) {
+    return `This action updates the transaction with #${id} for user ${updateTransactionDto.user}`;
   }
 
   @Delete(':id')
-  deletePlace(@Param('id') id: string) {
-    return `This action removes the place with id #${id}`;
+  deleteTransaction(@Param('id') id: string) {
+    return `This action removes the transaction with id #${id}`;
   }
 
-  //En de implementatie van UpdatePlaceRequestDto in place.dto.ts
-  export class UpdatePlaceRequestDto extends CreatePlaceRequestDto {}
+  //En de implementatie van CreateTransactionRequestDto in transaction.dto.ts
+  export class CreateTransactionRequestDto extends CreateTransactionRequestDto {}
 ```
 <!-- markdownlint-enable header-start-left -->
 
@@ -408,12 +418,12 @@ Controllers moeten HTTP-verzoeken afhandelen en complexere taken delegeren aan p
 NestJS biedt een CLI commando om automatisch een service te genereren:
 
 ```bash
-nest generate service place --no-spec
+nest generate service transaction --no-spec
 ```
 
-Dit commando maakt het volgende bestand aan :
+Dit commando maakt het volgende bestand aan:
 
-- `src/place/place.service.ts`: de service zelf
+- `src/transaction/transaction.service.ts`: de service zelf
 
 --no-spec zorgt ervoor dat er geen testbestand wordt aangemaakt
 De service wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `providers` array). Zonder deze toevoeging zou de service niet beschikbaar zijn in de applicatie en niet injecteerbaar zijn.
@@ -424,39 +434,39 @@ De Service
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
-export class PlaceService {}
+export class TransactionService {}
 ```
 
-De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat PlaceService een klasse is die beheerd kan worden door de Nest IoC-container (zie verder).
+De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat TransactionService een klasse is die beheerd kan worden door de Nest IoC-container (zie verder).
 
 ### Dependency injection
 
-We passen de PlaceController aan om van de Service gebruik te maken.
+We passen de TransactionController aan om van de Service gebruik te maken.
 
 ```typescript
 import {
   Body,  Controller,  Delete,  Get,  Param,  Put,   Post,  Query, HttpStatus, HttpCode} from '@nestjs/common';
-import { PlaceService } from './place.service';// 👈
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto } from './place.dto';
+import { TransactionService } from './transaction.service';// 👈
+import { CreateTransactionRequestDto, CreateTransactionRequestDto } from './transaction.dto';
 
-@Controller('places')
-export class PlaceController {
-  constructor(private readonly placeService: PlaceService) {} // 👈
+@Controller('transactions')
+export class TransactionController {
+  constructor(private readonly transactionService: TransactionService) {}// 👈
 ```
 
 We injecteren de service in de constructor
 
 - `private`:  TypeScript maakt daar automatisch een attribuut van en vult deze in. Het attribuut is bovendien enkel toegankelijk in de klasse.
 - `readonly`: is een best practice. Dit verzekert dat we de service reference niet aanpassen
--`PlaceService`: het type is belangrijk!
+-`TransactionService`: het type is belangrijk!
 
 Om een instantie van een klasse aan te maken dienen we normaalgezien deze code te schrijven
 
 ```typescript
-const placeController = new PlaceController(new PlaceService())
+const transactionController = new TransactionController(new TransactionService())
 ```
 
-Maar NestJS fungeert als een `DI Container` of `IoC-container` (Inversion of control). Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de PlaceService aanmaken en doorgeven aan de placeController. Of i.g.v. een Singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
+Maar NestJS fungeert als een `DI Container` of `IoC-container` (Inversion of control). Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de TransactionService aanmaken en doorgeven aan de TransactionController. Of i.g.v. een Singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
 
 Een DI Container bevat 2 sets van informatie
 
@@ -474,120 +484,119 @@ Meer info, lees  [Dependency injection](https://docs.nestjs.com/providers#depend
 
 ### Implementatie service
 
-Voor de implementatie van de service maken we gebruik van de in-memory data `PLACES`. Dit is onze data source. In het volgende hoofdstuk vervangen we dit door een database.
+Voor de implementatie van de service maken we gebruik van de in-memory data `TRANSACTIONS`. Dit is onze data source. In het volgende hoofdstuk vervangen we dit door een database.
 
 Binnen de service voorzien we alle `CRUD acties` die we later vanuit de Controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
 
-We dienen ook het returntype van de methodes vast te leggen. Hiervoor maken we eerst de nodige Dto's aan in `place.dto.ts`.
+We dienen ook het returntype van de methodes vast te leggen. Hiervoor maken we eerst de nodige Dto's aan in `transaction.dto.ts`.
 
 ```typescript
-//src/place/place.dto.ts
-export class PlaceResponseDto extends CreatePlaceRequestDto {
+//src/transaction/transaction.dto.ts
+export class TransactionResponseDto extends CreateTransactionRequestDto {
    id: number;
 }
 
-export class PlaceListResponseDto {
-    items: PlaceResponseDto[];
+export class TransactionListResponseDto {
+    items: TransactionResponseDto[];
 ```
 
-- `PlaceResponseDto` beschrijft hoe een enkele plaats eruitziet in een API-respons, wanneer er 1 plaats wordt opgehaald of wanneer een plaats gecreëerd of aangepast wordt.
-- `PlaceListResponseDto` beschrijft de lijst van de plaatsen die zal worden teruggegeven bij het ophalen van alle plaatsen.
+`TransactionResponseDto` beschrijft hoe een enkele transactie eruitziet in een API-respons, wanneer er 1 transactie wordt opgehaald of na create, wijziging van een transactie. `TransactionListResponseDto` beschrijft de lijst van de transacties die zal worden teruggegeven bij het ophalen van alle transacties
 
 De service wordt als volgt aangepast:
 
 ```typescript
-//src/place/place.service.ts
-//src/place/place.service.ts
+//src/transaction/transaction.service.ts
 import { Injectable } from '@nestjs/common';
-import { PLACES } from '../data/mock-data';
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
+import { TRANSACTIONS } from '../data/mock-data.ts';
+import { CreateTransactionRequestDto, CreateTransactionRequestDto, TransactionListResponseDto, TransactionResponseDto } from './transaction.dto';
 
 @Injectable()
-export class PlaceService {
+export class TransactionService {
 
-  getAll(): PlaceListResponseDto {
-    return { items: PLACES };
+  getAll() : TransactionListResponseDto{
+    return {items:TRANSACTIONS};
   }
 
-  getById(id: number): PlaceResponseDto {
-    return PLACES.find(item => item.id === id);
+  getById(id: number): TransactionResponseDto{
+    return TRANSACTIONS.find(item => item.id === id);
   }
 
-  create({ name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
-    const newplace = { id: Math.max(...PLACES.map(item => item.id)) + 1, name, rating };
-    PLACES.push(newplace);
-    return newplace;
+  create({amount, date, user, place}: CreateTransactionRequestDto): TransactionResponseDto {
+    const newTransaction = {id:Math.max(...TRANSACTIONS.map(item => item.id))+1, amount, date, user, place};
+    TRANSACTIONS.push(newTransaction);
+    return newTransaction;
   }
 
-  updateById(id: number, { name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
-    throw new Error('not yet implemented');
+  updateById(id: number, {amount, date, user, place}: CreateTransactionRequestDto): TransactionResponseDto {
+   throw new Error('not yet implemented');
   }
 
   deleteById(id: number): void {
-    throw new Error('not yet implemented');
+   throw new Error('not yet implemented');
   }
 }
 ```
 
-`create`: We creëren een nieuwe plaats, met het id erbij en voegen ze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
+`create`: We creëren een nieuwe transactie, met het id erbij en voegen ze toe aan onze array. We genereren een nieuw id voor onze transactie door het hoogste id te zoeken en er 1 bij op te tellen.
 
 ### Implementatie controller
 
-In de controller kunnen we nu gebruik maken van de PlaceService. De code wordt
+In de controller kunnen we nu gebruik maken van de TransactionService. De code wordt
 
 ```typescript
-//src/place/place.controller.ts
+//src/transaction/transaction.controller.ts
 import {
-  Body, Controller, Delete, Get, Param, Put, Post, HttpStatus, HttpCode
-} from '@nestjs/common';
-import { PlaceService } from './place.service';
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
+  Body,  Controller,  Delete,  Get,  Param,  Put,   Post,  Query, HttpStatus, HttpCode} from '@nestjs/common';
+import { TransactionService } from './transaction.service';
+import { CreateTransactionRequestDto, UpdateTransactionRequestDto, TransactionListResponseDto, TransactionResponseDto } from './transaction.dto';
 
-@Controller('places')
-export class PlaceController {
-  constructor(private readonly placeService: PlaceService) { }
+@Controller('transactions')
+export class TransactionController {
+  constructor(private readonly transactionService: TransactionService) {}
 
   @Get()
-  getAllPlaces(): PlaceListResponseDto {
-    return this.placeService.getAll();
+  getAllTransactions() : TransactionListResponseDto {
+    return this.transactionService.getAll();
   }
 
   @Get(':id')
-  getPlaceById(@Param('id') id: string): PlaceResponseDto {
-    return this.placeService.getById(+id);
+  getTransactionById(@Param('id') id: string): TransactionResponseDto{
+    return this.transactionService.getById(+id);
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createPlace(@Body() createPlaceDto: CreatePlaceRequestDto): PlaceResponseDto {
-    return this.placeService.create(createPlaceDto);
+  createTransaction(@Body() createTransactionDto:CreateTransactionRequestDto): TransactionResponseDto {
+    return this.transactionService.create(createTransactionDto);
   }
+
+  ...
 }
 ```
 
-Vervang de hardgecodeerde data door de aanroep van de methodes in de PlaceService, that's it!
+Vervang de hardgecodeerde data door de aanroep van de methodes in de transactionService, that's it!
 Merk op:
 
-- `getAllplaces`: Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een items property die de array bevat.
+- `getAllTransactions`: Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een items property die de array bevat.
 Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
 Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
-- `getPlaceById`: De service verwacht een number, vandaar `+id`
-- `create`: Geef de net toegevoegde place ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
+- `getTransactionById`: De service verwacht een number, vandaar `+id`
+- `create`: Geef de net toegevoegde transaction ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
 
 Test alle endpoints uit in POSTMAN.
 
-- Doe een GET request naar <http://localhost:9000/api/places/1> en je zou de eerste plaats moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
-- Bij de POST request zou je de nieuwe plaats moeten zien verschijnen in de response en in de lijst van plaatsen als je een GET request doet naar `/api/places`. Natuurlijk is dit nog niet persistent en verdwijnt de plaats als je de server herstart.
+- Doe een GET request naar <http://localhost:9000/api/transactions/1> en je zou de eerste transactie moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+- Bij de POST request zou je de nieuwe transactie moeten zien verschijnen in de response en in de lijst van transacties als je een GET request doet naar `/api/transactions`. Natuurlijk is dit nog niet persistent en verdwijnt de transactie als je de server herstart.
 
 ### Oefening
 
  Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
 
-- `PUT /api/places/:id`:
-  - een plaats aanpassen
-  - geeft de aangepaste plaats terug
-- `DELETE /api/places/:id`:
-  - een plaats verwijderen
+- `PUT /api/transactions/:id`:
+  - een transactie aanpassen
+  - geeft de aangepaste transactie terug
+- `DELETE /api/transactions/:id`:
+  - een transactie verwijderen
   - geeft niets terug
   - De status 204 : NO CONTENT wordt teruggegeven
 - Extra (voor de ervaren JavaScript'ers): maak alle servicefuncties async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
@@ -596,31 +605,31 @@ Test alle endpoints uit in POSTMAN.
 
 ```typescript
   //de service
-  updateById(id: number, { name, rating }: UpdatePlaceRequestDto): PlaceResponseDto {
-    let existingplace = this.getById(id);
-    if (existingplace) {
-      existingplace = { id: id, name, rating }
+ updateById(id: number, { amount, date, user, place }: UpdateTransactionRequest): TransactionResponseDto {
+    let existingTransaction = this.getById(id);
+    if (existingTransaction) {
+      existingTransaction = {id:id, amount, date, user, place}
     }
-    return existingplace;
+    return existingTransaction;
   }
 
   deleteById(id: number): void {
-    const index = PLACES.findIndex(item => item.id === id);
+    const index = TRANSACTIONS.findIndex(item => item.id === id);
     if (index >= 0) {
-      PLACES.splice(index, 1);
+      TRANSACTIONS.splice(index, 1);
     }
   }
 
  //De controller
   @Put(':id')
-  updatePlace(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceRequestDto): PlaceResponseDto {
-    return this.placeService.updateById(+id, updatePlaceDto);
+  updateTransaction(@Param('id') id: string, @Body() updateTransactionDto:UpdateTransactionRequest): TransactionResponseDto{
+    return this.transactionService.updateById(+id, updateTransactionDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  deletePlace(@Param('id') id: string): void {
-    this.placeService.deleteById(+id);
+  deleteTransaction(@Param('id') id: string): void{
+     this.transactionService.deleteById(+id);
   }
 ```
 
@@ -632,26 +641,26 @@ Test alle endpoints uit in POSTMAN.
 
 ## Exception handling
 
-Als de gebruiker een plaats probeert op te vragen waarvan de id niet bestaat, dan wensen we een `404 NOT FOUND` terug te geven.
+Als de gebruiker een transactie probeert op te vragen waarvan de id niet bestaat, dan wensen we een `404 NOT FOUND` terug te geven.
 
 `NotFoundException` is een ingebouwde HTTP-exception in NestJS die je gebruikt om aan te geven dat een bepaald item niet gevonden is. Wanneer je deze exception gooit, stuurt NestJS automatisch een HTTP-response terug met statuscode 404 en een duidelijke foutboodschap.
 
 ```typescript
-//src/place/place.service.ts
+//src/transaction/transaction.service.ts
   import { Injectable, NotFoundException } from '@nestjs/common';// 👈1
 
-  getById(id: number): PlaceResponseDto {
-    const place = PLACES.find(item => item.id === id);// 👈2
-    if (!place) {
-      throw new NotFoundException(`place #${id} not found`);
+  getById(id: number): TransactionResponseDto {
+    const transaction = TRANSACTIONS.find(item => item.id === id);// 👈2
+    if (!transaction) {
+      throw new NotFoundException(`Transaction #${id} not found`);
     }// 👈3
-    return place;// 👈3
+    return transaction;// 👈3
   }
 ```
 
 1. Importeer `NotFoundException` uit de `@nestjs/common`namespace.
-2. Definieer een constante die de de opgevraagde plaats bevat.
-3. Als geen plaats gevonden, throw dan `NotFoundException`, anders retourneer de gevonden plaats.
+2. Definieer een constante die de de opgevraagde transactie bevat.
+3. Als geen transactie gevonden, throw dan `NotFoundException`, anders retourneer de gevonden transactie.
 
 NestJS heeft helpermethodes voor alle mogelijke status codes, zoals InternalServerError (500), BadRequestException (404),...
 
@@ -669,14 +678,14 @@ Welke soorten invoer kan een HTTP request bevatten?
 
 - Antwoord +
 
-  - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/places/1`.
+  - **URL parameters:** je kan bijvoorbeeld het id van een transactie meegeven in de URL, bv. `/api/transactions/1`.
   - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/places?name=loon`.
-  - **Body:** als je een nieuwe plaats maakt, dan geef je de nodige gegevens mee in de body van het request.
+  - **Body:** als je een nieuwe transactie maakt, dan geef je de nodige gegevens mee in de body van het request.
   - **Headers:** in het volgende hoofdstuk gaan we zien hoe we een token meegeven in de headers van een request, zo kunnen we de gebruiker authenticeren.
 
   In ons voorbeeldproject voegen we invoervalidatie toe voor de URL parameters, query parameters en de body van het request.
 
-Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoorbeeld in de `POST /api/places` moet het bedrag van de plaats een geldig getal zijn (geen string, object...) én is het verplicht op te geven. Indien aan de validatie niet voldaan is, retourneer je een status code 400 (= bad request) en geef je details over de fout. Zonder bijkomende informatie is de HTTP 400 nutteloos. Bij validatiefouten stop je onmiddellijk de verdere verwerking van het request en retourneer je een passende foutboodschap voor de client. Stuur het response zo snel mogelijk terug naar de client (= **fail-fast principe**). De oorzaak van de validatiefout moet goed worden uitgelegd en begrepen door de client. Technische aspecten mag je om veiligheidsredenen niet retourneren.
+Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoorbeeld in de `POST /api/transactions` moet het bedrag van de transactie een geldig getal zijn (geen string, object...) én is het verplicht op te geven. Indien aan de validatie niet voldaan is, retourneer je een status code 400 (= bad request) en geef je details over de fout. Zonder bijkomende informatie is de HTTP 400 nutteloos. Bij validatiefouten stop je onmiddellijk de verdere verwerking van het request en retourneer je een passende foutboodschap voor de client. Stuur het response zo snel mogelijk terug naar de client (= **fail-fast principe**). De oorzaak van de validatiefout moet goed worden uitgelegd en begrepen door de client. Technische aspecten mag je om veiligheidsredenen niet retourneren.
 
 ?> In geen geval is het goed om een HTTP 500 terug te geven bij fouten die de client kan vermijden. De HTTP 500 dient enkel voor serverfouten die de client niet kan vermijden. Een HTTP 400 is een fout veroorzaakt door de client en moet dus ook door de client worden opgelost.
 
@@ -700,16 +709,16 @@ NestJS voorziet bvb in volgende built-in pipes:
 Gebruik in een controller:
 
 ```typescript
-//src/place/place.controller.ts
+//src/transaction/transaction.controller.ts
   import {  ..., ParseIntPipe} from '@nestjs/common';
   @Get(':id')
-  getPlaceById(@Param('id', ParseIntPipe) id: number): PlaceResponseDto {// 👈
+  getTransactionById(@Param('id', ParseIntPipe) id: number): TransactionResponseDto {// 👈
     console.log(typeof id);
-    return this.placeService.getById(id);// 👈
+    return this.transactionService.getById(id);// 👈
   }
 ```
 
-Het type van de id parameter wordt nu een number. We hoeven de id niet langer naar een number om te zetten bij aanroep van de methode getById uit de PlaceService.
+Het type van de id parameter wordt nu een number. We hoeven de id niet langer naar een number om te zetten bij aanroep van de methode getById uit de transactionService.
 
 ### ValidationPipe
 
@@ -727,19 +736,21 @@ Validatie voeg je toe door gebruik te maken van `class-validator`. Je kunt decor
 pnpm i class-validator
 ```
 
-Pas de CreatePlaceRequestDto class aan
+Pas de CreateTransactionRequestDto class aan
 
 ```typescript
-//src/places/place.dto.ts
-import { IsNumber, IsString, Max, Min } from "class-validator";
+//src/transactions/transaction.dto.ts
+import { IsString, IsNumber, Min} from 'class-validator';
 
-export class CreatePlaceRequestDto {
-  @IsString()
-  name: string;
-  @IsNumber()
-  @Min(1)
-  @Max(5)
-  rating: number;
+export class CreateTransactionRequestDto {
+    @IsNumber()
+    @Min(1)
+    amount: number;
+    date: Date;
+    @IsString()
+    user: string;
+    @IsString()
+    place: string;
 }
 ```
 
@@ -771,12 +782,12 @@ In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit e
 Pas de `create` methode aan en doe een POST request. Bekijk de console.
 
 ```typescript
-  //src/place/place.controller.ts
+  //src/transaction/transaction.controller.ts
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createplace(@Body() createPlaceDto:CreatePlaceRequestDto): PlaceResponseDto {
-    console.log( createPlaceDto instanceof CreatePlaceRequestDto);// 👈
-    return this.placeService.create(createPlaceDto);
+  createTransaction(@Body() createTransactionDto:CreateTransactionRequestDto): TransactionResponseDto {
+    console.log( createTransactionDto instanceof CreateTransactionRequestDto);// 👈
+    return this.transactionService.create(createTransactionDto);
   }
 ```
 
@@ -809,14 +820,55 @@ bootstrap();
 
 Voer een POST request uit en bekijk het type.
 
-`Class-transformers` kunnen ook primitieve types omzetten. Alles wat via `@Param()` of` @Query()`... binnenkomt is van type string. Als we in de `getPlaceById` methode het type van de id veranderen in `Number` zal ValidationPipe dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
+Als we de decorator `IsDate()` toevoegen aan de date-member dan krijgen we een 400 BAD REQUEST.
 
 ```typescript
-//src/place/place.controller.ts
+//src/transaction/transaction.dto.ts
+import { IsString, IsNumber, Min, isDate} from 'class-validator';// 👈
+
+export class CreateTransactionRequestDto {
+    @IsNumber()
+    @Min(1)
+    amount: number;
+    @IsDate()// 👈
+    date: Date;
+    @IsString()
+    user: string;
+    @IsString()
+    place: string;
+}
+```
+
+De `ValidationPipe` (met class-validator) behandelt inkomende JSON-data als "plain objects" met strings. `@IsDate()` verwacht een echte Date-instantie, maar uit je JSON komt date als string. Vandaar "date must be a Date instance". Je moet dus NestJS vertellen om de date-string in het request om te zetten naar een Date-object. Dit doe je met: `@Type(() => Date)` van class-transformer. Via de `@MaxDate()` decorator leggen we op dat de datum kleiner of gelijk moet zijn aan de datum van vandaag.
+
+```typescript
+//src/transactions/transaction.dto.ts
+import { IsString, IsNumber, IsDate, MaxDate, Min} from 'class-validator';// 👈
+import { Type } from 'class-transformer';// 👈
+
+export class CreateTransactionRequestDto {
+    @IsNumber()
+    @Min(1)
+    amount: number;
+    @Type(() => Date)// 👈
+    @IsDate()
+    @MaxDate(() => new Date())// 👈
+    date: Date;
+    @IsString()
+    user: string;
+    @IsString()
+    place: string;
+}
+```
+
+Class-transformers kunnen ook primitieve types omzetten. Alles wat via @Param() of @Query()... binnenkomt is van type string. Als we in de `getTransactionById` methode het type van de id veranderen in Number zal ValidationPipe dit proberen om te zetten. Verwijder de ParseIntPipe en pas aan.
+
+```typescript
+//src/transaction/transaction.controller.ts
   @Get(':id')
-  getPlaceById(@Param('id') id: number): PlaceResponseDto {// 👈
+  getTransactionById(@Param('id') id: number): TransactionResponseDto {// 👈
     console.log(typeof id);
-    return this.placeService.getById(id);
+    return this.transactionService.getById(id);
   }
 ```
 
@@ -857,7 +909,7 @@ Page en offset zijn optioneel.
 
 In NestJS is een module een manier om je applicatie op te delen in overzichtelijke, goed georganiseerde stukken. Een module is eigenlijk een TypeScript-klasse met de `@Module()-decorator`. Binnen zo’n module geef je aan welke controllers, services en andere providers erbij horen.
 
-Je kunt het zien als een container die alles groepeert wat bij een bepaald domein of functie hoort. Bijvoorbeeld: je maakt een `PlaceModule` om alles rond placebeheer (controllers, services, ...) bij elkaar te houden.
+Je kunt het zien als een container die alles groepeert wat bij een bepaald domein of functie hoort. Bijvoorbeeld: je maakt een `TransactionModule` om alles rond transactionbeheer (controllers, services, repositories) bij elkaar te houden.
 
 Modules helpen je applicatie modulair en schaalbaar te maken. Ze zorgen ervoor dat je code gestructureerd is, makkelijk te onderhouden en herbruikbaar. Elke NestJS-applicatie heeft minstens één root module (meestal `AppModule`), maar je kunt er zoveel maken als je wil om je app logisch op te splitsen.
 
@@ -866,17 +918,17 @@ Lees [Modules] (<https://docs.nestjs.com/modules>)
 NestJS biedt een CLI commando om automatisch een module te genereren:
 
 ```bash
-nest g module place
+nest g module transaction
 ```
 
-De module klasse wordt toegevoegd aan de `place` folder en wordt geïmporteerd in de `AppModule`.
+De module klasse wordt toegevoegd aan de `transaction` folder en wordt geïmporteerd in de `AppModule`.
 
 ```typescript
-//src/place/place.module.ts
+//src/transaction/transaction.module.ts
 import { Module } from '@nestjs/common';
 
 @Module({})
-export class PlaceModule {}
+export class TransactionModule {}
 ```
 
 De `@Module()-decorator` maakt van een TypeScript-klasse een NestJS-module. Hierin geef je aan wat bij deze module hoort. Het is als een container die controllers, services en andere dependencies groepeert.
@@ -889,20 +941,20 @@ De `@Module()-decorator` maakt van een TypeScript-klasse een NestJS-module. Hier
 Pas de code aan:
 
 ```typescript
-//src/place/place.module.ts
+//src/transaction/transaction.module.ts
 import { Module } from '@nestjs/common';
-import { PlaceController } from './place.controller';// 👈
-import { PlaceService } from './place.service';// 👈
+import { TransactionController } from './transaction.controller';// 👈
+import { TransactionService } from './transaction.service';// 👈
 
 @Module({// 👈
   imports: [],// 👈
-  controllers: [PlaceController],// 👈
-  providers: [PlaceService],// 👈
+  controllers: [TransactionController],// 👈
+  providers: [TransactionService],// 👈
 })// 👈
-export class PlaceModule {}
+export class TransactionModule {}
 ```
 
-Verwijder dan de `PlaceController` en `PlaceService` uit `AppModule`.
+Verwijder dan de `TransactionController` en `TransactionService` uit `AppModule`.
 
 Het is een goed idee om steeds eerst de module aan te maken en dan de controllers en services. Dan wordt alles in de correcte module geplaatst.
 
@@ -1019,7 +1071,7 @@ Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aan
 1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. Dit heet het preflight request.
 2. De werkelijke aanvraag, gemaakt op de gewenste resource.
 
-Lees [Cors](https://docs.nestjs.com/security/cors)
+Lees [Cors] (<https://docs.nestjs.com/security/cors>)
 
 Pas de code in `main.ts` aan
 
@@ -1034,10 +1086,10 @@ Pas de code in `main.ts` aan
 
 Deze code zorgt ervoor dat je NestJS-backend CORS toestaat
 
-- `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
-  - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
-  - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
+-`origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
 
+- Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
+- Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
 - `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming hoeft te worden gevraagd
 
 ### Oefening 6 - Je eigen project
