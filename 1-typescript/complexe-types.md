@@ -4,7 +4,7 @@
 
 Uiteraard zijn er meer dan alleen de basis types die we in de vorige sectie hebben gezien. 
 In deze sectie gaan we kijken naar de complexere types die TypeScript kent.
-Opgelet, Deze voorbeelden werken enkel wanneer we het keyword `type` gebruiken, bij `interface` zal dit niet werken.
+Opgelet, deze voorbeelden werken enkel wanneer we het keyword `type` gebruiken, bij `interface` zal dit niet werken.
 
 > Onderstaande operators kunnen vaak werken met interfaces als argument, maar ze retourneren nadien een type.
 
@@ -60,7 +60,7 @@ Zet je de union operator helemaal vooraan het type, dan moet het één van de ty
 
 ```typescript
 type NetworkLoadingState = {
-  state: 'loading'; // Dit is een speicaal type, dit heet een string literal type. Hierbij wordt de waarde van de property 'state' gecontroleerd dat deze zeker 'loading' is.
+  state: 'loading';
 };
 type NetworkFailedState = {
   state: 'failed';

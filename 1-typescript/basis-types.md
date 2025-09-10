@@ -80,10 +80,10 @@ const sum: BinaryOperationInterface = (a: number, b: number) => {
 
 ### Gevorderd voorbeeld
 
-Stel dat we nu zouden willen zorgen dat we eenvoudig reeksen van getallen kunnen vermenigvuldigen, zodat we bijvoorbeeld de tafel-van-twee, of de tafel-van-drie, kunnen berekenen.
+Stel dat we nu zouden willen zorgen dat we eenvoudig reeksen van getallen kunnen vermenigvuldigen, zodat we bijvoorbeeld de tafel van twee, of de tafel van drie, kunnen berekenen.
 Daarvoor willen we een vermenigvuldig-functie maken, waarbij we moeten zeggen dat we een getal willen vermenigvuldigen met een andere getal, maar we willen niet telkens de 2 (of 3) opnieuw moeten opgeven.
 Hiervoor willen we dus een functie, die een andere functie teruggeeft.
-Het onderstaande voorbeeld heeft dus als beschrijven dat we een functie hebben met één parameter (waarbij wij dus willen opgeven dat we willen vermenigvuldigen met 2), en een andere functie als return type, zodat we kunnen meegeven waarmee we willen vermenigvuldigen.
+Het onderstaande voorbeeld heeft dus als beschrijving dat we een functie hebben met één parameter (waarbij wij dus willen opgeven dat we willen vermenigvuldigen met 2), en een andere functie als return type, zodat we kunnen meegeven waarmee we willen vermenigvuldigen.
 
 ```typescript
 type MultiplyFunction = (a: number) => (b: number) => number;
@@ -255,11 +255,39 @@ class Persoon2 {
 }
 ```
 
-De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework. In de olods Web Services en Front-end Web Development zal er echter enkel gebruik gemaakt worden van interfaces/types.
+De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework.
 
 Je kan hier dus ook keywords als `extends` en `implements` gebruiken om respectievelijk te erven van een klasse/interface of een interface te implementeren.
 
 Je kan aan de constructor van een klasse `private`, `public`, `protected` argumenten meegeven. Dit is syntactic sugar voor het aanmaken van properties met dezelfde naam en het toekennen van de argumenten aan de properties (zie `Persoon2` hierboven).
+
+## Literals
+
+Literals zijn een speciaal type in typescript. 
+Hierbij kunnen we omschrijven dat slechts een bepaald aantal specifieke waarden zijn toegestaan.
+Het meest voorkomende voorbeeld is het type `string`.
+Een voorbeeld hiervan is het veld `state` in het volgende voorbeeld.
+
+Ditzelfde voorbeeld wordt verderop opnieuw gebruikt om aan te geven dat een status ofwel aan het laden, ofwel mislukt, ofwel succesvol is.
+In dit voorbeeld tonen we aan dat bij het type `NetworkLoadingState` de waarde van het veld `state` altijd `loading` is. 
+
+```typescript
+type NetworkLoadingState = {
+  state: 'loading';
+};
+type NetworkFailedState = {
+  state: 'failed';
+  code: number;
+};
+type NetworkSuccessState = {
+  state: 'success';
+  response: {
+    title: string;
+    duration: number;
+    summary: string;
+  };
+};
+```
 
 ### Sidenote Arrays
 
