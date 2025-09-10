@@ -47,7 +47,7 @@ Hierbij weten we dat we tweemaal een `number` als input willen, en dat we een `n
 Dit zouden we zowel als interface als type kunnen maken, zoals te zien is in het onderstaande voorbeeld.
 Hierbij is ook meteen duidelijk dat de syntax van de interface en het type zeer gelijkaardig zijn, mits enkele kleine verschillen.
 
-Hierbij zien we dat de ronde haakjes aangeven dat a en b de parameters zijn van het type `number`. 
+Hierbij zien we dat de ronde haakjes aangeven dat a en b de parameters zijn van het type `number`.
 De functie zelf zal dan een `number` teruggeven.
 
 ```typescript
@@ -58,7 +58,7 @@ interface BinaryOperationInterface {
 type BinaryOperationType = (a: number, b: number) => number;
 ```
 
-Deze kunnen we vervolgens gebruiken om functies te definiëren. 
+Deze kunnen we vervolgens gebruiken om functies te definiëren.
 Let op, wanneer we gebruik maken van het keyword `function`, moeten we nog steeds de parameters en het return type opgeven.
 
 ```typescript
@@ -68,7 +68,7 @@ function sum(a: number, b: number): number {
 ```
 
 Wanneer we nu deze functie als een variabele willen gebruiken, dan kunnen we wel het volledige nut van de interface of het type gebruiken.
-Hierbij beschrijven we dus wat het type van de variabele is, waarbij we ons gedefinieerd type/interface gebruiken. 
+Hierbij beschrijven we dus wat het type van de variabele is, waarbij we ons gedefinieerd type/interface gebruiken.
 Vervolgens zetten we het "="-teken, waarbij we de parameters nogmaals moeten herhalen, en de implementatie van de functie volgt.
 Hierdoor zal typescript afdwingen dat we dezelfde parameters en return type gebruiken als in de interface/type.
 
@@ -255,7 +255,7 @@ class Persoon2 {
 }
 ```
 
-De OO features van TypeScript worden intensief gebruikt in bv. Angular, een front-end framework.
+De OO features van TypeScript worden intensief gebruikt in bv. Angular (een front-end framework) of NestJS (een back-end framework). In het olod Web Services zal je intensief met deze features werken, in het olod Front-end Web Development zal je enkel functioneel programmeren.
 
 Je kan hier dus ook keywords als `extends` en `implements` gebruiken om respectievelijk te erven van een klasse/interface of een interface te implementeren.
 
@@ -263,13 +263,13 @@ Je kan aan de constructor van een klasse `private`, `public`, `protected` argume
 
 ## Literals
 
-Literals zijn een speciaal type in typescript. 
+Literals zijn een speciaal type in typescript.
 Hierbij kunnen we omschrijven dat slechts een bepaald aantal specifieke waarden zijn toegestaan.
 Het meest voorkomende voorbeeld is het type `string`.
 Een voorbeeld hiervan is het veld `state` in het volgende voorbeeld.
 
 Ditzelfde voorbeeld wordt verderop opnieuw gebruikt om aan te geven dat een status ofwel aan het laden, ofwel mislukt, ofwel succesvol is.
-In dit voorbeeld tonen we aan dat bij het type `NetworkLoadingState` de waarde van het veld `state` altijd `loading` is. 
+In dit voorbeeld tonen we aan dat bij het type `NetworkLoadingState` de waarde van het veld `state` altijd `loading` is.
 
 ```typescript
 type NetworkLoadingState = {
