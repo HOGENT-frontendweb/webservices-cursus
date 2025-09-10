@@ -524,6 +524,19 @@ Merk op dat er een `.gitignore` bestand aanwezig is in de root van het project. 
 
 Kijk gerust eens welke bestanden er allemaal genegeerd worden. Je kan dit bestand ook aanpassen naar eigen wens, maar dit is een vrij complete voor een Node.js project. Een vrij uitgebreide `.gitignore` voor Node.JS projecten is te vinden op GitHub: <https://github.com/github/gitignore/blob/main/Node.gitignore>.
 
+### tsconfig.json
+
+NestJS gebruikt TypeScript, een superset van JavaScript die statische types toevoegt. TypeScript helpt fouten te voorkomen en maakt de code beter leesbaar en onderhoudbaar. Het bestand `tsconfig.json` bevat de configuratie voor de TypeScript compiler. Open het bestand en bekijk de inhoud. Dit bevat enkele belangrijke eigenschappen:
+
+- `compilerOptions`: de instellingen voor de TypeScript compiler
+  - `module`: het modulesysteem dat gebruikt wordt (CommonJS is standaard in Node.js)
+  - `target`: de versie van JavaScript die gegenereerd wordt
+  - `strict`: of strict mode ingeschakeld is (aanbevolen), zorgt ervoor dat TypeScript strenger controleert op types
+  - `outDir`: de map waar de gegenereerde JavaScript bestanden worden geplaatst (`dist` is standaard)
+  - Alle andere opties zijn te vinden op <https://www.typescriptlang.org/tsconfig>
+
+Normaal gesproken hoef je aan dit bestand niets te wijzigen, tenzij je specifieke wensen hebt. Voor ons project gaan we **de `baseUrl` optie verwijderen** uit `compilerOptions`. Het is niet aan te raden deze optie te gebruiken, omdat dit kan zorgen voor problemen en verwarring bij imports.
+
 ### Projectstructuur
 
 Alvorens we verder gaan, is het belangrijk om de projectstructuur van de basisapplicatie te begrijpen. Lees hiervoor de [First steps sectie](https://docs.nestjs.com/first-steps) in de NestJS documentatie. Een paar opmerkingen voor tijdens het lezen:
