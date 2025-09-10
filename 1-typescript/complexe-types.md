@@ -2,7 +2,9 @@
 
 ## Complexe types
 
-Uiteraard zijn er meer dan alleen de basis types die we in de vorige sectie hebben gezien. In deze sectie gaan we kijken naar de complexere types die TypeScript kent.
+Uiteraard zijn er meer dan alleen de basis types die we in de vorige sectie hebben gezien.
+In deze sectie gaan we kijken naar de complexere types die TypeScript kent.
+Opgelet, deze voorbeelden werken enkel wanneer we het keyword `type` gebruiken, bij `interface` zal dit niet werken.
 
 > Onderstaande operators kunnen vaak werken met interfaces als argument, maar ze retourneren nadien een type.
 

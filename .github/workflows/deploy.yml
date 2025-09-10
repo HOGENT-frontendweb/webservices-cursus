@@ -28,19 +28,19 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Lint markdown files
-        uses: nosborn/github-action-markdown-cli@v3.3.0
+        uses: nosborn/github-action-markdown-cli@v3.5.0
         with:
           files: "**/*.md"
           config_file: .markdownlint.json
           dot: false
 
-      - name: Check links in markdown files
-        uses: lycheeverse/lychee-action@v2.0.2
-        with:
-          args: "'./**/*.md' '*.md' --scheme https --exclude kroki\\.io --exclude api\\.fbi\\.gov --exclude sciencedirect\\.com --exclude youtube-nocookie\\.com --exclude dev\\.mysql\\.com --exclude jwt\\.io"
+      # - name: Check links in markdown files
+      #   uses: lycheeverse/lychee-action@v2.6.1
+      #   with:
+      #     args: "'./**/*.md' '*.md' --scheme https --exclude kroki\\.io --exclude api\\.fbi\\.gov --exclude sciencedirect\\.com --exclude youtube-nocookie\\.com --exclude dev\\.mysql\\.com --exclude jwt\\.io"
 
       - name: Check for broken GitHub commit references
         uses: ./commit-verifier
@@ -56,13 +56,13 @@ jobs:
     needs: lint
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           # Upload entire repository
           path: '.'

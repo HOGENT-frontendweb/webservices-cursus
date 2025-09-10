@@ -114,3 +114,6 @@ dist
 
 # macOS files
 .DS_Store
+
+# IntelliJ files
+.idea
