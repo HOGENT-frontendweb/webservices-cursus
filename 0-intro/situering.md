@@ -92,6 +92,7 @@ Als dat niets oplevert, kan je op twee manieren hulp krijgen:
 - Koppel jouw lector aan het issue als assignee
 - Gebruik het voorziene template dat automatisch wordt geladen
 - Geef voldoende context en details over je probleem
+- Om elke student evenveel te kunnen helpen, mag je maximaal 3 issues openen
 
 **Belangrijk:** Technische vragen via e-mail worden niet beantwoord. Gebruik altijd de bovenstaande kanalen voor de beste en snelste hulp.
 
