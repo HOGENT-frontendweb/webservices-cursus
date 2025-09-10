@@ -36,11 +36,9 @@ Een volledig overzicht van de mogelijkheden van TypeScript kan je vinden in de [
 
 [Complexe types](complexe-types.md ':include')
 
-[Functioneel programmeren](functioneel-programmeren.md ':include')
+[Andere belangrijke technieken](andere-belangrijke-technieken.md ':include')
 
 [Async code](async-code.md ':include')
-
-[Array functions](array-functions.md ':include')
 
 ## Diverse handigheidjes
 
