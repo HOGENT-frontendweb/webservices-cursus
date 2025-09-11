@@ -105,7 +105,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
 
 ## CRUD operaties voor plaatsen
 
-Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor places, d.w.z.:
+Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD operaties uit voor plaatsen, d.w.z.:
 
 - `GET /api/places`: alle plaatsen opvragen
 - `GET /api/places/:id`: een specifieke plaats opvragen
@@ -113,22 +113,24 @@ Nu is het tijd om aan onze API te starten! In dit voorbeeld werken we alle CRUD 
 - `PUT /api/places/:id`: een plaats aanpassen
 - `DELETE /api/places/:id`: een plaats verwijderen
 
-NestJS biedt de tools om de inkomende requests af te handelen en een response terug te sturen.
+NestJS biedt de nodige tools om de inkomende requests af te handelen en een response terug te sturen:
 
 ![Tools](./images/placesoverview.png)
 
 ## Datalaag
 
-Deze beheert onze data. Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal uit een databank moeten komen. Voorlopig gaan we even met mock data werken (in-memory). Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in het volgende hoofdstuk toegevoegd. We definiëren ook een interface `Place` die het contract vastlegt.
+De datalaag beheert onze data. Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal in de toekomst uit een databank moeten komen, maar voorlopig werken we even met mock data (in-memory).
+
+Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in een volgend hoofdstuk toegevoegd. We definiëren ook een interface `Place` die vastlegt hoe een plaats eruitziet.
 
 ```ts
 export interface Place {
-  id:number
+  id: number;
   name: string;
   rating: number;
 }
 
-export const PLACES = [
+export const PLACES: Place[] = [
   {
     id: 1,
     name: 'Dranken Geers',
@@ -147,158 +149,169 @@ export const PLACES = [
 ];
 ```
 
-We houden hier voorlopig een variabele `PLACES` bij met onze places. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies of klassen beschikbaar te maken voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
+We houden hier voorlopig een variabele `PLACES` bij met onze places. Deze moeten uiteindelijk in de databank terechtkomen. Je merkt dat we hier een `export` gebruiken. Dit is een manier om variabelen, functies, klassen, enz. beschikbaar te maken voor andere bestanden. In dit geval gebruiken we een named export, dus moeten we deze variabelen importeren met exact dezelfde naam.
 
-Als we ook de PLACES willen updaten gaan we een id nodig hebben om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Bij toevoegen van een plaats moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de plaats te zoeken en aan te passen.
+Als we ook de `PLACES` willen updaten, hebben we een id nodig om elementen eenduidig van elkaar te onderscheiden. We maken gebruik van een simpele auto-increment (= een geheel getal dat telkens met 1 verhoogd wordt). Bij toevoegen van een plaats moeten we het grootste id zoeken en daar 1 bij optellen. Bij het updaten hoeven we enkel de plaats te zoeken en aan te passen.
 
-## Place controller
+## PlaceController
 
-Controllers zijn verantwoordelijk voor het verwerken van binnenkomende verzoeken en het terugsturen van een antwoord naar de client. Het routingmechanisme bepaalt welke controller elk verzoek afhandelt. Vaak heeft een controller meerdere routes, en elke route kan een andere actie uitvoeren. Onze controller zal alle bovenstaande routes bevatten.
+Controllers zijn verantwoordelijk voor het verwerken van binnenkomende verzoeken en het terugsturen van een antwoord naar de client. Het routingmechanisme bepaalt welke controller een verzoek afhandelt. Vaak heeft een controller meerdere routes, en elke route kan een andere actie uitvoeren. Onze controller zal alle [bovenstaande routes](#crud-operaties-voor-plaatsen) bevatten.
 
 ### Generatie controller
 
 NestJS biedt een CLI commando om automatisch een controller te genereren:
 
 ```bash
-nest generate controller place
+nest generate controller place --no-spec
 ```
 
-Dit commando maakt een folder place aan en de volgende bestanden:
+Dit commando maakt een map `place` met een bestand `place.controller.ts` aan. Dit bestand bevat de basisstructuur van een controller. De `no-spec` flag zorgt ervoor dat er geen unit test bestand wordt aangemaakt. Voorlopig laten we de testen achterwege, in een later hoofdstuk voegen we daarentegen integratietesten toe.
 
-- `src/place/place.controller.ts`: de controller zelf
-- `src/place/place.controller.spec.ts`: test bestand voor de controller
+De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging is de controller niet beschikbaar in de applicatie.
 
-Wens je geen test bestand, gebruik dan de flag `--no-spec`.
+Open het bestand `src/place/place.controller.ts`. De `@Controller('place')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/api/place`.
 
-De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging zou de controller niet beschikbaar zijn in de applicatie.
+De Best Practices geven aan dat alle routes zelfstandige naamwoorden in het meervoud dienen te zijn. Pas de naam van de route aan `@Controller('places')`
 
-Open het bestand `src/place/place.controller.ts`. De `@Controller('place')` decorator geeft aan dat deze controller verantwoordelijk is voor alle routes die beginnen met `/api/place`. De Best Practices geven aan dat alle routes zelfstandige naamwoorden in het meervoud dienen te zijn. Pas de naam van de route aan `@Controller('places')`
+### HTTP decorators
 
-### Overzicht van de decorators
+Elke route in je applicatie wordt afgehandeld door een specifieke methode in je controller. Met behulp van HTTP decorators kan je aangeven welke methode welke HTTP-verzoeken afhandelt:
 
-Elke route in je applicatie wordt afgehandeld door een specifieke methode in je controller. Met behulp van HTTP-decoratoren `Get()`, `@Post()`,... decoreer je de methode met een routepad.
+- `@Get()`: voor GET-verzoeken
+- `@Post()`: voor POST-verzoeken
+- `@Put()`: voor PUT-verzoeken
+- `@Delete()`: voor DELETE-verzoeken
+- Enzovoort...
 
-### Static routes: `GET /api/places`
+### Statische route `GET /api/places`
 
-Voeg onderstaande inhoud toe aan de Controller.
+Als eerste zullen we de statische route `GET /api/places` implementeren. Deze route haalt alle plaatsen op. Voeg onderstaande inhoud toe aan de controller.
 
 ```typescript
-  @Get('')
-  getAllPlaces(): string {
-    return 'this action returns all places';
-  }
+@Get()
+getAllPlaces(): string {
+  return 'this action returns all places';
+}
 ```
 
-Importeer `@Get` uit de `@nestjs/common` package.
+Importeer `Get` uit de `@nestjs/common` package.
 
-De `@Get('')` decorator geeft aan dat de `getAllPlaces()` methode reageert op GET verzoeken op de route `/api/places`.
+De `@Get()` decorator geeft aan dat de `getAllPlaces()` methode reageert op GET verzoeken op de route `/api/places`.
 
-Het routepad is het resultaat van `@controller-pad + @methode-pad`. Hier dus `/api/places`.
+Het routepad is het resultaat van `global prefix + controller pad + methode pad`. Hier dus `/api/places`.
 
-De methodenaam `getAllPlaces` is willekeurig. Je kan even goed de methodenaam listAllPlaces(),... gebruiken.
+De methodenaam `getAllPlaces` is willekeurig. Je kan even goed de methodenaam `listAllPlaces` of iets anders gebruiken.
 
 De methode `getAllPlaces()` retourneert momenteel een string.
 
-Start de server (als deze nog niet draait) en open de url <http://localhost:3000/api/places> in je browser of Postman. Je zou de string "this action returns all places" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. De request retourneert ook een statuscode 200 (d.i. de standaard).
+Start de server (als deze nog niet draait) en open de url <http://localhost:3000/api/places> in je browser of Postman. Je zou de string "this action returns all places" moeten zien. We retourneren hier een primitief datatype, dus Nest retourneert de waarde en past hier geen JSON serialisatie toe. Het request retourneert ook een statuscode 200, dit is de standaard voor een succesvolle GET request.
 
 ### Route parameters: `GET /api/places/:id`
 
 Niet alle routes kunnen gewoon een hardgecodeerde string zijn, soms heb je een parameter nodig zoals bv. `/api/places/15` of `/api/places/43` om een plaats met een bepaald id op te vragen.
 
-Een request bestaat uit een aantal lijnen met een specifieke betekenis. A.d.h.v. decorators kan NestJS specifieke informatie uit de request extraheren.
+Een request bestaat uit een aantal lijnen met een specifieke betekenis. Aan de hand van decorators kan NestJS specifieke informatie uit het request extraheren.
 
 ![Decorators](./images/decorators.png)
 
-Hiervoor gebruik je `route parameters` – stukjes in de URL die dynamisch kunnen zijn, zoals een id.
+Om dynamische waarden uit de URL te halen, zoals een id, gebruiken we route parameters.
 
 Lees eerst volgende secties in de documentatie:
 
 - [Request objects](https://docs.nestjs.com/controllers#request-object)
 - [Route parameters](https://docs.nestjs.com/controllers#route-parameters)
 
-Voeg onderstaande inhoud toe aan de Controller.
+Voeg onderstaande code toe aan de Controller.
 
 ```typescript
-  @Get(':id')
-  getPlaceById(@Param() params: any): string {
-    return `This action returns a #${params.id} place`;
-  }
+@Get(':id')
+getPlaceById(@Param() params: any): string {
+  return `This action returns a #${params.id} place`;
+}
 ```
 
-Zorg dat je ``@Param`` importeert uit `@nestjs/common`.
+Zorg dat je `@Param` importeert uit `@nestjs/common`.
 
-- `@Get(':id')`: Dit betekent dat elk verzoek naar /api/places/{id} door deze handler wordt afgehandeld.
-- `@Param()`: Maakt de routeparameter beschikbaar in de methode.
-- `params.id`: Hiermee haal je de waarde van de :id uit de URL op.
+- `@Get(':id')`: Dit betekent dat elk verzoek naar `/api/places/:id` door deze handler wordt afgehandeld. Het stukje `:id` is een routeparameter die een dynamische waarde vertegenwoordigt.
+- `@Param()`: Maakt alle route parameters beschikbaar in de methode.
+- `params.id`: Hiermee haal je de waarde van de `:id` uit de URL op.
 
-Je kan de id ook direct ophalen door de parameter direct te benoemen in `@Param()`. Zo is de code korter en duidelijker.
+Je kan het id ook direct ophalen door de parameter direct te benoemen in `@Param()`. Zo is de code korter en duidelijker.
 
 ```typescript
-  @Get(':id')
-  getPlaceById(@Param('id') id:string): string {
-    return `This action returns a #${id} place`;
-  }
+@Get(':id')
+getPlaceById(@Param('id') id:string): string {
+  return `This action returns a #${id} place`;
+}
 ```
 
-Belangrijk: Zet routes met parameters na de statische routes in je controller.
+**Belangrijk**: zet routes met parameters na de statische routes in je controller.
 
-Waarom?
-Als je een route zoals @Get(':id') vóór een statische route @Get('transactions') plaatst, dan zal een verzoek naar /api/places/transactions behandeld worden alsof places een id is.
+Waarom? Als je een route zoals `@Get(':id')` vóór een statische route `@Get('transactions')` plaatst, dan zal een verzoek naar `/api/places/transactions` behandeld worden alsof `transactions` een id is.
 
-### Request Body: `POST /api/places`
+### Request body: `POST /api/places`
 
-Een POST-handler gebruik je om nieuwe data te creëren, hier een plaats. De data voor de plaats wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
+Een POST-handler gebruik je om nieuwe data te creëren, in dit geval een plaats. De data voor de plaats wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
 
-Voeg onderstaande inhoud toe aan de Controller.
+Voeg onderstaande inhoud toe aan de controller.
 
 ```typescript
-  @Post('')
-  createPlace(@Body() body: any): string {
-    console.log(body);
-    return `This action adds a new place for ${body.name}`;
-  }
+@Post()
+createPlace(@Body() body: any): string {
+  console.log(body);
+  return `This action adds a new place for ${body.name}`;
+}
 ```
 
-- `@Post()`: Handelt een POST-verzoek af. Importeer uit `@nestjs/common`
-- `@Body() body`: any: Haalt de volledige body op als object. Importeer uit `@nestjs/common`. Voor de eenvoud gebruiken we nu any als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
+- `@Post()`: Handelt een POST-verzoek af. Importeer dit uit `@nestjs/common`.
+- `@Body() body: any`: Haalt de volledige body op als object. Importeer dit uit `@nestjs/common`. Voor de eenvoud gebruiken we nu `any` als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
 - `body.name`: Benader de waarden rechtstreeks.
 
-### Status Codes
+Test dit uit in Postman. Maak een POST request naar <http://localhost:3000/api/places> met volgende body:
+
+```json
+{
+  "name": "HOGENT",
+  "rating": 5
+}
+```
+
+### HTTP statuscodes
 
 In een RESTful API geven HTTP status codes aan of een verzoek geslaagd is, wat er gebeurd is, of waarom iets is mislukt.
 
-Lees eerst volgende secties in de documentatie:
+Lees eerst volgende sectie in de documentatie:
 
-- [Status Code](https://docs.nestjs.com/controllers#status-code)
+- [Status code](https://docs.nestjs.com/controllers#status-code)
 
-Standaard retourneert NestJS 200 OK, maar bij een succesvolle POST zou je expliciet 201 Created moeten teruggeven, omdat je iets nieuws aanmaakt.
+Standaard retourneert NestJS de status "200 OK". Echter bij een succesvolle POST zou je expliciet "201 Created" moeten teruggeven, omdat je iets nieuws aanmaakt.
 
 ```typescript
-  @Post('')
-  @HttpCode(HttpStatus.CREATED) // 👈
-  createPlace(@Body() body): string {
-    console.log(body);
-    return `This action adds a new place ${body.name}`;
-  }
+@Post()
+@HttpCode(HttpStatus.CREATED) // 👈
+createPlace(@Body() body: any): string {
+  console.log(body);
+  return `This action adds a new place ${body.name}`;
+}
 ```
 
-@HttpCode en HttpStatus importeer je uit `@nestjs/common`.
+`@HttpCode` en `HttpStatus` importeer je uit `@nestjs/common`.
 
 Als je meer controle wenst over de response kan je `@Res()` gebruiken. Een voorbeeld:
 
 ```typescript
-  @Post('')
-  createPlace(@Body() body,  @Res() res: Response): string {
-    console.log(body);
-    res.status(HttpStatus.CREATED).json({
-      message: 'place successfully created',
-      data: body,
-    });// 👈
-    return `This action adds a new place ${body.name}`;
-  }
+@Post()
+createPlace(@Body() body: any,  @Res() res: Response): string {
+  console.log(body);
+  res.status(HttpStatus.CREATED).json({
+    message: 'place successfully created',
+    data: body,
+  });// 👈
+  return `This action adds a new place ${body.name}`;
+}
 ```
 
-Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `Response` importeer je uit de `express` namespace.
+Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `Response` importeer je uit de `express` namespace. Probeer wel om zoveel mogelijk de voorziene decorators te gebruiken.
 
 ### Best practice: gebruik DTO's
 
@@ -306,11 +319,11 @@ Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om dat
 
 In NestJS gebruik je DTO’s vooral om de structuur en validatie van binnenkomende en uitgaande gegevens te definiëren, bijvoorbeeld bij POST- of PUT-verzoeken.
 
-Lees eerst volgende secties in de documentatie:
+Lees eerst volgende sectie in de documentatie:
 
 - [DTO](https://docs.nestjs.com/controllers#request-payloads)
 
-Maak in de `places`folder een bestand `place.dto.ts`. Hierin plaatsen we alle DTO's die binnen places gebruikt worden.
+Maak in de `places` map een bestand `place.dto.ts`. Hierin plaatsen we alle DTO's die binnen places gebruikt worden.
 
 ```typescript
 export class CreatePlaceRequestDto {
@@ -322,48 +335,61 @@ export class CreatePlaceRequestDto {
 Importeer deze klasse in de `PlaceController` en pas de code voor de `CreatePlace` aan.
 
 ```typescript
-  @Post('')
-  @HttpCode(HttpStatus.CREATED)
-  CreatePlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
-    return `This action adds a new place ${createPlaceDto.name}`;
-  }
-```
-
-De validatie komt later aan bod.
-Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
-
-```json
-{
-  "name": "HoGent",
-  "rating": 4,
+@Post()
+@HttpCode(HttpStatus.CREATED)
+CreatePlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
+  return `This action adds a new place ${createPlaceDto.name}`;
 }
 ```
 
-### Query Parameters: `GET /api/places?page=2&limit=10`
+De validatie komt later aan bod. Dit kan je het eenvoudigst testen via Postman. Gebruik bijvoorbeeld deze body:
 
-Lees [Query parameters](https://docs.nestjs.com/controllers#query-parameters)
-
-In de meeste apps wordt gebruik gemaakt van grote (1000den plaatsen) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren,  de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. Bij paginatie haal je slechts een deel (een pagina) van de dataset op. Met `GET /api/places?offset=2&limit=10` haal je pagina 2 op met 10 plaatsen op de pagina.
-
-```typescript
-  @Get()
-  getAllPlaces(
-    @Query('offset') offset = 1,
-    @Query('limit') limit = 10) {
-    return `This action returns all places. Limit ${limit}, offset: ${offset}`;
-  }
+```json
+{
+  "name": "HOGENT",
+  "rating": 5,
+}
 ```
 
-Query parameters worden vaak ook gebruikt voor search. Bvb `GET /api/places?search=xxx`
+### Query parameters: `GET /api/places?page=2&limit=10`
 
-### Oefening: Implementeer PUT en DELETE
+Lees de sectie [Query parameters](https://docs.nestjs.com/controllers#query-parameters) in de documentatie.
 
-<!-- markdownlint-disable header-start-left -->
+In de meeste apps wordt gebruik gemaakt van grote (1000den plaatsen) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren, de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. Bij paginatie haal je slechts een deel (= een pagina) van de dataset op. Met `GET /api/places?page=2&limit=10` haal je pagina 2 op met 10 plaatsen op de pagina.
+
+```typescript
+@Get()
+getAllPlaces(
+  @Query('page') page = 1,
+  @Query('limit') limit = 10
+) {
+  return `This action returns all places. Limit ${limit}, page: ${page}`;
+}
+```
+
+Query parameters worden vaak ook gebruikt voor zoekopdrachten, bv. `GET /api/places?search=xxx`.
+
+### Oefening: PUT en DELETE
+
+Implementeer volgende routes:
+
+- `PUT /api/places/:id`: een plaats aanpassen
+- `DELETE /api/places/:id`: een plaats verwijderen
+
+Voeg een DTO toe voor de body van de `PUT` request.
 
 - Oplossing +
 
-```typescript
-  //de controller
+  Het DTO:
+
+  ```typescript
+  export class UpdatePlaceRequestDto extends CreatePlaceRequestDto {}
+  ```
+
+  De code in de controller:
+
+  ```typescript
+  @Put(':id')
   updatePlace(@Param('id') id: string, @Body() updatePlaceDto:UpdatePlaceRequestDto) {
     return `This action updates the place ${updatePlaceDto.name} with #${id}`;
   }
@@ -372,36 +398,34 @@ Query parameters worden vaak ook gebruikt voor search. Bvb `GET /api/places?sear
   deletePlace(@Param('id') id: string) {
     return `This action removes the place with id #${id}`;
   }
+  ```
 
-  //En de implementatie van UpdatePlaceRequestDto in place.dto.ts
-  export class UpdatePlaceRequestDto extends CreatePlaceRequestDto {}
-```
-<!-- markdownlint-enable header-start-left -->
+### Oefening: DTO voor paginatie
 
-### Oefening: Maak een dto aan voor de paginatie
+Maak een DTO aan voor de query parameters van de paginatie.
+Gebruik deze DTO in de `getAllPlaces` methode.
 
 - Oplossing +
 
-```typescript
+  ```typescript
   // src/common/common.dto.ts
   export class PaginationQuery {
     page?: number = 1;
     limit?: number = 10;
   }
-```
+  ```
 
 ## Providers
 
-Een provider is elk stuk logica dat NestJS kan instantiëren en injecteren, zoals services, repositories, helpers,...
-In NestJS zijn providers klassen die via de `@Injectable()` decorator beschikbaar worden gemaakt voor `dependency injection`.
+Een provider is elk stuk logica dat NestJS kan instantiëren en injecteren, zoals services, repositories, helpers,... In NestJS zijn providers klassen die via de `@Injectable()` decorator beschikbaar worden gemaakt voor `dependency injection`.
 
-Lees [Providers](https://docs.nestjs.com/providers)
+Lees de sectie [Providers](https://docs.nestjs.com/providers) in de documentatie.
 
 Dependency Injection (DI) is een design pattern waarbij de afhankelijkheden van een klasse van buitenaf worden binnengebracht, hier door NestJS, in plaats van dat de klasse ze zelf aanmaakt. Dit maakt testen makkelijker, bevordert loskoppeling en herbruikbare en configureerbare code.
 
 ## Services
 
-Controllers moeten HTTP-verzoeken afhandelen en complexere taken delegeren aan providers. Een service in NestJS is bedoeld om logica en functionaliteit van je applicatie op een centrale, herbruikbare en testbare manier te organiseren. Services bevatten de domein logica (zoals businesslogica, data ophalen, berekeningen,...), zijn onze domeinlaag. Ze zijn herbruikbaar in andere onderdelen van de app zoals controllers of andere services. En ze kunnen via dependency injection gebruikt worden, zijn dus `providers`.
+Controllers moeten HTTP-verzoeken afhandelen en complexere taken delegeren aan providers. Een service in NestJS is bedoeld om logica en functionaliteit van je applicatie op een centrale, herbruikbare en testbare manier te organiseren. Services bevatten de domeinlogica (zoals businesslogica, data ophalen, berekeningen, ...), dit is onze domeinlaag. Ze zijn herbruikbaar in andere onderdelen van de app zoals controllers of andere services, en ze kunnen via dependency injection gebruikt worden. Services zijn dus `providers`.
 
 ### Generatie service
 
@@ -411,14 +435,11 @@ NestJS biedt een CLI commando om automatisch een service te genereren:
 nest generate service place --no-spec
 ```
 
-Dit commando maakt het volgende bestand aan :
+Dit commando maakt de service aan in het bestand `src/place/place.service.ts`.
 
-- `src/place/place.service.ts`: de service zelf
-
---no-spec zorgt ervoor dat er geen testbestand wordt aangemaakt
 De service wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `providers` array). Zonder deze toevoeging zou de service niet beschikbaar zijn in de applicatie en niet injecteerbaar zijn.
 
-De Service
+De service ziet er als volgt uit:
 
 ```typescript
 import { Injectable } from '@nestjs/common';
@@ -427,28 +448,29 @@ import { Injectable } from '@nestjs/common';
 export class PlaceService {}
 ```
 
-De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat PlaceService een klasse is die beheerd kan worden door de Nest IoC-container (zie verder).
+De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat `PlaceService` een klasse is die beheerd kan worden door de Nest IoC-container (zie verder).
 
 ### Dependency injection
 
-We passen de PlaceController aan om van de Service gebruik te maken.
+We passen de `PlaceController` aan om van de service gebruik te maken.
 
 ```typescript
-import {
-  Body,  Controller,  Delete,  Get,  Param,  Put,   Post,  Query, HttpStatus, HttpCode} from '@nestjs/common';
+// andere imports...
 import { PlaceService } from './place.service';// 👈
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto } from './place.dto';
 
 @Controller('places')
 export class PlaceController {
   constructor(private readonly placeService: PlaceService) {} // 👈
+
+  // ...
+}
 ```
 
 We injecteren de service in de constructor
 
-- `private`:  TypeScript maakt daar automatisch een attribuut van en vult deze in. Het attribuut is bovendien enkel toegankelijk in de klasse.
-- `readonly`: is een best practice. Dit verzekert dat we de service reference niet aanpassen
--`PlaceService`: het type is belangrijk!
+- `private`:  TypeScript maakt daar automatisch een attribuut van en vult dit in. Het attribuut is bovendien enkel toegankelijk in de klasse.
+- `readonly`: is een best practice. Dit verzekert dat we de service reference niet kunnen aanpassen.
+- `PlaceService`: het type is belangrijk! NestJS bepaalt op basis van het type welke provider er moet geïnjecteerd worden.
 
 Om een instantie van een klasse aan te maken dienen we normaalgezien deze code te schrijven
 
@@ -456,48 +478,49 @@ Om een instantie van een klasse aan te maken dienen we normaalgezien deze code t
 const placeController = new PlaceController(new PlaceService())
 ```
 
-Maar NestJS fungeert als een `DI Container` of `IoC-container` (Inversion of control). Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de PlaceService aanmaken en doorgeven aan de placeController. Of i.g.v. een Singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
+Maar NestJS fungeert als een "Dependency Injection (DI) container" of "Inversion of Control (IoC) container. Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de `PlaceService` aanmaken en doorgeven aan de `PlaceController`. In het geval van een singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
 
-Een DI Container bevat 2 sets van informatie
+Een DI container bevat 2 sets van informatie:
 
 - een lijst met alle Provider klassen uit onze app en hun dependencies
 - een lijst van alle instanties die deze container reeds gecreëerd heeft
 
-Providers hebben meestal een levensduur (of scope) die overeenkomt met de levenscyclus van de applicatie. Dat betekent dat ze worden geïnstantieerd wanneer de applicatie opstart, en weer worden vernietigd bij het afsluiten. Het is echter ook mogelijk om een provider request-scoped te maken. In dat geval wordt de provider aangemaakt en beheerd per individuele aanvraag, in plaats van één keer voor de hele applicatie. Zo kun je meer controle krijgen over afhankelijkheden die specifieke context of data per verzoek nodig hebben.
+Providers hebben meestal een levensduur (of scope) die overeenkomt met de levenscyclus van de applicatie. Dat betekent dat ze worden geïnstantieerd wanneer de applicatie opstart, en weer worden vernietigd bij het afsluiten. Het is echter ook mogelijk om een provider request-scoped te maken. In dat geval wordt de provider aangemaakt en beheerd per individuele aanvraag, in plaats van één keer voor de hele applicatie. Zo kan je meer controle krijgen over afhankelijkheden die specifieke context of data per verzoek nodig hebben.
 
-In onderstaand voorbeeld gaan we ervan uit dat de Service een afhankelijkheid heeft met een Repository (wat we later zullen toevoegen aan de Rest API)
+In onderstaand voorbeeld gaan we ervan uit dat de service een afhankelijkheid heeft met een repository (wat we later zullen toevoegen aan de Rest API).
+
 ![DI Container](./images/container.png)
 
 Bij dependency injection noem je het object dat de afhankelijkheid ontvangt de `client`, en het object dat wordt doorgegeven (de geïnjecteerde afhankelijkheid) de `service`. De code die deze service aan de client levert, heet de `injector`. In plaats van dat jij in de client expliciet aangeeft welke service je wil gebruiken, bepaalt de injector dat voor jou. Injection verwijst dus naar het proces waarbij een afhankelijkheid (de service) wordt doorgegeven aan de client die ze nodig heeft.
 
-Meer info, lees  [Dependency injection](https://docs.nestjs.com/providers#dependency-injection)
+Wil je meer info? Lees het stuk over [Dependency injection](https://docs.nestjs.com/providers#dependency-injection) in de documentatie.
 
 ### Implementatie service
 
-Voor de implementatie van de service maken we gebruik van de in-memory data `PLACES`. Dit is onze data source. In het volgende hoofdstuk vervangen we dit door een database.
+Voor de implementatie van de service maken we gebruik van de in-memory data `PLACES`. Dit is onze data source. In een volgende hoofdstuk vervangen we dit door een database.
 
-Binnen de service voorzien we alle `CRUD acties` die we later vanuit de Controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we ze alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
+Binnen de service voorzien we alle CRUD acties die we later vanuit de controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
 
-We dienen ook het returntype van de methodes vast te leggen. Hiervoor maken we eerst de nodige Dto's aan in `place.dto.ts`.
+We dienen ook het returntype van de methodes vast te leggen. Hiervoor maken we eerst de nodige DTO's aan in `src/place/place.dto.ts`.
 
 ```typescript
-//src/place/place.dto.ts
+// src/place/place.dto.ts
 export class PlaceResponseDto extends CreatePlaceRequestDto {
-   id: number;
+  id: number;
 }
 
 export class PlaceListResponseDto {
-    items: PlaceResponseDto[];
+  items: PlaceResponseDto[];
+}
 ```
 
-- `PlaceResponseDto` beschrijft hoe een enkele plaats eruitziet in een API-respons, wanneer er 1 plaats wordt opgehaald of wanneer een plaats gecreëerd of aangepast wordt.
+- `PlaceResponseDto` beschrijft hoe een enkele plaats eruitziet in een API-response: wanneer er een plaats wordt opgehaald of wanneer een plaats gecreëerd of aangepast wordt.
 - `PlaceListResponseDto` beschrijft de lijst van de plaatsen die zal worden teruggegeven bij het ophalen van alle plaatsen.
 
 De service wordt als volgt aangepast:
 
 ```typescript
-//src/place/place.service.ts
-//src/place/place.service.ts
+// src/place/place.service.ts
 import { Injectable } from '@nestjs/common';
 import { PLACES } from '../data/mock-data';
 import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
@@ -529,14 +552,14 @@ export class PlaceService {
 }
 ```
 
-`create`: We creëren een nieuwe plaats, met het id erbij en voegen ze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
+In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen deze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
 
 ### Implementatie controller
 
-In de controller kunnen we nu gebruik maken van de PlaceService. De code wordt
+In de controller kunnen we nu gebruik maken van de `PlaceService`. De code wordt:
 
 ```typescript
-//src/place/place.controller.ts
+// src/place/place.controller.ts
 import {
   Body, Controller, Delete, Get, Param, Put, Post, HttpStatus, HttpCode
 } from '@nestjs/common';
@@ -554,7 +577,7 @@ export class PlaceController {
 
   @Get(':id')
   getPlaceById(@Param('id') id: string): PlaceResponseDto {
-    return this.placeService.getById(+id);
+    return this.placeService.getById(Number(id));
   }
 
   @Post()
@@ -565,23 +588,22 @@ export class PlaceController {
 }
 ```
 
-Vervang de hardgecodeerde data door de aanroep van de methodes in de PlaceService, that's it!
+Vervang de hardgecodeerde data door de aanroep van de methodes in de `PlaceService`, that's it!
+
 Merk op:
 
-- `getAllplaces`: Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een items property die de array bevat.
-Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger.
-Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
-- `getPlaceById`: De service verwacht een number, vandaar `+id`
+- `getAllplaces`: Het is een slecht idee om een JSON array terug te geven in een HTTP response. Het is beter om een object terug te geven met een items property die de array bevat. Een JSON array is geldige JavaScript en kan bijgevolg uitgevoerd worden. Dit kan een XSS aanval mogelijk maken. Een object kan niet uitgevoerd worden en is dus veiliger. Dit heet JSON Hijacking. Tegenwoordig is dit niet meer zo'n groot probleem, maar het is een goede gewoonte om het correct te doen.
+- `getPlaceById`: De service verwacht een number, vandaar `Number(id)`.
 - `create`: Geef de net toegevoegde place ook weer terug vanuit de `create` via de response body. Het lijkt misschien wat raar om eigenlijk hetzelfde terug te geven dan wat je binnen kreeg maar dat is meestal een goed idee. Daarmee weet de gebruiker van de API hoe je het opgeslagen hebt, wat niet noodzakelijk hetzelfde is als hoe hij het doorgaf. Bijvoorbeeld: bij ons kan de omzetting van de datum iets wijzigen en sowieso zal er een 'id' toegevoegd zijn.
 
-Test alle endpoints uit in POSTMAN.
+Test alle endpoints uit in Postman:
 
-- Doe een GET request naar <http://localhost:9000/api/places/1> en je zou de eerste plaats moeten zien. Als je een id opgeeft dat niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+- Doe een GET request naar <http://localhost:9000/api/places/1> en je zou de eerste plaats moeten zien. Als je een id opgeeft van een plaats die niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
 - Bij de POST request zou je de nieuwe plaats moeten zien verschijnen in de response en in de lijst van plaatsen als je een GET request doet naar `/api/places`. Natuurlijk is dit nog niet persistent en verdwijnt de plaats als je de server herstart.
 
 ### Oefening
 
- Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
+Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
 
 - `PUT /api/places/:id`:
   - een plaats aanpassen
@@ -589,13 +611,16 @@ Test alle endpoints uit in POSTMAN.
 - `DELETE /api/places/:id`:
   - een plaats verwijderen
   - geeft niets terug
-  - De status 204 : NO CONTENT wordt teruggegeven
+  - geef status "204 No Content" terug
 - Extra (voor de ervaren JavaScript'ers): maak alle servicefuncties async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
+
+<br/>
 
 - Oplossing +
 
-```typescript
-  //de service
+  De service:
+
+  ```typescript
   updateById(id: number, { name, rating }: UpdatePlaceRequestDto): PlaceResponseDto {
     let existingplace = this.getById(id);
     if (existingplace) {
@@ -610,25 +635,28 @@ Test alle endpoints uit in POSTMAN.
       PLACES.splice(index, 1);
     }
   }
+  ```
 
- //De controller
+  De controller:
+
+  ```typescript
   @Put(':id')
   updatePlace(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceRequestDto): PlaceResponseDto {
-    return this.placeService.updateById(+id, updatePlaceDto);
+    return this.placeService.updateById(Number(id), updatePlaceDto);
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   deletePlace(@Param('id') id: string): void {
-    this.placeService.deleteById(+id);
+    this.placeService.deleteById(Number(id));
   }
-```
+  ```
 
 ### Oefening - Je eigen project
 
-- Maak alle CRUD endpoints aan voor 1 entiteit uit je project
-- Voorzie ook mock data
-- Maak de Service aan
+- Maak alle CRUD endpoints voor één entiteit uit je project (nog zonder relaties)
+- Maak mock data
+- Maak de service
 
 ## Exception handling
 
@@ -760,7 +788,7 @@ async function bootstrap() {
 bootstrap();
 ```
 
-`Whitelisting` is een functie van de ValidationPipe in NestJS die ervoor zorgt dat alleen de velden die je expliciet hebt gedefinieerd in je DTO worden geaccepteerd. Alle andere (onverwachte) velden worden automatisch verwijderd. De request gaat gewoon door, maar zonder de extra velden. Als je ook nog `forbidNonWhitelisted: true` toevoegt dan wordt er een fout gegooid als er ongewenste velden zijn. De request wordt geweigerd met een duidelijke error.
+`Whitelisting` is een functie van de ValidationPipe in NestJS die ervoor zorgt dat alleen de velden die je expliciet hebt gedefinieerd in je DTO worden geaccepteerd. Alle andere (onverwachte) velden worden automatisch verwijderd. Het request gaat gewoon door, maar zonder de extra velden. Als je ook nog `forbidNonWhitelisted: true` toevoegt dan wordt er een fout gegooid als er ongewenste velden zijn. Het request wordt geweigerd met een duidelijke error.
 
 Probeer een POST request uit en verwijder user uit de JSON en geef een datum op die in de toekomst ligt, voeg een extra veld toe. We krijgen een 400 BAD REQUEST terug en de reden van de fout.
 
@@ -809,7 +837,7 @@ bootstrap();
 
 Voer een POST request uit en bekijk het type.
 
-`Class-transformers` kunnen ook primitieve types omzetten. Alles wat via `@Param()` of` @Query()`... binnenkomt is van type string. Als we in de `getPlaceById` methode het type van de id veranderen in `Number` zal ValidationPipe dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
+`Class-transformers` kunnen ook primitieve types omzetten. Alles wat via `@Param()` of`@Query()`... binnenkomt is van type string. Als we in de `getPlaceById` methode het type van de id veranderen in `Number` zal ValidationPipe dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
 
 ```typescript
 //src/place/place.controller.ts
