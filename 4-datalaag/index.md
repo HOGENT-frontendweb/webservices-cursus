@@ -5,12 +5,10 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 4e63e94
+> git checkout -b les4 TODO:
 > yarn install
 > yarn start:dev
 > ```
->
-> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Gelaagde architectuur
 
@@ -21,7 +19,7 @@ De **gelaagde architectuur** is een veel gebruikte architectuur waarin code is o
 - Repositorylaag (= persistentielaag)
 - Datalaag (= persistentielaag)
 
-Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In Node.js heb je de keuze, er is geen verplichte structuur.
+Veel frameworks zijn opgebouwd rond deze architectuur (Spring, .NET...). In pure Node.js heb je de keuze, er is geen verplichte structuur. In NestJS daarentegen is de structuur grotendeels opgelegd door het framework, en het volgt ook de gelaagde architectuur.
 
 Een alternatieve structuur, veel gebruikt bij microservices, is de [**hexagonale structuur**](https://medium.com/idealo-tech-blog/hexagonal-ports-adapters-architecture-e3617bcf00a0). Een mooie (maar complexe) implementatie van deze structuur in Node.js (en TypeScript) vind je hier: <https://github.com/jbreckmckye/node-typescript-architecture>.
 
@@ -89,26 +87,134 @@ Het is dus belangrijk om te controleren of je effectief een ORM nodig hebt aange
 - eenvoudige interface om data op te vragen of weg te schrijven
 - diepgaande ondersteuning voor relaties
 - model definiëren kan complex zijn
-- bv. [Sequelize](https://www.npmjs.com/package/sequelize), [Prisma](https://www.npmjs.com/package/prisma), [TypeORM (enkel voor TypeScript)](https://www.npmjs.com/package/typeorm), [Mongoose (enkel voor MongoDB)](https://www.npmjs.com/package/mongoose)
+- bv. [Sequelize](https://www.npmjs.com/package/sequelize), [Prisma](https://www.npmjs.com/package/prisma), [Drizzle](https://orm.drizzle.team/), [TypeORM (enkel voor TypeScript)](https://www.npmjs.com/package/typeorm), [Mongoose (enkel voor MongoDB)](https://www.npmjs.com/package/mongoose)
 
 ### Datalaag: wat kiezen we nu?
 
-Wij kiezen voor [Prisma](https://www.npmjs.com/package/prisma), een ORM met native ondersteuning voor TypeScript. In ons voorbeeld hebben we een aantal relaties die we eenvoudig willen opvragen en we hebben geen geavanceerde queries nodig. Prisma is dus een goede keuze voor ons project.
+Wij kiezen voor [Drizzle](https://orm.drizzle.team/), een ORM met native ondersteuning voor TypeScript.In ons voorbeeld hebben we een aantal relaties die we eenvoudig willen opvragen en we hebben geen geavanceerde queries nodig. Drizzle is dus een goede keuze voor ons project.
 
 Voel je vrij om voor het project bv. een querybuilder of een ander ORM framework te gebruiken! We raden niet aan om zelf queries te schrijven, tenzij je écht een goede reden hebt.
 
-## Installatie Prisma
+## MySQL databank
 
-?> Onze configuratie is gebaseerd op de officiële [Prisma documentatie](https://www.prisma.io/docs/getting-started/setup-prisma/start-from-scratch/relational-databases-typescript-postgresql). Echter hebben we deze aangepast zodat Prisma mooi in onze gelaagde structuur past. **Het is de bedoeling dat je externe modules altijd degelijk integreert in jouw projectstructuur, dus je hoeft niet noodzakelijk exact de documentatie te volgen.**
+Normaal heb je een lokale MySQL server draaien van het olod Databases. Mocht dit niet het geval zijn, dan heb je twee opties:
 
-We installeren allereerst Prisma en de Prisma client:
+1. Je installeert MySQL zoals in de [instructies aan het begin van de cursus](../0-intro/software.md#mysql)
+2. Je gebruikt een Docker container
 
-```bash
-yarn add prisma @prisma/client
+### MySQL in Docker
+
+Als je ervoor kiest om MySQL in een Docker container te draaien, maak je je best een `docker-compose.yml` bestand aan in de root van je project:
+
+```yaml
+services:
+  db:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: budget
+      MYSQL_USER: devusr
+      MYSQL_PASSWORD: devpwd
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      timeout: 30s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  db_data:
 ```
 
-- [**prisma**](https://www.npmjs.com/package/prisma): CLI voor Prisma, waarmee je de Prisma client kan genereren en migraties kan uitvoeren.
-- [**@prisma/client**](https://www.npmjs.com/package/@prisma/client): de Prisma client, die de connectie met de databank afhandelt en waarmee je queries kan uitvoeren.
+Dit bestand definieert een MySQL container met:
+
+- als naam `db`
+- een port mapping van 3306 in de container naar 3306 op jouw systeem
+- een named volume om de data in de databank te bewaren
+- het wachtwoord van de root gebruiker
+- de credentials voor de gebruiker `devusr`
+  - deze heeft toegang tot de databank `budget`
+- een healthcheck om te controleren of de databank al klaar is
+
+Open een terminal in de root van je project en start de databank container
+
+```bash
+docker compose up -d
+```
+
+?> Voor de veiligheid kan je de eerste keer zonder de `-d` optie uitvoeren zodat je in de logs kan checken of de container goed opgestart wordt.
+
+## Installatie Drizzle
+
+Onze configuratie is gebaseerd op een aantal verschillende tutorials:
+
+- <https://dev.to/anooop102910/how-to-integrate-drizzle-orm-with-nest-js-gdc>
+- <https://trilon.io/blog/nestjs-drizzleorm-a-great-match>
+- <https://orm.drizzle.team/docs/get-started-mysql>
+
+Dus zoals je ziet moet je soms zelf wat puzzelen met verschillende tutorials om alles aan de praat te krijgen. Het is een best practice om een tutorial ook altijd eens door te lezen alvorens je die klakkeloos herhaalt. Niet elke tutorial is even goed of up-to-date. **Het is de bedoeling dat je externe modules altijd degelijk integreert in jouw projectstructuur, dus je hoeft niet noodzakelijk exact de documentatie te volgen.**
+
+We installeren allereerst Drizzle en de MySQL driver:
+
+```bash
+pnpm add drizzle-orm mysql2
+pnpm add -D drizzle-kit
+```
+
+- [**drizzle-orm**](https://www.npmjs.com/package/drizzle-orm): bevat alles van Drizzle
+- [**mysql2**](https://www.npmjs.com/package/mysql2): MySQL driver voor Node.js
+- [**drizzle-kit**](https://www.npmjs.com/package/drizzle-kit): een handige CLI om migraties en seeds te beheren
+  - Merk op: `drizzle-kit` is een dev dependency aangezien je deze niet nodig hebt om de server te kunnen starten.
+
+### Environment variabele `DATABASE_URL`
+
+We gaan de url naar onze databank niet hardcoderen. Dit maakt het moeilijk om aan te passen en zorgt ervoor dat productiecredentials mogelijk in de broncode terechtkomen.
+
+Daarom voegen we in het `.env` bestand in de root van ons project de connectiestring toe via de variabele `DATABASE_URL`:
+
+```ini
+NODE_ENV=development
+DATABASE_URL=mysql://<gebruikersnaam>:<wachtwoord>@localhost:3306/budget
+```
+
+Als je geen gebruik maakt van een lokale MySQL server, maar van een Docker container, gebruik dan de credentials die je in het `docker-compose.yml` bestand hebt opgegeven. In dat geval wordt dit je `.env` bestand:
+
+```ini
+NODE_ENV=development
+DATABASE_URL=mysql://devusr:devpwd@localhost:3306/budget
+```
+
+### Configuratie drizzle-kit
+
+Allereerst voegen we een `drizzle.config.ts` bestand toe in de root van ons project:
+
+```ts
+import { defineConfig } from 'drizzle-kit';
+
+export default defineConfig({
+  dialect: 'mysql',
+  schema: './src/drizzle/schema.ts',
+  out: './migrations',
+  dbCredentials: {
+    url: process.env.DATABASE_URL!,
+  },
+});
+```
+
+Dit bestand definieert een aantal zaken:
+
+- `dialect`: de databank die we gebruiken, in ons geval MySQL
+- `schema`: het bestand waarin we ons databankschema gaan definiëren
+  - Je kan ook een map opgeven als je het schemabestand liever splitst over meerdere bestanden
+- `out`: de map waarin de migraties worden opgeslagen
+- `dbCredentials`: de connectiegegevens van de databank
+  - In ons geval halen we deze uit de environment variabele `DATABASE_URL`
+
+<!-- TODO: hier verder gaan -->
 
 ### Databankschema definiëren
 
