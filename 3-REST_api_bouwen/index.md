@@ -666,34 +666,39 @@ Als de gebruiker een plaats probeert op te vragen waarvan de id niet bestaat, da
 
 ```typescript
 //src/place/place.service.ts
-  import { Injectable, NotFoundException } from '@nestjs/common';// 👈1
+import { Injectable, NotFoundException } from '@nestjs/common'; // 👈 1
 
-  getById(id: number): PlaceResponseDto {
-    const place = PLACES.find(item => item.id === id);// 👈2
-    if (!place) {
-      throw new NotFoundException(`place #${id} not found`);
-    }// 👈3
-    return place;// 👈3
+// ...
+
+getById(id: number): PlaceResponseDto {
+  const place = PLACES.find(item => item.id === id); // 👈 2
+
+  // 👇 3
+  if (!place) {
+    throw new NotFoundException(`place #${id} not found`);
   }
+
+return place; // 👈 3
+}
 ```
 
 1. Importeer `NotFoundException` uit de `@nestjs/common`namespace.
 2. Definieer een constante die de de opgevraagde plaats bevat.
 3. Als geen plaats gevonden, throw dan `NotFoundException`, anders retourneer de gevonden plaats.
 
-NestJS heeft helpermethodes voor alle mogelijke status codes, zoals InternalServerError (500), BadRequestException (404),...
+NestJS heeft helpermethodes voor alle mogelijke status codes, zoals `InternalServerError` (500), `BadRequestException` (404),...
 
-Probeer uit in POSTMAN.
+Probeer uit in Postman.
 
 ## Modules
 
-In NestJS is een module een manier om je applicatie op te delen in overzichtelijke, goed georganiseerde stukken. Een module is eigenlijk een TypeScript-klasse met de `@Module()-decorator`. Binnen zo’n module geef je aan welke controllers, services en andere providers erbij horen.
+In NestJS is een module een manier om je applicatie op te delen in overzichtelijke, goed georganiseerde stukken. Een module is eigenlijk een TypeScript-klasse met de `@Module()` decorator. Binnen zo’n module geef je aan welke controllers, services en andere providers erbij horen.
 
-Je kunt het zien als een container die alles groepeert wat bij een bepaald domein of functie hoort. Bijvoorbeeld: je maakt een `PlaceModule` om alles rond placebeheer (controllers, services, ...) bij elkaar te houden.
+Je kan het zien als een container die alles groepeert wat bij een bepaald domein of functie hoort. Bijvoorbeeld: je maakt een `PlaceModule` om alles rond beheer van places (controllers, services...) bij elkaar te houden.
 
-Modules helpen je applicatie modulair en schaalbaar te maken. Ze zorgen ervoor dat je code gestructureerd is, makkelijk te onderhouden en herbruikbaar. Elke NestJS-applicatie heeft minstens één root module (meestal `AppModule`), maar je kunt er zoveel maken als je wil om je app logisch op te splitsen.
+Modules helpen je applicatie modulair en schaalbaar te maken. Ze zorgen ervoor dat je code gestructureerd is, makkelijk te onderhouden en herbruikbaar. Elke NestJS-applicatie heeft minstens één root module (meestal `AppModule`), maar je kan er zoveel maken als je wil om je app logisch op te splitsen.
 
-Lees [Modules] (<https://docs.nestjs.com/modules>)
+Lees de documentatie over [modules](https://docs.nestjs.com/modules).
 
 NestJS biedt een CLI commando om automatisch een module te genereren:
 
@@ -704,14 +709,14 @@ nest g module place
 De module klasse wordt toegevoegd aan de `place` folder en wordt geïmporteerd in de `AppModule`.
 
 ```typescript
-//src/place/place.module.ts
+// src/place/place.module.ts
 import { Module } from '@nestjs/common';
 
 @Module({})
 export class PlaceModule {}
 ```
 
-De `@Module()-decorator` maakt van een TypeScript-klasse een NestJS-module. Hierin geef je aan wat bij deze module hoort. Het is als een container die controllers, services en andere dependencies groepeert.
+De `@Module()` decorator maakt van een TypeScript-klasse een NestJS-module. Hierin geef je aan wat bij deze module hoort. Het is als een container die controllers, services en andere dependencies groepeert.
 
 - `imports`: Hier geef je andere modules op die je nodig hebt in deze module.
 - `controllers`: Dit is een lijst van controllers die bij deze module horen.
@@ -723,14 +728,14 @@ Pas de code aan:
 ```typescript
 //src/place/place.module.ts
 import { Module } from '@nestjs/common';
-import { PlaceController } from './place.controller';// 👈
-import { PlaceService } from './place.service';// 👈
+import { PlaceController } from './place.controller'; // 👈
+import { PlaceService } from './place.service'; // 👈
 
-@Module({// 👈
-  imports: [],// 👈
-  controllers: [PlaceController],// 👈
-  providers: [PlaceService],// 👈
-})// 👈
+@Module({
+  imports: [], // 👈
+  controllers: [PlaceController], // 👈
+  providers: [PlaceService], // 👈
+})
 export class PlaceModule {}
 ```
 
@@ -742,12 +747,12 @@ Het is een goed idee om steeds eerst de module aan te maken en dan de controller
 
 Doe dezelfde refactoring in je eigen project:
 
-- Voeg exceptionhandling toe
-- Voeg een module toe
+- Voeg exceptionhandling toe.
+- Voeg een module toe.
 
 ## CORS
 
-Als geen Front-end Web Development volgt, is dit onderdeel niet vereist. Als je natuurlijk later een eigen front-end wil koppelen aan je back-end, is dit wel vereist.
+Als je geen Front-end Web Development volgt, is dit onderdeel niet vereist. Als je natuurlijk later een eigen front-end wil koppelen aan je back-end, is dit wel vereist.
 
 Als je vanuit een front-end een HTTP request stuurt naar een ander domein dan krijg je volgende fout:
 
@@ -764,26 +769,27 @@ Een CORS-aanvraag van een oorsprongdomein kan bestaan uit twee afzonderlijke aan
 1. Een eerste aanvraag, waarin de CORS-beperkingen worden opgevraagd die door de service zijn opgelegd. Dit heet het preflight request.
 2. De werkelijke aanvraag, gemaakt op de gewenste resource.
 
-Lees [Cors](https://docs.nestjs.com/security/cors)
+Lees de documentatie over [CORS](https://docs.nestjs.com/security/cors).
 
-Pas de code in `main.ts` aan
+Pas de code in `main.ts` aan:
 
 ```ts
-...
- app.enableCors({
-    origins: ['http://localhost:5173'],
-    maxAge: 3 * 60 * 60,
-  })
-...
+// ...
+
+app.enableCors({
+  origins: ['http://localhost:5173'],
+  maxAge: 3 * 60 * 60,
+})
+
+// ...
 ```
 
-Deze code zorgt ervoor dat je NestJS-backend CORS toestaat
+Deze code zorgt ervoor dat je NestJS-backend CORS toestaat:
 
-- `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in Front-end Web Development.
+- `origins`: de oorspronkelijke domeinen die via CORS een aanvraag mogen indienen. Dit is de URL van de webapp die gemaakt wordt in het olod Front-end Web Development.
   - Als je een API maakt die door meerdere front-ends gebruikt wordt, kan je hier een array van domeinen meegeven.
   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
-
-- `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming hoeft te worden gevraagd
+- `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming gevraagd hoeft te worden.
 
 ### Oefening - Je eigen project
 
