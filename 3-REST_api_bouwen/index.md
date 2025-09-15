@@ -124,6 +124,7 @@ De datalaag beheert onze data. Uiteraard willen we geen hardgecodeerde data teru
 Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in een volgend hoofdstuk toegevoegd. We definiëren ook een interface `Place` die vastlegt hoe een plaats eruitziet.
 
 ```ts
+// src/data/mock_data.ts
 export interface Place {
   id: number;
   name: string;
@@ -188,6 +189,7 @@ Elke route in je applicatie wordt afgehandeld door een specifieke methode in je 
 Als eerste zullen we de statische route `GET /api/places` implementeren. Deze route haalt alle plaatsen op. Voeg onderstaande inhoud toe aan de controller.
 
 ```typescript
+// src/place/place.controller.ts
 @Get()
 getAllPlaces(): string {
   return 'this action returns all places';
@@ -224,6 +226,7 @@ Lees eerst volgende secties in de documentatie:
 Voeg onderstaande code toe aan de Controller.
 
 ```typescript
+// src/place/place.controller.ts
 @Get(':id')
 getPlaceById(@Param() params: any): string {
   return `This action returns a #${params.id} place`;
@@ -239,6 +242,7 @@ Zorg dat je `@Param` importeert uit `@nestjs/common`.
 Je kan het id ook direct ophalen door de parameter direct te benoemen in `@Param()`. Zo is de code korter en duidelijker.
 
 ```typescript
+// src/place/place.controller.ts
 @Get(':id')
 getPlaceById(@Param('id') id:string): string {
   return `This action returns a #${id} place`;
@@ -256,6 +260,7 @@ Een POST-handler gebruik je om nieuwe data te creëren, in dit geval een plaats.
 Voeg onderstaande inhoud toe aan de controller.
 
 ```typescript
+// src/place/place.controller.ts
 @Post()
 createPlace(@Body() body: any): string {
   console.log(body);
@@ -287,6 +292,7 @@ Lees eerst volgende sectie in de documentatie:
 Standaard retourneert NestJS de status "200 OK". Echter bij een succesvolle POST zou je expliciet "201 Created" moeten teruggeven, omdat je iets nieuws aanmaakt.
 
 ```typescript
+// src/place/place.controller.ts
 @Post()
 @HttpCode(HttpStatus.CREATED) // 👈
 createPlace(@Body() body: any): string {
@@ -300,6 +306,7 @@ createPlace(@Body() body: any): string {
 Als je meer controle wenst over de response kan je `@Res()` gebruiken. Een voorbeeld:
 
 ```typescript
+// src/place/place.controller.ts
 @Post()
 createPlace(@Body() body: any,  @Res() res: Response): string {
   console.log(body);
@@ -326,6 +333,7 @@ Lees eerst volgende sectie in de documentatie:
 Maak in de `places` map een bestand `place.dto.ts`. Hierin plaatsen we alle DTO's die binnen places gebruikt worden.
 
 ```typescript
+// src/place/place.dto.ts
 export class CreatePlaceRequestDto {
   name: string;
   rating: number;
@@ -335,6 +343,7 @@ export class CreatePlaceRequestDto {
 Importeer deze klasse in de `PlaceController` en pas de code voor de `CreatePlace` aan.
 
 ```typescript
+// src/place/place.controller.ts
 @Post()
 @HttpCode(HttpStatus.CREATED)
 CreatePlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
@@ -358,6 +367,7 @@ Lees de sectie [Query parameters](https://docs.nestjs.com/controllers#query-para
 In de meeste apps wordt gebruik gemaakt van grote (1000den plaatsen) datasets. Paginatie is dan cruciaal om de prestaties te verbeteren, de server en de client niet te overbelasten, en de gebruikers een beter overzicht te geven. Bij paginatie haal je slechts een deel (= een pagina) van de dataset op. Met `GET /api/places?page=2&limit=10` haal je pagina 2 op met 10 plaatsen op de pagina.
 
 ```typescript
+// src/place/place.controller.ts
 @Get()
 getAllPlaces(
   @Query('page') page = 1,
@@ -383,12 +393,14 @@ Voeg een DTO toe voor de body van de `PUT` request.
   Het DTO:
 
   ```typescript
+  // src/place/place.dto.ts
   export class UpdatePlaceRequestDto extends CreatePlaceRequestDto {}
   ```
 
   De code in de controller:
 
   ```typescript
+  // src/place/place.controller.ts
   @Put(':id')
   updatePlace(@Param('id') id: string, @Body() updatePlaceDto:UpdatePlaceRequestDto) {
     return `This action updates the place ${updatePlaceDto.name} with #${id}`;
@@ -442,6 +454,7 @@ De service wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `prov
 De service ziet er als volgt uit:
 
 ```typescript
+// src/place/place.service.ts
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
@@ -455,6 +468,7 @@ De `@Injectable()` decorator koppelt metadata aan de klasse, wat aangeeft dat `P
 We passen de `PlaceController` aan om van de service gebruik te maken.
 
 ```typescript
+// src/place/place.controller.ts
 // andere imports...
 import { PlaceService } from './place.service';// 👈
 
@@ -621,6 +635,7 @@ Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
   De service:
 
   ```typescript
+  // src/place/place.service.ts
   updateById(id: number, { name, rating }: UpdatePlaceRequestDto): PlaceResponseDto {
     let existingplace = this.getById(id);
     if (existingplace) {
@@ -640,6 +655,7 @@ Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
   De controller:
 
   ```typescript
+  // src/place/place.controller.ts
   @Put(':id')
   updatePlace(@Param('id') id: string, @Body() updatePlaceDto: UpdatePlaceRequestDto): PlaceResponseDto {
     return this.placeService.updateById(Number(id), updatePlaceDto);
@@ -665,7 +681,7 @@ Als de gebruiker een plaats probeert op te vragen waarvan de id niet bestaat, da
 `NotFoundException` is een ingebouwde HTTP-exception in NestJS die je gebruikt om aan te geven dat een bepaald item niet gevonden is. Wanneer je deze exception gooit, stuurt NestJS automatisch een HTTP-response terug met statuscode 404 en een duidelijke foutboodschap.
 
 ```typescript
-//src/place/place.service.ts
+// src/place/place.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common'; // 👈 1
 
 // ...
@@ -726,7 +742,7 @@ De `@Module()` decorator maakt van een TypeScript-klasse een NestJS-module. Hier
 Pas de code aan:
 
 ```typescript
-//src/place/place.module.ts
+// src/place/place.module.ts
 import { Module } from '@nestjs/common';
 import { PlaceController } from './place.controller'; // 👈
 import { PlaceService } from './place.service'; // 👈
@@ -774,6 +790,7 @@ Lees de documentatie over [CORS](https://docs.nestjs.com/security/cors).
 Pas de code in `main.ts` aan:
 
 ```ts
+// src/main.ts
 // ...
 
 app.enableCors({
