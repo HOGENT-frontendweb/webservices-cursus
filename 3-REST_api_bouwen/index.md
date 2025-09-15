@@ -811,3 +811,13 @@ Deze code zorgt ervoor dat je NestJS-backend CORS toestaat:
 ### Oefening - Je eigen project
 
 Voeg CORS toe aan je eigen project.
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les2-opl TODO:
+> pnpm install
+> pnpm start:dev
+> ```
