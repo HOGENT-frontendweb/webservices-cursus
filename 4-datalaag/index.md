@@ -405,3 +405,637 @@ Je kan ook wijzigingen ongedaan maken als er iets fout liep. Dit is zeer belangr
 Het is wel belangrijk dat je let op de volgorde van uitvoeren van de migraties om geen problemen te krijgen met bv. foreign keys die nog niet zouden bestaan.
 
 ![Migraties](./images/versioncontrol-xkcd.jpg ':size=70%')
+
+### Eerste migratie
+
+Migrations in Drizzle worden beheerd met behulp van de `drizzle-kit` CLI. We hebben deze al geïnstalleerd als dev dependency en we hebben ook al een `drizzle.config.ts` bestand aangemaakt.
+
+Via de CLI kan je migraties aanmaken en uitvoeren. Laten we een eerste migratie maken om onze `places` tabel aan te maken:
+
+```bash
+pnpm drizzle-kit generate
+```
+
+Het `generate` commando maakt een nieuwe migratie aan in de `migrations` map. De naam van de migratie is gebaseerd bevat een volgnummer en een paar willekeurige woorden. Open de migratie en kijk wat Drizzle gegenereerd heeft.
+
+Deze migratie kan je uitvoeren met het volgende commando:
+
+```bash
+pnpm drizzle-kit migrate
+```
+
+Controleer in MySQL Workbench of de tabel effectief is aangemaakt. Je zal ook een tabel `__drizzle_migrations` zien. Deze tabel houdt bij welke migraties al uitgevoerd zijn.
+
+Om ons wat typewerk te besparen, voegen we twee scripts toe aan ons `package.json` bestand:
+
+```json
+{
+  "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  }
+}
+```
+
+### Oefening - Schema aanvullen
+
+1. Vul het schema aan met de tabellen voor transactions en users.
+2. Denk aan de foreign keys. Zorg ervoor dat die naar de juiste kolommen verwijzen.
+3. Voeg ook de nodige indices toe.
+
+- Oplossing +
+
+  Voeg toe aan `src/drizzle/schema.ts`:
+
+  ```ts
+  export const users = mysqlTable(
+    'users',
+    {
+      id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+      name: varchar('name', { length: 255 }).notNull(),
+      email: varchar('email', { length: 255 }).notNull(),
+      passwordHash: varchar('password_hash', { length: 255 }).notNull(),
+      roles: json('roles').notNull(),
+    },
+    (table) => [uniqueIndex('idx_user_email_unique').on(table.email)],
+  );
+
+  export const transactions = mysqlTable('transactions', {
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    amount: int('amount').notNull(),
+    date: datetime('date').notNull(),
+    userId: int('user_id', { unsigned: true })
+      .references(() => users.id, { onDelete: 'cascade' })
+      .notNull(),
+    placeId: int('place_id', { unsigned: true })
+      .references(() => places.id, { onDelete: 'cascade' })
+      .notNull(),
+  });
+  ```
+
+### Oefening - Relaties toevoegen
+
+Voeg de volgende relaties toe aan het schema:
+
+1. Een user kan meerdere transactions hebben.
+2. Een place kan meerdere transactions hebben.
+3. Een transactie heeft één user en één place.
+
+- Oplossing +
+
+  Voeg toe aan `src/drizzle/schema.ts`:
+
+  ```ts
+  export const placesRelations = relations(places, ({ many }) => ({
+    transactions: many(transactions),
+  }));
+
+  export const usersRelations = relations(users, ({ many }) => ({
+    transactions: many(transactions),
+  }));
+
+  export const transactionsRelations = relations(transactions, ({ one }) => ({
+    place: one(places, {
+      fields: [transactions.placeId],
+      references: [places.id],
+    }),
+    user: one(users, {
+      fields: [transactions.userId],
+      references: [users.id],
+    }),
+  }));
+  ```
+
+### Oefening - Migratie maken en uitvoeren
+
+1. Maak een nieuwe migratie aan.
+2. Voer de migratie uit.
+
+- Oplossing +
+
+  Voer volgende commando's uit:
+
+  ```bash
+  pnpm db:generate
+  pnpm db:migrate
+  ```
+
+### drizzle-kit push
+
+De Drizzle kit biedt ook een [`drizzle-kit push`](https://orm.drizzle.team/docs/drizzle-kit-push) commando aan. Dit commando vergelijkt het huidige schema met de databank en past de databank aan om overeen te komen met het schema. Dit commando kan je wel gebruiken in lokaal development om snel wijzigingen door te voeren, maar in productie niet! In productie maak je altijd gebruik van migraties.
+
+<!-- TODO: aanvullen met veel op veel relatie -->
+
+## Seeds
+
+Met seeds kan je testdata toevoegen aan een databank. Dit wordt typisch enkel gebruikt in development, niet in testing of production. Let op dat je data in de juiste volgorde toevoegt! In ons geval moeten we eerst de plaatsen toevoegen vooraleer we transacties kunnen toevoegen.
+
+?> Mocht je in productie toch data willen toevoegen, zoals bv. een aantal categorieën van producten in een webshop, dan maak je hiervoor een migratie en geen seed.
+
+Indien je niet zelf de data wil genereren, kan je gebruik maken van de ingebouwde functionaliteit van Drizzle: <https://orm.drizzle.team/docs/seed-overview>. Probeer dit gerust zelf uit in je eigen project (dit is geen extra).
+
+### Seeds in Drizzle
+
+Wij willen iets meer controle over de specifieke data die we toevoegen. Daarom maken we zelf een seed script aan in `src/drizzle/seed.ts`. Dit script doorloopt volgende stappen:
+
+1. Connectie maken met de databank
+2. Users toevoegen
+3. Places toevoegen
+4. Transactions toevoegen
+
+Merk op dat je entiteiten in de juiste volgorde moet toevoegen. Transactions verwijzen naar users en places, dus moeten deze eerst toegevoegd worden.
+
+Allereerst definiëren we een nieuwe connectie in een bestand `src/drizzle/seed.ts`. Deze connectie is gelijkaardig aan de connectie die we in de `DrizzleModule` hebben gedefinieerd, maar dan zonder NestJS. Op die manier kunnen we dit script ook los van de NestJS applicatie uitvoeren.
+
+```ts
+import { drizzle } from 'drizzle-orm/mysql2';
+import * as mysql from 'mysql2/promise';
+import * as schema from './schema';
+
+const connection = mysql.createPool({
+  uri: process.env.DATABASE_URL,
+  connectionLimit: 5,
+});
+
+const db = drizzle(connection, {
+  schema,
+  mode: 'default',
+});
+```
+
+Daarna definiëren we een functie om de databank leeg te maken:
+
+```ts
+async function resetDatabase() {
+  console.log('🗑️ Resetting database...');
+
+  // Delete data in correct order (respecting foreign key constraints)
+  await db.delete(schema.transactions);
+  await db.delete(schema.places);
+  await db.delete(schema.users);
+
+  console.log('✅ Database reset completed\n');
+}
+```
+
+Vervolgens definiëren we de functies om de data toe te voegen:
+
+```ts
+async function seedUsers() {
+  console.log('👥 Seeding users...');
+
+  await db.insert(schema.users).values([
+    {
+      id: 1,
+      name: 'Thomas Aelbrecht',
+    },
+    {
+      id: 2,
+      name: 'Pieter Van Der Helst',
+    },
+    {
+      id: 3,
+      name: 'Karine Samyn',
+    },
+  ]);
+
+  console.log('✅ Users seeded successfully\n');
+}
+
+async function seedPlaces() {
+  console.log('📍 Seeding places...');
+
+  await db.insert(schema.places).values([
+    {
+      id: 1,
+      name: 'Loon',
+      rating: 5,
+    },
+    {
+      id: 2,
+      name: 'Dranken Geers',
+      rating: 3,
+    },
+    {
+      id: 3,
+      name: 'Irish Pub',
+      rating: 4,
+    },
+  ]);
+
+  console.log('✅ Places seeded successfully\n');
+}
+
+async function seedTransactions() {
+  console.log('💰 Seeding transactions...');
+
+  await db.insert(schema.transactions).values([
+    // User Thomas
+    // ===========
+    {
+      id: 1,
+      userId: 1,
+      placeId: 1,
+      amount: 3500,
+      date: new Date(2021, 4, 25, 19, 40),
+    },
+    {
+      id: 2,
+      userId: 1,
+      placeId: 2,
+      amount: -220,
+      date: new Date(2021, 4, 8, 20, 0),
+    },
+    {
+      id: 3,
+      userId: 1,
+      placeId: 3,
+      amount: -74,
+      date: new Date(2021, 4, 21, 14, 30),
+    },
+    // User Pieter
+    // ===========
+    {
+      id: 4,
+      userId: 2,
+      placeId: 1,
+      amount: 4000,
+      date: new Date(2021, 4, 25, 19, 40),
+    },
+    {
+      id: 5,
+      userId: 2,
+      placeId: 2,
+      amount: -220,
+      date: new Date(2021, 4, 9, 23, 0),
+    },
+    {
+      id: 6,
+      userId: 2,
+      placeId: 3,
+      amount: -74,
+      date: new Date(2021, 4, 22, 12, 0),
+    },
+    // User Karine
+    // ===========
+    {
+      id: 7,
+      userId: 3,
+      placeId: 1,
+      amount: 4000,
+      date: new Date(2021, 4, 25, 19, 40),
+    },
+    {
+      id: 8,
+      userId: 3,
+      placeId: 2,
+      amount: -220,
+      date: new Date(2021, 4, 10, 10, 0),
+    },
+    {
+      id: 9,
+      userId: 3,
+      placeId: 3,
+      amount: -74,
+      date: new Date(2021, 4, 19, 11, 30),
+    },
+  ]);
+
+  console.log('✅ Transactions seeded successfully\n');
+}
+```
+
+Tot slot definiëren we een `main` functie die deze functies aanroept:
+
+```ts
+async function main() {
+  console.log('🌱 Starting database seeding...\n');
+
+  await resetDatabase();
+  await seedUsers();
+  await seedPlaces();
+  await seedTransactions();
+
+  console.log('🎉 Database seeding completed successfully!');
+}
+```
+
+Deze `main` functie voeren we uit en sluiten we de connectie:
+
+```ts
+main()
+  .then(async () => {
+    await connection.end();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await connection.end();
+    process.exit(1);
+  });
+```
+
+We moeten de functie op deze manier uitvoeren aangezien we geen `await` kunnen gebruiken in de top-level code.
+
+### Seed script uitvoeren
+
+Voeg een nieuw script toe aan je `package.json` bestand:
+
+```json
+{
+  "scripts": {
+    "db:seed": "env-cmd tsx src/drizzle/seed.ts"
+  }
+}
+```
+
+Dit script voert ons seed script uit. We gebruiken `env-cmd` om de environment variabelen uit ons `.env` bestand te laden. We gebruiken `tsx` om TypeScript bestanden rechtstreeks uit te voeren zonder deze eerst te moeten compileren.
+
+Alvorens het script uitgevoerd kan worden, moet je eerst de nodige modules installeren:
+
+```bash
+pnpm add -D env-cmd tsx
+```
+
+Nu kan je het seed script uitvoeren:
+
+```bash
+pnpm db:seed
+```
+
+Controleer in MySQL Workbench of de data effectief is toegevoegd.
+
+## Opmerking over migrations en seeds
+
+Migrations en seeds moeten steeds vóór de start van de server uitgevoerd worden. Dat geeft een aantal mogelijkheden:
+
+- externe service die hiervoor zorgt
+- scripts die uitgevoerd worden voor de server start (voor `yarn start`)
+- de server doet het zelf
+
+Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om je migraties en seeds uit te voeren alvorens je de server start.
+
+?> **Tip:** documenteer duidelijk in de `README.md` hoe je de server start en welke stappen je moet ondernemen om de databank correct te initialiseren. _Dit is ook één van de ontvankelijkheidscriteria voor de examenopdracht (en wordt vaak verwaarloosd)._
+
+## Oefening - Je eigen project
+
+1. Vervolledig het schema van je eigen project.
+2. Maak een migratie aan en voer deze uit.
+3. Maak seeds aan voor alle tabellen die je in stap 1 hebt gedefinieerd.
+
+## Repository
+
+Een repository is een abstractie voor de datalaag. Het definieert een aantal (CRUD) functies die queries uitvoeren en, indien nodig, de query resultaten omvormen naar OO-objecten. Het is de tussenpersoon tussen domein en databank. Zo zou het "eenvoudig" moeten zijn om te switchen tussen databanken. Dit is eenvoudiger in een taal met interfaces en klassen (bv. TypeScript). [Lees meer over het repository patroon](https://medium.com/@pererikbergman/repository-design-pattern-e28c0f3e4a30)
+
+Het repository patroon is niet altijd nodig. Maak zelf de afweging of de extra laag nut heeft. Een simpel "doorgeefluik" naar de databank heeft geen nut. Dit heeft bv. wel nut indien data omgevormd moet worden. Zorg voor één lijn in een applicatie: ofwel voor alles een repository ofwel voor niets.
+
+Meestal is deze laag niet nuttig bij het gebruik van een ORM want het ORM is zelf de repository. Aangezien wij Drizzle gebruiken, is het niet nodig om een extra repositorylaag te voorzien. Onze lagen zien er dus als volgt uit:
+
+```mermaid
+flowchart TD
+  A(REST) --> B(Service)
+  B --> C(Data)
+```
+
+Een pijl van de ene naar de andere laag betekent dat de ene laag de andere laag gebruikt. In dit geval gebruikt de REST-laag de service-laag en de service-laag gebruikt de datalaag. Als je voor een repository zou kiezen, zou de service-laag de repository-laag gebruiken, en de repository-laag de datalaag.
+
+## Services
+
+Nu moeten we enkel nog de Drizzle client gebruiken in onze services.
+
+### PlaceService
+
+Allereerst moeten we onze Drizzle provider injecteren in de `PlaceService`. Open `src/places/places.service.ts` en voeg een constructor toe:
+
+```ts
+// ...
+import { DatabaseProvider, InjectDrizzle } from '../drizzle/drizzle.provider';
+
+export class PlaceService {
+  constructor(
+    @InjectDrizzle()
+    private readonly db: DatabaseProvider,
+  ) {}
+
+  // ...
+}
+```
+
+Vervolgens passen we de `getAll` functie aan zodat deze Drizzle gebruikt om de places uit de databank op te halen:
+
+```ts
+export class PlaceService {
+  // ...
+
+  async getAll(): Promise<PlaceListResponseDto> {
+    const items = await this.db.query.places.findMany();
+    return { items };
+  }
+
+  // ...
+}
+```
+
+Hier gebruiken we de ORM interface van Drizzle (via het `query` property).
+
+De `getAll` functie heeft nu het `async` keyword gekregen, dus we moeten ook de bijhorende functie in de `PlaceController` async maken:
+
+```ts
+export class PlaceController {
+  // ...
+
+  async getAllPlaces(): Promise<PlaceListResponseDto> {
+    return await this.placeService.getAll();
+  }
+
+  // ...
+}
+```
+
+Daarna passen we de `getById` aan:
+
+```ts
+export class PlaceService {
+  // ...
+  async getById(id: number): Promise<PlaceDetailResponseDto> {
+    const place = await this.db.query.places.findFirst({ // 👈 1
+      where: eq(places.id, id), // 👈 2
+      // 👇 3
+      with: {
+        transactions: {
+          with: {
+            user: true,
+            place: true,
+          },
+        },
+      },
+    });
+
+    // 👇 4
+    if (!place) {
+      throw new NotFoundException('No place with this id exists');
+    }
+
+    // 👇 5
+    return place;
+  }
+  // ...
+}
+```
+
+1. We halen de eerste plaats op die voldoet aan de `WHERE` clause.
+2. We definiëren de `WHERE` clause. We filteren de places tabel op het id dat gelijk is aan de parameter `id`.
+   - De `eq` functie komt uit `drizzle-orm` en wordt gebruikt om een vergelijking te maken.
+   - `places.id` verwijst naar de `id` kolom uit de `places` tabel.
+3. Met `with` halen we alle transacties verbonden aan deze place op. Voor elke transactie halen we ook de bijbehorende user en place op.
+4. Als geen place gevonden werd, gooien we een `NotFoundException`.
+5. We geven de gevonden place terug. Drizzle heeft deze automatisch omgevormd naar een JavaScript object met de juiste opbouw (inclusief relaties).
+
+Maak ook de bijhorende functie in de `PlaceController` async.
+
+Als laatste voorbeeld passen we de `create` functie aan:
+
+```ts
+export class PlaceService {
+  // ...
+
+  async create(place: CreatePlaceRequestDto): Promise<PlaceResponseDto> {
+    const [newPlace] = await this.db
+      .insert(places)
+      .values(place)
+      .$returningId();
+
+    return this.getById(newPlace.id);
+  }
+
+  // ...
+}
+```
+
+In deze functie gebruiken we de SQL-like interface van Drizzle. Je merkt dat de code leest alsof het SQL is, maar dan in JavaScript functies.
+
+We voegen de nieuwe place toe en vragen om het id terug te geven via de `$returningId` functie. De `insert` functie geeft altijd een array terug, we pakken het eerste element hieruit.
+
+Daarna halen we de volledige place op via de `getById` functie zodat we ook de relaties meekrijgen.
+
+Maak uiteindelijk de bijhorende functie in de `PlaceController` async.
+
+#### Oefening - Update en delete place
+
+1. Pas de `update` functie aan zodat deze Drizzle gebruikt om een place te updaten.
+   - Gebruik hiervoor de SQL-like interface van Drizzle om de place te updaten.
+   - Retourneer de place via de `getById` functie.
+2. Pas de `delete` functie aan zodat deze Drizzle gebruikt om een place te verwijderen.
+   - Gebruik hiervoor de SQL-like interface van Drizzle om de place te verwijderen.
+   - Gooi een `NotFoundException` als de place niet bestaat. Tip: de `delete` functie geeft het aantal verwijderde rijen terug.
+   - Retourneer niets.
+3. Maak de bijhorende functies in de `PlaceController` async.
+
+- Oplossing +
+
+  Pas `src/places/places.service.ts` aan:
+
+  ```ts
+  export class PlaceService {
+    // ...
+
+    async update(
+      id: number,
+      place: UpdatePlaceRequestDto,
+    ): Promise<PlaceResponseDto> {
+      await this.db
+        .update(places)
+        .set(changes)
+        .where(eq(places.id, id));
+
+      return this.getById(id);
+    }
+
+    async delete(id: number): Promise<void> {
+      const [result] = await this.db
+        .delete(places)
+        .where(eq(places.id, id));
+
+      if (result.affectedRows === 0) {
+        throw new NotFoundException('No place with this id exists');
+      }
+    }
+
+    // ...
+  }
+  ```
+
+### Transactions
+
+Als laatste voorbeeld passen we de functie `getAll` in de `TransactionService` aan:
+
+```ts
+export class TransactionService {
+
+  // 👇 1
+  constructor(
+    @InjectDrizzle()
+    private readonly db: DatabaseProvider,
+  ) {}
+
+  async getAll(
+    userId: number,
+    roles: string[],
+  ): Promise<TransactionListResponseDto> {
+    const items = await this.db.query.transactions.findMany({
+      // 👇 2
+      columns: {
+        id: true,
+        amount: true,
+        date: true,
+      },
+      // 👇 3
+      with: {
+        place: true,
+        user: true,
+      },
+    });
+
+    return { items };
+  }
+
+  // ...
+}
+```
+
+1. We injecteren onze Drizzle provider in de constructor.
+2. We selecteren enkel de kolommen `id`, `amount` en `date`.
+   - De kolommen `placeId` en `userId` wensen we niet in ons response. De eindgebruiker hoeft niet te weten hoe de transactions gekoppeld zijn aan de place en user.
+3. We selecteren de place en de user.
+   - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
+
+Maak ook de bijhorende functie in de `TransactionController` async.
+
+De code van de overige methoden uit de services kan je raadplegen in onze voorbeeldapplicatie.
+
+### Oefening - Je eigen project
+
+1. Vervolledig de services in je project met alle benodigde CRUD-operaties.
+2. Werk in de services met de databank i.p.v. mock data.
+3. Maak de nodige functies in de controllers async.
+4. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les4-opl TODO:
+> yarn install
+> yarn prisma migrate dev
+> yarn start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
+
+## Mogelijke extra's voor de examenopdracht
+
+- Gebruik van een ander ORM framework of een querybuilder.
+  - We raden niet aan om zelf queries te schrijven, tenzij je écht een goede reden hebt
+- Gebruik van een mapper package in de repositorylaag (indien van toepassing).
+- Gebruik een ander type databank (column oriented, document based...)
+  - Let op: wisselen van MySQL naar bv. PostgreSQL is geen extra. Dit blijft nog steeds hetzelfde type databank.
