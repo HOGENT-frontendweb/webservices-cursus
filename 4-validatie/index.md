@@ -313,16 +313,17 @@ Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optione
 
 ## Logging
 
-Lees [Best practices for logging](https://betterstack.com/community/guides/logging/nodejs-logging-best-practices/).
+Lees deze [best practices for logging](https://betterstack.com/community/guides/logging/nodejs-logging-best-practices/).
 
 Manueel links en rechts wat `console.log` instructies toevoegen om iets te loggen is natuurlijk niet zo handig. Een goede logger laat toe om eenvoudig meer of minder te loggen al naargelang we in productie of development draaien.
 
-Logs kan je ook met een zeker 'level' loggen, zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. En nog veel meer..., een goede logger is best een uitgebreid stuk software.
+Logs kan je ook met een zeker "level" loggen zodat je niet telkens alles moet in/uit commentaar zetten als je wat meer/minder detail wil. Een goede logger is best een uitgebreid stuk software, het kan nog veel meer.
 
-NestJS bevat een ingebouwde tekstlogger via de `Logger`klasse uit `@nestjs/common`.
-Neem [Logging](https://docs.nestjs.com/techniques/logger) door.
+NestJS bevat een ingebouwde tekstlogger via de `Logger` klasse uit `@nestjs/common`.
 
-We maken een eigen `CustomLogger` aan. In de `src` folder maak je een `core` folder aan. Voeg een bestand `customLogger.ts` toe.
+Neem de NestJS documentatie over [logging](https://docs.nestjs.com/techniques/logger) door.
+
+We maken een eigen `CustomLogger` aan. In de `src` map maak je een `core` map aan. Voeg hierin een bestand `customLogger.ts` toe.
 
 ```ts
 // src/core/customLogger.ts
@@ -350,10 +351,9 @@ export class CustomLogger extends ConsoleLogger implements LoggerService {
     super.verbose('📖 ' + message);
   }
 }
-
 ```
 
-  `CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Zo werkt  `CustomLogger` als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit.
+`CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Zo werkt  `CustomLogger` als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit met een emoji:
 
 - log: 📢 voor algemene logs
 - error: ❌ voor fouten
@@ -369,75 +369,81 @@ Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opst
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common';// 👈 3
+import { ValidationPipe, Logger } from '@nestjs/common'; // 👈 3
 import { CustomLogger } from './core/customLogger'; // 👈 1
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // ...
+
   app.useLogger(new CustomLogger());  //👈 2
-  ...
+
+  // ...
+
   await app.listen(process.env.PORT ?? 9000, () => {
     new Logger().log('🚀 Server listening on http://127.0.0.1:9000');//👈 3
-});
+  });
 }
+
 bootstrap();
 ```
 
-1. Importeer `CustomLogger`
-2. In de app gebruik je een aangepaste logger (`CustomLogger`)  in plaats van de standaard logger van NestJS
+1. Importeer `CustomLogger`.
+2. Configureer de app zodat een aangepaste logger (`CustomLogger`) gebruikt wordt in plaats van de standaard logger van NestJS.
 3. We loggen een bericht wanneer de server opgestart is. Nu worden alle logs van je applicatie via de `CustomLogger` verwerkt.
 
 Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 
 ## Foutafhandeling
 
-[Lees Exception filters](https://docs.nestjs.com/exception-filters) tot aan [sectie Exception filters](https://docs.nestjs.com/exception-filters#exception-filters-1)
+Lees de documentatie over [exception filters](https://docs.nestjs.com/exception-filters) tot aan de sectie "Exception filters".
 
 ### Standaard exceptions
 
-NestJS levert een set HTTP-exceptions mee die je direct kan gebruiken. Ze komen uit `@nestjs/common` en gooien een response met de juiste HTTP-statuscode en een standaard JSON-body.
+NestJS voorziet een set HTTP exceptions die je direct kan gebruiken. Ze komen uit `@nestjs/common` en gooien een response met de juiste HTTP-statuscode en een standaard JSON-body.
 
-Voorbeeld: NotFoundException
+Een voorbeeld van zo'n exception is de `NotFoundException`:
 
 ```typescript
 // src/place/place.service.ts
-  import { Injectable, NotFoundException } from '@nestjs/common';// 👈1
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-  getById(id: number): PlaceResponseDto {
-    const place = PLACES.find(item => item.id === id);// 👈2
-    if (!place) {
-      throw new NotFoundException(`place #${id} not found`);
-    }// 👈3
-    return place;// 👈3
+getById(id: number): PlaceResponseDto {
+  const place = PLACES.find(item => item.id === id);
+
+  if (!place) {
+    throw new NotFoundException(`place #${id} not found`); // 👈
   }
+
+  return place;
+}
 ```
 
-Als de plaats niet bestaat dan krijg je automatisch een `404 NOT FOUND` exception met volgende respons :
+Als de plaats niet bestaat dan krijg je automatisch een HTTP 404 exception met volgende respons:
 
 ```json
 {
-    "message": "place #10 not found",
-    "error": "Not Found",
-    "statusCode": 404
+  "message": "place #10 not found",
+  "error": "Not Found",
+  "statusCode": 404
 }
 ```
 
 ### Exception filters
 
-Exception Filters zijn klassen die afhandelen hoe exceptions worden omgezet naar responses. Standaard gebruikt NestJS een Global Exception Filter (`BaseExceptionFilter`), die alle `HttpException` vertaalt naar JSON. Als je echter meer controle wil (bv. logging, een andere JSON-structuur, errors wegschrijven naar een monitoring tool) kan je hiervoor een Exception filter aanmaken.
+Exception filters zijn klassen die afhandelen hoe exceptions worden omgezet naar responses. Standaard gebruikt NestJS een global exception filter (`BaseExceptionFilter`) die alle `HttpException` vertaalt naar JSON. Als je echter meer controle wil (bv. logging, een andere JSON-structuur, errors wegschrijven naar een monitoring tool) kan je hiervoor een Exception filter aanmaken.
 
 ![Exception Filters](./images/ExceptionFilter.png)
 
-Lees [Exception filters](https://docs.nestjs.com/exception-filters#exception-filters-1)
+Lees de sectie over [exception filters](https://docs.nestjs.com/exception-filters#exception-filters-1) in de NestJS documentatie.
 
-Maak een bestand `http-exception.filter.ts` aan in de folder `src/lib/`. We definiëren de respons structuur voor een exception.
+Maak een bestand `http-exception.filter.ts` aan in de map `src/lib/`. Hierin definiëren we de structuur van het response voor een exception.
 
 ```typescript
 // src/lib/http-exception.filter.ts
 interface HttpExceptionResponse {
-  statusCode: number;    // HTTP status code (400, 404, 500, etc.)
-  timestamp: string;     // Wanneer de error optrad
-  message: string;       // Error boodschap
+  statusCode: number;      // HTTP status code (400, 404, 500, etc.)
+  timestamp: string;       // Wanneer de error optrad
+  message: string;         // Error boodschap
   details?: object | null; // Extra error details (optioneel)
 }
 ```
@@ -457,6 +463,8 @@ interface HttpExceptionResponse {
 }
 ```
 
+<br />
+
 - Oplossing +
 
   ```typescript
@@ -472,60 +480,63 @@ interface HttpExceptionResponse {
     details?: object | null;
   }
 
-  @Catch(HttpException)// 👈1
-  export class HttpExceptionFilter implements ExceptionFilter {// 👈2
-    catch(exception: HttpException, host: ArgumentsHost) {// 👈3
-      const ctx = host.switchToHttp();// 👈4
-      const response = ctx.getResponse<Response>();// 👈5
-      const status = exception.getStatus();// 👈6
+  @Catch(HttpException) // 👈 1
+  export class HttpExceptionFilter implements ExceptionFilter { // 👈 2
+    catch(exception: HttpException, host: ArgumentsHost) { // 👈 3
+      const ctx = host.switchToHttp(); // 👈 4
+      const response = ctx.getResponse<Response>(); // 👈 5
+      const status = exception.getStatus(); // 👈 6
 
+      // 👇 7
       const responseBody: HttpExceptionResponse = {
         statusCode: status,
         timestamp: new Date().toISOString(),
         message: exception.message,
         details: null,
-      };// 👈7
+      };
 
+      // 👇 8
       new Logger('HttpExceptionFilter').error(
         `HTTP Exception: ${JSON.stringify(responseBody)}`,
-      );// 👈8
+      );
 
-      response.status(status).json(responseBody);// 👈9
+      response.status(status).json(responseBody); // 👈 9
     }
   }
   ```
 
   1. `@Catch`: Als er ergens in de applicatie een `HttpException` gegooid wordt, zal deze filter de fout afhandelen.
   2. De klasse implementeert de `ExceptionFilter` interface, met de catch methode.
-  3. De `catch` methode bevat 2 argumenten
-     - `exception`: dit is de fout die gegooid werd (bv. een NotFoundException).
+  3. De `catch` methode krijgt 2 argumenten
+     - `exception`: dit is de fout die gegooid werd (bv. een `NotFoundException`).
      - `host`: bevat alle context-informatie over de request/response.
-  4. Omdat NestJS ook andere platformen ondersteunt (WebSockets, gRPC…), moet je expliciet zeggen dat je in HTTP context wil werken.
+  4. Omdat NestJS ook andere platformen ondersteunt (WebSockets, gRPC...), moet je expliciet zeggen dat je in HTTP context wil werken.
   5. Daarna haal je het response object op (van Express).
   6. Vervolgens haal je de status op. Dit geeft de juiste HTTP-statuscode terug (bv. 404).
   7. Hier herschrijf je de response. De status, tijdstip en basis error message van de Exception worden aan de respons toegevoegd.
   8. De json wordt gelogd.
   9. De status en json wordt ingesteld in de respons.
 
-  Maak de filter Global-scoped:
+  Maak de filter global scoped:
 
   ```typescript
   // src/main.ts
   import { HttpExceptionFilter } from './lib/http-exception.filter';
-  ...
-    app.useGlobalFilters(new HttpExceptionFilter());
-  ...
+
+  // ...
+  app.useGlobalFilters(new HttpExceptionFilter());
+  // ...
   ```
 
-Vraag een onbestaande plaats op en bekijk de respons.
+  Vraag een onbestaande plaats op en bekijk de respons.
 
-Je kan een eenvoudige exception throwen
+Je kan een eenvoudige exception gooien met enkel een custom message:
 
 ```typescript
 throw new NotFoundException('Place not found');
 ```
 
-Of je kan ook meer detail meegeven met je exception
+Of je kan ook meer detail meegeven met je exception:
 
 ```typescript
 throw new NotFoundException({
@@ -537,8 +548,9 @@ throw new NotFoundException({
 Om ook de custom message en de details weer te geven in de respons passen we de code verder aan.
 
 ```typescript
- // src/lib/http-exception.filter.ts
-...
+// src/lib/http-exception.filter.ts
+// ...
+
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
   catch(exception: HttpException, host: ArgumentsHost) {
@@ -563,7 +575,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
         'message' in exceptionResponse &&
         typeof exceptionResponse.message === 'string'
       ) {
-        responseBody.message = exceptionResponse.message; //we nemen de custom message over ipv de basis error message
+        responseBody.message = exceptionResponse.message; // we nemen de custom message over ipv de basis error message
       }
 
       if (
@@ -575,11 +587,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         responseBody.details = exceptionResponse.details;
       }
     }
-    // 👈
 
     new Logger('HttpExceptionFilter').error(
-        `HTTP Exception: ${JSON.stringify(responseBody)}`,
-      );
+      `HTTP Exception: ${JSON.stringify(responseBody)}`,
+    );
 
     response.status(status).json(responseBody);
   }
@@ -600,26 +611,26 @@ Middleware functies kunnen de volgende taken uitvoeren:
 - de volgende middleware functie in de stack aanroepen.
 - als de huidige middleware functie de request-response cyclus niet beëindigt, moet deze next() aanroepen om de controle over te dragen aan de volgende middleware functie. Anders blijft de aanvraag hangen.
 
-Voorbeeld: Stel je wil kunnen volgen welke requests binnenkomen in je API. Dat helpt bij debugging en monitoring. Zonder logger weet je niet wat er allemaal langs je server passeert. Nu loggen we enkel een foutmelding.(verwijder de logging code uit  `src/lib/http-exception.filter.ts`). Alle logging zal nu gebeuren in de logging middleware.
+Voorbeeld: Stel je wil kunnen volgen welke requests binnenkomen in je API. Dat helpt bij debugging en monitoring. Zonder logger weet je niet wat er allemaal langs je server passeert. Nu loggen we enkel een foutmelding. Verwijder de logging code uit  `src/lib/http-exception.filter.ts`. Alle logging zal nu gebeuren in de logging middleware.
 
-Lees [logging middleware](https://docs.nestjs.com/middleware)
+Lees de documentatie over [logging middleware](https://docs.nestjs.com/middleware).
 
 ![Logging middleware](./images/logging.png)
 
-Maak een bestand `logger.middleware.ts`aan in de `src/lib` folder.
+Maak een bestand `logger.middleware.ts`aan in de `src/lib` map.
 
 ```ts
 import type { NestMiddleware } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 
-@Injectable() // 👈1
-export class LoggerMiddleware implements NestMiddleware {// 👈1
-  private readonly logger = new Logger(LoggerMiddleware.name);// 👈2
+@Injectable() // 👈 1
+export class LoggerMiddleware implements NestMiddleware { // 👈 1
+  private readonly logger = new Logger(LoggerMiddleware.name); // 👈 2
 
-  use(req: Request, res: Response, next: NextFunction) {// 👈3
-    res.on('finish', () => {// 👈4
-     // 👇5
+  use(req: Request, res: Response, next: NextFunction) { // 👈 3
+    res.on('finish', () => { // 👈 4
+      // 👇 5
       const statusCode = res.statusCode;
 
       const message = `${req.method} ${req.originalUrl} - ${statusCode}`;
@@ -633,40 +644,44 @@ export class LoggerMiddleware implements NestMiddleware {// 👈1
       }
     });
 
-    next();// 👈6
+    next(); // 👈 6
   }
 }
 ```
 
 1. Een middleware is gewoon een klasse die de interface `NestMiddleware` implementeert. Deze klasse in injecteerbaar.
-2. Maak een instantie van de Logger aan. Geef de naam van de klasse door. Zo weet je in de logs altijd welk onderdeel van je applicatie het bericht heeft gelogd.
-3. `use` is de te implementeren methode. Request, Response, NextFunction: types uit Express, omdat NestJS onder de motorkap Express gebruikt.
+2. Maak een instantie van de `Logger` aan. Geef de naam van de klasse door. Zo weet je in de logs altijd welk onderdeel van je applicatie het bericht heeft gelogd.
+3. `use` is de te implementeren methode. `Request`, `Response`, `NextFunction` zijn types uit Express omdat NestJS onder de motorkap Express gebruikt.
 
    - Request: alle info over de inkomende request (bv. URL, headers, body, method).
    - Response: het antwoord dat je terugstuurt naar de client.
    - extFunction: een functie die je moet oproepen om verder te gaan naar de volgende middleware of controller.
 
-4. res.on('finish', () => { ... }) "luistert" naar het moment dat de response klaar is en verstuurd wordt. Waarom? Omdat je dan ook de statusCode kent (200, 404, 500, ...).
-5. Statuscode wordt gecontroleerd en dit wordt gelogd
-6. Logging is gebeurd. Geef de controle door aan de volgende functie in de pipeline
+4. `res.on('finish', () => { ... })` "luistert" naar het moment dat de response klaar is en verstuurd wordt. Waarom? Omdat je dan ook de status code kent (200, 404, 500, ...).
+5. De status code wordt gecontroleerd en wordt gelogd.
+6. De logging is gebeurd. Geef de controle door aan de volgende functie in de pipeline.
 
-In de App Module geven we mee dat we bij elke request de LoggerMiddleware wensen te gebruiken. Er is echter geen plaats voor middleware in de @Module()-decorator. In plaats daarvan stellen we ze in met de `configure()`-methode van de moduleklasse. Modules die middleware bevatten, moeten de `NestModule-interface` implementeren.
+In de `AppModule` geven we mee dat we bij elke request de `LoggerMiddleware` wensen te gebruiken. Er is echter geen plaats voor middleware in de `@Module()` decorator. In plaats daarvan stellen we ze in met de `configure()` methode van de moduleklasse. Modules die middleware bevatten, moeten de `NestModule` interface implementeren.
 
 ```typescript
-import { Module, MiddlewareConsumer } from '@nestjs/common';
+import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { LoggerMiddleware } from './lib/logger.middleware';
-...
-export class AppModule {
-  configure(consumer: MiddlewareConsumer) {// 👈1
-    consumer.apply(LoggerMiddleware).forRoutes('*path');// 👈2
+
+// ...
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) { // 👈 1
+    consumer.apply(LoggerMiddleware).forRoutes('*path'); // 👈 2
   }
 }
 ```
 
-1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middleware te configureren
-2. `consumer.apply(LoggerMiddleware)`: Registreert de LoggerMiddleware bij de DI container. `forRoutes('*path')`: Zorgt ervoor dat de LoggerMiddleware wordt uitgevoerd voor alle routes in je applicatie (de wildcard * matcht alle paden)
+1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middlewares te configureren
+2. `consumer.apply(LoggerMiddleware)`: Registreert de `LoggerMiddleware` bij de DI container.
+   - `forRoutes('*path')`: Zorgt ervoor dat de `LoggerMiddleware` wordt uitgevoerd voor alle routes in je applicatie (de wildcard * matcht alle paden)
 
-Roep een endpoint aan en bekijk de logs
+Roep een endpoint aan en bekijk de logs.
+
+<!-- TODO: vanaf hier verder lezen -->
 
 ## Configuratie
 
