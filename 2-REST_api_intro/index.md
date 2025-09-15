@@ -558,10 +558,18 @@ Controllers in NestJS zijn verantwoordelijk voor het afhandelen van inkomende ve
 - [Controllers](https://docs.nestjs.com/controllers#controllers)
 - [Routing](https://docs.nestjs.com/controllers#routing)
 
-NestJS biedt een CLI commando om automatisch een controller te genereren:
+NestJS biedt een CLI commando om allerlei onderdelen automatisch te genereren. We kunnen deze globaal installeren voor het hele systeem maar dat is een bad practice. Op die manier vervuil je jouw systeem met allerlei CLI's en packages die je misschien maar voor één project nodig hebt.
+
+Daarom installeren we de NestJS CLI in ons eigen project als devDependency:
 
 ```bash
-nest generate controller health
+pnpm add -D @nestjs/cli
+```
+
+Daarna genereren we een nieuwe controller met de naam `health`:
+
+```bash
+pnpm nest generate controller health
 ```
 
 Dit commando maakt de volgende bestanden aan:
@@ -570,6 +578,8 @@ Dit commando maakt de volgende bestanden aan:
 - `src/health/health.controller.spec.ts`: test bestand voor de controller
 
 De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging zou de controller niet beschikbaar zijn in de applicatie.
+
+Doordat we `@nestjs/cli` als devDependency geïnstalleerd hebben, moeten we altijd `pnpm` voor het `nest` commando schrijven. pnpm kijkt automatisch in de `node_modules/.bin` map als je een script uitvoert dat niet herkend wordt, `nest` is zo'n script. Kijk in de `node_modules/.bin` map of je daar een bestand met naam `nest` ziet, dat is het script waarmee de NestJS CLI opgestart wordt.
 
 ### Route implementeren
 
