@@ -6,8 +6,8 @@
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > git checkout -b les4 TODO:
-> yarn install
-> yarn start:dev
+> pnpm install
+> pnpm start:dev
 > ```
 
 ## Gelaagde architectuur
@@ -769,7 +769,7 @@ Controleer in MySQL Workbench of de data effectief is toegevoegd.
 Migrations en seeds moeten steeds vóór de start van de server uitgevoerd worden. Dat geeft een aantal mogelijkheden:
 
 - externe service die hiervoor zorgt
-- scripts die uitgevoerd worden voor de server start (voor `yarn start`)
+- scripts die uitgevoerd worden voor de server start (voor `pnpm start:dev`)
 - de server doet het zelf
 
 Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om je migraties en seeds uit te voeren alvorens je de server start.
@@ -1025,9 +1025,9 @@ De code van de overige methoden uit de services kan je raadplegen in onze voorbe
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
 > git checkout -b les4-opl TODO:
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
+> pnpm install
+> pnpm db:migrate
+> pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
