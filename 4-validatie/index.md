@@ -664,6 +664,7 @@ export class LoggerMiddleware implements NestMiddleware { // 👈 1
 In de `AppModule` geven we mee dat we bij elke request de `LoggerMiddleware` wensen te gebruiken. Er is echter geen plaats voor middleware in de `@Module()` decorator. In plaats daarvan stellen we ze in met de `configure()` methode van de moduleklasse. Modules die middleware bevatten, moeten de `NestModule` interface implementeren.
 
 ```typescript
+// src/app.module.ts
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { LoggerMiddleware } from './lib/logger.middleware';
 
@@ -716,6 +717,8 @@ De `ConfigModule` maakt de configuratie beschikbaar in onze applicatie. We impor
 Voeg onderstaand fragment toe aan de `imports` array in `AppModule`:
 
 ```typescript
+// src/app.module.ts
+
 ConfigModule.forRoot({
   isGlobal: true,
 })
@@ -730,6 +733,8 @@ Lees de documentatie over [custom configuration files](https://docs.nestjs.com/t
 Aan de hand van custom config files kunnen we de instellingen per domein groeperen. Maak een `src/config` map aan en een bestand `configuration.ts` met volgende inhoud:
 
 ```typescript
+// src/config/configuration.ts
+
 // 👇 1
 export default () => ({
   env: process.env.NODE_ENV, // 👈 2
@@ -752,6 +757,8 @@ export interface ServerConfig {
 We laden deze configuratie via de `load` property van het `options` object die we doorgeven aan de methode `forRoot`:
 
 ```typescript
+// src/app.module.ts
+
 import configuration from './config/configuration';
 
 // In de imports:
@@ -775,6 +782,7 @@ export class SomeController {
 We dienen de poort op te halen in `bootstrap` functie in `main.ts`. Dit is geen klasse dus constructor injectie is hier niet mogelijk.
 
 ```typescript
+// src/main.ts
 import { ConfigService } from '@nestjs/config'; // 👈 1
 import { ServerConfig } from './config/configuration'; // 👈 1
 
