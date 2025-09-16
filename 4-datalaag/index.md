@@ -219,8 +219,6 @@ Dit bestand definieert een aantal zaken:
   - In ons geval halen we deze uit de environment variabele `DATABASE_URL`
   - We gooien een error als deze variabele niet bestaat
 
-<!-- TODO: hier verder gaan -->
-
 ### Drizzle connectie als provider
 
 In NestJS wordt de connectie met de databank best als provider aangeboden. Op die manier zijn we zeker dat er slechts één connectie is in de volledige applicatie. We maken hiervoor een `drizzle` module aan:
@@ -286,6 +284,8 @@ Om ons leven makkelijker te maken definiëren we een custom decorator om de Driz
 ```ts
 export const InjectDrizzle = () => Inject(DrizzleAsyncProvider);
 ```
+
+Een [decorator](https://www.typescriptlang.org/docs/handbook/decorators.html) is in principe een simpele functie. Dit herken je ook in onze `InjectDrizzle` decorator. Deze decorator roept onderliggend de `Inject` decorator van NestJS aan.
 
 Importeer `Inject` uit het `@nestjs/common` package.
 
