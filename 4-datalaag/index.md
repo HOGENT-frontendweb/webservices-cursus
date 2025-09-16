@@ -417,7 +417,9 @@ Via de CLI kan je migraties aanmaken en uitvoeren. Laten we een eerste migratie 
 pnpm drizzle-kit generate
 ```
 
-Het `generate` commando maakt een nieuwe migratie aan in de `migrations` map. De naam van de migratie is gebaseerd bevat een volgnummer en een paar willekeurige woorden. Open de migratie en kijk wat Drizzle gegenereerd heeft.
+Het `generate` commando maakt een nieuwe migratie aan in de `migrations` map. Dit hebben we zo gedefinieerd in de `out` optie in `drizzle.config.ts`. De migratie bevat de nodige SQL-code om de `places` tabel aan te maken. De naam van de migratie is bevat een volgnummer en een paar willekeurige woorden.
+
+Open de migratie en kijk wat Drizzle gegenereerd heeft.
 
 Deze migratie kan je uitvoeren met het volgende commando:
 
@@ -437,6 +439,22 @@ Om ons wat typewerk te besparen, voegen we twee scripts toe aan ons `package.jso
   }
 }
 ```
+
+### Metadata migraties
+
+Drizzle maakte ook een `migrations/meta` map aan. Hierin houdt Drizzle in de `xxx_snapshot.json` bestanden bij hoe het databankschema eruit zag na elke migratie. De `xxx` komt overeen met het volgnummer van de migratie waarover de snapshot gaat. Drizzle heeft de snapshots nodig om te bepalen wat er juist veranderd is aan het databankschema om, indien nodig, een nieuwe migratie te maken.
+
+In de `migrations/meta` map vind je ook een `_journal.json` bestand. Dit bevat een object met een oplijsting van alle migraties in volgorde van uitvoering. Drizzle gebruikt dit bestand om te bepalen welke migraties uitgevoerd moeten worden.
+
+### Merge conflicten migraties
+
+Als je met meerdere samenwerkt aan eenzelfde project, kan je wel eens merge conflicten tegenkomen in de `migrations` map. Je lost deze conflicten het eenvoudigst op door de migratie(s) op jouw branch te verwijderen en de inkomende migraties (van bv. de `main` branch) te laten staan.
+
+Hetzelfde geldt voor de bestanden in de `migrations/meta` map: bewaar enkel de inkomende snapshots en journal entries (van bv. de `main` branch).
+
+Nadien kan je simpelweg een nieuwe migratie genereren via `pnpm db:generate`.
+
+Jouw lokale databank zal dan wel inconsistent zijn met de migraties in de `migrations` map. Dat kan je ook simpel oplossen door die te droppen en opnieuw aan te maken.
 
 ### Oefening - Schema aanvullen
 
