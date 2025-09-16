@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les3 3acce6c
+> git checkout -b les3 TODO:
 > yarn install
 > yarn start:dev
 > ```
@@ -817,7 +817,7 @@ Voeg CORS toe aan je eigen project.
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les2-opl TODO:
+> git checkout -b les3-opl TODO:
 > pnpm install
 > pnpm start:dev
 > ```
