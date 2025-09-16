@@ -136,6 +136,8 @@ Dit bestand definieert een MySQL container met:
 - een port mapping van 3306 in de container naar 3306 op jouw systeem
 - een named volume om de data in de databank te bewaren
 - het wachtwoord van de root gebruiker
+- de naam van de databank die aangemaakt moet worden: `budget`
+  - pas dit aan voor je eigen project
 - de credentials voor de gebruiker `devusr`
   - deze heeft toegang tot de databank `budget`
 - een healthcheck om te controleren of de databank al klaar is
@@ -180,6 +182,8 @@ Daarom voegen we in het `.env` bestand in de root van ons project de connectiest
 NODE_ENV=development
 DATABASE_URL=mysql://<gebruikersnaam>:<wachtwoord>@localhost:3306/budget
 ```
+
+?> Pas voor jouw eigen project de naam van je databank aan. De naam vind je na de `/`.
 
 Als je geen gebruik maakt van een lokale MySQL server, maar van een Docker container, gebruik dan de credentials die je in het `docker-compose.yml` bestand hebt opgegeven. In dat geval wordt dit je `.env` bestand:
 
@@ -311,6 +315,14 @@ We beginnen met het definiëren van de places tabel uit een vorig hoofdstuk. Het
 
 ```ts
 // src/drizzle.schema.ts
+import {
+  int,
+  mysqlTable,
+  varchar,
+  uniqueIndex,
+  tinyint,
+} from 'drizzle-orm/mysql-core';
+
 export const places = mysqlTable(
   'places',
   {
@@ -421,6 +433,10 @@ Het `generate` commando maakt een nieuwe migratie aan in de `migrations` map. Di
 
 Open de migratie en kijk wat Drizzle gegenereerd heeft.
 
+Alvorens we de migratie kunnen uitvoeren, moeten we zeker zijn dat onze `budget` databank bestaat. Drizzle doet dit helaas niet voor ons. Je zou dit kunnen forceren via een migratie maar in productie bestaat de databank altijd als je die via een managed service (op AWS, Azure...) aanmaakt.
+
+Open dus MySQL Workbench en controleer of de `budget` databank bestaat. Mocht je gebruik maken van [Docker Compose](#mysql-in-docker), dan bestaat deze databank reeds. Als je geen Docker gebruikt, moet je een nieuwe databank aanmaken. Uiteraard pas je de naam van de databank aan naar de naam die je gekozen hebt in de `DATABASE_URL` variabele in `.env`.
+
 Deze migratie kan je uitvoeren met het volgende commando:
 
 ```bash
@@ -472,9 +488,6 @@ Jouw lokale databank zal dan wel inconsistent zijn met de migraties in de `migra
     {
       id: int('id', { unsigned: true }).primaryKey().autoincrement(),
       name: varchar('name', { length: 255 }).notNull(),
-      email: varchar('email', { length: 255 }).notNull(),
-      passwordHash: varchar('password_hash', { length: 255 }).notNull(),
-      roles: json('roles').notNull(),
     },
     (table) => [uniqueIndex('idx_user_email_unique').on(table.email)],
   );
@@ -487,7 +500,7 @@ Jouw lokale databank zal dan wel inconsistent zijn met de migraties in de `migra
       .references(() => users.id, { onDelete: 'cascade' })
       .notNull(),
     placeId: int('place_id', { unsigned: true })
-      .references(() => places.id, { onDelete: 'cascade' })
+      .references(() => places.id, { onDelete: 'no action' })
       .notNull(),
   });
   ```
