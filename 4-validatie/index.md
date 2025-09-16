@@ -72,7 +72,7 @@ NestJS voorziet bv. in volgende built-in pipes:
 
 Gebruik in een controller:
 
-```typescript
+```ts
 // src/place/place.controller.ts
 import { /* ... */ ParseIntPipe} from '@nestjs/common';
 
@@ -103,7 +103,7 @@ pnpm i class-validator
 
 Pas de `CreatePlaceRequestDto` klasse aan:
 
-```typescript
+```ts
 // src/places/place.dto.ts
 import { IsNumber, IsString, Max, Min } from "class-validator";
 
@@ -122,7 +122,7 @@ De `ValidationPipe` zorgt ervoor dat alle inkomende DTO’s automatisch worden g
 
 De `ValidationPipe` dien je te activeren in `main.ts` zodat deze wordt toegepast op alle inkomende requests.
 
-```typescript
+```ts
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -160,7 +160,7 @@ In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit e
 
 Pas de `create` methode aan en doe een POST request. Bekijk de console.
 
-```typescript
+```ts
 // src/place/place.controller.ts
 
 @Post()
@@ -179,7 +179,7 @@ pnpm i class-transformer
 
 En voegen we in `main.ts` onderstaande optie toe:
 
-```typescript
+```ts
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
@@ -207,7 +207,7 @@ Voer een POST request uit en bekijk het type.
 
 Class transformers kunnen ook primitieve types omzetten. Alles wat via `@Param()`, `@Query()`, enz. binnenkomt is van type `string`. Als we in de `getPlaceById` methode het type van de id veranderen in `number` zal `ValidationPipe` dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
 
-```typescript
+```ts
 // src/place/place.controller.ts
 
 @Get(':id')
@@ -248,7 +248,7 @@ Deze respons retourneren:
 
 We willen deze fouten formatteren zodat we mooi per parameter de fouten gegroepeerd zien. Zo is het voor de front-end makkelijker om bv. per inputveld de bijhorende error te tonen.
 
-```typescript
+```ts
 // src/main.ts
 // ...
 app.useGlobalPipes(
@@ -291,7 +291,7 @@ Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optione
 
 - Oplossing +
 
-  ```typescript
+  ```ts
   // pagination.dto.ts
   import { Type } from 'class-transformer';
   import { IsInt, Min, IsOptional } from 'class-validator';
@@ -403,7 +403,7 @@ NestJS voorziet een set HTTP exceptions die je direct kan gebruiken. Ze komen ui
 
 Een voorbeeld van zo'n exception is de `NotFoundException`:
 
-```typescript
+```ts
 // src/place/place.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 
@@ -438,7 +438,7 @@ Lees de sectie over [exception filters](https://docs.nestjs.com/exception-filter
 
 Maak een bestand `http-exception.filter.ts` aan in de map `src/lib/`. Hierin definiëren we de structuur van het response voor een exception.
 
-```typescript
+```ts
 // src/lib/http-exception.filter.ts
 interface HttpExceptionResponse {
   statusCode: number;      // HTTP status code (400, 404, 500, etc.)
@@ -467,7 +467,7 @@ interface HttpExceptionResponse {
 
 - Oplossing +
 
-  ```typescript
+  ```ts
   // src/lib/http-exception.filter.ts
   import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
   import { Catch, HttpException } from '@nestjs/common';
@@ -519,7 +519,7 @@ interface HttpExceptionResponse {
 
   Maak de filter global scoped:
 
-  ```typescript
+  ```ts
   // src/main.ts
   import { HttpExceptionFilter } from './lib/http-exception.filter';
 
@@ -532,13 +532,13 @@ interface HttpExceptionResponse {
 
 Je kan een eenvoudige exception gooien met enkel een custom message:
 
-```typescript
+```ts
 throw new NotFoundException('Place not found');
 ```
 
 Of je kan ook meer detail meegeven met je exception:
 
-```typescript
+```ts
 throw new NotFoundException({
   message: 'Place not found'
   details: { id : 10}
@@ -547,7 +547,7 @@ throw new NotFoundException({
 
 Om ook de custom message en de details weer te geven in de respons passen we de code verder aan.
 
-```typescript
+```ts
 // src/lib/http-exception.filter.ts
 // ...
 
@@ -620,6 +620,7 @@ Lees de documentatie over [logging middleware](https://docs.nestjs.com/middlewar
 Maak een bestand `logger.middleware.ts`aan in de `src/lib` map.
 
 ```ts
+// src/lib/logger.middleware.ts
 import type { NestMiddleware } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
@@ -663,7 +664,7 @@ export class LoggerMiddleware implements NestMiddleware { // 👈 1
 
 In de `AppModule` geven we mee dat we bij elke request de `LoggerMiddleware` wensen te gebruiken. Er is echter geen plaats voor middleware in de `@Module()` decorator. In plaats daarvan stellen we ze in met de `configure()` methode van de moduleklasse. Modules die middleware bevatten, moeten de `NestModule` interface implementeren.
 
-```typescript
+```ts
 // src/app.module.ts
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
 import { LoggerMiddleware } from './lib/logger.middleware';
@@ -716,7 +717,7 @@ De `ConfigModule` maakt de configuratie beschikbaar in onze applicatie. We impor
 
 Voeg onderstaand fragment toe aan de `imports` array in `AppModule`:
 
-```typescript
+```ts
 // src/app.module.ts
 
 ConfigModule.forRoot({
@@ -732,7 +733,7 @@ Lees de documentatie over [custom configuration files](https://docs.nestjs.com/t
 
 Aan de hand van custom config files kunnen we de instellingen per domein groeperen. Maak een `src/config` map aan en een bestand `configuration.ts` met volgende inhoud:
 
-```typescript
+```ts
 // src/config/configuration.ts
 
 // 👇 1
@@ -756,7 +757,7 @@ export interface ServerConfig {
 
 We laden deze configuratie via de `load` property van het `options` object die we doorgeven aan de methode `forRoot`:
 
-```typescript
+```ts
 // src/app.module.ts
 
 import configuration from './config/configuration';
@@ -772,7 +773,7 @@ Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. De `ConfigS
 
 Zie hieronder een voorbeeld van constructor injectie in een controller:
 
-```typescript
+```ts
 @Controller()
 export class SomeController {
   constructor(private configService: ConfigService) {}
@@ -781,7 +782,7 @@ export class SomeController {
 
 We dienen de poort op te halen in `bootstrap` functie in `main.ts`. Dit is geen klasse dus constructor injectie is hier niet mogelijk.
 
-```typescript
+```ts
 // src/main.ts
 import { ConfigService } from '@nestjs/config'; // 👈 1
 import { ServerConfig } from './config/configuration'; // 👈 1
