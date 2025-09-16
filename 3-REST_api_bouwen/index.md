@@ -513,7 +513,7 @@ Wil je meer info? Lees het stuk over [Dependency injection](https://docs.nestjs.
 
 Voor de implementatie van de service maken we gebruik van de in-memory data `PLACES`. Dit is onze data source. In een volgende hoofdstuk vervangen we dit door een database.
 
-Binnen de service voorzien we alle CRUD acties die we later vanuit de controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we alle functies met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
+Binnen de service voorzien we alle CRUD acties die we later vanuit de controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we alle methoden met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
 
 We dienen ook het returntype van de methodes vast te leggen. Hiervoor maken we eerst de nodige DTO's aan in `src/place/place.dto.ts`.
 
@@ -617,7 +617,7 @@ Test alle endpoints uit in Postman:
 
 ### Oefening
 
-Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
+Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende service-methoden:
 
 - `PUT /api/places/:id`:
   - een plaats aanpassen
@@ -626,7 +626,7 @@ Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende servicefuncties:
   - een plaats verwijderen
   - geeft niets terug
   - geef status "204 No Content" terug
-- Extra (voor de ervaren JavaScript'ers): maak alle servicefuncties async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
+- Extra (voor de ervaren JavaScript'ers): maak alle service-methoden async (zoals de databank zal zijn). Geef promises terug en gebruik async/await in de routes.
 
 <br/>
 

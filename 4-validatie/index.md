@@ -217,7 +217,7 @@ getPlaceById(@Param('id') id: number): PlaceResponseDto { // 👈
 }
 ```
 
-Doe dit ook voor PUT en DELETE. We hoeven Number-functie niet langer te gebruiken. Merk op dat deze feature invloed heeft op de performantie van je applicatie.
+Doe dit ook voor PUT en DELETE. We hoeven `Number` functie niet langer te gebruiken. Merk op dat deze feature invloed heeft op de performantie van je applicatie.
 
 ### Formatteren van validatie fouten
 
@@ -655,7 +655,7 @@ export class LoggerMiddleware implements NestMiddleware { // 👈 1
 
    - Request: alle info over de inkomende request (bv. URL, headers, body, method).
    - Response: het antwoord dat je terugstuurt naar de client.
-   - extFunction: een functie die je moet oproepen om verder te gaan naar de volgende middleware of controller.
+   - NextFunction: een functie die je moet oproepen om verder te gaan naar de volgende middleware of controller.
 
 4. `res.on('finish', () => { ... })` "luistert" naar het moment dat de response klaar is en verstuurd wordt. Waarom? Omdat je dan ook de status code kent (200, 404, 500, ...).
 5. De status code wordt gecontroleerd en wordt gelogd.
