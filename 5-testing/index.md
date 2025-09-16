@@ -120,6 +120,7 @@ Pas de test scripts aan in `package.json`:
   }
 }
 ```
+`--runInBand`: JEST voert de testsuites in parallel uit. Daar we met een database zullen werken en deze consistent dient te blijven dienen we de testsuites 1 na 1 uit te voeren.
 
 ## Linting configuratie
 
@@ -209,6 +210,7 @@ describe('Health', () => {
 
 Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt.
 
+### Refactoring
 De setup zal in elke TestSuite opnieuw moeten gebeuren, daarom maken we een helper functie om de App te initialiseren. In de `/test/helpers`folder maak je een bestand `create-app.ts`. Dit bevat de code uit `beforeAll`
 
 ```typescript
@@ -385,7 +387,11 @@ Schrijf een test voor het endpoint `GET /api/places/:id`:
     });
   ```
 
-  Wat zijn de mogelijke alternatiev scenario's? Schrijf ook hiervoor een test.
+D.i. de positieve test case (happy path). Wat zijn de mogelijke alternatieve scenario's?
+- Negatieve test cases (error scenarios)
+- Edge cases (grenssituaties)
+- Validatie tests
+ Schrijf ook hiervoor testen.
 
   - Oplossing +
 
@@ -416,7 +422,7 @@ Schrijf een test voor het endpoint `GET /api/places/:id`:
 
 ### POST /api/places
 
-Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testscenario's hebben we hier?
+Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testcases hebben we hier?
 
 ```typescript
   describe('POST /api/places', () => {
@@ -615,10 +621,10 @@ Schrijf een test voor het endpoint `PUT /api/places/:id`:
 
 ### Oefening 3 - DELETE /api/places/:id
 
-Schrijf een test voor het endpoint `DELETE /api/places/:id`:
+Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
 
 1. Maak een nieuwe test suite aan voor het endpoint `DELETE /api/places/:id`.
-4. Voer de test uit:
+4. Voer de testen uit:
    1. Check of de statuscode gelijk is aan 204.
    2. Check of de plaats daadwerkelijk verwijderd is uit de database.
 
@@ -656,7 +662,7 @@ Schrijf een test voor het endpoint `DELETE /api/places/:id`:
 
 ### Oefening 4 - Coverage
 
-Vraag de coverage op van je testen met `pnpm test:cov`. Bekijk de gegenereerde HTML pagina in het bestand `coverage/lcov-report/index.html`. Wat merk je op?
+Vraag de coverage op van je testen met `pnpm test:cov`. Bekijk de gegenereerde HTML pagina in het bestand `test/coverage/lcov-report/index.html`. Wat merk je op?
 
 - Oplossing +
 
@@ -664,61 +670,8 @@ Vraag de coverage op van je testen met `pnpm test:cov`. Bekijk de gegenereerde H
 
   In de service laag hebben we misschien nog geen 100% omdat we bijvoorbeeld nog niet alle edge cases testen (zoals error handling voor ongeldige input).
 
-### Oefening 5 - Unit Tests voor Services
 
-Maak unit tests aan voor je services. Deze tests focussen op de business logic zonder database interactie.
-
-```typescript
-// src/place/place.service.spec.ts
-import { Test, TestingModule } from '@nestjs/testing';
-import { PlaceService } from './place.service';
-import { PrismaService } from '../prisma/prisma.service';
-
-describe('PlaceService', () => {
-  let service: PlaceService;
-  let prisma: PrismaService;
-
-  const mockPrismaService = {
-    place: {
-      findMany: jest.fn(),
-      findUnique: jest.fn(),
-      create: jest.fn(),
-      update: jest.fn(),
-      delete: jest.fn(),
-    },
-  };
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        PlaceService,
-        {
-          provide: PrismaService,
-          useValue: mockPrismaService,
-        },
-      ],
-    }).compile();
-
-    service = module.get<PlaceService>(PlaceService);
-    prisma = module.get<PrismaService>(PrismaService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-
-  it('should return all places', async () => {
-    const places = [{ id: 1, name: 'Test Place', rating: 4 }];
-    mockPrismaService.place.findMany.mockResolvedValue(places);
-
-    const result = await service.findAll();
-    expect(result.items).toEqual(places);
-    expect(mockPrismaService.place.findMany).toHaveBeenCalled();
-  });
-});
-```
-
-### Oefening 6 - Testen voor de andere endpoints
+### Oefening 5 - Testen voor de andere endpoints
 
 Maak de testen aan voor alle endpoints in je applicatie. Denk na over:
 - Positieve test cases (happy path)
