@@ -390,7 +390,7 @@ export class DrizzleModule implements OnModuleDestroy { // 👈 1
 ```
 
 1. Laat de `DrizzleModule` de interface `OnModuleDestroy` implementeren.
-2. Definieer een `onModuleDestroy` functie.
+2. Definieer een `onModuleDestroy` methode.
 3. Injecteer onze Drizzle provider.
 4. Sluit de connectie als deze module afgebroken wordt.
 
@@ -820,7 +820,7 @@ export class PlaceService {
 }
 ```
 
-Vervolgens passen we de `getAll` functie aan zodat deze Drizzle gebruikt om de places uit de databank op te halen:
+Vervolgens passen we de `getAll` methode aan zodat deze Drizzle gebruikt om de places uit de databank op te halen:
 
 ```ts
 export class PlaceService {
@@ -837,7 +837,7 @@ export class PlaceService {
 
 Hier gebruiken we de ORM interface van Drizzle (via het `query` property).
 
-De `getAll` functie heeft nu het `async` keyword gekregen, dus we moeten ook de bijhorende functie in de `PlaceController` async maken:
+De `getAll` methode heeft nu het `async` keyword gekregen, dus we moeten ook de bijhorende methode in de `PlaceController` async maken:
 
 ```ts
 export class PlaceController {
@@ -890,9 +890,9 @@ export class PlaceService {
 4. Als geen place gevonden werd, gooien we een `NotFoundException`.
 5. We geven de gevonden place terug. Drizzle heeft deze automatisch omgevormd naar een JavaScript object met de juiste opbouw (inclusief relaties).
 
-Maak ook de bijhorende functie in de `PlaceController` async.
+Maak ook de bijhorende methode in de `PlaceController` async.
 
-Als laatste voorbeeld passen we de `create` functie aan:
+Als laatste voorbeeld passen we de `create` methode aan:
 
 ```ts
 export class PlaceService {
@@ -911,24 +911,24 @@ export class PlaceService {
 }
 ```
 
-In deze functie gebruiken we de SQL-like interface van Drizzle. Je merkt dat de code leest alsof het SQL is, maar dan in JavaScript functies.
+In deze methode gebruiken we de SQL-like interface van Drizzle. Je merkt dat de code leest alsof het SQL is, maar dan in JavaScript functies.
 
 We voegen de nieuwe place toe en vragen om het id terug te geven via de `$returningId` functie. De `insert` functie geeft altijd een array terug, we pakken het eerste element hieruit.
 
-Daarna halen we de volledige place op via de `getById` functie zodat we ook de relaties meekrijgen.
+Daarna halen we de volledige place op via de `getById` methode zodat we ook de relaties meekrijgen.
 
-Maak uiteindelijk de bijhorende functie in de `PlaceController` async.
+Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
 
 #### Oefening - Update en delete place
 
-1. Pas de `update` functie aan zodat deze Drizzle gebruikt om een place te updaten.
+1. Pas de `update` methode aan zodat deze Drizzle gebruikt om een place te updaten.
    - Gebruik hiervoor de SQL-like interface van Drizzle om de place te updaten.
-   - Retourneer de place via de `getById` functie.
-2. Pas de `delete` functie aan zodat deze Drizzle gebruikt om een place te verwijderen.
+   - Retourneer de place via de `getById` methode.
+2. Pas de `delete` methode aan zodat deze Drizzle gebruikt om een place te verwijderen.
    - Gebruik hiervoor de SQL-like interface van Drizzle om de place te verwijderen.
-   - Gooi een `NotFoundException` als de place niet bestaat. Tip: de `delete` functie geeft het aantal verwijderde rijen terug.
+   - Gooi een `NotFoundException` als de place niet bestaat. Tip: de `delete` methode geeft het aantal verwijderde rijen terug.
    - Retourneer niets.
-3. Maak de bijhorende functies in de `PlaceController` async.
+3. Maak de bijhorende methoden in de `PlaceController` async.
 
 - Oplossing +
 
@@ -966,7 +966,7 @@ Maak uiteindelijk de bijhorende functie in de `PlaceController` async.
 
 ### Transactions
 
-Als laatste voorbeeld passen we de functie `getAll` in de `TransactionService` aan:
+Als laatste voorbeeld passen we de methode `getAll` in de `TransactionService` aan:
 
 ```ts
 export class TransactionService {
@@ -1008,7 +1008,7 @@ export class TransactionService {
 3. We selecteren de place en de user.
    - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
 
-Maak ook de bijhorende functie in de `TransactionController` async.
+Maak ook de bijhorende methode in de `TransactionController` async.
 
 De code van de overige methoden uit de services kan je raadplegen in onze voorbeeldapplicatie.
 
@@ -1016,7 +1016,7 @@ De code van de overige methoden uit de services kan je raadplegen in onze voorbe
 
 1. Vervolledig de services in je project met alle benodigde CRUD-operaties.
 2. Werk in de services met de databank i.p.v. mock data.
-3. Maak de nodige functies in de controllers async.
+3. Maak de nodige methoden in de controllers async.
 4. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
 
 > **Oplossing voorbeeldapplicatie**
