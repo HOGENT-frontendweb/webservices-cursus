@@ -307,9 +307,10 @@ export class DrizzleModule {}
 
 ## Databankschema definiëren
 
-Nu definiëren we ons schema in `src/drizzle/schema.ts`. Allereerst maken we de places tabel uit een vorig hoofdstuk:
+We beginnen met het definiëren van de places tabel uit een vorig hoofdstuk. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
 
 ```ts
+// src/drizzle.schema.ts
 export const places = mysqlTable(
   'places',
   {
