@@ -1,4 +1,4 @@
-# TypeScript (WIP)
+# TypeScript
 
 Jullie hebben reeds kennis gemaakt met JavaScript in het olod Web Development II. Dit hoofdstuk heeft als doel om jullie kennis van JavaScript te herhalen, te verdiepen en TypeScript te introduceren.
 
