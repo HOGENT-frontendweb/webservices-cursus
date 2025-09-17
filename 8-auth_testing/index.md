@@ -50,17 +50,17 @@ import { INestApplication } from '@nestjs/common';
 import { AuthService } from '../../src/auth/auth.service';
 
 export const login = async (app: INestApplication): Promise<string> => {
-  const authService = app.get(AuthService);
+  const authService = app.get(AuthService);// 👈 1
   const token = await authService.login({
     email: 'test.user@hogent.be',
     password: '12345678',
-  });
+  });// 👈 2
 
   if (!token) {
     throw new Error('No token received');
-  }
+  }// 👈 3
 
-  return token;
+  return token;// 👈 4
 };
 
 export const loginAdmin = async (app: INestApplication): Promise<string> => {
@@ -75,7 +75,7 @@ export const loginAdmin = async (app: INestApplication): Promise<string> => {
   }
 
   return token;
-};
+};// 👈 5
 ```
 De methode `login` meldt een gewone gebruiker aan
 1. Vraag een instantie van AuthService op
@@ -169,8 +169,9 @@ describe('Places', () => {
 4. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
 
 
-Je kan enkel de testen voor de places uitvoeren door het volgende commando uit te voeren:
-w in te drukken en te zoeken op places of
+Je kan enkel de testen voor de places uitvoeren door het volgende commando uit te voeren :
+- druk w in en zoek op places
+- of
 ```bash
 yarn test "./test/places.e2e-spec.ts"
 ```
@@ -189,7 +190,7 @@ Herhaal hetzelfde voor alle andere testen van Transactions en users:
 - Voeg de login header toe.
 - Pas de requests, indien nodig, aan.
 - Test voor elke URL of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
-Let op bij de testen voor transacties, bij de PUT en POST requests: het `userId` moet niet langer worden opgegeven. Het `userId` van de aangemelde gebruiker wordt gebruikt.
+- Let op bij de testen voor transacties, bij de PUT en POST requests: het `userId` moet niet langer worden opgegeven. Het `userId` van de aangemelde gebruiker wordt gebruikt.
 - Let bij er de testen van gebruikers op dat je de gebruikers die je nodig hebt om aan te melden niet verwijdert.
 
 Vergeet ook niet om testen toe te voegen voor de `POST /api/sessions`.

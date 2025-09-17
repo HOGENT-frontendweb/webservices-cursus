@@ -15,8 +15,6 @@
 ## Leerdoelen
 
 - Je krijgt inzicht in de verschillende soorten testen en hun plaats in de testpiramide
-- Je leert Test Driven Development (TDD) principes toepassen
-- Je kunt unit tests schrijven voor NestJS services
 - Je kunt integratietesten schrijven voor NestJS controllers en endpoints
 - Je begrijpt hoe je een testomgeving opzet met Jest en de NestJS testing utilities
 - Je leert werken met testdata en database cleanup in een testomgeving
@@ -72,28 +70,27 @@ Als je `nest new project` gebruikt, krijg je automatisch een mapje `test` met ee
 
 ## Integratietesten
 
-In deze cursus focussen we ons op integratietesten. We schrijven hier integratietesten om te testen of de verschillende onderdelen van onze applicatie goed samenwerken (bv. validatie, authenticatie...). We gebruiken hiervoor [Jest](https://jestjs.io/), een populaire test library voor JavaScript. Jest is een uitgebreid framework, dus we beperken ons tot wat wij specifiek nodig hebben.
+In deze cursus focussen we ons op integratietesten. We schrijven hier integratietesten om te testen of de verschillende onderdelen van onze applicatie goed samenwerken (bv. validatie, authenticatie...). We gebruiken hiervoor [Jest](https://jestjs.io/), een populaire test library voor JavaScript en is een uitgebreid framework, dus we beperken ons tot wat wij specifiek nodig hebben.
 
 NestJS heeft ingebouwde testing utilities die het testen vergemakkelijken. Voor integratietesten maken we gebruik van
 
 - [**jest**](https://jestjs.io/): de test library en test runner (standaard in NestJS)
-- [**supertest**](https://www.npmjs.com/package/supertest): een library om HTTP requests te maken naar een server en het response te testen
+- [**supertest**](https://www.npmjs.com/package/supertest): een library om HTTP requests te maken naar een server en de response te testen
 - [**@nestjs/testing**](https://docs.nestjs.com/fundamentals/testing): NestJS testing utilities voor het maken van TestingModules. Het biedt een `TestingModule` om onze applicatie te testen zonder deze op een echte poort te laten draaien.
 
-### Configuratie
+### De hierarchie
+![Hierarchie](./images/testhierarchy.png)
+- `JEST` is de Test Runner, de engine die de tests uitvoert. Het zoekt alle .spec.ts en .test.ts bestanden op, voert de `describe`,... uit, rapporteert de resultaten en beheert de test lifecycle.
+- `@nestjs/testing` is het NestJS Testing framework die de testing utilities bevat. Het is de brug tussen Jest en NestJS en maakt dependency injection in testen mogelijk
+- `TestingModule`, werkt bijna hetzelfde als een gewone NestJS-module (@Module), maar wordt volledig in een testcontext opgezet. Zo kun je controllers, providers en services isoleren en testen zonder dat je je hele applicatie hoeft op te starten.
+- `INestApplication` is een draaiende app instantie voor de testen, de HTTP server voor supertest.
+
+## Configuratie
 
 NestJS projecten hebben standaard al Jest configuratie. Controleer je `package.json` en je zult zien dat er al een Jest configuratie is opgenomen.
 
-We wensen nu gebruik te maken van `.env.test`. Jest kent de optie `--env-file` niet (NestJS CLI). Je kan dit oplossen door gebruik te maken van `env-cmd` package.
+Voor onze integratietesten krijgen een aantal omgevingsvariabelen een andere waarde dan in development. Maak een `.env.test` bestand aan in de root van je project. We gaan gebruik maken van een test database.
 
-Installeer:
-```bash
-pnpm add -D env-cmd
-```
-
-Voor onze integratietesten maken we gebruik van een aparte omgevingsvariabelen. Maak een `.env.test` bestand aan in de root van je project. We gaan gebruik maken van een test database.
-
-//TODO
 ```ini
 # General configuration
 NODE_ENV=testing
@@ -104,7 +101,16 @@ PORT=9000
 LOG_DISABLED=false
 
 # Database configuration
-DATABASE_URL=mysql://username:password@localhost:3306/budgettest
+DATABASE_URL=mysql://<username>:<password>@localhost:3306/budgettest
+```
+
+`LOG_DISABLED`: het is performanter om de logging in een test omgeving uit te schakelen. Voeg deze variabele ook toe in de `.env` file en plaats deze op true
+
+We wensen tijdens het runnen van de testen gebruik te maken van `.env.test`. Jest kent de optie `--env-file` niet (NestJS CLI). Je kan dit oplossen door gebruik te maken van `env-cmd` package.
+
+Installeer:
+```bash
+pnpm add -D env-cmd
 ```
 
 Pas de test scripts aan in `package.json`:
@@ -122,10 +128,47 @@ Pas de test scripts aan in `package.json`:
 ```
 `--runInBand`: JEST voert de testsuites in parallel uit. Daar we met een database zullen werken en deze consistent dient te blijven dienen we de testsuites 1 na 1 uit te voeren.
 
-## Linting configuratie
+## Logging in test omgeving
+Om de logging te disablen in testomgeving hebben we reeds de omgevingsvariabele `LOG_DISABLED` toegevoegd.
 
-NestJS projecten hebben standaard al ESLint configuratie voor Jest. Controleer je `.eslintrc.js` - er zou al een Jest environment geconfigureerd moeten zijn voor test bestanden.
+We dienen ook de config hiervoor aan te passen
+```typescript
+// src/config/configuration.ts
+ export default () => ({
+  env: process.env.NODE_ENV,
+  port: parseInt(process.env.PORT || '9000'),
+  logging: {
+    disabled: process.env.LOG_DISABLED === 'true',
+  },// 👈
+  database: {
+    url: process.env.DATABASE_URL,
+  },
+  });
+```
 
+Pas ook `app.module.ts` aan
+
+```typescript
+// src/app.module.ts
+import { ConfigModule, ConfigService } from '@nestjs/config';
+...
+export class AppModule {
+  constructor(private configService: ConfigService) { }// 👈 1
+
+  configure(consumer: MiddlewareConsumer) {// 👈 2
+    const isLoggingDisabled = this.configService.get<boolean>('logging.disabled', false);// 👈 3
+
+    if (!isLoggingDisabled) {
+      consumer.apply(LoggerMiddleware).forRoutes('*path');
+    }// 👈 4
+  }
+}
+```
+
+1. Injecteer de `ConfigService`.
+2. De `configure` methode is een NestJS lifecycle hook die automatisch wordt aangeroepen tijdens `module` initialisatie. `MiddlewareConsumer` laat je middleware registreren voor specifieke routes.
+3. Haal de waarde voor de omgevingsvariabele `log.disabled` op.
+4. Als logging niet is uitgeschakeld, registreer de LoggerMiddleware en pas toe op alle routes (wildcard pattern).
 
 ## Integratietesten schrijven
 
@@ -138,11 +181,17 @@ Jest voorziet een aantal globale functies die je kunt gebruiken in je testen. De
 - `beforeEach`: definieert een functie die wordt uitgevoerd voor elke test
 - `afterEach`: definieert een functie die wordt uitgevoerd na elke test
 
-### De setup van een test
+### GET api/health
 
-Maak een nieuwe map `test` aan in de root van je project (als deze nog niet bestaat). Maak hierin een bestand `health.e2e-spec.ts` aan. Voor we effectief kunnen testen, moeten we een NestJS testmodule opzetten.
+In de map `test`, maak je een bestand `health.e2e-spec.ts` aan.
+Alvorens we dit endpoint kunnen testen dienen we een instantie van de applicatie op te starten in de TestRunner.
+
+#### De setup van een test
+
+ Voordat alle testen runnen (`beforeAll`), moeten we een instantie van de applicatie starten.
 
 ```typescript
+// test/health.e2e-spec.ts
 import { Test, TestingModule } from '@nestjs/testing';// 👈 1
 import { INestApplication } from '@nestjs/common';// 👈 1
 import * as request from 'supertest';// 👈 1
@@ -164,31 +213,28 @@ describe('Health', () => {// 👈 2
     await app.close();
   });// 👈 7
 
-  const url = '/api/health';
 });
 ```
 
 
 1. We importeren de NestJS testing utilities en supertest voor HTTP requests.
   - `Test`: een statische klasse die factory methoden biedt om `TestingModule` instanties te maken. Het is de startpunt voor alle NestJS testing.
-  - `TestingModule`:creëert een geïsoleerde instantie van je NestJS applicatie speciaal voor testing.
+  - `TestingModule`: creëert een geïsoleerde instantie van de NestJS applicatie speciaal voor testing.
   - `INestApplication`: een interface uit NestJS die het hoofdapplicatie-object representeert.
-  - supertestSupertest stelt je in staat om HTTP requests te maken naar je API (GET, POST, PUT, DELETE, etc.), responses te valideren (status codes, body content, headers). Dit alles te doen zonder een echte server op te starten
+  - `supertest`: stelt je in staat om HTTP requests te maken naar je API (GET, POST, PUT, DELETE, etc.), responses te valideren (status codes, body content, headers). Dit alles te doen zonder een echte server op te starten.
 2. Groepeer de testen voor de health in een test suite met naam "Health".
 3. Definieer de variabele `app` die een instantie van onze app zal bevatten
 4. Gebruik `Test.createTestingModule()` om een complete NestJS applicatie op te zetten in test modus. Importeer AppModule. `compile()`compileert en retourneert een gebruiksklare TestingModule
 5. `moduleFixture.createNestApplication()` creëert een `INestApplication` instantie uit de `TestingModule`.
 6. `app.init()` initialiseert de applicatie, inclusief alle modules, controllers en services.
-5. Na alle testen sluiten we de applicatie netjes af met `app.close()`.
-6. We definiëren een constante `url` die we gebruiken om de URL van de API te definiëren.
-7. Dit alles gebeurt voor het runnen van de testsuite. Nadat alle testen gerund hebben wordt de HTTP server afgesloten.
+7. Nadat alle testen gerund hebben, sluiten we de applicatie netjes af met `app.close()`.
 
-
-### De test zelf
+#### De test zelf
 
 Nu is het tijd om een eerste echte integratietest te schrijven!
 
 ```typescript
+// test/health.e2e-spec.ts
 describe('Health', () => {
   // ...
 
@@ -214,6 +260,7 @@ Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt.
 De setup zal in elke TestSuite opnieuw moeten gebeuren, daarom maken we een helper functie om de App te initialiseren. In de `/test/helpers`folder maak je een bestand `create-app.ts`. Dit bevat de code uit `beforeAll`
 
 ```typescript
+// test/helpers/create-app.ts
 import {
   INestApplication,
 } from '@nestjs/common';
@@ -232,8 +279,9 @@ export async function createTestApp(): Promise<INestApplication> {
 }
 ```
 
-Pas de code in `health/e2e-spec.ts` aan.
+Pas de code in `health.e2e-spec.ts` aan.
 ```typescript
+// test/health.e2e-spec.ts
 import { createTestApp } from './helpers/create-app';
 ...
   beforeAll(async () => {
@@ -254,9 +302,10 @@ Om de andere endpoints te testen hebben we testdata nodig. Hiervoor maken we geb
 ### seeding
 We starten met het testen van de places endpoints. Hiervoor dienen we testdata aan de database toe te voegen.
 
-Maak een folder `/test/seeding` aan en het bestand `places.ts`. Voor het runnen van een test wordt de database geseed met de data, na de test wordt de data terug verwijderd.
+Maak een folder `/test/seeds` aan en het bestand `places.ts`. Voor het runnen van een test wordt de database geseed met de data, na de test wordt de data terug verwijderd.
 
 ```typescript
+// /test/seeds/places.ts
 import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
 import { places } from '../../src/drizzle/schema';
 
@@ -299,7 +348,7 @@ import {
   DrizzleAsyncProvider,
 } from '../src/drizzle/drizzle.provider';// 👈 1
 import { createTestApp } from './helpers/create-app';
-import { seedPlaces, clearPlaces } from './helpers/seed-places';
+import { seedPlaces, clearPlaces } from './seeds/places';
 
 describe('Places', () => {
   let app: INestApplication;
@@ -325,8 +374,8 @@ describe('Places', () => {
 
 De setup is analoog aan de Health test, maar nu dienen we ook de database te seeden.
 1. Maak een variabele aan van het type `DatabaseProvider`
-2. Localiseer een instantie van DrizzleAsyncProvider.
-3. Seed de tabel places
+2. Localiseer een instantie van `DrizzleAsyncProvider`.
+3. Seed de tabel `places`
 4. Ruim deze data op na de testen.
 
 ### GET /api/places/
@@ -391,16 +440,17 @@ D.i. de positieve test case (happy path). Wat zijn de mogelijke alternatieve sce
 - Negatieve test cases (error scenarios)
 - Edge cases (grenssituaties)
 - Validatie tests
- Schrijf ook hiervoor testen.
 
-  - Oplossing +
+Schrijf ook hiervoor testen.
+
+
+- Oplossing +
 
   ```typescript
   describe('GET /api/places/:id', () => {
     it('should 404 when requesting not existing place', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/5`)
-        .set('Authorization', `Bearer ${userAuthToken}`);
+        .get(`${url}/5`);
 
       expect(response.statusCode).toBe(404);
 
@@ -409,8 +459,7 @@ D.i. de positieve test case (happy path). Wat zijn de mogelijke alternatieve sce
 
     it('should 400 with invalid place id', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/invalid`)
-        .set('Authorization', `Bearer ${userAuthToken}`);
+        .get(`${url}/invalid`);
 
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toBe(
@@ -429,7 +478,6 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testc
     it('should 201 and return the created place', async () => {
       const response = await request(app.getHttpServer())
         .post(url)
-        .set('Authorization', `Bearer ${userAuthToken}`)
         .send({ name: 'New place' });
 
       expect(response.statusCode).toBe(201);
@@ -699,3 +747,4 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 ## Extra's voor de examenopdracht
 
 - Gebruik een andere test library (bv. [Mocha](https://mochajs.org/), [Jasmine](https://jasmine.github.io/), [Vitest](<http://localhost:3000/[https://](https://vitest.dev/)>)...)
+- Voeg unit testen toe voor de services
