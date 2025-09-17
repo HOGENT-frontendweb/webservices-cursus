@@ -140,9 +140,7 @@ We dienen ook de config hiervoor aan te passen
   logging: {
     disabled: process.env.LOG_DISABLED === 'true',
   },// 👈
-  database: {
-    url: process.env.DATABASE_URL,
-  },
+  ...
   });
 ```
 
