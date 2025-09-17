@@ -830,7 +830,7 @@ Voeg CORS toe aan je eigen project.
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les3-opl TODO:
+> git checkout -b les3-opl 02abd96
 > pnpm install
 > pnpm start:dev
 > ```

@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 TODO:
+> git checkout -b les4 02abd96
 > yarn install
 > yarn start:dev
 > ```
@@ -130,6 +130,7 @@ import { ValidationPipe } from '@nestjs/common'; // 👈
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
 
   // 👇
   app.useGlobalPipes(new ValidationPipe({
@@ -138,7 +139,11 @@ async function bootstrap() {
     forbidUnknownValues: true, // gooit fout bij onbekende types/waarden
   }));
 
-  await app.listen(process.env.PORT ?? 9000);
+  app.enableCors({
+    origins: ['http://localhost:5173'],
+    maxAge: 3 * 60 * 60,
+  })
+  await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();
@@ -148,15 +153,14 @@ Whitelisting is een functie van de `ValidationPipe` in NestJS die ervoor zorgt d
 
 Probeer een POST request uit en:
 
-- verwijder `user` uit de JSON
-- geef een datum op die in de toekomst ligt
-- voeg een extra veld toe.
+- geef een rating op die groter is dan 5
+- voeg een extra veld toe
 
 We krijgen een HTTP 400 terug en de reden van de fout.
 
 ### Auto transform payloads naar DTO's
 
-In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte instanties van een klasse, zodat je bijvoorbeeld methodes kan gebruiken, of zodat validatie en andere decorators goed werken. Class transformers zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
+In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte instanties van een klasse, zodat je bijvoorbeeld methodes kan gebruiken, of zodat validatie en andere decorators goed werken. `Class transformers` zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
 
 Pas de `create` methode aan en doe een POST request. Bekijk de console.
 
@@ -250,6 +254,7 @@ We willen deze fouten formatteren zodat we mooi per parameter de fouten gegroepe
 
 ```ts
 // src/main.ts
+import { ValidationPipe, ValidationError, BadRequestException } from '@nestjs/common';
 // ...
 app.useGlobalPipes(
   new ValidationPipe({
@@ -292,7 +297,7 @@ Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optione
 - Oplossing +
 
   ```ts
-  // pagination.dto.ts
+  // src/common/pagination.dto.ts
   import { Type } from 'class-transformer';
   import { IsInt, Min, IsOptional } from 'class-validator';
 
@@ -321,7 +326,7 @@ Logs kan je ook met een zeker "level" loggen zodat je niet telkens alles moet in
 
 NestJS bevat een ingebouwde tekstlogger via de `Logger` klasse uit `@nestjs/common`.
 
-Neem de NestJS documentatie over [logging](https://docs.nestjs.com/techniques/logger) door.
+Neem de NestJS documentatie over [logging](https://docs.nestjs.com/techniques/logger) door tot aan de sectie 'JSON logging'. En neem dan sectie [Custom implementation](https://docs.nestjs.com/techniques/logger#custom-implementation) door.
 
 We maken een eigen `CustomLogger` aan. In de `src` map maak je een `core` map aan. Voeg hierin een bestand `customLogger.ts` toe.
 
@@ -369,7 +374,7 @@ Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opst
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common'; // 👈 3
+import { ValidationPipe, ValidationError, BadRequestException, Logger } from '@nestjs/common'; // 👈 3
 import { CustomLogger } from './core/customLogger'; // 👈 1
 
 async function bootstrap() {
@@ -379,8 +384,8 @@ async function bootstrap() {
 
   // ...
 
-  await app.listen(process.env.PORT ?? 9000, () => {
-    new Logger().log('🚀 Server listening on http://127.0.0.1:9000');//👈 3
+  await app.listen(process.env.PORT ?? 3000, () => {
+    new Logger().log('🚀 Server listening on http://127.0.0.1:3000');//👈 3
   });
 }
 
@@ -411,7 +416,7 @@ getById(id: number): PlaceResponseDto {
   const place = PLACES.find(item => item.id === id);
 
   if (!place) {
-    throw new NotFoundException(`place #${id} not found`); // 👈
+    throw new NotFoundException(`No place with this id exists`); // 👈
   }
 
   return place;
@@ -422,7 +427,7 @@ Als de plaats niet bestaat dan krijg je automatisch een HTTP 404 exception met v
 
 ```json
 {
-  "message": "place #10 not found",
+  "message": "No place with this id exists",
   "error": "Not Found",
   "statusCode": 404
 }
@@ -458,7 +463,7 @@ interface HttpExceptionResponse {
 {
     "statusCode": 404,
     "timestamp": "2025-09-12T08:55:15.039Z",
-    "message": "place #10 not found",
+    "message": "No place with this id exists",
     "details": null
 }
 ```
@@ -470,7 +475,7 @@ interface HttpExceptionResponse {
   ```ts
   // src/lib/http-exception.filter.ts
   import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
-  import { Catch, HttpException } from '@nestjs/common';
+  import { Catch, HttpException, Logger} from '@nestjs/common';
   import type { Response } from 'express';
 
   interface HttpExceptionResponse {
@@ -605,7 +610,7 @@ Middleware is code die uitgevoerd wordt tussen de inkomende request en de uitgaa
 
 Middleware functies kunnen de volgende taken uitvoeren:
 
-- elke code uitvoeren.
+- code uitvoeren.
 - wijzigingen aanbrengen in de request- en response objecten.
 - de request-response cyclus beëindigen.
 - de volgende middleware functie in de stack aanroepen.
@@ -706,7 +711,7 @@ Maak een `.env` bestand aan in de root met onderstaande code. Dit bestand bevat 
 
 ```ini
 NODE_ENV=development
-PORT=9000
+PORT=3000
 ```
 
 Dit `.env` bestand zal niet in GitHub komen door onze `.gitignore` (en dat is de bedoeling!). Dus het is ook de ideale plaats om 'geheimen' (API keys, JWT secrets...) in op te nemen, later meer hierover. Later maken we ook een `.env.test` aan voor de testomgeving.
@@ -719,7 +724,6 @@ Voeg onderstaand fragment toe aan de `imports` array in `AppModule`:
 
 ```ts
 // src/app.module.ts
-
 ConfigModule.forRoot({
   isGlobal: true,
 })
@@ -739,7 +743,7 @@ Aan de hand van custom config files kunnen we de instellingen per domein groeper
 // 👇 1
 export default () => ({
   env: process.env.NODE_ENV, // 👈 2
-  port: parseInt(process.env.PORT || '9000'), // 👈 3
+  port: parseInt(process.env.PORT || '3000'), // 👈 3
 })
 
 // 👇 4
@@ -752,7 +756,7 @@ export interface ServerConfig {
 1. Het `config` package verplicht om de configuratiebestanden te exporteren als een object in de default export.
    - Het `default` keyword zorgt ervoor dat je het object kan importeren zonder accolades, bv. `import configuration from './config/configuration`.
 2. Je kan de environment variabelen expliciet opvragen, via het object `env` uit `node:process`. `node:process` is een ingebouwde module om informatie op te vragen over het proces, zoals de omgevingsvariabelen via `env`. Deze zijn ook beschikbaar via `process.env`.
-3. We zetten de poort om naar een getal (een environment variable is altijd een string). Als de `PORT` variabele niet gedefinieerd is, dan gebruiken we 9000 als default waarde.
+3. We zetten de poort om naar een getal (een environment variable is altijd een string). Als de `PORT` variabele niet gedefinieerd is, dan gebruiken we 3000 als default waarde.
 4. We definiëren ook een interface zodat we de correcte types krijgen als we de configuratie gebruiken.
 
 We laden deze configuratie via de `load` property van het `options` object die we doorgeven aan de methode `forRoot`:
@@ -786,12 +790,14 @@ We dienen de poort op te halen in `bootstrap` functie in `main.ts`. Dit is geen 
 // src/main.ts
 import { ConfigService } from '@nestjs/config'; // 👈 1
 import { ServerConfig } from './config/configuration'; // 👈 1
-
+...
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService<ServerConfig>); // 👈 2
-  const port = config.get<number>('port') || 9000; // 👈 3
+  const port = config.get<number>('port')! // 👈 3
+
+  ...
 
   await app.listen(port, () => {
     new Logger().log(`🚀 Server listening on http://127.0.0.1:${port}`);
@@ -816,6 +822,62 @@ In de Nest CLI kan je gebruik maken van `--env-file` optie om een .env bestand m
 
 Standaard leest de `ConfigModule` het `.env` bestand in de root van je project. Wij hoeven de `--env-file` optie niet mee te geven.
 
+### Oefening
+
+Voeg nu ook een environment variabelen toe voor CORS.
+- Pas het .env bestand aan
+- Pas `configuration.ts` aan
+- Pas `main.ts` aan
+
+
+- Oplossing +
+
+  De .env file
+  ```ini
+  NODE_ENV=development
+  PORT=3000
+  CORS_ORIGINS=["http://localhost:5173"]
+  CORS_MAX_AGE=10800
+  ```
+
+  De configuration file
+  ```ts
+  export default () => ({
+    env: process.env.NODE_ENV,
+    port: parseInt(process.env.PORT || '3000'),
+    cors: {
+      origins: process.env.CORS_ORIGINS
+        ? (JSON.parse(process.env.CORS_ORIGINS) as string[])
+        : [],
+      maxAge: parseInt(process.env.CORS_MAX_AGE || String(3 * 60 * 60)),
+    },
+  });
+
+  export interface ServerConfig {
+    env: string;
+    port: number;
+    cors: CorsConfig;
+  }
+
+  export interface CorsConfig {
+    origins: string[];
+    maxAge: number;
+  }
+  ````
+
+  main.ts
+  ```typescript
+  import { ServerConfig, CorsConfig } from './config/configuration';
+  ...
+    const cors = config.get<CorsConfig>('cors')!;
+    ...
+     app.enableCors({
+    origins: cors.origins,
+    maxAge: cors.maxAge,
+  });
+  ```
+
+
 ### API keys
 
 Sommige API's zijn door iedereen vrij te gebruiken, zoals de FBI most wanted (uit hoofdstuk 2), maar heel vaak is dat niet zo. Er zijn in essentie twee redenen om een API call af te schermen:
@@ -835,7 +897,12 @@ Steek dus nooit een API key in de client. Maak daarentegen requests naar je eige
 
 [Hier kan je meer info vinden over de best practices voor het gebruik van Google API keys](https://cloud.google.com/docs/authentication/api-keys), maar hetzelfde geldt voor de keys van andere services.
 
-## Oefening - Je eigen project
+## Documentatie bijwerken
+
+Werk de `README.md` in de root van je repository bij met instructies om de .env file aan te maken.
+
+
+## Oefening - Je eigen project (indien nog niet gebeurd is)
 
 Voeg volgende componenten toe aan je eigen project:
 
@@ -843,6 +910,7 @@ Voeg volgende componenten toe aan je eigen project:
 - foutafhandeling met exception filters
 - logging met een custom logger en logging middleware
 - configuratie via de `ConfigModule`
+- pas README aan
 
 > **Oplossing voorbeeldapplicatie**
 >
