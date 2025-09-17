@@ -749,12 +749,12 @@ Werk de `README.md` in de root van je repository bij met instructies om de depen
 
 Verwijder de `README.md` in je webservice map - de `README.md` in de root is voldoende.
 
-## Oplossing voorbeeldapplicatie
-
-```bash
-git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-cd webservices-budget
-git checkout -b les2-opl a2cbdcd
-pnpm install
-pnpm start:dev
-```
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les2-opl a2cbdcd
+> pnpm install
+> pnpm start:dev
+> ```

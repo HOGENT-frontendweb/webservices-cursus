@@ -5,9 +5,9 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les3 TODO:
-> yarn install
-> yarn start:dev
+> git checkout -b les3 a2cbdcd
+> pnpm install
+> pnpm start:dev
 > ```
 
 ## Leerdoelen
