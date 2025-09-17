@@ -5,7 +5,7 @@
 - [0. Examenopdracht](/0-intro/examenopdracht.md)
 - [1. TypeScript](/1-typescript/index.md)
 - [2. REST API intro](/2-REST_api_intro/index.md)
-- [3. REST API bouwen (WIP)](/3-REST_api_bouwen/index.md)
+- [3. REST API bouwen](/3-REST_api_bouwen/index.md)
 - [4. Validatie en foutafhandeling (WIP)](/4-validatie/index.md)
 - [5. Datalaag en CRUD (WIP)](/5-datalaag/index.md)
 - [6. Testing (WIP)](/6-testing/index.md)

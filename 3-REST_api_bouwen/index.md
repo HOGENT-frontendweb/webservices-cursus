@@ -59,7 +59,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
 2. Definieer de endpoints die we moeten voorzien in de REST API.
    - Denk na over de HTTP-methoden die je nodig hebt (GET, POST, PUT, DELETE,...)
    - Denk na over de opbouw van de URL's
-   - Hebben we geneste routes nodig (bv. de plaatsen van een plaats opvragen)?
+   - Hebben we geneste routes nodig (bv. de transacties van een plaats opvragen)?
 
 <!-- markdownlint-disable header-start-left -->
 
@@ -73,7 +73,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
 
   #### Transactions
 
-  - `GET /api/transactions`: alle plaatsen opvragen
+  - `GET /api/transactions`: alle transacties opvragen
   - `GET /api/transactions/:id`: een specifieke transactie opvragen
   - `POST /api/transactions`: een nieuwe transactie aanmaken
   - `PUT /api/transactions/:id`: een transactie aanpassen
@@ -86,7 +86,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
   - `POST /api/places`: een nieuwe plaats aanmaken
   - `PUT /api/places/:id`: een plaats aanpassen
   - `DELETE /api/places/:id`: een plaats verwijderen
-  - `GET /api/places/:id/transactions`: plaatsen van een specifieke plaats opvragen
+  - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
 
   #### Users
 
@@ -95,7 +95,7 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
   - `POST /api/users`: een nieuwe gebruiker aanmaken
   - `PUT /api/users/:id`: een gebruiker aanpassen
   - `DELETE /api/users/:id`: een gebruiker verwijderen
-  - `GET /api/users/:id/transactions`: plaatsen van een specifieke gebruiker opvragen
+  - `GET /api/users/:id/transactions`: transacties van een specifieke gebruiker opvragen
 
   Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `GET /api/places/:id` of `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
 
@@ -121,7 +121,7 @@ NestJS biedt de nodige tools om de inkomende requests af te handelen en een resp
 
 De datalaag beheert onze data. Uiteraard willen we geen hardgecodeerde data terugsturen. Deze data zal in de toekomst uit een databank moeten komen, maar voorlopig werken we even met mock data (in-memory).
 
-Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken ook nog geen relaties, deze worden in een volgend hoofdstuk toegevoegd. We definiëren ook een interface `Place` die vastlegt hoe een plaats eruitziet.
+Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken nog geen relaties, deze worden in een volgend hoofdstuk toegevoegd. We definiëren ook een interface `Place` die vastlegt hoe een plaats eruitziet.
 
 ```ts
 // src/data/mock_data.ts
@@ -253,6 +253,8 @@ getPlaceById(@Param('id') id:string): string {
 
 Waarom? Als je een route zoals `@Get(':id')` vóór een statische route `@Get('transactions')` plaatst, dan zal een verzoek naar `/api/places/transactions` behandeld worden alsof `transactions` een id is.
 
+Test de url uit.
+
 ### Request body: `POST /api/places`
 
 Een POST-handler gebruik je om nieuwe data te creëren, in dit geval een plaats. De data voor de plaats wordt als JSON data meegestuurd naar de server. De `@Body()` decorator wordt gebruikt om gegevens uit het body-gedeelte van een inkomend HTTP-verzoek op te halen. Dit is vooral handig bij POST-, PUT- of PATCH-verzoeken.
@@ -263,11 +265,9 @@ Voeg onderstaande inhoud toe aan de controller.
 // src/place/place.controller.ts
 @Post()
 createPlace(@Body() body: any): string {
-  console.log(body);
   return `This action adds a new place for ${body.name}`;
 }
 ```
-
 - `@Post()`: Handelt een POST-verzoek af. Importeer dit uit `@nestjs/common`.
 - `@Body() body: any`: Haalt de volledige body op als object. Importeer dit uit `@nestjs/common`. Voor de eenvoud gebruiken we nu `any` als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
 - `body.name`: Benader de waarden rechtstreeks.
@@ -296,7 +296,6 @@ Standaard retourneert NestJS de status "200 OK". Echter bij een succesvolle POST
 @Post()
 @HttpCode(HttpStatus.CREATED) // 👈
 createPlace(@Body() body: any): string {
-  console.log(body);
   return `This action adds a new place ${body.name}`;
 }
 ```
@@ -309,7 +308,6 @@ Als je meer controle wenst over de response kan je `@Res()` gebruiken. Een voorb
 // src/place/place.controller.ts
 @Post()
 createPlace(@Body() body: any,  @Res() res: Response): string {
-  console.log(body);
   res.status(HttpStatus.CREATED).json({
     message: 'place successfully created',
     data: body,
@@ -322,7 +320,7 @@ Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `
 
 ### Best practice: gebruik DTO's
 
-Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in een NestJS.
+Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in NestJS.
 
 In NestJS gebruik je DTO’s vooral om de structuur en validatie van binnenkomende en uitgaande gegevens te definiëren, bijvoorbeeld bij POST- of PUT-verzoeken.
 
@@ -344,6 +342,8 @@ Importeer deze klasse in de `PlaceController` en pas de code voor de `CreatePlac
 
 ```ts
 // src/place/place.controller.ts
+import { CreatePlaceRequestDto } from './place.dto';
+...
 @Post()
 @HttpCode(HttpStatus.CREATED)
 CreatePlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
@@ -424,6 +424,17 @@ Gebruik deze DTO in de `getAllPlaces` methode.
   export class PaginationQuery {
     page?: number = 1;
     limit?: number = 10;
+  }
+  ```
+
+  ```ts
+  // src/place/place.controller.ts
+  @Get()
+  getAllPlaces(
+    @Query() paginationQuery: PaginationQuery
+  ) {
+    const { page = 1, limit = 10 } = paginationQuery;
+    return `This action returns all places. Limit ${limit}, page: ${page}`;
   }
   ```
 
@@ -513,7 +524,7 @@ Wil je meer info? Lees het stuk over [Dependency injection](https://docs.nestjs.
 
 Voor de implementatie van de service maken we gebruik van de in-memory data `PLACES`. Dit is onze data source. In een volgende hoofdstuk vervangen we dit door een database.
 
-Binnen de service voorzien we alle CRUD acties die we later vanuit de controller zullen aanroepen. We implementeren momenteel enkel de GET en de POST methodes. Maar opdat alles uitvoerbaar zou zijn, declareren we alle methoden met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
+Binnen de service voorzien we alle CRUD acties die we later vanuit de controller zullen aanroepen. We implementeren momenteel enkel het ophalen van 1 en meerdere plaatsen en de creatie van een plaats. Maar opdat alles uitvoerbaar zou zijn, declareren we alle methoden met de correcte types, en laten we ze een error gooien als ze gebruikt worden.
 
 We dienen ook het returntype van de methodes vast te leggen. Hiervoor maken we eerst de nodige DTO's aan in `src/place/place.dto.ts`.
 
@@ -529,14 +540,14 @@ export class PlaceListResponseDto {
 ```
 
 - `PlaceResponseDto` beschrijft hoe een enkele plaats eruitziet in een API-response: wanneer er een plaats wordt opgehaald of wanneer een plaats gecreëerd of aangepast wordt.
-- `PlaceListResponseDto` beschrijft de lijst van de plaatsen die zal worden teruggegeven bij het ophalen van alle plaatsen.
+- `PlaceListResponseDto` beschrijft de lijst van de plaatsen die zal worden teruggegeven bij het ophalen van alle plaatsen. We plaatsen de array van places in een object met property items. Zie verder.
 
 De service wordt als volgt aangepast:
 
 ```ts
 // src/place/place.service.ts
 import { Injectable } from '@nestjs/common';
-import { PLACES } from '../data/mock-data';
+import { PLACES, Place } from '../data/mock_data';
 import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
 
 @Injectable()
@@ -547,11 +558,11 @@ export class PlaceService {
   }
 
   getById(id: number): PlaceResponseDto {
-    return PLACES.find(item => item.id === id);
+    return PLACES.find((item: Place) => item.id === id);
   }
 
   create({ name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
-    const newplace = { id: Math.max(...PLACES.map(item => item.id)) + 1, name, rating };
+    const newplace = { id: Math.max(...PLACES.map((item: Place) => item.id)) + 1, name, rating };
     PLACES.push(newplace);
     return newplace;
   }
@@ -570,7 +581,7 @@ In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen 
 
 ### Implementatie controller
 
-In de controller kunnen we nu gebruik maken van de `PlaceService`. De code wordt:
+In de controller kunnen we nu gebruik maken van de `PlaceService`. De code voor Get en Post methodes wordt:
 
 ```ts
 // src/place/place.controller.ts
@@ -585,24 +596,26 @@ export class PlaceController {
   constructor(private readonly placeService: PlaceService) { }
 
   @Get()
-  getAllPlaces(): PlaceListResponseDto {
-    return this.placeService.getAll();
+  getAllPlaces(): PlaceListResponseDto {//👈
+    return this.placeService.getAll();//👈
   }
 
   @Get(':id')
-  getPlaceById(@Param('id') id: string): PlaceResponseDto {
-    return this.placeService.getById(Number(id));
+  getPlaceById(@Param('id') id: string): PlaceResponseDto {//👈
+    return this.placeService.getById(Number(id));//👈
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createPlace(@Body() createPlaceDto: CreatePlaceRequestDto): PlaceResponseDto {
-    return this.placeService.create(createPlaceDto);
+  createPlace(@Body() createPlaceDto: CreatePlaceRequestDto): PlaceResponseDto {//👈
+    return this.placeService.create(createPlaceDto);//👈
   }
+
+  ...
 }
 ```
 
-Vervang de hardgecodeerde data door de aanroep van de methodes in de `PlaceService`, that's it!
+Vervang de hardgecodeerde data door de aanroep van de methodes in de `PlaceService`, en pas de returntypes aan. that's it!
 
 Merk op:
 
@@ -612,7 +625,7 @@ Merk op:
 
 Test alle endpoints uit in Postman:
 
-- Doe een GET request naar <http://localhost:9000/api/places/1> en je zou de eerste plaats moeten zien. Als je een id opgeeft van een plaats die niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
+- Doe een GET request naar <http://localhost:3000/api/places/1> en je zou de eerste plaats moeten zien. Als je een id opgeeft van een plaats die niet bestaat, krijg je een HTTP 200 OK en een leeg antwoord. Voor nu is dit goed, later geven we een foutmelding terug.
 - Bij de POST request zou je de nieuwe plaats moeten zien verschijnen in de response en in de lijst van plaatsen als je een GET request doet naar `/api/places`. Natuurlijk is dit nog niet persistent en verdwijnt de plaats als je de server herstart.
 
 ### Oefening
@@ -645,7 +658,7 @@ Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende service-methoden:
   }
 
   deleteById(id: number): void {
-    const index = PLACES.findIndex(item => item.id === id);
+    const index = PLACES.findIndex((item: Place) => item.id === id);
     if (index >= 0) {
       PLACES.splice(index, 1);
     }
@@ -687,11 +700,11 @@ import { Injectable, NotFoundException } from '@nestjs/common'; // 👈 1
 // ...
 
 getById(id: number): PlaceResponseDto {
-  const place = PLACES.find(item => item.id === id); // 👈 2
+  const place = PLACES.find((item: Place) => item.id === id); // 👈 2
 
   // 👇 3
   if (!place) {
-    throw new NotFoundException(`place #${id} not found`);
+    throw new NotFoundException(`No place with this id exists`);
   }
 
 return place; // 👈 3
@@ -773,7 +786,7 @@ Als je geen Front-end Web Development volgt, is dit onderdeel niet vereist. Als 
 Als je vanuit een front-end een HTTP request stuurt naar een ander domein dan krijg je volgende fout:
 
 ```text
-Access to fetch at 'https://app.mydomain.com' from origin 'http://localhost:9000'
+Access to fetch at 'https://app.mydomain.com' from origin 'http://localhost:3000'
 has been blocked by CORS policy: Response to preflight request doesn't pass access
 control check:
 ```
