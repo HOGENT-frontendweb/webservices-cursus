@@ -606,6 +606,24 @@ De `@Get('ping')` decorator geeft aan dat de `ping()` methode reageert op `GET` 
 
 Start de server (als deze nog niet draait) en open de url <http://localhost:3000/health/ping> in je browser of Postman. Je zou de string "pong" moeten zien.
 
+## /api prefix
+
+Het is een best practice om alle API routes te prefixen met `/api`. Dit maakt het duidelijk dat deze routes bedoeld zijn voor API calls en niet voor andere doeleinden zoals het hosten van statische bestanden of webpagina's.
+
+Open het bestand `src/main.ts` en pas de `app.setGlobalPrefix` aan zoals hieronder:
+
+```ts
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.setGlobalPrefix('api'); // 👈
+
+  // rest van de code
+}
+```
+
+Contolleer of alles nog steeds werkt door naar <http://localhost:3000/api/health/ping> te surfen.
+
 ## Debugging
 
 Een applicatie ontwikkelen zonder eens te moeten debuggen is een utopie, ook in Node.js.
