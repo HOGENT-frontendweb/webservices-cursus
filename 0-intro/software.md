@@ -9,6 +9,7 @@ Voor dit OLOD gaan we ervan uit dat je onderstaande **software installeert en co
 - [MySQL Workbench](#mysql-workbench)
 - [Visual Studio Code](#visual-studio-code)
 - [Postman](#postman)
+- [Docker](#docker)
 
 ## Git
 
@@ -49,13 +50,13 @@ Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/conn
 
 ## Node.js
 
-Installeer Node.js (**minimaal versie 22.9.0**) via een package manager:
+Installeer Node.js (**minimaal versie 22.x.x**) via een package manager:
 
 - Windows: `winget install -e --id OpenJS.NodeJS.LTS`
 - macOS: `brew install node@22`
 - Linux: [distro afhankelijk](https://nodejs.org/en/download/package-manager)
 
-Of kies voor een manuele installatie door **minimaal v22.9.0** te downloaden vanaf de website: <https://nodejs.org/en/>.
+Of kies voor een manuele installatie door **minimaal v22.x.x** te downloaden vanaf de website: <https://nodejs.org/en/>.
 
 Controleer na de installatie of Node.js correct geïnstalleerd is door het volgende commando uit te voeren:
 
@@ -115,7 +116,6 @@ Een aantal **verplichte** extensies voor VS Code:
 - [Error Lens](https://marketplace.visualstudio.com/items?itemName=usernamehw.errorlens)
 - [ESLint](https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint)
 - [Path Intellisense](https://marketplace.visualstudio.com/items?itemName=christian-kohler.path-intellisense)
-- [Prisma](https://marketplace.visualstudio.com/items?itemName=Prisma.prisma)
 
 Een aantal optionele, maar wel handige extensies:
 
@@ -124,7 +124,6 @@ Een aantal optionele, maar wel handige extensies:
 - [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 - [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree)
 - [TODO Highlight](https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight)
-- [vscode-twoslash-queries](https://marketplace.visualstudio.com/items?itemName=Orta.vscode-twoslash-queries)
 
 ### Configuratie VS Code <!-- omit in toc -->
 
@@ -138,8 +137,12 @@ Voeg onderstaande configuratie toe aan de instellingen van Visual Studio Code. D
 
 ```json
 {
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
   "editor.codeActionsOnSave": {
-    "source.fixAll": "always"
+    "source.addMissingImports.ts": "explicit",
+    "source.removeUnusedImports": "explicit",
+    "source.fixAll.eslint": "explicit"
   },
   "[javascript]": {
     "editor.defaultFormatter": "dbaeumer.vscode-eslint"
@@ -190,3 +193,7 @@ Installeer Postman via een package manager:
 - Linux: [distro afhankelijk](https://www.postman.com/downloads/)
 
 Open Postman en maak een account aan. Je kan er natuurlijk ook voor kiezen om je eenvoudig aan te melden met Google.
+
+## Docker
+
+Installeer Docker Desktop volgens de instructies op de website: <https://docs.docker.com/get-docker/>. Windows-gebruikers kiezen zelf of ze een WSL back-end of Hyper-V back-end willen gebruiken.
