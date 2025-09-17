@@ -1,4 +1,4 @@
-# REST API intro (WIP)
+# REST API intro
 
 ## Leerdoelen
 
@@ -452,11 +452,19 @@ Vervolgens maken we een nieuw project aan met de CLI. Dit kan je doen met het on
 
 ```bash
 nest new --strict webservices-budget
+
+# Kies voor pnpm als package manager
 ```
 
 Hiermee maken we een nieuw NestJS project aan in de map `webservices-budget`. De `--strict` optie zorgt ervoor dat TypeScript strict is ingesteld, wat we aanraden om bugs te voorkomen. Dit is een goede gewoonte, zeker als je met TypeScript werkt. Het project wordt aangemaakt met de standaard mappenstructuur en een aantal voorbeeldbestanden.
 
-Open deze map in VS Code.
+Open deze map in VS Code:
+
+```bash
+cd webservices-budget
+
+code .
+```
 
 ### package.json
 
@@ -467,7 +475,7 @@ De [package.json](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) b
 - `description`: een korte beschrijving van het project
   - Deze mag je gerust aanvullen
 - `author`: de auteur van de applicatie
-  - Deze mag je gerust aanvullen
+  - Deze mag je gerust aanvullen in deze vorm: "Voornaam Familienaam &lt;e-mailadres&gt;"
 - `private`: of de applicatie publiek is of niet, npm zal bv. niet toelaten om een private package te publiceren
 - `license`: de licentie van de applicatie
 - `dependencies`: de packages waarvan deze applicatie gebruik maakt
@@ -522,7 +530,9 @@ Dit bestand vermijdt versieconflicten aangezien in de `package.json` niet altijd
 
 Merk op dat er een `.gitignore` bestand aanwezig is in de root van het project. Dit bestand zorgt ervoor dat bepaalde bestanden en mappen niet naar GitHub gepusht worden. Dit is handig om te voorkomen dat je onnodige bestanden of mappen in je repository hebt, zoals de `node_modules` map die alle geïnstalleerde packages bevat. Je kan nl. de dependencies eenvoudig opnieuw installeren d.m.v. `pnpm install`.
 
-Kijk gerust eens welke bestanden er allemaal genegeerd worden. Je kan dit bestand ook aanpassen naar eigen wens, maar dit is een vrij complete voor een Node.js project. Een vrij uitgebreide `.gitignore` voor Node.JS projecten is te vinden op GitHub: <https://github.com/github/gitignore/blob/main/Node.gitignore>.
+Kijk gerust eens welke bestanden er allemaal genegeerd worden. Je kan dit bestand ook aanpassen naar eigen wens, maar dit is een vrij complete voor een Node.js project.
+
+?> **Tip:** er bestaat een GitHub repository met `.gitignore` bestanden voor allerlei soorten projecten: <https://github.com/github/gitignore>.
 
 ### tsconfig.json
 
@@ -537,12 +547,12 @@ NestJS gebruikt TypeScript, een superset van JavaScript die statische types toev
 
 Normaal gesproken hoef je aan dit bestand niets te wijzigen, tenzij je specifieke wensen hebt. Voor ons project gaan we **de `baseUrl` optie verwijderen** uit `compilerOptions`. Het is niet aan te raden deze optie te gebruiken, omdat dit kan zorgen voor problemen en verwarring bij imports.
 
-### Projectstructuur
+## Projectstructuur
 
 Alvorens we verder gaan, is het belangrijk om de projectstructuur van de basisapplicatie te begrijpen. Lees hiervoor de [First steps sectie](https://docs.nestjs.com/first-steps) in de NestJS documentatie. Een paar opmerkingen voor tijdens het lezen:
 
-- Bootstrapping = het opstarten van de applicatie
-- De sectie "Linting and formatting" mag je voorlopig nog negeren, we gaan dit later behandelen
+- Bootstrapping = het opstarten van de applicatie.
+- De sectie "Linting and formatting" mag je voorlopig nog negeren, we gaan dit later behandelen.
 
 ### De obligate Hello World
 
@@ -556,7 +566,7 @@ Start de applicatie in development modus met het volgende commando:
 pnpm start:dev
 ```
 
-Je zou nu een bericht moeten zien in de terminal dat de applicatie draait op `http://localhost:3000`. Open deze URL in je browser en je zou een "Hello World!" bericht moeten zien.
+Je zou nu een bericht moeten zien in de terminal dat de applicatie succesvol opgestart is. Open je browser en navigeer naar <http://localhost:3000>. Je zou een "Hello World!" bericht moeten zien.
 
 Ga naar de `AppService` klasse en pas de `getHello()` methode aan om een andere string te retourneren, bijvoorbeeld "Hallo wereld!". Sla het bestand op en herlaad de pagina in je browser. Je zou zien dat de tekst aangepast is naar "Hallo wereld!".
 
@@ -566,7 +576,7 @@ Voor het volgende voorbeeld gaan we een eenvoudige controller maken die een heal
 
 ### Controller genereren
 
-Controllers in NestJS zijn verantwoordelijk voor het afhandelen van inkomende verzoeken en het retourneren van antwoorden. Ze zijn de brug tussen de client en de service laag van de applicatie. Lees eerst volgende secties in de documentatie:
+Controllers in NestJS zijn verantwoordelijk voor het afhandelen van inkomende verzoeken en het retourneren van antwoorden. Ze zijn de brug tussen de client en de servicelaag van de applicatie. Lees eerst volgende secties in de documentatie:
 
 - [Controllers](https://docs.nestjs.com/controllers#controllers)
 - [Routing](https://docs.nestjs.com/controllers#routing)
@@ -580,9 +590,11 @@ nest generate controller health
 Dit commando maakt de volgende bestanden aan:
 
 - `src/health/health.controller.ts`: de controller zelf
-- `src/health/health.controller.spec.ts`: test bestand voor de controller
+- `src/health/health.controller.spec.ts`: unit test bestand voor de controller
 
 De controller wordt ook automatisch toegevoegd aan de `app.module.ts` (zie de `controllers` array). Zonder deze toevoeging zou de controller niet beschikbaar zijn in de applicatie.
+
+Verwijder het `src/health/health.controller.spec.ts` bestand, dat hebben we niet nodig. Later voegen we integratietesten toe i.p.v. unit testen.
 
 ### Route implementeren
 
@@ -622,7 +634,7 @@ async function bootstrap() {
 }
 ```
 
-Contolleer of alles nog steeds werkt door naar <http://localhost:3000/api/health/ping> te surfen.
+Contolleer of alles nog steeds werkt door naar <http://localhost:3000/api/health/ping> te surfen. De vorige URL zou een 404 moeten geven.
 
 ## Debugging
 
@@ -652,7 +664,7 @@ Maak een bestand `launch.json` aan in de `.vscode` map en voeg volgende configur
 }
 ```
 
-Dit zorgt ervoor dat VS Code de debugger zal koppelen aan localhost:9229. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
+Dit zorgt ervoor dat VS Code de debugger zal koppelen aan <localhost:9229>. Indien de debugger om een of andere reden ontkoppeld wordt, zal VS Code proberen opnieuw te koppelen voor maximaal 10 seconden.
 
 Voor NestJS hoef je geen extra opties toe te voegen aan het start-commando. NestJS heeft standaard debugging ondersteuning ingebouwd.
 
@@ -684,6 +696,7 @@ Ontwerp de database voor je project door een Entity Relationship Diagram (ERD) t
    - Hoe deze entiteiten met elkaar gerelateerd zijn
    - Hoe je deze relaties wegwerkt in een relationele database
 3. Voeg je ERD toe aan je projectdossier (in het bestand `dossier.md`)
+   - Voeg dit toe als [afbeelding in markdown](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet#images), geen broncode toevoegen
 
 ### Stap 2: API endpoints definiëren
 
@@ -716,11 +729,19 @@ Maak nu je webservice aan:
 
 ### Stap 5: Git configuratie
 
-Omdat NestJS automatisch een git repository aanmaakt, moet je dit aanpassen:
+NestJS maakt automatisch een git repository aan. Stel de link naar jouw GitHub classroom repository in:
 
-1. **Verwijder** de (verborgen) `.git` map in je webservice directory:
-2. **Controleer** de `.gitignore` om ervoor te zorgen dat `node_modules` niet wordt geüpload
-3. **Upload** je webservice naar je GitHub repository
+```bash
+git remote add origin <LINK HIER>
+```
+
+Upload het leeg project naar de repository:
+
+```bash
+git add .
+git commit -m "Leeg project toegevoegd"
+git push
+```
 
 ### Stap 6: Documentatie bijwerken
 
@@ -728,12 +749,12 @@ Werk de `README.md` in de root van je repository bij met instructies om de depen
 
 Verwijder de `README.md` in je webservice map - de `README.md` in de root is voldoende.
 
-> **Oplossing voorbeeldapplicatie**
->
-> ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-> cd webservices-budget
-> git checkout -b les2-opl TODO:
-> pnpm install
-> pnpm start:dev
-> ```
+## Oplossing voorbeeldapplicatie
+
+```bash
+git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+cd webservices-budget
+git checkout -b les2-opl a2cbdcd
+pnpm install
+pnpm start:dev
+```
