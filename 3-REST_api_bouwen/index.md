@@ -268,6 +268,7 @@ createPlace(@Body() body: any): string {
   return `This action adds a new place for ${body.name}`;
 }
 ```
+
 - `@Post()`: Handelt een POST-verzoek af. Importeer dit uit `@nestjs/common`.
 - `@Body() body: any`: Haalt de volledige body op als object. Importeer dit uit `@nestjs/common`. Voor de eenvoud gebruiken we nu `any` als type (= mag eender wat zijn), maar later zullen we dit verfijnen.
 - `body.name`: Benader de waarden rechtstreeks.
