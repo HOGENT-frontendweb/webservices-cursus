@@ -49,7 +49,7 @@ jobs:
       - name: Check links in markdown files
         uses: lycheeverse/lychee-action@v2.6.1
         with:
-          args: "'./**/*.md' '*.md' --cache --max-cache-age 7d --scheme https --exclude kroki\\.io --exclude api\\.fbi\\.gov --exclude sciencedirect\\.com --exclude youtube-nocookie\\.com --exclude dev\\.mysql\\.com --exclude jwt\\.io --exclude hashicorp\\.com"
+          args: "'./**/*.md' '*.md' --cache --max-cache-age 7d --scheme https"
 
       - name: Save link checker cache
         uses: actions/cache/save@v4
