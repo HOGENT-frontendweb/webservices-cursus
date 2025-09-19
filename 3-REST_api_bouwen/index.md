@@ -31,25 +31,35 @@ In de olods Front-end Web Development en Web Services maken we een budgetapplica
 De applicatie die we gaan maken bevat volgende pagina's:
 
 <!-- tabs:start -->
+### **Login pagina**
+
+Op deze pagina meldt de gebruiker zich aan.
+
+![Signin pagina](./images/signin.png)
 
 ### **Transaction pagina**
 
-Deze pagina geeft een overzicht van alle plaatsen van alle gebruikers. Later toont deze enkel de plaatsen van de ingelogde gebruiker.
+Deze pagina geeft een overzicht van alle transacties van alle gebruikers. Later toont deze enkel de transacties van de ingelogde gebruiker.
 
 ![Transactions pagina](./images/transactions.png)
 
 ### **Places pagina**
 
-Deze pagina toont een overzicht van alle plaatsen waar je plaatsen kan doen.
+Deze pagina toont een overzicht van alle plaatsen waar je transacties kan doen. De aangemelde gebruiker kan hier ook zijn favoriete plaatsen bekijken en aanduiden.
 
 ![Places pagina](./images/places.png)
 
 ### **Add/edit transaction pagina**
 
-De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande aan te passen.
+Deze pagina laat toe om een nieuwe transactie toe te voegen of een bestaande aan te passen.
 
 ![Add/edit transaction pagina](./images/add-transaction.png)
 
+### **Place detail pagina**
+
+De laatste pagina laat toe om een plaats te bekijken samen met de transacties van de aangemelde gebruiker op deze plaats.
+
+![Place detail pagina](./images/place-detail.png)
 <!-- tabs:end -->
 
 ### Oefening 1 - De budget app
@@ -96,8 +106,11 @@ De laatste pagina laat toe om een nieuwe plaats toe te voegen of een bestaande a
   - `PUT /api/users/:id`: een gebruiker aanpassen
   - `DELETE /api/users/:id`: een gebruiker verwijderen
   - `GET /api/users/:id/transactions`: transacties van een specifieke gebruiker opvragen
+  - `GET /api/users/:id/favoriteplaces`: favoriete plaatsen van een specifieke gebruiker opvragen
+  - `POST /api/users/:id/favoriteplaces/:placeId`: favoriete plaats toevoegen aan een specifieke gebruiker
+  - `DELETE /api/users/:id/favoriteplaces/:placeId`: favoriete plaats verwijderen van een specifieke gebruiker
 
-  Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `GET /api/places/:id` of `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
+  Op basis van de gegeven screenshots kan je wel bepaalde API calls schrappen. Zo is er bijvoorbeeld geen nood aan bv. `POST /api/places`. Voor de volledigheid hebben we alle mogelijke API calls neergeschreven.
 
   !> Kijk goed hoe de twee geneste routes gedefinieerd zijn (`GET /api/places/:id/transactions` en `GET /api/users/:id/transactions`)! Hiertegen worden heel wat fouten gemaakt.
 
