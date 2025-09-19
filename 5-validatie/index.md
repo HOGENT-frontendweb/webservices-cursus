@@ -692,7 +692,7 @@ Roep een endpoint aan en bekijk de logs.
 
 In een project wil je geen veranderlijke of gevoelige data hardcoderen. Typisch wil je verschillende instellingen (bv. op welke poort de server luister, databank connectiegegevens (locatie, poort...), logging niveau...) al naargelang je in een development, productie of test omgeving bent. Ook gevoelige data, zoals databasewachtwoorden en API keys, wil je niet op GitHub pushen. De configuratie doen we liefst op één plaats.
 
-In `src/main.ts` verwijzen we bijvoorbeeld naar poort 9000, dit zetten we best niet in code!
+In `src/main.ts` verwijzen we bijvoorbeeld naar poort 3000, dit zetten we best niet in code!
 
 Het `@nestjs/config` package in NestJS maakt het mogelijk om met configuratiebestanden te werken:
 
@@ -825,14 +825,15 @@ Standaard leest de `ConfigModule` het `.env` bestand in de root van je project. 
 ### Oefening
 
 Voeg nu ook een environment variabelen toe voor CORS.
+
 - Pas het .env bestand aan
 - Pas `configuration.ts` aan
 - Pas `main.ts` aan
 
-
 - Oplossing +
 
   De .env file
+
   ```ini
   NODE_ENV=development
   PORT=3000
@@ -841,6 +842,7 @@ Voeg nu ook een environment variabelen toe voor CORS.
   ```
 
   De configuration file
+
   ```ts
   export default () => ({
     env: process.env.NODE_ENV,
@@ -866,6 +868,7 @@ Voeg nu ook een environment variabelen toe voor CORS.
   ````
 
   main.ts
+
   ```typescript
   import { ServerConfig, CorsConfig } from './config/configuration';
   ...
@@ -876,7 +879,6 @@ Voeg nu ook een environment variabelen toe voor CORS.
     maxAge: cors.maxAge,
   });
   ```
-
 
 ### API keys
 
@@ -897,11 +899,6 @@ Steek dus nooit een API key in de client. Maak daarentegen requests naar je eige
 
 [Hier kan je meer info vinden over de best practices voor het gebruik van Google API keys](https://cloud.google.com/docs/authentication/api-keys), maar hetzelfde geldt voor de keys van andere services.
 
-## Documentatie bijwerken
-
-Werk de `README.md` in de root van je repository bij met instructies om de .env file aan te maken.
-
-
 ## Oefening - Je eigen project (indien nog niet gebeurd is)
 
 Voeg volgende componenten toe aan je eigen project:
@@ -910,7 +907,7 @@ Voeg volgende componenten toe aan je eigen project:
 - foutafhandeling met exception filters
 - logging met een custom logger en logging middleware
 - configuratie via de `ConfigModule`
-- pas README aan
+- werk de `README.md` in de root van je repository bij met instructies om de .env file aan te maken.
 
 > **Oplossing voorbeeldapplicatie**
 >
