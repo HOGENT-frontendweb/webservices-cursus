@@ -18,7 +18,11 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 ## 2. Ontvankelijkheidscriteria
 
-Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal ontvankelijkheidscriteria. Indien deze niet voldaan zijn, krijg je een score van 0/20. Deze criteria zijn:
+Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal ontvankelijkheidscriteria.
+
+!>Als niet voldaan is aan de ontvankelijkheidscriteria, krijg je een AFWEZIGHEID (conform DOER).
+
+Deze criteria zijn:
 
 - Het dossier is volledig en tijdig ingediend (zie [sectie 4](#4-dossier-vereisten) voor de vereisten)
 - Er werden voldoende (kleine) commits gemaakt
