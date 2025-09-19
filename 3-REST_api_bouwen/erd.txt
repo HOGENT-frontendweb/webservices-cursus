@@ -17,5 +17,11 @@ date
 name
 rating
 
+[User_favorite_places]
+*+user_id
+*+place_id
+
 Transaction *--1 Place
 Transaction *--1 User
+User 1--* User_favorite_places
+Place 1--* User_favorite_places
