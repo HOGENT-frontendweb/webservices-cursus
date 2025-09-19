@@ -31,6 +31,7 @@ In de olods Front-end Web Development en Web Services maken we een budgetapplica
 De applicatie die we gaan maken bevat volgende pagina's:
 
 <!-- tabs:start -->
+
 ### **Login pagina**
 
 Op deze pagina meldt de gebruiker zich aan.
@@ -57,9 +58,10 @@ Deze pagina laat toe om een nieuwe transactie toe te voegen of een bestaande aan
 
 ### **Place detail pagina**
 
-De laatste pagina laat toe om een plaats te bekijken samen met de transacties van de aangemelde gebruiker op deze plaats.
+De laatste pagina laat toe om een plaats te bekijken samen met de transacties van deze plaats. Laat toont deze pagina enkel de transacties van de aangemelde gebruiker op deze plaats.
 
 ![Place detail pagina](./images/place-detail.png)
+
 <!-- tabs:end -->
 
 ### Oefening 1 - De budget app
@@ -370,7 +372,7 @@ De validatie komt later aan bod. Dit kan je het eenvoudigst testen via Postman. 
 ```json
 {
   "name": "HOGENT",
-  "rating": 5,
+  "rating": 5
 }
 ```
 
@@ -495,7 +497,7 @@ We passen de `PlaceController` aan om van de service gebruik te maken.
 ```ts
 // src/place/place.controller.ts
 // andere imports...
-import { PlaceService } from './place.service';// 👈
+import { PlaceService } from './place.service'; // 👈
 
 @Controller('places')
 export class PlaceController {
@@ -507,14 +509,14 @@ export class PlaceController {
 
 We injecteren de service in de constructor
 
-- `private`:  TypeScript maakt daar automatisch een attribuut van en vult dit in. Het attribuut is bovendien enkel toegankelijk in de klasse.
+- `private`: TypeScript maakt daar automatisch een attribuut van en vult dit in. Het attribuut is bovendien enkel toegankelijk in de klasse.
 - `readonly`: is een best practice. Dit verzekert dat we de service reference niet kunnen aanpassen.
 - `PlaceService`: het type is belangrijk! NestJS bepaalt op basis van het type welke provider er moet geïnjecteerd worden.
 
 Om een instantie van een klasse aan te maken dienen we normaalgezien deze code te schrijven
 
 ```ts
-const placeController = new PlaceController(new PlaceService())
+const placeController = new PlaceController(new PlaceService());
 ```
 
 Maar NestJS fungeert als een "Dependency Injection (DI) container" of "Inversion of Control (IoC) container. Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de `PlaceService` aanmaken en doorgeven aan de `PlaceController`. In het geval van een singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
@@ -562,11 +564,15 @@ De service wordt als volgt aangepast:
 // src/place/place.service.ts
 import { Injectable } from '@nestjs/common';
 import { PLACES, Place } from '../data/mock_data';
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
+import {
+  CreatePlaceRequestDto,
+  UpdatePlaceRequestDto,
+  PlaceListResponseDto,
+  PlaceResponseDto,
+} from './place.dto';
 
 @Injectable()
 export class PlaceService {
-
   getAll(): PlaceListResponseDto {
     return { items: PLACES };
   }
@@ -576,12 +582,19 @@ export class PlaceService {
   }
 
   create({ name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
-    const newplace = { id: Math.max(...PLACES.map((item: Place) => item.id)) + 1, name, rating };
+    const newplace = {
+      id: Math.max(...PLACES.map((item: Place) => item.id)) + 1,
+      name,
+      rating,
+    };
     PLACES.push(newplace);
     return newplace;
   }
 
-  updateById(id: number, { name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
+  updateById(
+    id: number,
+    { name, rating }: CreatePlaceRequestDto,
+  ): PlaceResponseDto {
     throw new Error('not yet implemented');
   }
 
@@ -823,7 +836,7 @@ Pas de code in `main.ts` aan:
 app.enableCors({
   origins: ['http://localhost:5173'],
   maxAge: 3 * 60 * 60,
-})
+});
 
 // ...
 ```
