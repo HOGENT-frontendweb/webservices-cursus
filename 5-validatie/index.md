@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 TODO:
+> git checkout -b les4 02abd96
 > yarn install
 > yarn start:dev
 > ```
@@ -25,10 +25,6 @@
   - Je weet hoe je standaard HTTP exceptions gebruikt
   - Je weet hoe je custom exception filters implementeert
   - Je begrijpt hoe je structured error responses maakt
-- Je krijgt inzicht in configuratiebeheer
-  - Je weet hoe je environment variables gebruikt
-  - Je weet hoe je `ConfigModule` en `ConfigService` implementeert
-  - Je begrijpt hoe je configuratie per omgeving beheert
 
 !> De wijzigingen die we hier bespreken, kan je meteen toepassen in je eigen project. Terwijl de lector in de les de code demonstreert in het voorbeeldproject, pas jij de aanpassingen best al direct toe in jouw eigen project. Zo leer je het meteen in jouw eigen context en heb je achteraf minder werk
 
@@ -130,6 +126,7 @@ import { ValidationPipe } from '@nestjs/common'; // 👈
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.setGlobalPrefix('api');
 
   // 👇
   app.useGlobalPipes(new ValidationPipe({
@@ -138,7 +135,11 @@ async function bootstrap() {
     forbidUnknownValues: true, // gooit fout bij onbekende types/waarden
   }));
 
-  await app.listen(process.env.PORT ?? 9000);
+  app.enableCors({
+    origins: ['http://localhost:5173'],
+    maxAge: 3 * 60 * 60,
+  })
+  await app.listen(process.env.PORT ?? 3000);
 }
 
 bootstrap();
@@ -148,15 +149,14 @@ Whitelisting is een functie van de `ValidationPipe` in NestJS die ervoor zorgt d
 
 Probeer een POST request uit en:
 
-- verwijder `user` uit de JSON
-- geef een datum op die in de toekomst ligt
-- voeg een extra veld toe.
+- geef een rating op die groter is dan 5
+- voeg een extra veld toe
 
 We krijgen een HTTP 400 terug en de reden van de fout.
 
 ### Auto transform payloads naar DTO's
 
-In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte instanties van een klasse, zodat je bijvoorbeeld methodes kan gebruiken, of zodat validatie en andere decorators goed werken. Class transformers zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
+In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte instanties van een klasse, zodat je bijvoorbeeld methodes kan gebruiken, of zodat validatie en andere decorators goed werken. `Class transformers` zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
 
 Pas de `create` methode aan en doe een POST request. Bekijk de console.
 
@@ -250,6 +250,7 @@ We willen deze fouten formatteren zodat we mooi per parameter de fouten gegroepe
 
 ```ts
 // src/main.ts
+import { ValidationPipe, ValidationError, BadRequestException } from '@nestjs/common';
 // ...
 app.useGlobalPipes(
   new ValidationPipe({
@@ -292,7 +293,7 @@ Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optione
 - Oplossing +
 
   ```ts
-  // pagination.dto.ts
+  // src/common/pagination.dto.ts
   import { Type } from 'class-transformer';
   import { IsInt, Min, IsOptional } from 'class-validator';
 
@@ -321,7 +322,7 @@ Logs kan je ook met een zeker "level" loggen zodat je niet telkens alles moet in
 
 NestJS bevat een ingebouwde tekstlogger via de `Logger` klasse uit `@nestjs/common`.
 
-Neem de NestJS documentatie over [logging](https://docs.nestjs.com/techniques/logger) door.
+Neem de NestJS documentatie over [logging](https://docs.nestjs.com/techniques/logger) door tot aan de sectie 'JSON logging'. En neem dan sectie [Custom implementation](https://docs.nestjs.com/techniques/logger#custom-implementation) door.
 
 We maken een eigen `CustomLogger` aan. In de `src` map maak je een `core` map aan. Voeg hierin een bestand `customLogger.ts` toe.
 
@@ -369,7 +370,7 @@ Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opst
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, Logger } from '@nestjs/common'; // 👈 3
+import { ValidationPipe, ValidationError, BadRequestException, Logger } from '@nestjs/common'; // 👈 3
 import { CustomLogger } from './core/customLogger'; // 👈 1
 
 async function bootstrap() {
@@ -379,8 +380,8 @@ async function bootstrap() {
 
   // ...
 
-  await app.listen(process.env.PORT ?? 9000, () => {
-    new Logger().log('🚀 Server listening on http://127.0.0.1:9000');//👈 3
+  await app.listen(process.env.PORT ?? 3000, () => {
+    new Logger().log('🚀 Server listening on http://127.0.0.1:3000');//👈 3
   });
 }
 
@@ -411,7 +412,7 @@ getById(id: number): PlaceResponseDto {
   const place = PLACES.find(item => item.id === id);
 
   if (!place) {
-    throw new NotFoundException(`place #${id} not found`); // 👈
+    throw new NotFoundException(`No place with this id exists`); // 👈
   }
 
   return place;
@@ -422,7 +423,7 @@ Als de plaats niet bestaat dan krijg je automatisch een HTTP 404 exception met v
 
 ```json
 {
-  "message": "place #10 not found",
+  "message": "No place with this id exists",
   "error": "Not Found",
   "statusCode": 404
 }
@@ -458,7 +459,7 @@ interface HttpExceptionResponse {
 {
     "statusCode": 404,
     "timestamp": "2025-09-12T08:55:15.039Z",
-    "message": "place #10 not found",
+    "message": "No place with this id exists",
     "details": null
 }
 ```
@@ -470,7 +471,7 @@ interface HttpExceptionResponse {
   ```ts
   // src/lib/http-exception.filter.ts
   import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
-  import { Catch, HttpException } from '@nestjs/common';
+  import { Catch, HttpException, Logger} from '@nestjs/common';
   import type { Response } from 'express';
 
   interface HttpExceptionResponse {
@@ -605,7 +606,7 @@ Middleware is code die uitgevoerd wordt tussen de inkomende request en de uitgaa
 
 Middleware functies kunnen de volgende taken uitvoeren:
 
-- elke code uitvoeren.
+- code uitvoeren.
 - wijzigingen aanbrengen in de request- en response objecten.
 - de request-response cyclus beëindigen.
 - de volgende middleware functie in de stack aanroepen.
@@ -683,166 +684,14 @@ export class AppModule implements NestModule {
 
 Roep een endpoint aan en bekijk de logs.
 
-## Configuratie
-
-In een project wil je geen veranderlijke of gevoelige data hardcoderen. Typisch wil je verschillende instellingen (bv. op welke poort de server luister, databank connectiegegevens (locatie, poort...), logging niveau...) al naargelang je in een development, productie of test omgeving bent. Ook gevoelige data, zoals databasewachtwoorden en API keys, wil je niet op GitHub pushen. De configuratie doen we liefst op één plaats.
-
-In `src/main.ts` verwijzen we bijvoorbeeld naar poort 9000, dit zetten we best niet in code!
-
-Het `@nestjs/config` package in NestJS maakt het mogelijk om met configuratiebestanden te werken:
-
-- Het leest waarden uit `.env` bestanden (= [environment variables](https://en.wikipedia.org/wiki/Environment_variable)).
-- Die variabelen worden beschikbaar gemaakt in je hele applicatie.
-
-Lees de documentatie over [configuratie](https://docs.nestjs.com/techniques/configuration) t.e.m. "Use module globally".
-
-```bash
-pnpm add @nestjs/config
-```
-
-### .env
-
-Maak een `.env` bestand aan in de root met onderstaande code. Dit bestand bevat key-value paren voor elke environment variable
-
-```ini
-NODE_ENV=development
-PORT=9000
-```
-
-Dit `.env` bestand zal niet in GitHub komen door onze `.gitignore` (en dat is de bedoeling!). Dus het is ook de ideale plaats om 'geheimen' (API keys, JWT secrets...) in op te nemen, later meer hierover. Later maken we ook een `.env.test` aan voor de testomgeving.
-
-### ConfigModule
-
-De `ConfigModule` maakt de configuratie beschikbaar in onze applicatie. We importeren deze module in de `AppModule` en controleren het gedrag gebruik makend van de statische methode `forRoot()`. De `isGlobal` property maakt de configuratie globaal beschikbaar. Je hoeft deze module dus niet meer te importeren in elke andere module.
-
-Voeg onderstaand fragment toe aan de `imports` array in `AppModule`:
-
-```ts
-// src/app.module.ts
-
-ConfigModule.forRoot({
-  isGlobal: true,
-})
-```
-
-Importeer de `ConfigModule` vanuit `@nestjs/config`.
-
-### Custom configuration files
-
-Lees de documentatie over [custom configuration files](https://docs.nestjs.com/techniques/configuration#custom-configuration-files).
-
-Aan de hand van custom config files kunnen we de instellingen per domein groeperen. Maak een `src/config` map aan en een bestand `configuration.ts` met volgende inhoud:
-
-```ts
-// src/config/configuration.ts
-
-// 👇 1
-export default () => ({
-  env: process.env.NODE_ENV, // 👈 2
-  port: parseInt(process.env.PORT || '9000'), // 👈 3
-})
-
-// 👇 4
-export interface ServerConfig {
-  env: string;
-  port: number;
-}
-```
-
-1. Het `config` package verplicht om de configuratiebestanden te exporteren als een object in de default export.
-   - Het `default` keyword zorgt ervoor dat je het object kan importeren zonder accolades, bv. `import configuration from './config/configuration`.
-2. Je kan de environment variabelen expliciet opvragen, via het object `env` uit `node:process`. `node:process` is een ingebouwde module om informatie op te vragen over het proces, zoals de omgevingsvariabelen via `env`. Deze zijn ook beschikbaar via `process.env`.
-3. We zetten de poort om naar een getal (een environment variable is altijd een string). Als de `PORT` variabele niet gedefinieerd is, dan gebruiken we 9000 als default waarde.
-4. We definiëren ook een interface zodat we de correcte types krijgen als we de configuratie gebruiken.
-
-We laden deze configuratie via de `load` property van het `options` object die we doorgeven aan de methode `forRoot`:
-
-```ts
-// src/app.module.ts
-
-import configuration from './config/configuration';
-
-// In de imports:
-ConfigModule.forRoot({
-  load: [configuration], // 👈
-  isGlobal: true,
-})
-```
-
-Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. De `ConfigService` is een injectable service die NestJS voorziet zodra je de `ConfigModule` installeert. Dit laat je toe om environment variabelen op te vragen binnen je services, controllers of guards.
-
-Zie hieronder een voorbeeld van constructor injectie in een controller:
-
-```ts
-@Controller()
-export class SomeController {
-  constructor(private configService: ConfigService) {}
-}
-```
-
-We dienen de poort op te halen in `bootstrap` functie in `main.ts`. Dit is geen klasse dus constructor injectie is hier niet mogelijk.
-
-```ts
-// src/main.ts
-import { ConfigService } from '@nestjs/config'; // 👈 1
-import { ServerConfig } from './config/configuration'; // 👈 1
-
-async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  const config = app.get(ConfigService<ServerConfig>); // 👈 2
-  const port = config.get<number>('port') || 9000; // 👈 3
-
-  await app.listen(port, () => {
-    new Logger().log(`🚀 Server listening on http://127.0.0.1:${port}`);
-  }); // 👈 4
-}
-```
-
-1. Importeer de `ConfigService` en de `ServerConfig` interface.
-2. Gebruik een service locator om een instantie van de `ConfigService` op te halen uit de DI Container. We geven het generieke type `ServerConfig` mee zodat we de correcte types krijgen bij het opvragen van de variabelen.
-3. Alle gedefinieerde configuratievariabelen kunnen opgevraagd worden met de `get` methode.
-   - Let op dat je het correcte type meegeeft tussen de `<>` haakjes. Dit zijn generieke types, je kan ze zien als een soort van argumenten die je meegeeft aan een functie. In dit geval geef je het type van de waarde die je verwacht terug te krijgen mee. TypeScript zorgt er vervolgens voor dat de returnwaarde van `config.get` van dat type is.
-
-In de Nest CLI kan je gebruik maken van `--env-file` optie om een .env bestand mee te geven. In de `package.json` zou je bij wijze van voorbeeld het volgende kunnen meegeven:
-
-```json
-{
-  "scripts": {
-    "start:dev": "nest start --watch --env-file .env.production",
-  }
-}
-```
-
-Standaard leest de `ConfigModule` het `.env` bestand in de root van je project. Wij hoeven de `--env-file` optie niet mee te geven.
-
-### API keys
-
-Sommige API's zijn door iedereen vrij te gebruiken, zoals de FBI most wanted (uit hoofdstuk 2), maar heel vaak is dat niet zo. Er zijn in essentie twee redenen om een API call af te schermen:
-
-- er zit gevoelige data achter die slechts één iemand of een beperkt aantal personen mag zien (neem bijvoorbeeld een Facebook feed)
-- de API aanbieden / beschikbaar stellen kost geld en de toegang moet dus gecontroleerd / gemeten worden
-
-Als data persoonlijk is wordt er meestal met een **login** systeem gewerkt (en tokens of cookies). Daarover in een later hoofdstuk (veel) meer. Maar als het gaat om te traceren hoe vaak een API gebruikt wordt is een login systeem niet echt een optie.
-
-Stel bijvoorbeeld dat jouw applicatie onderliggend Google Maps gebruikt. Dan is het niet echt realistisch dat iedereen die jouw applicatie gebruikt eerst met jouw credentials zou moeten inloggen of iets dergelijks. Voor zo'n use cases maakt men vaak gebruik van **API keys**.
-
-Er valt veel te zeggen over hoe API keys opgebouwd worden en werken, maar dat valt een beetje buiten de scope van deze cursus. Maar we willen toch een aantal best practices meegeven voor diegenen die een 3rd party API verwerken in hun opdracht.
-
-Simpel gezegd is een API key een soort random string die je identificeert en die niet kan geraden worden. Dus als iemand jouw API key heeft, kan hij zich als jou voordoen (en dus op jouw kosten een API gebruiken).
-
-Steek dus nooit een API key in de client. Maak daarentegen requests naar je eigen API, en doe de third party access vanaf je eigen server. Hardcode nooit een API key in je code. Sla deze op in een apart bestand dat niet in git opgenomen is, bv. het `.env` bestand. Gebruik access control als je API key dat toelaat (bij Google kan je bijvoorbeeld een key enkel laten werken vanaf bepaalde domeinen vanuit of vanuit bepaalde apps).
-
-[Hier kan je meer info vinden over de best practices voor het gebruik van Google API keys](https://cloud.google.com/docs/authentication/api-keys), maar hetzelfde geldt voor de keys van andere services.
-
-## Oefening - Je eigen project
+## Oefening - Je eigen project (indien nog niet gebeurd is)
 
 Voeg volgende componenten toe aan je eigen project:
 
 - invoervalidatie in de DTO's
 - foutafhandeling met exception filters
 - logging met een custom logger en logging middleware
-- configuratie via de `ConfigModule`
+- werk de `README.md` in de root van je repository bij met instructies om de .env file aan te maken.
 
 > **Oplossing voorbeeldapplicatie**
 >

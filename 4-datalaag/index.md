@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 4e63e94
+> git checkout -b les4 1e3ffd2
 > yarn install
 > yarn start:dev
 > ```
