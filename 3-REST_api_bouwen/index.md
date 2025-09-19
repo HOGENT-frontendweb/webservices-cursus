@@ -348,10 +348,12 @@ Importeer deze klasse in de `PlaceController` en pas de code voor de `CreatePlac
 ```ts
 // src/place/place.controller.ts
 import { CreatePlaceRequestDto } from './place.dto';
-//...
+
+// ...
+
 @Post()
 @HttpCode(HttpStatus.CREATED)
-CreatePlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
+createPlace(@Body() createPlaceDto: CreatePlaceRequestDto): string {
   return `This action adds a new place ${createPlaceDto.name}`;
 }
 ```
@@ -361,7 +363,7 @@ De validatie komt later aan bod. Dit kan je het eenvoudigst testen via Postman. 
 ```json
 {
   "name": "HOGENT",
-  "rating": 5,
+  "rating": 5
 }
 ```
 
@@ -486,7 +488,7 @@ We passen de `PlaceController` aan om van de service gebruik te maken.
 ```ts
 // src/place/place.controller.ts
 // andere imports...
-import { PlaceService } from './place.service';// 👈
+import { PlaceService } from './place.service'; // 👈
 
 @Controller('places')
 export class PlaceController {
@@ -498,14 +500,14 @@ export class PlaceController {
 
 We injecteren de service in de constructor
 
-- `private`:  TypeScript maakt daar automatisch een attribuut van en vult dit in. Het attribuut is bovendien enkel toegankelijk in de klasse.
+- `private`: TypeScript maakt daar automatisch een attribuut van en vult dit in. Het attribuut is bovendien enkel toegankelijk in de klasse.
 - `readonly`: is een best practice. Dit verzekert dat we de service reference niet kunnen aanpassen.
 - `PlaceService`: het type is belangrijk! NestJS bepaalt op basis van het type welke provider er moet geïnjecteerd worden.
 
 Om een instantie van een klasse aan te maken dienen we normaalgezien deze code te schrijven
 
 ```ts
-const placeController = new PlaceController(new PlaceService())
+const placeController = new PlaceController(new PlaceService());
 ```
 
 Maar NestJS fungeert als een "Dependency Injection (DI) container" of "Inversion of Control (IoC) container. Het IoC-framework maakt hierdoor automatisch objecten aan op basis van aanvragen en injecteert ze indien nodig. NestJS zal een instantie van de `PlaceService` aanmaken en doorgeven aan de `PlaceController`. In het geval van een singleton, zal het de reeds bestaande instantie aanleveren indien deze reeds gecreëerd werd.
@@ -553,11 +555,15 @@ De service wordt als volgt aangepast:
 // src/place/place.service.ts
 import { Injectable } from '@nestjs/common';
 import { PLACES, Place } from '../data/mock_data';
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
+import {
+  CreatePlaceRequestDto,
+  UpdatePlaceRequestDto,
+  PlaceListResponseDto,
+  PlaceResponseDto,
+} from './place.dto';
 
 @Injectable()
 export class PlaceService {
-
   getAll(): PlaceListResponseDto {
     return { items: PLACES };
   }
@@ -567,12 +573,19 @@ export class PlaceService {
   }
 
   create({ name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
-    const newplace = { id: Math.max(...PLACES.map((item: Place) => item.id)) + 1, name, rating };
+    const newplace = {
+      id: Math.max(...PLACES.map((item: Place) => item.id)) + 1,
+      name,
+      rating,
+    };
     PLACES.push(newplace);
     return newplace;
   }
 
-  updateById(id: number, { name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
+  updateById(
+    id: number,
+    { name, rating }: CreatePlaceRequestDto,
+  ): PlaceResponseDto {
     throw new Error('not yet implemented');
   }
 
@@ -591,32 +604,48 @@ In de controller kunnen we nu gebruik maken van de `PlaceService`. De code voor 
 ```ts
 // src/place/place.controller.ts
 import {
-  Body, Controller, Delete, Get, Param, Put, Post, HttpStatus, HttpCode
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Put,
+  Post,
+  HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { PlaceService } from './place.service';
-import { CreatePlaceRequestDto, UpdatePlaceRequestDto, PlaceListResponseDto, PlaceResponseDto } from './place.dto';
+import {
+  CreatePlaceRequestDto,
+  UpdatePlaceRequestDto,
+  PlaceListResponseDto,
+  PlaceResponseDto,
+} from './place.dto';
 
 @Controller('places')
 export class PlaceController {
-  constructor(private readonly placeService: PlaceService) { }
+  constructor(private readonly placeService: PlaceService) {}
 
   @Get()
-  getAllPlaces(): PlaceListResponseDto {//👈
-    return this.placeService.getAll();//👈
+  getAllPlaces(): PlaceListResponseDto {
+    //👈
+    return this.placeService.getAll(); //👈
   }
 
   @Get(':id')
-  getPlaceById(@Param('id') id: string): PlaceResponseDto {//👈
-    return this.placeService.getById(Number(id));//👈
+  getPlaceById(@Param('id') id: string): PlaceResponseDto {
+    //👈
+    return this.placeService.getById(Number(id)); //👈
   }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createPlace(@Body() createPlaceDto: CreatePlaceRequestDto): PlaceResponseDto {//👈
-    return this.placeService.create(createPlaceDto);//👈
+  createPlace(@Body() createPlaceDto: CreatePlaceRequestDto): PlaceResponseDto {
+    //👈
+    return this.placeService.create(createPlaceDto); //👈
   }
 
-  //...
+  // ...
 }
 ```
 
@@ -822,7 +851,7 @@ Voeg onderstaand fragment toe aan de `imports` array in `AppModule`:
 // src/app.module.ts
 ConfigModule.forRoot({
   isGlobal: true,
-})
+});
 ```
 
 Importeer de `ConfigModule` vanuit `@nestjs/config`.
@@ -840,7 +869,7 @@ Aan de hand van custom config files kunnen we de instellingen per domein groeper
 export default () => ({
   env: process.env.NODE_ENV, // 👈 2
   port: parseInt(process.env.PORT || '3000'), // 👈 3
-})
+});
 
 // 👇 4
 export interface ServerConfig {
@@ -866,7 +895,7 @@ import configuration from './config/configuration';
 ConfigModule.forRoot({
   load: [configuration], // 👈
   isGlobal: true,
-})
+});
 ```
 
 Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. De `ConfigService` is een injectable service die NestJS voorziet zodra je de `ConfigModule` installeert. Dit laat je toe om environment variabelen op te vragen binnen je services, controllers of guards.
@@ -886,14 +915,14 @@ We dienen de poort op te halen in `bootstrap` functie in `main.ts`. Dit is geen 
 // src/main.ts
 import { ConfigService } from '@nestjs/config'; // 👈 1
 import { ServerConfig } from './config/configuration'; // 👈 1
-//...
+// ...
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   const config = app.get(ConfigService<ServerConfig>); // 👈 2
   const port = config.get<number>('port')!; // 👈 3
 
-  //...
+  // ...
 
   await app.listen(port); // 👈 4
 }
@@ -909,7 +938,7 @@ In de Nest CLI kan je gebruik maken van `--env-file` optie om een .env bestand m
 ```json
 {
   "scripts": {
-    "start:dev": "nest start --watch --env-file .env.production",
+    "start:dev": "nest start --watch --env-file .env.production"
   }
 }
 ```
@@ -965,7 +994,7 @@ Pas de code in `main.ts` aan:
 app.enableCors({
   origins: ['http://localhost:5173'],
   maxAge: 3 * 60 * 60,
-})
+});
 
 // ...
 ```
@@ -977,19 +1006,19 @@ Deze code zorgt ervoor dat je NestJS-backend CORS toestaat:
   - Natuurlijk zal ons domein in productie iets anders dan <http://localhost:5173> zijn, maar dat lossen we op in het hoofdstuk rond CI/CD.
 - `maxAge`: de maximale tijd die een browser nodig heeft om de preflight OPTIONS-aanvraag in de cache op te nemen (hier 3u), zodat niet bij elk verzoek opnieuw toestemming gevraagd hoeft te worden.
 
-### Oefening
+### Oefening - CORS via env
 
-Voeg nu ook een environment variabelen toe voor CORS.
+Voeg nu ook een environment variabelen toe voor CORS:
 
 - Pas het .env bestand aan
 - Pas `configuration.ts` aan
 - Pas `main.ts` aan
 
-#### Oplossing
+<br />
 
 - Oplossing +
 
-  De .env file
+  Het `.env` bestand:
 
   ```ini
   NODE_ENV=development
@@ -998,7 +1027,7 @@ Voeg nu ook een environment variabelen toe voor CORS.
   CORS_MAX_AGE=10800
   ```
 
-  De configuration file
+  Het `configuration.ts` bestand:
 
   ```ts
   export default () => ({
@@ -1024,24 +1053,25 @@ Voeg nu ook een environment variabelen toe voor CORS.
   }
   ```
 
-  main.ts
+  De code in `main.ts`:
 
   ```typescript
   import { ServerConfig, CorsConfig } from './config/configuration';
-  //...
-    const cors = config.get<CorsConfig>('cors')!;
-    //...
-     app.enableCors({
-      origins: cors.origins,
-      maxAge: cors.maxAge,
+  // ...
+  const cors = config.get<CorsConfig>('cors')!;
+  // ...
+  app.enableCors({
+    origins: cors.origins,
+    maxAge: cors.maxAge,
   });
   ```
 
-### Oefening - Je eigen project
+## Oefening - Je eigen project
 
-- Voeg configuratie toe in je eigen project
+- Voeg configuratie toe in je eigen project.
 - Voeg CORS toe aan je eigen project.
-- Werk de `README.md` in de root van je repository bij met instructies om de .env file aan te maken.
+- Werk de `README.md` in de root van je repository bij met instructies om de `.env` file aan te maken.
+  - Geef ook aan welke variabelen er minimaal in moeten staan.
 
 > **Oplossing voorbeeldapplicatie**
 >
