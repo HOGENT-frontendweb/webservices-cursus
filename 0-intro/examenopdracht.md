@@ -20,7 +20,7 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal ontvankelijkheidscriteria.
 
-!>Als niet voldaan is aan de ontvankelijkheidscriteria, krijg je een AFWEZIGHEID (conform DOER).
+!> Als niet voldaan is aan de ontvankelijkheidscriteria, krijg je de score "Afwezig" (conform het DOER).
 
 Deze criteria zijn:
 
