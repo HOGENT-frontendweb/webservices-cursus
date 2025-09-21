@@ -39,10 +39,24 @@ jobs:
           config_file: .markdownlint.json
           dot: false
 
-      # - name: Check links in markdown files
-      #   uses: lycheeverse/lychee-action@v2.6.1
-      #   with:
-      #     args: "'./**/*.md' '*.md' --scheme https --exclude kroki\\.io --exclude api\\.fbi\\.gov --exclude sciencedirect\\.com --exclude youtube-nocookie\\.com --exclude dev\\.mysql\\.com --exclude jwt\\.io"
+      - name: Restore link checker cache
+        uses: actions/cache@v4
+        with:
+          path: .lycheecache
+          key: cache-lychee-${{ github.sha }}
+          restore-keys: cache-lychee-
+
+      - name: Check links in markdown files
+        uses: lycheeverse/lychee-action@v2.6.1
+        with:
+          args: "'./**/*.md' '*.md' --cache --max-cache-age 7d --scheme https"
+
+      - name: Save link checker cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .lycheecache
+          key: ${{ steps.restore-cache.outputs.cache-primary-key }}
 
       - name: Check for broken GitHub commit references
         uses: ./commit-verifier
