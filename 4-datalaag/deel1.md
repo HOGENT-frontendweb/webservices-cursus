@@ -1,4 +1,4 @@
-# Datalaag en CRUD (WIP)
+# Datalaag en CRUD - Deel 1
 
 > **Startpunt voorbeeldapplicatie**
 >
@@ -9,6 +9,15 @@
 > pnpm install
 > pnpm start:dev
 > ```
+
+## Leerdoelen
+
+- Je krijgt inzicht in de gelaagde architectuur
+- Je kan een datalaag implementeren met Drizzle ORM in NestJS
+- Je kan een simpele tabel definiëren en gebruiken met Drizzle
+- Je weet wat migraties en seeds zijn
+- Je kan migraties maken en uitvoeren
+- Je kan seeds maken en uitvoeren
 
 ## Gelaagde architectuur
 
@@ -111,7 +120,7 @@ services:
   db:
     image: mysql:8.0
     ports:
-      - "3306:3306"
+      - '3306:3306'
     volumes:
       - db_data:/var/lib/mysql
     environment:
@@ -120,7 +129,7 @@ services:
       MYSQL_USER: devusr
       MYSQL_PASSWORD: devpwd
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--silent']
       timeout: 30s
       interval: 30s
       retries: 5
@@ -223,6 +232,29 @@ Dit bestand definieert een aantal zaken:
   - In ons geval halen we deze uit de environment variabele `DATABASE_URL`
   - We gooien een error als deze variabele niet bestaat
 
+### Configuratie aanvullen
+
+Alvorens we onze connectie met de databank kunnen maken, moeten we nog een aantal zaken aanvullen in onze configuratie.
+
+Vul het `src/config/configuration.ts` bestand aan met een interface voor de database configuratie:
+
+```ts
+export interface DatabaseConfig {
+  url: string;
+}
+```
+
+Vul vervolgens de default export in `src/config/configuration.ts` aan met de database configuratie:
+
+```ts
+export default () => ({
+  // ...
+  database: {
+    url: process.env.DATABASE_URL,
+  },
+});
+```
+
 ### Drizzle connectie als provider
 
 In NestJS wordt de connectie met de databank best als provider aangeboden. Op die manier zijn we zeker dat er slechts één connectie is in de volledige applicatie. We maken hiervoor een `drizzle` module aan:
@@ -247,7 +279,7 @@ Daaronder definiëren we onze Drizzle connectie die we aanbieden als async provi
 
 ```ts
 import { ConfigService } from '@nestjs/config';
-import { drizzle, MySql2Database } from 'drizzle-orm/mysql2';
+import { drizzle } from 'drizzle-orm/mysql2';
 import * as mysql from 'mysql2/promise';
 import { DatabaseConfig, ServerConfig } from '../config/configuration';
 
@@ -297,10 +329,7 @@ Opdat we onze provider kunnen gebruiken, definiëren we deze als provider en exp
 
 ```ts
 import { Module } from '@nestjs/common';
-import {
-  DrizzleAsyncProvider,
-  drizzleProvider,
-} from './drizzle.provider';
+import { DrizzleAsyncProvider, drizzleProvider } from './drizzle.provider';
 
 @Module({
   providers: [...drizzleProvider], // 👈
@@ -311,7 +340,11 @@ export class DrizzleModule {}
 
 ## Databankschema definiëren
 
-We beginnen met het definiëren van de places tabel uit een vorig hoofdstuk. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
+Het ERD waar we uiteindelijk naartoe willen, ziet er zo uit (zie vorig hoofdstuk):
+
+![ERD](../3-REST_api_bouwen/images/budget_erd.svg ':size=70%')
+
+In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
 
 ```ts
 // src/drizzle.schema.ts
@@ -328,7 +361,7 @@ export const places = mysqlTable(
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     name: varchar('name', { length: 255 }).notNull(),
-    rating: tinyint('rating', { unsigned: true }),
+    rating: tinyint('rating', { unsigned: true }).notNull(),
   },
   (table) => [uniqueIndex('idx_place_name_unique').on(table.name)],
 );
@@ -371,7 +404,7 @@ export type DatabaseProvider = MySql2Database<typeof schema> & {
 };
 ```
 
-We definiëren een type `DatabaseProvider` van het type `MySql2Database`. Aan `MySql2Database` geven we het type van ons schema door via `typeof`. We breiden het type uit met een `$client` optie zodat we later onze connectie kunnen sluiten.
+We definiëren een type `DatabaseProvider` van het type `MySql2Database`. Aan `MySql2Database` geven we het type van ons schema door via `typeof`. We breiden het type uit met een `$client` optie zodat we later onze connectie kunnen sluiten. Importeer `MySql2Database` uit `drizzle-orm/mysql2`.
 
 ## Connectie afsluiten
 
@@ -392,7 +425,8 @@ import {
   providers: [...drizzleProvider],
   exports: [DrizzleAsyncProvider],
 })
-export class DrizzleModule implements OnModuleDestroy { // 👈 1
+export class DrizzleModule implements OnModuleDestroy {
+  // 👈 1
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {} // 👈 3
 
   // 👇 2
@@ -472,91 +506,9 @@ Nadien kan je simpelweg een nieuwe migratie genereren via `pnpm db:generate`.
 
 Jouw lokale databank zal dan wel inconsistent zijn met de migraties in de `migrations` map. Dat kan je ook simpel oplossen door die te droppen en opnieuw aan te maken.
 
-### Oefening - Schema aanvullen
-
-1. Vul het schema aan met de tabellen voor transactions en users.
-2. Denk aan de foreign keys. Zorg ervoor dat die naar de juiste kolommen verwijzen.
-3. Voeg ook de nodige indices toe.
-
-- Oplossing +
-
-  Voeg toe aan `src/drizzle/schema.ts`:
-
-  ```ts
-  export const users = mysqlTable(
-    'users',
-    {
-      id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-      name: varchar('name', { length: 255 }).notNull(),
-    },
-    (table) => [uniqueIndex('idx_user_email_unique').on(table.email)],
-  );
-
-  export const transactions = mysqlTable('transactions', {
-    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-    amount: int('amount').notNull(),
-    date: datetime('date').notNull(),
-    userId: int('user_id', { unsigned: true })
-      .references(() => users.id, { onDelete: 'cascade' })
-      .notNull(),
-    placeId: int('place_id', { unsigned: true })
-      .references(() => places.id, { onDelete: 'no action' })
-      .notNull(),
-  });
-  ```
-
-### Oefening - Relaties toevoegen
-
-Voeg de volgende relaties toe aan het schema:
-
-1. Een user kan meerdere transactions hebben.
-2. Een place kan meerdere transactions hebben.
-3. Een transactie heeft één user en één place.
-
-- Oplossing +
-
-  Voeg toe aan `src/drizzle/schema.ts`:
-
-  ```ts
-  export const placesRelations = relations(places, ({ many }) => ({
-    transactions: many(transactions),
-  }));
-
-  export const usersRelations = relations(users, ({ many }) => ({
-    transactions: many(transactions),
-  }));
-
-  export const transactionsRelations = relations(transactions, ({ one }) => ({
-    place: one(places, {
-      fields: [transactions.placeId],
-      references: [places.id],
-    }),
-    user: one(users, {
-      fields: [transactions.userId],
-      references: [users.id],
-    }),
-  }));
-  ```
-
-### Oefening - Migratie maken en uitvoeren
-
-1. Maak een nieuwe migratie aan.
-2. Voer de migratie uit.
-
-- Oplossing +
-
-  Voer volgende commando's uit:
-
-  ```bash
-  pnpm db:generate
-  pnpm db:migrate
-  ```
-
 ### drizzle-kit push
 
 De Drizzle kit biedt ook een [`drizzle-kit push`](https://orm.drizzle.team/docs/drizzle-kit-push) commando aan. Dit commando vergelijkt het huidige schema met de databank en past de databank aan om overeen te komen met het schema. Dit commando kan je wel gebruiken in lokaal development om snel wijzigingen door te voeren, maar in productie niet! In productie maak je altijd gebruik van migraties.
-
-<!-- TODO: aanvullen met veel op veel relatie -->
 
 ## Seeds
 
@@ -595,45 +547,21 @@ const db = drizzle(connection, {
 });
 ```
 
-Daarna definiëren we een functie om de databank leeg te maken:
+Daarna definiëren we een functie om de databank leeg te maken. We gebruiken hiervoor de [`delete` functie van Drizzle](https://orm.drizzle.team/docs/delete#sql-delete).
 
 ```ts
 async function resetDatabase() {
   console.log('🗑️ Resetting database...');
 
-  // Delete data in correct order (respecting foreign key constraints)
-  await db.delete(schema.transactions);
   await db.delete(schema.places);
-  await db.delete(schema.users);
 
   console.log('✅ Database reset completed\n');
 }
 ```
 
-Vervolgens definiëren we de functies om de data toe te voegen:
+Vervolgens definiëren we een functie om places toe te voegen. We gebruiken hiervoor de [`insert` functie van Drizzle](https://orm.drizzle.team/docs/insert#sql-insert).
 
 ```ts
-async function seedUsers() {
-  console.log('👥 Seeding users...');
-
-  await db.insert(schema.users).values([
-    {
-      id: 1,
-      name: 'Thomas Aelbrecht',
-    },
-    {
-      id: 2,
-      name: 'Pieter Van Der Helst',
-    },
-    {
-      id: 3,
-      name: 'Karine Samyn',
-    },
-  ]);
-
-  console.log('✅ Users seeded successfully\n');
-}
-
 async function seedPlaces() {
   console.log('📍 Seeding places...');
 
@@ -657,84 +585,6 @@ async function seedPlaces() {
 
   console.log('✅ Places seeded successfully\n');
 }
-
-async function seedTransactions() {
-  console.log('💰 Seeding transactions...');
-
-  await db.insert(schema.transactions).values([
-    // User Thomas
-    // ===========
-    {
-      id: 1,
-      userId: 1,
-      placeId: 1,
-      amount: 3500,
-      date: new Date(2021, 4, 25, 19, 40),
-    },
-    {
-      id: 2,
-      userId: 1,
-      placeId: 2,
-      amount: -220,
-      date: new Date(2021, 4, 8, 20, 0),
-    },
-    {
-      id: 3,
-      userId: 1,
-      placeId: 3,
-      amount: -74,
-      date: new Date(2021, 4, 21, 14, 30),
-    },
-    // User Pieter
-    // ===========
-    {
-      id: 4,
-      userId: 2,
-      placeId: 1,
-      amount: 4000,
-      date: new Date(2021, 4, 25, 19, 40),
-    },
-    {
-      id: 5,
-      userId: 2,
-      placeId: 2,
-      amount: -220,
-      date: new Date(2021, 4, 9, 23, 0),
-    },
-    {
-      id: 6,
-      userId: 2,
-      placeId: 3,
-      amount: -74,
-      date: new Date(2021, 4, 22, 12, 0),
-    },
-    // User Karine
-    // ===========
-    {
-      id: 7,
-      userId: 3,
-      placeId: 1,
-      amount: 4000,
-      date: new Date(2021, 4, 25, 19, 40),
-    },
-    {
-      id: 8,
-      userId: 3,
-      placeId: 2,
-      amount: -220,
-      date: new Date(2021, 4, 10, 10, 0),
-    },
-    {
-      id: 9,
-      userId: 3,
-      placeId: 3,
-      amount: -74,
-      date: new Date(2021, 4, 19, 11, 30),
-    },
-  ]);
-
-  console.log('✅ Transactions seeded successfully\n');
-}
 ```
 
 Tot slot definiëren we een `main` functie die deze functies aanroept:
@@ -744,9 +594,7 @@ async function main() {
   console.log('🌱 Starting database seeding...\n');
 
   await resetDatabase();
-  await seedUsers();
   await seedPlaces();
-  await seedTransactions();
 
   console.log('🎉 Database seeding completed successfully!');
 }
@@ -810,9 +658,9 @@ Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om 
 
 ## Oefening - Je eigen project
 
-1. Vervolledig het schema van je eigen project.
+1. Voeg één tabel (zonder relaties) toe aan je eigen project.
 2. Maak een migratie aan en voer deze uit.
-3. Maak seeds aan voor alle tabellen die je in stap 1 hebt gedefinieerd.
+3. Maak seeds aan voor de tabel die je in stap 1 hebt gedefinieerd.
 
 ## Repository
 
@@ -832,11 +680,26 @@ Een pijl van de ene naar de andere laag betekent dat de ene laag de andere laag 
 
 ## Services
 
-Nu moeten we enkel nog de Drizzle client gebruiken in onze services.
+Nu moeten we enkel nog de Drizzle client gebruiken in onze `PlaceService`. Hiervoor importeren we eerst de `DrizzleModule` in de `PlacesModule`:
+
+```ts
+import { Module } from '@nestjs/common';
+import { PlaceService } from './place.service';
+import { PlaceController } from './place.controller';
+import { DrizzleModule } from '../drizzle/drizzle.module'; // 👈
+
+@Module({
+  imports: [DrizzleModule], // 👈
+  providers: [PlaceService],
+  controllers: [PlaceController],
+  exports: [PlaceService],
+})
+export class PlaceModule {}
+```
 
 ### PlaceService
 
-Allereerst moeten we onze Drizzle provider injecteren in de `PlaceService`. Open `src/places/places.service.ts` en voeg een constructor toe:
+Daarna kunnen we onze Drizzle provider injecteren in de `PlaceService`. Open `src/places/places.service.ts` en voeg een constructor toe:
 
 ```ts
 // ...
@@ -867,7 +730,12 @@ export class PlaceService {
 }
 ```
 
-Hier gebruiken we de ORM interface van Drizzle (via het `query` property).
+Hier gebruiken we de ORM interface van Drizzle (via het `query` property). Drizzle voorziet namelijk twee interfaces om queries uit te voeren:
+
+1. een SQL-like interface, zie <https://orm.drizzle.team/docs/select>
+2. een ORM interface, zie <https://orm.drizzle.team/docs/rqb>
+
+We gebruiken hier de ORM interface aangezien deze eenvoudiger is voor eenvoudige queries. We halen alle plaatsen op via de `findMany` functie. In sommige gevallen is de ORM interface echter te beperkt en moet je de SQL-like interface gebruiken. Tijdens het programmeren zal je snel merken welke interface je in welk geval het best gebruikt.
 
 De `getAll` methode heeft nu het `async` keyword gekregen, dus we moeten ook de bijhorende methode in de `PlaceController` async maken:
 
@@ -889,7 +757,8 @@ Daarna passen we de `getById` aan:
 export class PlaceService {
   // ...
   async getById(id: number): Promise<PlaceDetailResponseDto> {
-    const place = await this.db.query.places.findFirst({ // 👈 1
+    const place = await this.db.query.places.findFirst({
+      // 👈 1
       where: eq(places.id, id), // 👈 2
       // 👇 3
       with: {
@@ -974,18 +843,13 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
       id: number,
       place: UpdatePlaceRequestDto,
     ): Promise<PlaceResponseDto> {
-      await this.db
-        .update(places)
-        .set(changes)
-        .where(eq(places.id, id));
+      await this.db.update(places).set(changes).where(eq(places.id, id));
 
       return this.getById(id);
     }
 
     async delete(id: number): Promise<void> {
-      const [result] = await this.db
-        .delete(places)
-        .where(eq(places.id, id));
+      const [result] = await this.db.delete(places).where(eq(places.id, id));
 
       if (result.affectedRows === 0) {
         throw new NotFoundException('No place with this id exists');
@@ -996,60 +860,11 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
   }
   ```
 
-### Transactions
-
-Als laatste voorbeeld passen we de methode `getAll` in de `TransactionService` aan:
-
-```ts
-export class TransactionService {
-
-  // 👇 1
-  constructor(
-    @InjectDrizzle()
-    private readonly db: DatabaseProvider,
-  ) {}
-
-  async getAll(
-    userId: number,
-    roles: string[],
-  ): Promise<TransactionListResponseDto> {
-    const items = await this.db.query.transactions.findMany({
-      // 👇 2
-      columns: {
-        id: true,
-        amount: true,
-        date: true,
-      },
-      // 👇 3
-      with: {
-        place: true,
-        user: true,
-      },
-    });
-
-    return { items };
-  }
-
-  // ...
-}
-```
-
-1. We injecteren onze Drizzle provider in de constructor.
-2. We selecteren enkel de kolommen `id`, `amount` en `date`.
-   - De kolommen `placeId` en `userId` wensen we niet in ons response. De eindgebruiker hoeft niet te weten hoe de transactions gekoppeld zijn aan de place en user.
-3. We selecteren de place en de user.
-   - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
-
-Maak ook de bijhorende methode in de `TransactionController` async.
-
-De code van de overige methoden uit de services kan je raadplegen in onze voorbeeldapplicatie.
-
 ### Oefening - Je eigen project
 
-1. Vervolledig de services in je project met alle benodigde CRUD-operaties.
-2. Werk in de services met de databank i.p.v. mock data.
-3. Maak de nodige methoden in de controllers async.
-4. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
+1. Vervolledig de service en controller van de entiteit die je in de vorige oefeningen hebt aangemaakt zodat deze de databank gebruikt i.p.v. mock data.
+2. Maak de nodige methoden in de controllers async.
+3. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
 
 > **Oplossing voorbeeldapplicatie**
 >

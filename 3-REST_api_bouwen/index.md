@@ -13,13 +13,9 @@
 ## Leerdoelen
 
 - Inzicht krijgen in de werking van controllers in NestJS, hoe routes worden gedefinieerd en hoe je meerdere routes binnen één controller groepeert.
-
 - Begrijpen hoe je toegang krijgt tot HTTP-aanvraaggegevens (zoals headers, body, params, etc.) in NestJS met behulp van decoratoren en hoe je verschillende HTTP-methoden implementeert in controllers.
-
 - Inzicht krijgen in Providers, dependency injection, Services
-
 - Gebruik maken van DTO's voor invoervalidatie.
-
 - Inzicht krijgen in de werking van modules in NestJS
 
 ## De budget app
