@@ -54,8 +54,6 @@ Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stel
 
 ## Planning
 
-<!-- TODO: planning updaten -->
-
 Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 
 | Week    | Inhoud                                        |
@@ -64,14 +62,14 @@ Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 | week 2  | TypeScript, REST API intro                    |
 | week 3  | REST API intro + bouwen                       |
 | week 4  | REST API bouwen                               |
-| week 5  | datalaag en CRUD                              |
-| week 6  | datalaag en CRUD                              |
-| week 7  | (geen nieuwe theorie, aan de opdracht werken) |
-| week 8  | testen                                        |
-| week 9  | validatie en foutafhandeling                  |
-| week 10 | authenticatie / autorisatie                   |
-| week 11 | testen authenticatie / autorisatie + Swagger  |
-| week 12 | CI/CD (= online zetten)                       |
+| week 5  | Datalaag en places                            |
+| week 6  | Relaties                                      |
+| week 7  | Validatie en foutafhandeling                  |
+| week 8  | Authenticatie / autorisatie                   |
+| week 9  | Testen                                        |
+| week 10 | API documentatie                              |
+| week 11 | CI/CD (= online zetten)                       |
+| week 12 | (geen nieuwe theorie, aan de opdracht werken) |
 
 ## Help, ik zit vast!
 
