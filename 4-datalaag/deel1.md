@@ -1,4 +1,4 @@
-# Datalaag en CRUD - Deel 1
+# Datalaag en places (WIP)
 
 > **Startpunt voorbeeldapplicatie**
 >
