@@ -342,7 +342,7 @@ export class DrizzleModule {}
 
 Het ERD waar we uiteindelijk naartoe willen, ziet er zo uit (zie vorig hoofdstuk):
 
-![ERD](../3-REST_api_bouwen/images/budget_erd.svg ':size=70%')
+![ERD](../3-REST_api_bouwen/images/budget_erd.svg)
 
 In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
 

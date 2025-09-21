@@ -18,71 +18,179 @@
 - Je kan relaties tussen tabellen definiëren en gebruiken met Drizzle
 - Je kan complexe queries maken met Drizzle
 
+## Inleiding
+
+In een vorig hoofdstuk hebben we de basis gelegd voor het werken met Drizzle ORM. Nu gaan we dieper in op het definiëren van relaties tussen tabellen en het uitvoeren van complexe queries.
+
+Hier zie je nogmaals het ERD waar we in dit hoofdstuk naartoe werken:
+
+![ERD](../3-REST_api_bouwen/images/budget_erd.svg)
+
+In het vorige hoofdstuk hebben we de places tabel reeds aangemaakt. We gaan nu de users, transactions en user_favorite_places tabellen toevoegen, inclusief de nodige relaties.
+
 ### Oefening - Schema aanvullen
 
-1. Vul het schema aan met de tabellen voor transactions en users.
-2. Denk aan de foreign keys. Zorg ervoor dat die naar de juiste kolommen verwijzen.
-3. Voeg ook de nodige indices toe.
+Vul het schema aan met de tabellen voor transactions, users en favoriete places:
+
+- Definieer enkel de kolommen, laat de foreign keys en indices nog weg.
+- Definieer voor de user tabel enkel de kolommen `id` en `name`.
+- Voor de tabel user_favorite_places definieer je een samengestelde primary key met behulp van de `primaryKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#composite-primary-key>
+
+<br />
 
 - Oplossing +
 
   Voeg toe aan `src/drizzle/schema.ts`:
 
   ```ts
-  export const users = mysqlTable(
-    'users',
-    {
-      id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-      name: varchar('name', { length: 255 }).notNull(),
-    },
-    (table) => [uniqueIndex('idx_user_email_unique').on(table.email)],
-  );
+  // src/drizzle/schema.ts
+
+  import {
+    // ...
+    datetime,
+    json,
+    primaryKey,
+  } from 'drizzle-orm/mysql-core';
+
+  // ...
+
+  export const users = mysqlTable('users', {
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    name: varchar('name', { length: 255 }).notNull(),
+  });
 
   export const transactions = mysqlTable('transactions', {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     amount: int('amount').notNull(),
     date: datetime('date').notNull(),
-    userId: int('user_id', { unsigned: true })
-      .references(() => users.id, { onDelete: 'cascade' })
-      .notNull(),
-    placeId: int('place_id', { unsigned: true })
-      .references(() => places.id, { onDelete: 'no action' })
-      .notNull(),
+    userId: int('user_id', { unsigned: true }).notNull(),
+    placeId: int('place_id', { unsigned: true }).notNull(),
   });
+
+  export const userFavoritePlaces = mysqlTable(
+    'user_favorite_places',
+    {
+      userId: int('user_id', { unsigned: true }).notNull(),
+      placeId: int('place_id', { unsigned: true }).notNull(),
+    },
+    (table) => [primaryKey({ columns: [table.userId, table.placeId] })],
+  );
   ```
 
-### Oefening - Relaties toevoegen
+## Relaties definiëren
 
-Voeg de volgende relaties toe aan het schema:
+In Drizzle moet je relaties op twee plaatsen definiëren:
+
+1. In de tabeldefinities: dit wordt door de databank gebruikt om foreign keys en indices aan te maken, en de referentiële integriteit te waarborgen.
+2. In de relatie-definities: dit wordt door Drizzle gebruikt om de relaties tussen de tabellen te begrijpen en te beheren. Hierdoor kan je later in de ORM-like interface makkelijk de gerelateerde data opvragen.
+   - **Merk op:** dit heeft enkel gevolgen voor jou als programmeur, de databank zelf maakt hier geen gebruik van. Hierdoor krijg je betere type-inferentie en autocompletion in je code editor.
+   - Deze definities kan je bijgevolg in sommige gevallen weglaten. Denk bijvoorbeeld aan relaties die slechts in één richting worden gebruikt.
+
+Lees de documentatie over dit verschil: <https://orm.drizzle.team/docs/relations#foreign-keys>.
+
+In ons ERD hebben we volgende relaties:
 
 1. Een user kan meerdere transactions hebben.
 2. Een place kan meerdere transactions hebben.
 3. Een transactie heeft één user en één place.
+4. Een user kan meerdere favoriete places hebben.
+5. Een place kan favoriet zijn bij meerdere users.
+
+Welk soort relaties zijn dit: één-op-veel of veel-op-veel?
 
 - Oplossing +
 
-  Voeg toe aan `src/drizzle/schema.ts`:
+  1. Eén-op-veel
+  2. Eén-op-veel
+  3. Andere kant van de één-op-veel relaties uit 1 en 2
+  4. Veel-op-veel
+  5. Veel-op-veel (andere kant van 4)
 
-  ```ts
-  export const placesRelations = relations(places, ({ many }) => ({
-    transactions: many(transactions),
-  }));
+Lees eerst de documentatie over de `foreignKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#foreign-key>.
 
-  export const usersRelations = relations(users, ({ many }) => ({
-    transactions: many(transactions),
-  }));
+### Foreign keys toevoegen
 
-  export const transactionsRelations = relations(transactions, ({ one }) => ({
+Als eerste voegen we de foreign keys toe in de tabeldefinities in `src/drizzle/schema.ts`:
+
+```ts
+// src/drizzle/schema.ts
+
+// ...
+export const transactions = mysqlTable('transactions', {
+  // ...
+  userId: int('user_id', { unsigned: true })
+    .references(() => users.id, { onDelete: 'cascade' }) // 👈
+    .notNull(),
+  placeId: int('place_id', { unsigned: true })
+    .references(() => places.id, { onDelete: 'no action' }) // 👈
+    .notNull(),
+});
+
+export const userFavoritePlaces = mysqlTable(
+  'user_favorite_places',
+  {
+    userId: int('user_id', { unsigned: true })
+      .references(() => users.id, { onDelete: 'cascade' }) // 👈
+      .notNull(),
+    placeId: int('place_id', { unsigned: true })
+      .references(() => places.id, { onDelete: 'cascade' }) // 👈
+      .notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.userId, table.placeId] })],
+);
+```
+
+Met deze foreign keys zorgen we ervoor dat:
+
+- Als een user verwijderd wordt, ook alle bijhorende transactions en user_favorite_places verwijderd worden (cascade delete).
+- Als een place verwijderd wordt, de bijhorende transactions niet verwijderd worden (no action).
+
+Hiermee zijn de relaties in de databank gedefinieerd.
+
+### Relaties toevoegen in Drizzle
+
+Vervolgens voegen we de relaties toe in de relatie-definities in `src/drizzle/schema.ts` onder de tabel-definities:
+
+```ts
+// src/drizzle/schema.ts
+// ...
+import { relations } from 'drizzle-orm';
+
+// ...
+export const placesRelations = relations(places, ({ many }) => ({
+  transactions: many(transactions),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  transactions: many(transactions),
+}));
+
+export const transactionsRelations = relations(transactions, ({ one }) => ({
+  place: one(places, {
+    fields: [transactions.placeId],
+    references: [places.id],
+  }),
+  user: one(users, {
+    fields: [transactions.userId],
+    references: [users.id],
+  }),
+}));
+
+export const userFavoritePlacesRelations = relations(
+  userFavoritePlaces,
+  ({ one }) => ({
+    // Relatie in de richting van user niet gebruikt
     place: one(places, {
-      fields: [transactions.placeId],
+      fields: [userFavoritePlaces.placeId],
       references: [places.id],
     }),
-    user: one(users, {
-      fields: [transactions.userId],
-      references: [users.id],
-    }),
-  }));
-  ```
+  }),
+);
+```
+
+Merk op dat we in de `userFavoritePlacesRelations` enkel de relatie naar `places` definiëren. De relatie naar `users` wordt niet gebruikt in onze applicatie, dus die laten we weg.
+
+Merk ook op dat de `relations` functie geïmporteerd wordt vanuit `drizzle-orm` en niet vanuit `drizzle-orm/mysql-core`. Hieraan zie je ook dat dit puur een Drizzle concept is en geen databank-concept.
 
 ### Oefening - Migratie maken en uitvoeren
 
@@ -98,11 +206,16 @@ Voeg de volgende relaties toe aan het schema:
   pnpm db:migrate
   ```
 
+## Seeds aanvullen
+
+We gaan nu de seed data aanvullen met users, transactions en favoriete places. Vervolledig eerst de `resetDatabase` functie in `src/drizzle/seed.ts`:
+
 ```ts
+// src/drizzle/seed.ts
+
 async function resetDatabase() {
   console.log('🗑️ Resetting database...');
 
-  // Delete data in correct order (respecting foreign key constraints)
   await db.delete(schema.transactions);
   await db.delete(schema.places);
   await db.delete(schema.users);
@@ -111,9 +224,13 @@ async function resetDatabase() {
 }
 ```
 
-Vervolgens definiëren we de functies om de data toe te voegen:
+Denk eraan om de tabellen in de juiste volgorde te verwijderen om foreign key problemen te vermijden.
+
+Vervolgens definiëren we de functies om data toe te voegen aan de nieuwe tabellen:
 
 ```ts
+// src/drizzle/seed.ts
+
 async function seedUsers() {
   console.log('👥 Seeding users...');
 
@@ -133,30 +250,6 @@ async function seedUsers() {
   ]);
 
   console.log('✅ Users seeded successfully\n');
-}
-
-async function seedPlaces() {
-  console.log('📍 Seeding places...');
-
-  await db.insert(schema.places).values([
-    {
-      id: 1,
-      name: 'Loon',
-      rating: 5,
-    },
-    {
-      id: 2,
-      name: 'Dranken Geers',
-      rating: 3,
-    },
-    {
-      id: 3,
-      name: 'Irish Pub',
-      rating: 4,
-    },
-  ]);
-
-  console.log('✅ Places seeded successfully\n');
 }
 
 async function seedTransactions() {
@@ -236,13 +329,66 @@ async function seedTransactions() {
 
   console.log('✅ Transactions seeded successfully\n');
 }
+
+async function seedUserFavoritePlaces() {
+  console.log('💰 Seeding UserFavoritePlaces...');
+
+  await db.insert(schema.userFavoritePlaces).values([
+    {
+      userId: 1,
+      placeId: 1,
+    },
+    {
+      userId: 1,
+      placeId: 2,
+    },
+    {
+      userId: 2,
+      placeId: 1,
+    },
+  ]);
+
+  console.log('✅ UserFavoritePlaces seeded successfully\n');
+}
 ```
+
+Pas tot slot de `main` functie aan om deze nieuwe functies aan te roepen:
+
+```ts
+// src/drizzle/seed.ts
+
+async function main() {
+  console.log('🌱 Starting database seeding...\n');
+
+  await resetDatabase();
+  await seedUsers();
+  await seedPlaces();
+  await seedTransactions();
+  await seedUserFavoritePlaces();
+
+  console.log('🎉 Database seeding completed successfully!');
+}
+```
+
+<!--
+TODO:
+  - Oefening:
+    - TransactionController en UserController met routes aanmaken
+    - DTO's aanmaken
+    - TransactionService aanmaken met getAll, getById, create, update, delete, getTransactionsByPlaceId (met Error implementeren)
+    - UserService aanmaken met getAll, getById, create, update, delete (met Error implementeren)
+    - PlacesService uitbreiden met getFavoritePlacesByUserId
+  - Methoden TransactionService en PlacesService implementeren in de les
+  - Oefening: UserService implementeren
+ -->
 
 ### Transactions
 
 Als laatste voorbeeld passen we de methode `getAll` in de `TransactionService` aan:
 
 ```ts
+// src/transactions/transaction.service.ts
+
 export class TransactionService {
   // 👇 1
   constructor(
