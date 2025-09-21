@@ -180,7 +180,7 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 - Het ingevulde dossier, als pdf ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
 
-Zorg ervoor dat jouw applicatie aan alle ontvankelijkheidscriteria voldoet op het moment van de deadline. Indien dit niet het geval is, krijg je een score van 0/20.
+Zorg ervoor dat jouw applicatie aan alle ontvankelijkheidscriteria voldoet op het moment van de deadline. Indien dit niet het geval is, krijg je een score 'AFWEZIG".
 
 **De deadline voor het portfolio is het einde van week 13 (vrijdag 19 december 2025, 23u59).**
 
