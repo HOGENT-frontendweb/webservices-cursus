@@ -12,7 +12,7 @@ Indien je in het keuzepakket `Development` zit, dan volg je waarschijnlijk Front
 
 Concreet maken we een back-end met JavaScript, meer specifiek TypeScript. Er zijn ontzettend veel frameworks en libraries om een back-end te maken, elk met hun eigen voor- en nadelen.
 
-Wij hebben gekozen voor [NestJS](https://nestjs.com/). Waarom? NestJS is een modern framework dat gebouwd is met en voor TypeScript. Het is geïnspireerd door Angular (vooral qua structuur) en maakt gebruik van de nieuwste JavaScript features. Het is modulair opgebouwd, wat het makkelijk maakt om te schalen. Daarnaast heeft het een grote community en veel ingebouwde functionaliteiten zoals dependency injection, wat de ontwikkeling versnelt. Je kan relatief snel een robuuste en onderhoudbare back-end opzetten met NestJS.
+Wij hebben gekozen voor [NestJS](https://nestjs.com/). Waarom? NestJS is een modern framework dat gebouwd is met en voor TypeScript. Het is geïnspireerd door Angular (vooral qua structuur) en maakt gebruik van de nieuwste JavaScript features. Het is modulair opgebouwd, wat het makkelijk maakt om te schalen. Daarnaast heeft het een grote community en veel ingebouwde functionaliteiten zoals dependency injection, wat de ontwikkeling versnelt. Je kan relatief snel een robuuste en onderhoudbare back-end opzetten met NestJS. NestJS staat ook op plaats 2 in de [State of JS 2024 Backend Frameworks](https://2024.stateofjs.com/en-US/other-tools/#backend_frameworks), net onder Express. Wat is nu toevallig? NestJS gebruikt standaard Express onder de motorkap, twee vliegen in één klap dus!
 
 ## Wat gaan jullie doen?
 
