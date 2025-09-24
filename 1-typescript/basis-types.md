@@ -17,6 +17,7 @@ Met enkel speciale:
 - `any`: eender welke waarde, van eender welk type (niet aanbevolen)
 - `never`: geeft nooit iets terug
   - bij `void` kan je nog `return;` doen, bij `never` niet
+  - dit kan je bv. gebruiken voor functies die iets controleren en een fout gooien als iets niet klopt
 
 ```typescript
 function testVreemd(): void {
@@ -75,7 +76,7 @@ Hierdoor zal typescript afdwingen dat we dezelfde parameters en return type gebr
 ```typescript
 const sum: BinaryOperationInterface = (a: number, b: number) => {
   return a + b;
-}
+};
 ```
 
 ### Gevorderd voorbeeld
