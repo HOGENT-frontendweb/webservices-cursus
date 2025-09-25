@@ -10,8 +10,6 @@
 > pnpm start:dev
 > ```
 
-<!-- TODO: aanvullen met veel op veel relatie -->
-
 ## Leerdoelen
 
 - Je kan meerdere tabellen definiëren en gebruiken met Drizzle
@@ -399,19 +397,7 @@ export class PlaceService {
 
 Met de `with` optie halen we gerelateerde gegevens op. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
 
-<!--
-TODO:
-  - Oefening:
-    - TransactionController en UserController met routes aanmaken
-    - DTO's aanmaken
-    - TransactionService aanmaken met getAll, getById, create, update, delete, getTransactionsByPlaceId (met Error implementeren)
-    - UserService aanmaken met getAll, getById, create, update, delete (met Error implementeren)
-    - PlacesService uitbreiden met getFavoritePlacesByUserId
-  - Methoden TransactionService en PlacesService implementeren in de les
-  - Oefening: UserService implementeren
- -->
-
-### TransactionService
+## Creatie TransactionService
 
 De volgende service die we gaan maken is de `TransactionService`. Deze service bevat de basis CRUD-methoden voor transacties. Alvorens we deze implementeren, maken we als oefening eerst de controller en de bijhorende DTO's aan.
 
@@ -523,14 +509,14 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
     @Get(':id')
     async getTransactionById(
-      @Param('id', ParseIntPipe) id: number,
+      @Param('id') id: number,
     ): Promise<TransactionResponseDto> {
       throw new Error('Not implemented');
     }
 
     @Put(':id')
     async updateTransaction(
-      @Param('id', ParseIntPipe) id: number,
+      @Param('id') id: number,
       @Body() updateTransactionDto: UpdateTransactionRequestDto,
     ): Promise<TransactionResponseDto> {
       throw new Error('Not implemented');
@@ -538,9 +524,7 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteTransaction(
-      @Param('id', ParseIntPipe) id: number,
-    ): Promise<void> {
+    async deleteTransaction(@Param('id') id: number): Promise<void> {
       throw new Error('Not implemented');
     }
   }
@@ -581,12 +565,9 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
       throw new Error('Not implemented');
     }
 
-    async create({
-      amount,
-      date,
-      placeId,
-      userId,
-    }: CreateTransactionRequestDto): Promise<TransactionResponseDto> {
+    async create(
+      dto: CreateTransactionRequestDto,
+    ): Promise<TransactionResponseDto> {
       throw new Error('Not implemented');
     }
 
@@ -605,13 +586,13 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
   }
   ```
 
-### Implementatie TransactionService
+## Implementatie TransactionService
 
-In de vorige oefening hebben we de `TransactionService` aangemaakt met de nodige methoden. We gaan nu één van deze methoden implementeren om te tonen hoe we de relaties in Drizzle kunnen gebruiken.
+In de vorige oefening hebben we de `TransactionService` aangemaakt met de nodige methoden. We gaan nu een aantal van deze methoden implementeren om te tonen hoe we de relaties in Drizzle kunnen gebruiken.
 
-### Transactions
+### getAll
 
-Als laatste voorbeeld passen we de methode `getAll` in de `TransactionService` aan:
+Als eerst voorbeeld vullen we de methode `getAll` in de `TransactionService` aan:
 
 ```ts
 // src/transactions/transaction.service.ts
@@ -654,6 +635,273 @@ export class TransactionService {
 3. We selecteren de place en de user.
    - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
 
-Maak ook de bijhorende methode in de `TransactionController` async.
+Injecteer de `TransactionService` en roep deze methode in de `TransactionController` aan:
 
-De code van de overige methoden uit de services kan je raadplegen in onze voorbeeldapplicatie.
+```ts
+// src/transactions/transaction.controller.ts
+import { TransactionService } from './transaction.service';
+
+@Controller('transactions')
+export class TransactionController {
+  constructor(private transactionService: TransactionService) {} // 👈
+
+  @Get()
+  async getAllTransactions(): Promise<TransactionListResponseDto> {
+    return await this.transactionService.getAll(); // 👈
+  }
+}
+```
+
+### Oefening - getById
+
+Vul de methode `getById` in de `TransactionService` aan. Hierbij willen we de transaction ophalen samen met de bijhorende user en place.
+
+Roep deze methode in de `TransactionController` aan.
+
+- Oplossing +
+
+  Vul de methode `getById` in de `TransactionService` aan:
+
+  ```ts
+  // src/transactions/transaction.service.ts
+  import { Injectable, NotFoundException } from '@nestjs/common';
+  import { eq } from 'drizzle-orm';
+  import { transactions } from '../drizzle/schema';
+
+  async getById(id: number): Promise<TransactionResponseDto> {
+    const transaction = await this.db.query.transactions.findFirst({
+      columns: {
+        id: true,
+        amount: true,
+        date: true,
+      },
+      where: eq(transactions.id, id),
+      with: {
+          place: true,
+          user: true,
+        },
+      },
+    });
+
+    if (!transaction) {
+      throw new NotFoundException(`No transaction with this id exists`);
+    }
+
+    return transaction;
+  }
+  ```
+
+  Roep deze methode in de `TransactionController` aan:
+
+  ```ts
+  // src/transactions/transaction.controller.ts
+  @Get(':id')
+  async getTransactionById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<TransactionResponseDto> {
+    return await this.transactionService.getById(id); // 👈
+  }
+  ```
+
+### create
+
+Vul de methode `create` in de `TransactionService` aan. Hierbij willen we een nieuwe transaction aanmaken en deze nieuwe transactie vervolgens teruggeven.
+
+```ts
+// src/transactions/transaction.service.ts
+async create(dto: CreateTransactionRequestDto): Promise<TransactionResponseDto> {
+  const [newTransaction] = await this.db
+    .insert(transactions)
+    .values(dto)
+    .$returningId();
+
+  return this.getById(newTransaction.id);
+}
+```
+
+Merk op dat je in MySQL de `$returningId()` functie moet gebruiken om de id van de nieuw aangemaakte rij op te halen. Je hebt geen mogelijkheid om de volledige transactie terug te krijgen. PostgreSQL heeft wel een `$returning()` functie waarmee je de volledige rij kan terugkrijgen. Daarom roepen we hierna de `getById` methode aan om de volledige transactie op te halen en terug te geven.
+
+Roep deze methode in de `TransactionController` aan:
+
+```ts
+// src/transactions/transaction.controller.ts
+@Post()
+async createTransaction(
+  @Body() createTransactionDto: CreateTransactionRequestDto,
+): Promise<TransactionResponseDto> {
+  return await this.transactionService.create(createTransactionDto);
+}
+```
+
+### deleteById
+
+Als laatste voorbeeld implementeren we de `deleteById` methode in de `TransactionService`:
+
+```ts
+// src/transactions/transaction.service.ts
+
+async deleteById(id: number): Promise<void> {
+  const [result] = await this.db
+    .delete(transactions)
+    .where(eq(transactions.id, id));
+
+  if (result.affectedRows === 0) {
+    throw new NotFoundException('No transaction with this id exists');
+  }
+}
+```
+
+Roep deze methode in de `TransactionController` aan:
+
+```ts
+// src/transactions/transaction.controller.ts
+
+@Delete(':id')
+@HttpCode(HttpStatus.NO_CONTENT)
+async deleteTransaction(
+  @Param('id', ParseIntPipe) id: number,
+): Promise<void> {
+  return await this.transactionService.deleteById(id);
+}
+```
+
+### Oefening - updateById
+
+Vul de methode `updateById` in de `TransactionService` aan. Hierbij willen we een bestaande transactie bijwerken en deze bijgewerkte transactie vervolgens teruggeven.
+
+Roep deze methode in de `TransactionController` aan.
+
+- Oplossing +
+
+  Vul de methode `updateById` in de `TransactionService` aan:
+
+  ```ts
+  // src/transactions/transaction.service.ts
+  async updateById(
+    id: number,
+    { amount, date, placeId, userId }: UpdateTransactionRequestDto,
+  ): Promise<TransactionResponseDto> {
+    await this.db
+      .update(transactions)
+      .set({
+        amount,
+        date,
+        placeId,
+      })
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+
+    return this.getById(id);
+  }
+  ```
+
+  Roep deze methode in de `TransactionController` aan:
+
+  ```ts
+  // src/transactions/transaction.controller.ts
+  @Put(':id')
+  async updateTransaction(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateTransactionDto: UpdateTransactionRequestDto,
+  ): Promise<TransactionResponseDto> {
+    return await this.transactionService.updateById(
+      id,
+      updateTransactionDto,
+    );
+  }
+  ```
+
+## Favorite places
+
+We gaan nu de `PlaceService` uitbreiden met een methode om de favoriete places van een user op te halen.
+
+### Best practices tussentabellen
+
+De favoriete places worden bewaard in een tussentabel tussen user en place. Bij het gebruik van tussentabellen in een REST API moet je rekening houden met een aantal best practices. Hier worden door studenten, en in bedrijven, heel wat fouten tegen gemaakt. Hou bijgevolg steeds rekening met deze twee best practices:
+
+- Maak nooit een service voor de tussentabel. Bevraag deze altijd via een van de entiteiten, in ons geval de user of de place.
+  - In ons geval mogen we dus geen service `UserFavoritePlacesService` voorzien.
+- Maak nooit een controller voor de tussentabel. Voorzie altijd routes in de controller van een van de entiteiten, in ons geval opnieuw de user en de place.
+  - In ons geval mogen we dus geen route `/api/userfavoriteplaces` voorzien.
+
+!> Let goed op het correct gebruik van tussentabellen! Er worden typisch heel wat fouten tegen gemaakt in de examenopdracht.
+
+### Implementatie
+
+```ts
+// src/place/place.service.ts
+import { userFavoritePlaces } from '../drizzle/schema';
+
+async getFavoritePlacesByUserId(userId: number): Promise<PlaceResponseDto[]> {
+  const favoritePlaces = await this.db.query.userFavoritePlaces.findMany({
+    where: eq(userFavoritePlaces.userId, userId),
+    with: { place: true },
+  });
+  return favoritePlaces.map((fav) => fav.place);
+}
+```
+
+Om de favoriete places van een user op te halen, maken we gebruik van de tussentabel `user_favorite_places`. We filteren op `userId` en laden de bijbehorende place met `with: { place: true }`. Vervolgens mappen we de resultaten om enkel de places terug te geven.
+
+Maak vervolgens een `UserModule` met bijbehorende `UserController` aan:
+
+```bash
+pnpm nest g module user
+pnpm nest g controller user
+```
+
+Definieer in de `UserController` een route om de favoriete places van een user op te halen:
+
+```ts
+// src/user/user.controller.ts
+import { Controller, Get, Param } from '@nestjs/common';
+import { PlaceService } from '../place/place.service';
+import { PlaceResponseDto } from '../place/place.dto';
+
+@Controller('users')
+export class UserController {
+  constructor(private placeService: PlaceService) {} // 👈 1
+
+  // 👇 2
+  @Get('/:id/favoriteplaces')
+  async getFavoritePlaces(
+    @Param('id') id: string | number,
+  ): Promise<PlaceResponseDto[]> {
+    return await this.placeService.getFavoritePlacesByUserId(id); // 👈 3
+  }
+}
+```
+
+1. We injecteren de `PlaceService` in de constructor van de `UserController`.
+2. We definiëren een `GET` route `/users/:id/favoriteplaces` om de favoriete places van een user op te halen.
+3. We roepen de `getFavoritePlacesByUserId` methode van de `PlaceService` aan om de favoriete places op te halen.
+
+## Oefening - UserService
+
+Definieer de overige endpoints in de `UserController`:
+
+- `GET /users` - Haal alle users op
+- `GET /users/:id` - Haal een user op basis van zijn id
+- `POST /users` - Maak een nieuwe user aan
+- `PUT /users/:id` - Werk een bestaande user bij
+- `DELETE /users/:id` - Verwijder een user
+
+Maak een `UserService` aan met de nodige methoden (getAll, getById, create, update, delete). Implementeer deze methoden. Voorzie ook de nodige DTO's.
+
+Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer enkel de service.
+
+- Oplossing +
+
+  De oplossing vind je in onze voorbeeldapplicatie in commit `TODO:`.
+
+> **Oplossing voorbeeldapplicatie**
+>
+> ```bash
+> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> cd webservices-budget
+> git checkout -b les5-opl TODO:
+> pnpm install
+> pnpm db:migrate
+> pnpm start:dev
+> ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
