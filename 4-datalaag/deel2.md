@@ -11,6 +11,7 @@
 > ```
 
 <!-- TODO: aanvullen met veel op veel relatie -->
+<!-- TODO: get place by id aanvullen met relaties -->
 
 ## Leerdoelen
 
@@ -100,11 +101,9 @@ Welk soort relaties zijn dit: één-op-veel of veel-op-veel?
 
 - Oplossing +
 
-  1. Eén-op-veel
-  2. Eén-op-veel
-  3. Andere kant van de één-op-veel relaties uit 1 en 2
-  4. Veel-op-veel
-  5. Veel-op-veel (andere kant van 4)
+  Relaties 1, 2 en 3 zijn onderdeel van dezelfde veel-op-veel relatie tussen users en places via transactions. De tabel transactions is in dit geval een tussentabel met extra kolommen.
+
+  Relaties 4 en 5 zijn onderdeel van dezelfde veel-op-veel relatie tussen users en places via de tabel user_favorite_places. De tabel user_favorite_places is in dit geval een pure tussentabel zonder extra kolommen.
 
 Lees eerst de documentatie over de `foreignKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#foreign-key>.
 
@@ -143,7 +142,7 @@ export const userFavoritePlaces = mysqlTable(
 Met deze foreign keys zorgen we ervoor dat:
 
 - Als een user verwijderd wordt, ook alle bijhorende transactions en user_favorite_places verwijderd worden (cascade delete).
-- Als een place verwijderd wordt, de bijhorende transactions niet verwijderd worden (no action).
+- Een place verwijderen faalt als er nog transacties aan gekoppeld zijn (no action). Je kan enkel een place verwijderen als er geen transacties meer aan gekoppeld zijn.
 
 Hiermee zijn de relaties in de databank gedefinieerd.
 

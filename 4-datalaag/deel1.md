@@ -255,6 +255,16 @@ export default () => ({
 });
 ```
 
+Voeg daarna de database configuratie toe aan de `ServerConfig` interface:
+
+```ts
+export interface ServerConfig {
+  env: string;
+  port: number;
+  database: DatabaseConfig; // 👈
+}
+```
+
 ### Drizzle connectie als provider
 
 In NestJS wordt de connectie met de databank best als provider aangeboden. Op die manier zijn we zeker dat er slechts één connectie is in de volledige applicatie. We maken hiervoor een `drizzle` module aan:
@@ -267,15 +277,13 @@ Dit genereert een bestand `src/drizzle/drizzle.module.ts` met onze DrizzleModule
 
 Lees eerst de sectie rond [Async providers](https://docs.nestjs.com/fundamentals/async-providers).
 
-Vervolgens definiëren we onze async provider in een bestand `src/drizzle/drizzle.provider.ts`. Maak dit bestand en definieer een contanste met de sleutel van de provider. Op basis van deze sleutel kunnen we de provider later injecteren in bv. onze services.
+Vervolgens definiëren we onze async provider in een bestand `src/drizzle/drizzle.provider.ts`. Maak dit bestand en definieer een constante met de sleutel van de provider. Op basis van deze sleutel kunnen we de provider later injecteren in bv. onze services.
 
 ```ts
 export const DrizzleAsyncProvider = 'DrizzleAsyncProvider';
 ```
 
 Daaronder definiëren we onze Drizzle connectie die we aanbieden als async provider met deze sleutel:
-
-<!-- TODO: zijn er al types voor de configuratie? -->
 
 ```ts
 import { ConfigService } from '@nestjs/config';
@@ -760,23 +768,14 @@ export class PlaceService {
     const place = await this.db.query.places.findFirst({
       // 👈 1
       where: eq(places.id, id), // 👈 2
-      // 👇 3
-      with: {
-        transactions: {
-          with: {
-            user: true,
-            place: true,
-          },
-        },
-      },
     });
 
-    // 👇 4
+    // 👇 3
     if (!place) {
       throw new NotFoundException('No place with this id exists');
     }
 
-    // 👇 5
+    // 👇 4
     return place;
   }
   // ...
@@ -787,9 +786,8 @@ export class PlaceService {
 2. We definiëren de `WHERE` clause. We filteren de places tabel op het id dat gelijk is aan de parameter `id`.
    - De `eq` functie komt uit `drizzle-orm` en wordt gebruikt om een vergelijking te maken.
    - `places.id` verwijst naar de `id` kolom uit de `places` tabel.
-3. Met `with` halen we alle transacties verbonden aan deze place op. Voor elke transactie halen we ook de bijbehorende user en place op.
-4. Als geen place gevonden werd, gooien we een `NotFoundException`.
-5. We geven de gevonden place terug. Drizzle heeft deze automatisch omgevormd naar een JavaScript object met de juiste opbouw (inclusief relaties).
+3. Als geen place gevonden werd, gooien we een `NotFoundException`.
+4. We geven de gevonden place terug. Drizzle heeft deze automatisch omgevormd naar een JavaScript object met de juiste opbouw (inclusief relaties).
 
 Maak ook de bijhorende methode in de `PlaceController` async.
 
@@ -886,3 +884,4 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
 - Gebruik van een mapper package in de repositorylaag (indien van toepassing).
 - Gebruik een ander type databank (column oriented, document based...)
   - Let op: wisselen van MySQL naar bv. PostgreSQL is geen extra. Dit blijft nog steeds hetzelfde type databank.
+- Gebruik een package om seed data te genereren, bv. <https://www.npmjs.com/package/faker>.
