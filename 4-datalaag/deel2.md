@@ -11,7 +11,6 @@
 > ```
 
 <!-- TODO: aanvullen met veel op veel relatie -->
-<!-- TODO: get place by id aanvullen met relaties -->
 
 ## Leerdoelen
 
@@ -368,6 +367,41 @@ async function main() {
   console.log('🎉 Database seeding completed successfully!');
 }
 ```
+
+## Data opvragen met relaties
+
+We gaan nu de services aanpassen om de relaties te gebruiken.
+
+### PlaceService - getById
+
+We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
+
+Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/queries#including-relations>.
+
+```ts
+export class PlaceService {
+  // ...
+  async getById(id: number): Promise<PlaceDetailResponseDto> {
+    const place = await this.db.query.places.findFirst({
+      where: eq(places.id, id),
+      // 👇
+      with: {
+        transactions: {
+          with: {
+            user: true,
+            place: true,
+          },
+        },
+      },
+    });
+
+    // ...
+  }
+  // ...
+}
+```
+
+Met de `with` optie halen we gerelateerde gegevens op. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
 
 <!--
 TODO:

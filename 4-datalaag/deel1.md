@@ -765,8 +765,8 @@ Daarna passen we de `getById` aan:
 export class PlaceService {
   // ...
   async getById(id: number): Promise<PlaceDetailResponseDto> {
+    // 👇 1
     const place = await this.db.query.places.findFirst({
-      // 👈 1
       where: eq(places.id, id), // 👈 2
     });
 
