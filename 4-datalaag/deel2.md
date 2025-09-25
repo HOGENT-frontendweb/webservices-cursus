@@ -370,7 +370,7 @@ async function main() {
 
 We gaan nu de services aanpassen om de relaties te gebruiken. We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
 
-Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/queries#including-relations>.
+Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/rqb#include-relations>.
 
 ```ts
 export class PlaceService {
@@ -395,7 +395,9 @@ export class PlaceService {
 }
 ```
 
-Met de `with` optie halen we gerelateerde gegevens op. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
+Met de `with` optie halen we gerelateerde gegevens op in de ORM-like manier. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
+
+Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover de documentatie t.e.m. "Full Join": <https://orm.drizzle.team/docs/joins>.
 
 ## Creatie TransactionService
 
