@@ -368,13 +368,9 @@ async function main() {
 }
 ```
 
-## Data opvragen met relaties
+## PlaceService - getById
 
-We gaan nu de services aanpassen om de relaties te gebruiken.
-
-### PlaceService - getById
-
-We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
+We gaan nu de services aanpassen om de relaties te gebruiken. We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
 
 Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/queries#including-relations>.
 
@@ -414,6 +410,204 @@ TODO:
   - Methoden TransactionService en PlacesService implementeren in de les
   - Oefening: UserService implementeren
  -->
+
+### TransactionService
+
+De volgende service die we gaan maken is de `TransactionService`. Deze service bevat de basis CRUD-methoden voor transacties. Alvorens we deze implementeren, maken we als oefening eerst de controller en de bijhorende DTO's aan.
+
+### Oefening - TransactionController
+
+Definieer een nieuwe module `TransactionModule` en een controller `TransactionController` met de volgende routes:
+
+- `GET /transactions` - Haal alle transacties op
+- `GET /transactions/:id` - Haal een transactie op basis van zijn id
+- `POST /transactions` - Maak een nieuwe transactie aan
+- `PUT /transactions/:id` - Werk een bestaande transactie bij
+- `DELETE /transactions/:id` - Verwijder een transactie
+
+Laat alle routes momenteel nog een `Error` gooien met de boodschap "Not implemented".
+
+Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
+
+- Oplossing +
+
+  Maak eerst een nieuwe module aan:
+
+  ```bash
+  pnpm nest g module transactions
+  ```
+
+  Maak vervolgens de controller aan:
+
+  ```bash
+  pnpm nest g controller transactions
+  ```
+
+  Controleer of deze controller in de `TransactionModule` gedefinieerd werd (in de `controllers` array).
+
+  Maak vervolgens het DTO bestand aan:
+
+  ```ts
+  // src/transactions/transaction.dto.ts
+  import { PlaceResponseDto } from '../place/place.dto';
+  import { PublicUserResponseDto } from '../user/user.dto';
+
+  export class TransactionListResponseDto {
+    items: TransactionResponseDto[];
+  }
+
+  export class TransactionResponseDto {
+    id: number;
+    amount: number;
+    date: Date;
+    user: UserResponseDto;
+    place: PlaceResponseDto;
+  }
+
+  export class CreateTransactionRequestDto {
+    placeId: number;
+    userId: number;
+    amount: number;
+    date: Date;
+  }
+
+  export class UpdateTransactionRequestDto extends CreateTransactionRequestDto {}
+  ```
+
+  Definieer ook een `UserResponseDto` in `src/user/user.dto.ts`:
+
+  ```ts
+  // src/user/user.dto.ts
+  export class UserResponseDto {
+    id: number;
+    name: string;
+  }
+  ```
+
+  Definieer tot slot de routes in de controller:
+
+  ```ts
+  // src/transactions/transaction.controller.ts
+  import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    ParseIntPipe,
+    Post,
+    Put,
+  } from '@nestjs/common';
+  import {
+    CreateTransactionRequestDto,
+    UpdateTransactionRequestDto,
+    TransactionResponseDto,
+    TransactionListResponseDto,
+  } from './transaction.dto';
+
+  @Controller('transactions')
+  export class TransactionController {
+    @Get()
+    async getAllTransactions(): Promise<TransactionListResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    @Post()
+    async createTransaction(
+      @Body() createTransactionDto: CreateTransactionRequestDto,
+    ): Promise<TransactionResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    @Get(':id')
+    async getTransactionById(
+      @Param('id', ParseIntPipe) id: number,
+    ): Promise<TransactionResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    @Put(':id')
+    async updateTransaction(
+      @Param('id', ParseIntPipe) id: number,
+      @Body() updateTransactionDto: UpdateTransactionRequestDto,
+    ): Promise<TransactionResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    @Delete(':id')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async deleteTransaction(
+      @Param('id', ParseIntPipe) id: number,
+    ): Promise<void> {
+      throw new Error('Not implemented');
+    }
+  }
+  ```
+
+### Oefening - TransactionService
+
+Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). Je mag de methoden voorlopig nog een `Error` laten gooien met de boodschap "Not implemented".
+
+- Oplossing +
+
+  Maak een nieuwe service aan:
+
+  ```bash
+  pnpm nest g service transactions
+  ```
+
+  Controleer of deze service in de `TransactionModule` gedefinieerd werd (in de `providers` array). Exporteer de service ook in de `TransactionModule`.
+
+  Definieer vervolgens de methoden in de service:
+
+  ```ts
+  import { Injectable } from '@nestjs/common';
+  import {
+    CreateTransactionRequestDto,
+    TransactionListResponseDto,
+    TransactionResponseDto,
+    UpdateTransactionRequestDto,
+  } from './transaction.dto';
+
+  @Injectable()
+  export class TransactionService {
+    async getAll(): Promise<TransactionListResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    async getById(id: number): Promise<TransactionResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    async create({
+      amount,
+      date,
+      placeId,
+      userId,
+    }: CreateTransactionRequestDto): Promise<TransactionResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    async updateById({
+      amount,
+      date,
+      placeId,
+      userId,
+    }: UpdateTransactionRequestDto): Promise<TransactionResponseDto> {
+      throw new Error('Not implemented');
+    }
+
+    async deleteById(id: number): Promise<void> {
+      throw new Error('Not implemented');
+    }
+  }
+  ```
+
+### Implementatie TransactionService
+
+In de vorige oefening hebben we de `TransactionService` aangemaakt met de nodige methoden. We gaan nu één van deze methoden implementeren om te tonen hoe we de relaties in Drizzle kunnen gebruiken.
 
 ### Transactions
 
