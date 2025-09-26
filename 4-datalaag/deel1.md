@@ -433,9 +433,9 @@ Lees eerst de [documentatie over lifecycle events](https://docs.nestjs.com/funda
 ```ts
 import { Module, OnModuleDestroy } from '@nestjs/common'; // 👈 1
 import {
+  type DatabaseProvider, // 👈 3
   DrizzleAsyncProvider,
   drizzleProvider,
-  DatabaseProvider,
   InjectDrizzle,
 } from './drizzle.provider';
 
@@ -443,8 +443,8 @@ import {
   providers: [...drizzleProvider],
   exports: [DrizzleAsyncProvider],
 })
+// 👇 1
 export class DrizzleModule implements OnModuleDestroy {
-  // 👈 1
   constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {} // 👈 3
 
   // 👇 2
@@ -456,7 +456,7 @@ export class DrizzleModule implements OnModuleDestroy {
 
 1. Laat de `DrizzleModule` de interface `OnModuleDestroy` implementeren.
 2. Definieer een `onModuleDestroy` methode.
-3. Injecteer onze Drizzle provider.
+3. Injecteer onze Drizzle provider. Het type importeren we uit `drizzle.provider.ts`. De `import type` syntax zorgt ervoor dat deze import enkel gebruikt wordt voor types en niet in de gegenereerde JavaScript code terechtkomt.
 4. Sluit de connectie als deze module afgebroken wordt.
 
 ## Migrations
