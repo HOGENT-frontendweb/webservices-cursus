@@ -181,6 +181,18 @@ pnpm add -D drizzle-kit
 - [**drizzle-kit**](https://www.npmjs.com/package/drizzle-kit): een handige CLI om migraties en seeds te beheren
   - Merk op: `drizzle-kit` is een dev dependency aangezien je deze niet nodig hebt om de server te kunnen starten.
 
+Na de installatie voer je het volgende commando uit om te selecteren welke packages gebuild mogen worden:
+
+```bash
+pnpm approve-builds
+
+# Selecteer alles door op de letter a te drukken
+# Druk op Enter
+# Voer vervolgens de letter y in om te bevestigen
+```
+
+pnpm zal steeds vragen om goedkeuring als een package gebuild moet worden na installatie.
+
 ### Environment variabele `DATABASE_URL`
 
 We gaan de url naar onze databank niet hardcoderen. Dit maakt het moeilijk om aan te passen en zorgt ervoor dat productiecredentials mogelijk in de broncode terechtkomen.
@@ -188,7 +200,6 @@ We gaan de url naar onze databank niet hardcoderen. Dit maakt het moeilijk om aa
 Daarom voegen we in het `.env` bestand in de root van ons project de connectiestring toe via de variabele `DATABASE_URL`:
 
 ```ini
-NODE_ENV=development
 DATABASE_URL=mysql://<gebruikersnaam>:<wachtwoord>@localhost:3306/budget
 ```
 
@@ -197,7 +208,6 @@ DATABASE_URL=mysql://<gebruikersnaam>:<wachtwoord>@localhost:3306/budget
 Als je geen gebruik maakt van een lokale MySQL server, maar van een Docker container, gebruik dan de credentials die je in het `docker-compose.yml` bestand hebt opgegeven. In dat geval wordt dit je `.env` bestand:
 
 ```ini
-NODE_ENV=development
 DATABASE_URL=mysql://devusr:devpwd@localhost:3306/budget
 ```
 
