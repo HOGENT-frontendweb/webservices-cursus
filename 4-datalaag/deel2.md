@@ -820,9 +820,9 @@ We gaan nu de `PlaceService` uitbreiden met een methode om de favoriete places v
 
 De favoriete places worden bewaard in een tussentabel tussen user en place. Bij het gebruik van tussentabellen in een REST API moet je rekening houden met een aantal best practices. Hier worden door studenten, en in bedrijven, heel wat fouten tegen gemaakt. Hou bijgevolg steeds rekening met deze twee best practices:
 
-- Maak nooit een service voor de tussentabel. Bevraag deze altijd via een van de entiteiten, in ons geval de user of de place.
+- Maak nooit een service voor de tussentabel. Bevraag deze altijd via één van de entiteiten, in ons geval de user of de place.
   - In ons geval mogen we dus geen service `UserFavoritePlacesService` voorzien.
-- Maak nooit een controller voor de tussentabel. Voorzie altijd routes in de controller van een van de entiteiten, in ons geval opnieuw de user en de place.
+- Maak nooit een controller voor de tussentabel. Voorzie altijd routes in de controller van één van de entiteiten, in ons geval opnieuw de user en de place.
   - In ons geval mogen we dus geen route `/api/userfavoriteplaces` voorzien.
 
 !> Let goed op het correct gebruik van tussentabellen! Er worden typisch heel wat fouten tegen gemaakt in de examenopdracht.
