@@ -727,13 +727,7 @@ Maak nu je webservice aan:
 2. **Locatie**: Maak het project aan in de root van je GitHub repository
 3. **Setup**: Volg de NestJS setup stappen zoals eerder beschreven
 
-### Stap 5: Git configuratie
-
-NestJS maakt automatisch een git repository aan. Stel de link naar jouw GitHub classroom repository in:
-
-```bash
-git remote add origin <LINK HIER>
-```
+### Stap 5: Commit
 
 Upload het leeg project naar de repository:
 
