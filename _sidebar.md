@@ -6,7 +6,7 @@
 - [1. TypeScript](/1-typescript/index.md)
 - [2. REST API intro](/2-REST_api_intro/index.md)
 - [3. REST API bouwen](/3-REST_api_bouwen/index.md)
-- [4. Datalaag en places (WIP)](/4-datalaag/deel1.md)
+- [4. Datalaag en places](/4-datalaag/deel1.md)
 - [5. Relaties (WIP)](/4-datalaag/deel2.md)
 - [6. Validatie en foutafhandeling (WIP)](/5-validatie/index.md)
 - [7. Testing (WIP)](/6-testing/index.md)

@@ -1,4 +1,4 @@
-# Datalaag en places (WIP)
+# Datalaag en places
 
 > **Startpunt voorbeeldapplicatie**
 >
