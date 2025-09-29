@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 TODO:
+> git checkout -b les4 1e3ffd2
 > pnpm install
 > pnpm start:dev
 > ```
@@ -508,6 +508,8 @@ Om ons wat typewerk te besparen, voegen we twee scripts toe aan ons `package.jso
 }
 ```
 
+?> Voeg deze scripts toe in het bestaande `scripts` object, niet als nieuw object.
+
 ### Metadata migraties
 
 Drizzle maakte ook een `migrations/meta` map aan. Hierin houdt Drizzle in de `xxx_snapshot.json` bestanden bij hoe het databankschema eruit zag na elke migratie. De `xxx` komt overeen met het volgnummer van de migratie waarover de snapshot gaat. Drizzle heeft de snapshots nodig om te bepalen wat er juist veranderd is aan het databankschema om, indien nodig, een nieuwe migratie te maken.
@@ -541,11 +543,7 @@ Indien je niet zelf de data wil genereren, kan je gebruik maken van de ingebouwd
 Wij willen iets meer controle over de specifieke data die we toevoegen. Daarom maken we zelf een seed script aan in `src/drizzle/seed.ts`. Dit script doorloopt volgende stappen:
 
 1. Connectie maken met de databank
-2. Users toevoegen
-3. Places toevoegen
-4. Transactions toevoegen
-
-Merk op dat je entiteiten in de juiste volgorde moet toevoegen. Transactions verwijzen naar users en places, dus moeten deze eerst toegevoegd worden.
+2. Places toevoegen
 
 Allereerst definiëren we een nieuwe connectie in een bestand `src/drizzle/seed.ts`. Deze connectie is gelijkaardig aan de connectie die we in de `DrizzleModule` hebben gedefinieerd, maar dan zonder NestJS. Op die manier kunnen we dit script ook los van de NestJS applicatie uitvoeren.
 
@@ -618,7 +616,7 @@ async function main() {
 }
 ```
 
-Deze `main` functie voeren we uit en sluiten we de connectie:
+Deze `main` functie voeren we uit. Daarna sluiten we de connectie:
 
 ```ts
 main()
@@ -653,6 +651,10 @@ Alvorens het script uitgevoerd kan worden, moet je eerst de nodige modules insta
 ```bash
 pnpm add -D env-cmd tsx
 ```
+
+- [**env-cmd**](https://www.npmjs.com/package/env-cmd): een library om environment variabelen in te laden vanuit een bestand
+- [**tsx**](https://www.npmjs.com/package/tsx): een runtime om TypeScript bestanden rechtstreeks uit te voeren
+  - Merk op: dit kan ook met [**ts-node**](https://www.npmjs.com/package/ts-node), maar `tsx` is sneller en moderner.
 
 Nu kan je het seed script uitvoeren:
 
@@ -721,7 +723,10 @@ Daarna kunnen we onze Drizzle provider injecteren in de `PlaceService`. Open `sr
 
 ```ts
 // ...
-import { DatabaseProvider, InjectDrizzle } from '../drizzle/drizzle.provider';
+import {
+  type DatabaseProvider,
+  InjectDrizzle,
+} from '../drizzle/drizzle.provider';
 
 export class PlaceService {
   constructor(
@@ -748,6 +753,8 @@ export class PlaceService {
 }
 ```
 
+!> Merk op dat de functie nu `async` is geworden aangezien we asynchroon data ophalen uit de databank en hiervoor `await` gebruiken.
+
 Hier gebruiken we de ORM interface van Drizzle (via het `query` property). Drizzle voorziet namelijk twee interfaces om queries uit te voeren:
 
 1. een SQL-like interface, zie <https://orm.drizzle.team/docs/select>
@@ -755,14 +762,14 @@ Hier gebruiken we de ORM interface van Drizzle (via het `query` property). Drizz
 
 We gebruiken hier de ORM interface aangezien deze eenvoudiger is voor eenvoudige queries. We halen alle plaatsen op via de `findMany` functie. In sommige gevallen is de ORM interface echter te beperkt en moet je de SQL-like interface gebruiken. Tijdens het programmeren zal je snel merken welke interface je in welk geval het best gebruikt.
 
-De `getAll` methode heeft nu het `async` keyword gekregen, dus we moeten ook de bijhorende methode in de `PlaceController` async maken:
+De `getAll` methode heeft nu het `async` keyword gekregen, dus we moeten ook de bijhorende methode in de `PlaceController` async maken én het returntype aanpassen:
 
 ```ts
 export class PlaceController {
   // ...
 
   async getAllPlaces(): Promise<PlaceListResponseDto> {
-    return await this.placeService.getAll();
+    return this.placeService.getAll();
   }
 
   // ...
@@ -772,6 +779,10 @@ export class PlaceController {
 Daarna passen we de `getById` aan:
 
 ```ts
+// ...
+import { eq } from 'drizzle-orm';
+import { places } from '../drizzle/schema';
+
 export class PlaceService {
   // ...
   async getById(id: number): Promise<PlaceDetailResponseDto> {
@@ -879,9 +890,10 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4-opl TODO:
+> git checkout -b les4-opl e27a0a6
 > pnpm install
 > pnpm db:migrate
+> pnpm db:seed
 > pnpm start:dev
 > ```
 >
