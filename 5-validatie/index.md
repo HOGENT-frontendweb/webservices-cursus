@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 02abd96
+> git checkout -b les6 d486627
 > yarn install
 > yarn start:dev
 > ```
@@ -101,7 +101,7 @@ Pas de `CreatePlaceRequestDto` klasse aan:
 
 ```ts
 // src/places/place.dto.ts
-import { IsNumber, IsString, Max, Min } from "class-validator";
+import { IsNumber, IsString, Max, Min } from 'class-validator';
 
 export class CreatePlaceRequestDto {
   @IsString()
@@ -129,16 +129,18 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
 
   // 👇
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true, // verwijdert de properties die niet in de DTO staan
-    forbidNonWhitelisted:true, // gooit fout als er foute properties binnenkomen
-    forbidUnknownValues: true, // gooit fout bij onbekende types/waarden
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // verwijdert de properties die niet in de DTO staan
+      forbidNonWhitelisted: true, // gooit fout als er foute properties binnenkomen
+      forbidUnknownValues: true, // gooit fout bij onbekende types/waarden
+    }),
+  );
 
   app.enableCors({
     origins: ['http://localhost:5173'],
     maxAge: 3 * 60 * 60,
-  })
+  });
   await app.listen(process.env.PORT ?? 3000);
 }
 
@@ -188,12 +190,14 @@ import { ValidationPipe } from '@nestjs/common';
 async function bootstrap() {
   // ...
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted:true,
-    forbidUnknownValues: true,
-    transform: true // 👈 zet inkomende JSON om naar instantie van DTO-klasse
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
+      transform: true, // 👈 zet inkomende JSON om naar instantie van DTO-klasse
+    }),
+  );
 
   // ...
 }
@@ -228,8 +232,8 @@ Momenteel zal een POST met onderstaande JSON:
 ```json
 {
   "name": "HOGENT",
-  "rating":10,
-  "review":"dit is een review"
+  "rating": 10,
+  "review": "dit is een review"
 }
 ```
 
@@ -250,7 +254,11 @@ We willen deze fouten formatteren zodat we mooi per parameter de fouten gegroepe
 
 ```ts
 // src/main.ts
-import { ValidationPipe, ValidationError, BadRequestException } from '@nestjs/common';
+import {
+  ValidationPipe,
+  ValidationError,
+  BadRequestException,
+} from '@nestjs/common';
 // ...
 app.useGlobalPipes(
   new ValidationPipe({
@@ -261,13 +269,10 @@ app.useGlobalPipes(
 
     // 👇
     exceptionFactory: (errors: ValidationError[] = []) => {
-      const formattedErrors = errors.reduce(
-        (acc, err) => {
-          acc[err.property] = Object.values(err.constraints || {});
-          return acc;
-        },
-        {} as Record<string, string[]>,
-      );
+      const formattedErrors = errors.reduce((acc, err) => {
+        acc[err.property] = Object.values(err.constraints || {});
+        return acc;
+      }, {} as Record<string, string[]>);
 
       return new BadRequestException({
         details: { body: formattedErrors },
@@ -354,7 +359,7 @@ export class CustomLogger extends ConsoleLogger implements LoggerService {
 }
 ```
 
-`CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Zo werkt  `CustomLogger` als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit met een emoji:
+`CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Zo werkt `CustomLogger` als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit met een emoji:
 
 - log: 📢 voor algemene logs
 - error: ❌ voor fouten
@@ -370,18 +375,23 @@ Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opst
 // src/main.ts
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, ValidationError, BadRequestException, Logger } from '@nestjs/common'; // 👈 3
+import {
+  ValidationPipe,
+  ValidationError,
+  BadRequestException,
+  Logger,
+} from '@nestjs/common'; // 👈 3
 import { CustomLogger } from './core/customLogger'; // 👈 1
 
 async function bootstrap() {
   // ...
 
-  app.useLogger(new CustomLogger());  //👈 2
+  app.useLogger(new CustomLogger()); //👈 2
 
   // ...
 
   await app.listen(process.env.PORT ?? 3000, () => {
-    new Logger().log('🚀 Server listening on http://127.0.0.1:3000');//👈 3
+    new Logger().log('🚀 Server listening on http://127.0.0.1:3000'); //👈 3
   });
 }
 
@@ -442,9 +452,9 @@ Maak een bestand `http-exception.filter.ts` aan in de map `src/lib/`. Hierin def
 ```ts
 // src/lib/http-exception.filter.ts
 interface HttpExceptionResponse {
-  statusCode: number;      // HTTP status code (400, 404, 500, etc.)
-  timestamp: string;       // Wanneer de error optrad
-  message: string;         // Error boodschap
+  statusCode: number; // HTTP status code (400, 404, 500, etc.)
+  timestamp: string; // Wanneer de error optrad
+  message: string; // Error boodschap
   details?: object | null; // Extra error details (optioneel)
 }
 ```
@@ -457,10 +467,10 @@ interface HttpExceptionResponse {
 
 ```json
 {
-    "statusCode": 404,
-    "timestamp": "2025-09-12T08:55:15.039Z",
-    "message": "No place with this id exists",
-    "details": null
+  "statusCode": 404,
+  "timestamp": "2025-09-12T08:55:15.039Z",
+  "message": "No place with this id exists",
+  "details": null
 }
 ```
 
@@ -471,7 +481,7 @@ interface HttpExceptionResponse {
   ```ts
   // src/lib/http-exception.filter.ts
   import type { ExceptionFilter, ArgumentsHost } from '@nestjs/common';
-  import { Catch, HttpException, Logger} from '@nestjs/common';
+  import { Catch, HttpException, Logger } from '@nestjs/common';
   import type { Response } from 'express';
 
   interface HttpExceptionResponse {
@@ -482,8 +492,10 @@ interface HttpExceptionResponse {
   }
 
   @Catch(HttpException) // 👈 1
-  export class HttpExceptionFilter implements ExceptionFilter { // 👈 2
-    catch(exception: HttpException, host: ArgumentsHost) { // 👈 3
+  export class HttpExceptionFilter implements ExceptionFilter {
+    // 👈 2
+    catch(exception: HttpException, host: ArgumentsHost) {
+      // 👈 3
       const ctx = host.switchToHttp(); // 👈 4
       const response = ctx.getResponse<Response>(); // 👈 5
       const status = exception.getStatus(); // 👈 6
@@ -612,7 +624,7 @@ Middleware functies kunnen de volgende taken uitvoeren:
 - de volgende middleware functie in de stack aanroepen.
 - als de huidige middleware functie de request-response cyclus niet beëindigt, moet deze next() aanroepen om de controle over te dragen aan de volgende middleware functie. Anders blijft de aanvraag hangen.
 
-Voorbeeld: Stel je wil kunnen volgen welke requests binnenkomen in je API. Dat helpt bij debugging en monitoring. Zonder logger weet je niet wat er allemaal langs je server passeert. Nu loggen we enkel een foutmelding. Verwijder de logging code uit  `src/lib/http-exception.filter.ts`. Alle logging zal nu gebeuren in de logging middleware.
+Voorbeeld: Stel je wil kunnen volgen welke requests binnenkomen in je API. Dat helpt bij debugging en monitoring. Zonder logger weet je niet wat er allemaal langs je server passeert. Nu loggen we enkel een foutmelding. Verwijder de logging code uit `src/lib/http-exception.filter.ts`. Alle logging zal nu gebeuren in de logging middleware.
 
 Lees de documentatie over [logging middleware](https://docs.nestjs.com/middleware).
 
@@ -627,11 +639,14 @@ import { Injectable, Logger } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 
 @Injectable() // 👈 1
-export class LoggerMiddleware implements NestMiddleware { // 👈 1
+export class LoggerMiddleware implements NestMiddleware {
+  // 👈 1
   private readonly logger = new Logger(LoggerMiddleware.name); // 👈 2
 
-  use(req: Request, res: Response, next: NextFunction) { // 👈 3
-    res.on('finish', () => { // 👈 4
+  use(req: Request, res: Response, next: NextFunction) {
+    // 👈 3
+    res.on('finish', () => {
+      // 👈 4
       // 👇 5
       const statusCode = res.statusCode;
 
@@ -672,7 +687,8 @@ import { LoggerMiddleware } from './lib/logger.middleware';
 
 // ...
 export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) { // 👈 1
+  configure(consumer: MiddlewareConsumer) {
+    // 👈 1
     consumer.apply(LoggerMiddleware).forRoutes('*path'); // 👈 2
   }
 }
@@ -680,7 +696,7 @@ export class AppModule implements NestModule {
 
 1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middlewares te configureren
 2. `consumer.apply(LoggerMiddleware)`: Registreert de `LoggerMiddleware` bij de DI container.
-   - `forRoutes('*path')`: Zorgt ervoor dat de `LoggerMiddleware` wordt uitgevoerd voor alle routes in je applicatie (de wildcard * matcht alle paden)
+   - `forRoutes('*path')`: Zorgt ervoor dat de `LoggerMiddleware` wordt uitgevoerd voor alle routes in je applicatie (de wildcard \* matcht alle paden)
 
 Roep een endpoint aan en bekijk de logs.
 
