@@ -165,7 +165,7 @@ Laten we een POST request uitvoeren in Postman:
 
 1. Kies de `POST` als method.
 2. Typ de URL in het veld. We gebruiken hier een publieke API om afbeeldingen te generen:
-<https://kroki.io/plantuml/png> (niet klikken, enkel kopiëren :upside_down_face:).
+   <https://kroki.io/plantuml/png> (niet klikken, enkel kopiëren :upside_down_face:).
 3. Vervolgens moeten we nog onze data in de body doorsturen. Kies in bij het tabblad `Body` voor `raw` en wijzig `JSON` naar `text`.
 
 ![Een POST request in Postman](./images/postman1.png)
@@ -581,10 +581,18 @@ Controllers in NestJS zijn verantwoordelijk voor het afhandelen van inkomende ve
 - [Controllers](https://docs.nestjs.com/controllers#controllers)
 - [Routing](https://docs.nestjs.com/controllers#routing)
 
-NestJS biedt een CLI commando om automatisch een controller te genereren:
+NestJS biedt een CLI commando om allerlei onderdelen automatisch te genereren. We kunnen deze globaal installeren voor het hele systeem maar dat is een bad practice. Op die manier vervuil je jouw systeem met allerlei CLI's en packages die je misschien maar voor één project nodig hebt.
+
+Daarom installeren we de NestJS CLI in ons eigen project als devDependency:
 
 ```bash
-nest generate controller health
+pnpm add -D @nestjs/cli
+```
+
+Daarna genereren we een nieuwe controller met de naam `health`:
+
+```bash
+pnpm nest generate controller health
 ```
 
 Dit commando maakt de volgende bestanden aan:

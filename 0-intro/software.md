@@ -81,23 +81,23 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 
 ## MySQL
 
+?> Het is niet verplicht om MySQL lokaal te installeren. In het cursusmateriaal wordt ook uitgelegd hoe je een MySQL server in een Docker container kan draaien. Die kan je na het olod gewoon verwijderen en MySQL is dan ook weg.
+
 Installeer MySQL via een package manager:
 
 - Windows: `winget install -e --id Oracle.MySQL`
 - macOS: `brew install mysql`
 - Linux: [distro afhankelijk](https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/linux-installation.html)
 
-?> Natuurlijk kan je ook MySQL uitvoeren in een [Docker container](https://hub.docker.com/_/mysql).
-
 ## MySQL Workbench
+
+?> Je bent vrij om een andere tool te gebruiken om met MySQL te werken.
 
 Installeer MySQL Workbench via een package manager of download het van de website:
 
 - Windows: <https://dev.mysql.com/downloads/workbench/>
 - macOS: `brew install --cask mysqlworkbench`
 - Linux: <https://dev.mysql.com/downloads/workbench/>
-
-?> Je bent vrij om een andere tool te gebruiken om met MySQL te werken.
 
 ## Visual Studio Code
 
