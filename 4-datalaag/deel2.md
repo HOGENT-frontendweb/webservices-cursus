@@ -1,4 +1,4 @@
-# Relaties (WIP)
+# Relaties
 
 > **Startpunt voorbeeldapplicatie**
 >
@@ -32,7 +32,7 @@ In het vorige hoofdstuk hebben we de places tabel reeds aangemaakt. We gaan nu d
 
 Vul het schema aan met de tabellen voor transactions, users en favoriete places:
 
-- Definieer enkel de kolommen, laat de foreign keys en indices nog weg.
+- Definieer enkel de kolommen, laat de foreign keys nog weg.
 - Definieer voor de user tabel enkel de kolommen `id` en `name`.
 - Voor de tabel user_favorite_places definieer je een samengestelde primary key met behulp van de `primaryKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#composite-primary-key>
 
@@ -424,13 +424,13 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
   Maak eerst een nieuwe module aan:
 
   ```bash
-  pnpm nest g module transactions
+  pnpm nest g module transaction
   ```
 
   Maak vervolgens de controller aan:
 
   ```bash
-  pnpm nest g controller transactions
+  pnpm nest g controller transaction --no-spec
   ```
 
   Controleer of deze controller in de `TransactionModule` gedefinieerd werd (in de `controllers` array).
@@ -473,6 +473,8 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
     name: string;
   }
   ```
+
+  Importeer de `UserResponseDto` in `src/transactions/transaction.dto.ts`.
 
   Definieer tot slot de routes in de controller:
 
@@ -543,7 +545,7 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
   Maak een nieuwe service aan:
 
   ```bash
-  pnpm nest g service transactions
+  pnpm nest g service transaction --no-spec
   ```
 
   Controleer of deze service in de `TransactionModule` gedefinieerd werd (in de `providers` array). Exporteer de service ook in de `TransactionModule`.
@@ -575,12 +577,10 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
       throw new Error('Not implemented');
     }
 
-    async updateById({
-      amount,
-      date,
-      placeId,
-      userId,
-    }: UpdateTransactionRequestDto): Promise<TransactionResponseDto> {
+    async updateById(
+      id: number,
+      { amount, date, placeId, userId }: UpdateTransactionRequestDto,
+    ): Promise<TransactionResponseDto> {
       throw new Error('Not implemented');
     }
 
@@ -600,6 +600,11 @@ Als eerst voorbeeld vullen we de methode `getAll` in de `TransactionService` aan
 
 ```ts
 // src/transactions/transaction.service.ts
+// ...
+import {
+  type DatabaseProvider,
+  InjectDrizzle,
+} from '../drizzle/drizzle.provider';
 
 export class TransactionService {
   // 👇 1
@@ -608,10 +613,7 @@ export class TransactionService {
     private readonly db: DatabaseProvider,
   ) {}
 
-  async getAll(
-    userId: number,
-    roles: string[],
-  ): Promise<TransactionListResponseDto> {
+  async getAll(): Promise<TransactionListResponseDto> {
     const items = await this.db.query.transactions.findMany({
       // 👇 2
       columns: {
@@ -639,6 +641,23 @@ export class TransactionService {
 3. We selecteren de place en de user.
    - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
 
+Importeer de `DrizzleModule` in de `TransactionModule` om de Drizzle provider te kunnen gebruiken:
+
+```ts
+import { Module } from '@nestjs/common';
+import { TransactionController } from './transaction.controller';
+import { TransactionService } from './transaction.service';
+import { DrizzleModule } from '../drizzle/drizzle.module'; // 👈
+
+@Module({
+  imports: [DrizzleModule], // 👈
+  controllers: [TransactionController],
+  providers: [TransactionService],
+  exports: [TransactionService],
+})
+export class TransactionModule {}
+```
+
 Injecteer de `TransactionService` en roep deze methode in de `TransactionController` aan:
 
 ```ts
@@ -651,7 +670,7 @@ export class TransactionController {
 
   @Get()
   async getAllTransactions(): Promise<TransactionListResponseDto> {
-    return await this.transactionService.getAll(); // 👈
+    return this.transactionService.getAll(); // 👈
   }
 }
 ```
@@ -681,9 +700,8 @@ Roep deze methode in de `TransactionController` aan.
       },
       where: eq(transactions.id, id),
       with: {
-          place: true,
-          user: true,
-        },
+        place: true,
+        user: true,
       },
     });
 
@@ -703,7 +721,7 @@ Roep deze methode in de `TransactionController` aan.
   async getTransactionById(
     @Param('id', ParseIntPipe) id: number,
   ): Promise<TransactionResponseDto> {
-    return await this.transactionService.getById(id); // 👈
+    return this.transactionService.getById(id); // 👈
   }
   ```
 
@@ -716,12 +734,17 @@ Vul de methode `create` in de `TransactionService` aan. Hierbij willen we een ni
 async create(dto: CreateTransactionRequestDto): Promise<TransactionResponseDto> {
   const [newTransaction] = await this.db
     .insert(transactions)
-    .values(dto)
+    .values({
+      ...dto,
+      date: new Date(dto.date),
+    })
     .$returningId();
 
   return this.getById(newTransaction.id);
 }
 ```
+
+Voorlopig moeten we de `date` kolom manueel omzetten naar een `Date` object. Wanneer we invoervalidatie toevoegen kunnen we dit automatisch laten doen.
 
 Merk op dat je in MySQL de `$returningId()` functie moet gebruiken om de id van de nieuw aangemaakte rij op te halen. Je hebt geen mogelijkheid om de volledige transactie terug te krijgen. PostgreSQL heeft wel een `$returning()` functie waarmee je de volledige rij kan terugkrijgen. Daarom roepen we hierna de `getById` methode aan om de volledige transactie op te halen en terug te geven.
 
@@ -733,7 +756,7 @@ Roep deze methode in de `TransactionController` aan:
 async createTransaction(
   @Body() createTransactionDto: CreateTransactionRequestDto,
 ): Promise<TransactionResponseDto> {
-  return await this.transactionService.create(createTransactionDto);
+  return this.transactionService.create(createTransactionDto);
 }
 ```
 
@@ -765,7 +788,7 @@ Roep deze methode in de `TransactionController` aan:
 async deleteTransaction(
   @Param('id', ParseIntPipe) id: number,
 ): Promise<void> {
-  return await this.transactionService.deleteById(id);
+  return this.transactionService.deleteById(id);
 }
 ```
 
@@ -781,6 +804,9 @@ Roep deze methode in de `TransactionController` aan.
 
   ```ts
   // src/transactions/transaction.service.ts
+  // ...
+  import { eq, and } from 'drizzle-orm';
+
   async updateById(
     id: number,
     { amount, date, placeId, userId }: UpdateTransactionRequestDto,
@@ -789,7 +815,7 @@ Roep deze methode in de `TransactionController` aan.
       .update(transactions)
       .set({
         amount,
-        date,
+        date: new Date(date),
         placeId,
       })
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
@@ -807,7 +833,7 @@ Roep deze methode in de `TransactionController` aan.
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTransactionDto: UpdateTransactionRequestDto,
   ): Promise<TransactionResponseDto> {
-    return await this.transactionService.updateById(
+    return this.transactionService.updateById(
       id,
       updateTransactionDto,
     );
@@ -850,7 +876,7 @@ Maak vervolgens een `UserModule` met bijbehorende `UserController` aan:
 
 ```bash
 pnpm nest g module user
-pnpm nest g controller user
+pnpm nest g controller user --no-spec
 ```
 
 Definieer in de `UserController` een route om de favoriete places van een user op te halen:
@@ -868,7 +894,7 @@ export class UserController {
   // 👇 2
   @Get('/:id/favoriteplaces')
   async getFavoritePlaces(
-    @Param('id') id: string | number,
+    @Param('id') id: number,
   ): Promise<PlaceResponseDto[]> {
     return await this.placeService.getFavoritePlacesByUserId(id); // 👈 3
   }
@@ -878,6 +904,8 @@ export class UserController {
 1. We injecteren de `PlaceService` in de constructor van de `UserController`.
 2. We definiëren een `GET` route `/users/:id/favoriteplaces` om de favoriete places van een user op te halen.
 3. We roepen de `getFavoritePlacesByUserId` methode van de `PlaceService` aan om de favoriete places op te halen.
+
+Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken
 
 ## Oefening - UserService
 
@@ -895,14 +923,14 @@ Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer 
 
 - Oplossing +
 
-  De oplossing vind je in onze voorbeeldapplicatie in commit `TODO:`.
+  De oplossing vind je in onze voorbeeldapplicatie in commit `d486627`.
 
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5-opl TODO:
+> git checkout -b les5-opl d486627
 > pnpm install
 > pnpm db:migrate
 > pnpm start:dev
