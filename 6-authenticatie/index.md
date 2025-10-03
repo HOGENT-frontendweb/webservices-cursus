@@ -5,15 +5,21 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7 ca4119d
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
+> git checkout -b les6 TODO:
+> pnpm install
+> pnpm db:migrate
+> pnpm db:seed
+> pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
-?> De code die je in de olods Front-end Web Development en Web Services opbouwt, werd vorig jaar door een student gecontroleerd op gebied van security. Een aantal zaken werden reeds dit academiejaar aangepast. Voel je vrij om deze bachelorproef te lezen als inspiratie voor eigen projecten: <br /><br />Vermeersch, J. (2024). Cybersecuritymaatregelen in de opleidingsonderdelen over webapplicatieontwikkeling aan Hogeschool Gent: een analyse en integratie van aanbevelingen in de voorbeeldapplicaties. Gent: s.n. Geraadpleegd op 3 november 2024, via <https://catalogus.hogent.be/catalog/hog01:003132172>.
+In dit hoofdstuk voegen we authenticatie en autorisatie toe aan onze applicatie:
+
+- **Authenticatie** is het proces waarbij je controleert of iemand is wie hij zegt dat hij is. Dit gebeurt typisch door een gebruikersnaam en wachtwoord te vragen.
+- **Autorisatie** is het proces waarbij je controleert of iemand de juiste rechten heeft om bepaalde acties uit te voeren of toegang te krijgen tot bepaalde gegevens.
+
+In deze cursus zullen we deze twee concepten manueel implementeren maar in een echte applicatie gebruik je best een bestaande oplossing zoals [Passport.js](https://www.passportjs.org/) of een externe authenticatieprovider zoals [Auth0](https://auth0.com/) of [Userfront](https://userfront.com/). Door dit toch eens manueel te implementeren, leer je beter hoe het allemaal werkt.
 
 ## JWT
 
@@ -85,7 +91,7 @@ Het token uit het bovenstaande voorbeeld bevat volgende payload:
 
 ### Signature
 
-De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen met een _secret_ om zo de payload te ondertekenen. Het is niet meer dan een handtekening die aangeeft of de payload gewijzigd is. Als iemand de payload wijzigt, zal de signature anders zijn en wordt de token ongeldig beschouwd.
+De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen met een _secret_ om zo de payload te ondertekenen. Het is niet meer dan een handtekening die aangeeft of de payload gewijzigd is. Als iemand de payload wijzigt, zal de signature anders zijn en wordt de token als ongeldig beschouwd.
 
 ## User types uitbreiden
 
@@ -1311,17 +1317,18 @@ Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implemen
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 42e1886
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
+> git checkout -b les6-opl TODO:
+> pnpm install
+> pnpm db:migrate
+> pnpm db:seed
+> pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Extra's voor de examenopdracht
 
-- Gebruik van een externe authenticatieprovider (bv. [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
+- Gebruik van een externe authenticatieprovider (bv. [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Schrijf een custom validator voor Joi om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
   - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.
