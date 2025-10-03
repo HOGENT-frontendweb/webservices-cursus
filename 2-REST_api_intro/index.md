@@ -280,9 +280,9 @@ Door de jaren heen merkten we een aantal terugkomende fouten in het ontwerp van 
   - Zie cursus Databases I
 - Geen foreign key voor een een-op-veel relatie
   - Zie cursus Databases I
-- Samengestelde sleutels i.p.v. een uniek id
-  - Eerder praktische afwijking van de cursus Databases I
-  - Samengestelde sleutels zijn niet fout, maar in sommige gevallen onhandig in URLs van de API calls
+- Geen id's, samengestelde sleutels
+  - Elke tabel moet een unieke id hebben. Dit mag ook een samengestelde sleutel zijn.
+  - Sleutels zijn beter geen tekstvelden, want die zijn langer en trager voor zoekopdrachten en joins
 - Adres/locatie als string in een tabel
   - Dit is in principe geen fout, maar het maakt het wel lastiger om queries uit te voeren op het adres
 - ERD niet voldoende om doel van de applicatie te verwezenlijken
@@ -547,6 +547,16 @@ NestJS gebruikt TypeScript, een superset van JavaScript die statische types toev
 
 Normaal gesproken hoef je aan dit bestand niets te wijzigen, tenzij je specifieke wensen hebt. Voor ons project gaan we **de `baseUrl` optie verwijderen** uit `compilerOptions`. Het is niet aan te raden deze optie te gebruiken, omdat dit kan zorgen voor problemen en verwarring bij imports.
 
+### eslint.config.js
+
+NestJS gebruikt ESLint om de code te linten. Linten is het controleren van de code op stijl- en programmeerfouten. Het bestand `eslint.config.js` bevat de configuratie voor ESLint. Open het bestand en bekijk de inhoud. Ook hier hoef je normaal niets aan te wijzigen, tenzij je specifieke wensen hebt. Meer info over ESLint vind je op <https://eslint.org/docs/latest/user-guide/configuring>.
+
+Indien je de foutmelding ''Delete CR (eslint - prettier/prettier)' krijgt bij het openen van `app.module.ts`, voeg dan volgende regel toe aan `.prettierrc`:
+
+```json
+  "endOfLine": "auto"
+```
+
 ## Projectstructuur
 
 Alvorens we verder gaan, is het belangrijk om de projectstructuur van de basisapplicatie te begrijpen. Lees hiervoor de [First steps sectie](https://docs.nestjs.com/first-steps) in de NestJS documentatie. Een paar opmerkingen voor tijdens het lezen:
@@ -581,15 +591,7 @@ Controllers in NestJS zijn verantwoordelijk voor het afhandelen van inkomende ve
 - [Controllers](https://docs.nestjs.com/controllers#controllers)
 - [Routing](https://docs.nestjs.com/controllers#routing)
 
-NestJS biedt een CLI commando om allerlei onderdelen automatisch te genereren. We kunnen deze globaal installeren voor het hele systeem maar dat is een bad practice. Op die manier vervuil je jouw systeem met allerlei CLI's en packages die je misschien maar voor één project nodig hebt.
-
-Daarom installeren we de NestJS CLI in ons eigen project als devDependency:
-
-```bash
-pnpm add -D @nestjs/cli
-```
-
-Daarna genereren we een nieuwe controller met de naam `health`:
+Genereer een nieuwe controller met de naam `health`:
 
 ```bash
 pnpm nest generate controller health
@@ -750,6 +752,10 @@ git push
 Werk de `README.md` in de root van je repository bij met instructies om de dependencies te installeren en de server te starten.
 
 Verwijder de `README.md` in je webservice map - de `README.md` in de root is voldoende.
+
+### Stap 7: Health controller toevoegen
+
+Voeg de `HealthController` toe aan je project zoals eerder beschreven. Test of alles werkt door naar <http://localhost:3000/api/health/ping> te surfen. Commit en push deze wijziging.
 
 > **Oplossing voorbeeldapplicatie**
 >
