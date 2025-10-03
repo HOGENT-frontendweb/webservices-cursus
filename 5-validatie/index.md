@@ -12,19 +12,10 @@
 
 ## Leerdoelen
 
-- Je krijgt inzicht in invoervalidatie en pipes in NestJS
-  - Je weet hoe je ValidationPipe gebruikt voor automatische validatie
-  - Je weet hoe je class-validator decorators toepast op DTO's
-  - Je begrijpt het verschil tussen transformatie en validatie pipes
-  - Je kan custom validatieregels implementeren
-- Je krijgt inzicht in logging en middleware in NestJS
-  - Je weet hoe je een custom logger implementeert
-  - Je weet hoe je middleware gebruikt voor request logging
-  - Je begrijpt de verschillende log levels en wanneer je ze gebruikt
-- Je krijgt inzicht in foutafhandeling en exception filters
-  - Je weet hoe je standaard HTTP exceptions gebruikt
-  - Je weet hoe je custom exception filters implementeert
-  - Je begrijpt hoe je structured error responses maakt
+- Je kan invoervalidatie implementeren a.d.h.v. pipes en DTO's
+- Je kan een custom logger implementeren
+- Je kan custom exception filters implementeren
+- Je kan middleware gebruiken voor request logging
 
 !> De wijzigingen die we hier bespreken, kan je meteen toepassen in je eigen project. Terwijl de lector in de les de code demonstreert in het voorbeeldproject, pas jij de aanpassingen best al direct toe in jouw eigen project. Zo leer je het meteen in jouw eigen context en heb je achteraf minder werk
 
@@ -38,14 +29,14 @@ Welke soorten invoer kan een HTTP request bevatten?
 
 - Antwoord +
 
-  - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/places/1`.
-  - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/places?name=loon`.
+  - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/transactions/1`.
+  - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/transactions?name=loon`.
   - **Body:** als je een nieuwe plaats maakt, dan geef je de nodige gegevens mee in de body van het request.
   - **Headers:** in het volgende hoofdstuk gaan we zien hoe we een token meegeven in de headers van een request, zo kunnen we de gebruiker authenticeren.
 
   In ons voorbeeldproject voegen we invoervalidatie toe voor de URL parameters, query parameters en de body van het request.
 
-Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoorbeeld in de `POST /api/places` moet het bedrag van de plaats een geldig getal zijn (geen string, object...) én is het verplicht op te geven. Indien aan de validatie niet voldaan is, retourneer je een status code 400 (= bad request) en geef je details over de fout. Zonder bijkomende informatie is de HTTP 400 nutteloos. Bij validatiefouten stop je onmiddellijk de verdere verwerking van het request en retourneer je een passende foutboodschap voor de client. Stuur het response zo snel mogelijk terug naar de client (= **fail-fast principe**). De oorzaak van de validatiefout moet goed worden uitgelegd en begrepen door de client. Technische aspecten mag je om veiligheidsredenen niet retourneren.
+Invoervalidatie is gericht op het verifiëren van de ontvangen gegevens. Bijvoorbeeld in de `POST /api/transactions` moet het bedrag een geldig getal zijn (geen string, object...) én is het verplicht op te geven. Indien aan de validatie niet voldaan is, retourneer je een status code 400 (= bad request) en geef je details over de fout. Zonder bijkomende informatie is de HTTP 400 nutteloos. Bij validatiefouten stop je onmiddellijk de verdere verwerking van het request en retourneer je een passende foutboodschap voor de client. Stuur het response zo snel mogelijk terug naar de client (= **fail-fast principe**). De oorzaak van de validatiefout moet goed worden uitgelegd en begrepen door de client. Technische aspecten mag je om veiligheidsredenen niet retourneren.
 
 ?> In geen geval is het goed om een HTTP 500 terug te geven bij fouten die de client kan vermijden. De HTTP 500 dient enkel voor serverfouten die de client niet kan vermijden. Een HTTP 400 is een fout veroorzaakt door de client en moet dus ook door de client worden opgelost.
 
@@ -58,11 +49,11 @@ In NestJS zijn pipes een soort middleware die o.a. gebruikt worden om:
 - Data te transformeren – bv. een string "123" omzetten naar een number.
 - Data te valideren – bv. checken of een parameter een geldig e-mailadres is.
 
-👉 Concreet: pipes werken voordat je data in je controller terechtkomt. Ze pakken de inkomende request-gegevens, passen transformaties en/of validaties toe, en geven het resultaat door aan je endpoint. Als de data ongeldig is, kan een pipe meteen een exception gooien.
+👉 Concreet: pipes werken voordat je data in je controller terechtkomt. Ze pakken de inkomende request-gegevens (params, query, body), passen transformaties en/of validaties toe, en geven het resultaat door aan je endpoint. Als de data ongeldig is, kan een pipe meteen een exception gooien.
 
 NestJS voorziet bv. in volgende built-in pipes:
 
-- `ParseIntPipe`: zet een string query param "5" om naar een getal 5.
+- `ParseIntPipe`: zet een string "5" om naar een getal 5.
 - `ParseBoolPipe`: zet "true" (als string) om naar true (als boolean).
 - `ValidationPipe`: valideert data met behulp van [class-validator](https://npmjs.com/package/class-validator).
 
@@ -73,13 +64,14 @@ Gebruik in een controller:
 import { /* ... */ ParseIntPipe} from '@nestjs/common';
 
 @Get(':id')
-getPlaceById(@Param('id', ParseIntPipe) id: number): PlaceResponseDto { // 👈
+getPlaceById(@Param('id', ParseIntPipe) id: number): PlaceResponseDto { // 👈 1
   console.log(typeof id);
-  return this.placeService.getById(id); // 👈
+  return this.placeService.getById(id); // 👈 2
 }
 ```
 
-Het type van de id parameter wordt nu een `number`. We hoeven het id niet langer naar een `number` om te zetten bij aanroep van de methode `getById` uit de `PlaceService`.
+1. We geven een klasse (`ParseIntPipe`) door, niet een instantie. We laten de verantwoordelijkheid voor instantiëring over aan het framework en maken daarmee dependency injection mogelijk. Je kan ook een instantie doorgeven met extra opties.
+2. Het type van de id parameter wordt nu een `number`. We hoeven het id niet langer naar een `number` om te zetten bij aanroep van de methode `getById` uit de `PlaceService`.
 
 ### ValidationPipe
 
@@ -87,32 +79,36 @@ In NestJS gebruik je DTO’s vooral om:
 
 - Te bepalen welke velden een request/response mag bevatten.
 - Validatie toe te passen op binnenkomende data.
-- De structuur van data duidelijk en voorspelbaar te maken.
 
 Lees de documentatie over [validatie](https://docs.nestjs.com/techniques/validation) t.e.m. "Transform payload objects".
 
-Validatie voeg je toe door gebruik te maken van `class-validator`. Je kan decorators van class-validator gebruiken om validatieregels op te leggen.
+Pipes maken gebruik van `class-validator` en `class-transformer` libraries. Installeer deze libraries:
 
 ```bash
-pnpm i class-validator
+pnpm i class-validator class-transformer
 ```
 
+Je kan decorators van `class-validator` gebruiken om validatieregels toe te voegen aan een DTO.
 Pas de `CreatePlaceRequestDto` klasse aan:
 
 ```ts
 // src/places/place.dto.ts
-import { IsNumber, IsString, Max, Min } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, Min, Max, IsInt } from 'class-validator';
 
 export class CreatePlaceRequestDto {
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
   name: string;
 
-  @IsNumber()
+  @IsInt()
   @Min(1)
   @Max(5)
   rating: number;
 }
 ```
+
+Voor een overzicht van alle beschikbare decorators, zie de [class-validator documentatie](https://github.com/typestack/class-validator#validation-decorators).
 
 De `ValidationPipe` zorgt ervoor dat alle inkomende DTO’s automatisch worden gevalideerd a.d.h.v. de decorators uit `class-validator`. Als een request niet voldoet, geeft NestJS een duidelijke foutmelding terug.
 
@@ -120,14 +116,11 @@ De `ValidationPipe` dien je te activeren in `main.ts` zodat deze wordt toegepast
 
 ```ts
 // src/main.ts
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common'; // 👈
-
+//...
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-
   // 👇
   app.useGlobalPipes(
     new ValidationPipe({
@@ -136,18 +129,15 @@ async function bootstrap() {
       forbidUnknownValues: true, // gooit fout bij onbekende types/waarden
     }),
   );
-
-  app.enableCors({
-    origins: ['http://localhost:5173'],
-    maxAge: 3 * 60 * 60,
-  });
-  await app.listen(process.env.PORT ?? 3000);
+  //...
 }
 
 bootstrap();
 ```
 
-Whitelisting is een functie van de `ValidationPipe` in NestJS die ervoor zorgt dat alleen de velden die je expliciet hebt gedefinieerd in je DTO worden geaccepteerd. Alle andere (onverwachte) velden worden automatisch verwijderd. Het request gaat gewoon door, maar zonder de extra velden. Als je ook nog `forbidNonWhitelisted: true` toevoegt, dan wordt er een fout gegooid als er ongewenste velden zijn. Het request wordt geweigerd met een duidelijke foutmelding. `forbidUnknownValues: true` gooit een foutmelding bij onbekende types/waarden.
+- `whitelist: true`: alleen de velden die je expliciet hebt gedefinieerd in je DTO worden geaccepteerd. Alle andere (onverwachte) velden worden automatisch verwijderd. Het request gaat gewoon door, maar zonder de extra velden.
+- `forbidNonWhitelisted: true`: gooit bovendien een fout als er ongewenste velden zijn. Het request wordt geweigerd met een duidelijke foutmelding.
+- `forbidUnknownValues: true`: gooit een foutmelding bij onbekende types/waarden.
 
 Probeer een POST request uit en:
 
@@ -156,7 +146,7 @@ Probeer een POST request uit en:
 
 We krijgen een HTTP 400 terug en de reden van de fout.
 
-### Auto transform payloads naar DTO's
+### Transformeren van payloads naar DTO's
 
 In NestJS krijg je vaak data binnen als platte JSON-objecten (bijvoorbeeld uit een HTTP-request). Maar in je code wil je werken met echte instanties van een klasse, zodat je bijvoorbeeld methodes kan gebruiken, of zodat validatie en andere decorators goed werken. `Class transformers` zetten gewone JavaScript-objecten om naar instances van classes en omgekeerd.
 
@@ -173,13 +163,7 @@ createplace(@Body() createPlaceDto:CreatePlaceRequestDto): PlaceResponseDto {
 }
 ```
 
-Om ervoor te zorgen dat dit een instantie is van de DTO klasse, installeren we `class-transformer`:
-
-```bash
-pnpm i class-transformer
-```
-
-En voegen we in `main.ts` onderstaande optie toe:
+De `ValidationPipe` kan automatisch payloads omzetten naar een instance van de DTO-klasse. Om automatische transformatie in te schakelen, stel je `transform` in op `true` in `main.ts`.
 
 ```ts
 // src/main.ts
@@ -209,7 +193,9 @@ bootstrap();
 
 Voer een POST request uit en bekijk het type.
 
-Class transformers kunnen ook primitieve types omzetten. Alles wat via `@Param()`, `@Query()`, enz. binnenkomt is van type `string`. Als we in de `getPlaceById` methode het type van de id veranderen in `number` zal `ValidationPipe` dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
+### Primitieve types transformeren
+
+Class transformers kunnen ook primitieve types omzetten. Alles wat via `@Param()`, `@Query()`,... binnenkomt is van type `string`. Als we in de `getPlaceById` methode het type van de id veranderen in `number` zal `ValidationPipe` dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
 
 ```ts
 // src/place/place.controller.ts
@@ -317,6 +303,8 @@ Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optione
   }
   ```
 
+  - `@Type`: Type transformatie, converteert de waarde automatisch naar een Number type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals`@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen.
+
 ## Logging
 
 Lees deze [best practices for logging](https://betterstack.com/community/guides/logging/nodejs-logging-best-practices/).
@@ -336,7 +324,7 @@ We maken een eigen `CustomLogger` aan. In de `src` map maak je een `core` map aa
 import type { LoggerService } from '@nestjs/common';
 import { ConsoleLogger } from '@nestjs/common';
 
-export class CustomLogger extends ConsoleLogger implements LoggerService {
+export default class CustomLogger extends ConsoleLogger implements LoggerService {
   log(message: string) {
     super.log('📢 ' + message);
   }
@@ -359,7 +347,7 @@ export class CustomLogger extends ConsoleLogger implements LoggerService {
 }
 ```
 
-`CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. Zo werkt `CustomLogger` als een geldige logger binnen het NestJS-framework. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit met een emoji:
+`CustomLogger` implementeert alle methodes die in de `LoggerService`-interface van NestJS zijn gedefinieerd. `CustomLogger` breidt de standaard `ConsoleLogger` van NestJS uit met een emoji:
 
 - log: 📢 voor algemene logs
 - error: ❌ voor fouten
@@ -367,7 +355,7 @@ export class CustomLogger extends ConsoleLogger implements LoggerService {
 - debug: 🐞 voor debugberichten
 - verbose: 📖 voor gedetailleerde logs
 
-Elke methode (log, error, warn, debug, verbose) roept de overeenkomstige methode van de `ConsoleLogger` aan, maar voegt eerst de emoji toe aan het bericht. Zo krijg je visueel onderscheid tussen verschillende soorten logberichten in je console.
+Elke methode roept de overeenkomstige methode van de `ConsoleLogger` aan, maar voegt eerst de emoji toe aan het bericht. Zo krijg je visueel onderscheid tussen verschillende soorten logberichten in je console.
 
 Om de `CustomLogger` te gebruiken in de app, stel je deze logger in bij het opstarten van de applicatie. Dit doe je in het entrypoint-bestand, `main.ts`.
 
@@ -381,7 +369,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common'; // 👈 3
-import { CustomLogger } from './core/customLogger'; // 👈 1
+import CustomLogger from './core/customLogger'; // 👈 1
 
 async function bootstrap() {
   // ...
@@ -404,6 +392,68 @@ bootstrap();
 
 Bekijk het resultaat in de terminal. Zijn dit geen mooie logs?
 
+### Oefening
+
+Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
+
+- Oplossing +
+
+  ```ts
+  // src/`config/configuration.ts
+  export default () => ({
+    env: process.env.NODE_ENV,
+    port: parseInt(process.env.PORT || '9000'),
+    cors: {
+      origins: process.env.CORS_ORIGINS
+        ? (JSON.parse(process.env.CORS_ORIGINS) as string[])
+        : [],
+      maxAge: parseInt(process.env.CORS_MAX_AGE || String(3 * 60 * 60)),
+    },
+    database: {
+      url: process.env.DATABASE_URL,
+    },
+    log: {
+      levels: process.env.LOG_LEVELS
+        ? (JSON.parse(process.env.LOG_LEVELS) as LogLevel[])
+        : ['log', 'error', 'warn'],
+    },
+  });
+
+  export interface ServerConfig {
+    env: string;
+    port: number;
+    cors: CorsConfig;
+    database: DatabaseConfig;
+    log: LogConfig;
+  }
+  //...
+  export interface LogConfig {
+    levels: LogLevel[];
+  }
+
+  type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose' | 'fatal';
+  ```
+
+  ```ts
+  // src/main.ts
+  //...
+  const log = config.get<LogConfig>('log')!;
+
+    app.useLogger(
+      new CustomLogger({
+        logLevels: log.levels,
+      }),
+    );
+  //...
+  ```
+
+  ```ini
+  # .env
+  LOG_LEVELS=["log","error","warn","debug"]
+  ```
+
+  Pas ook de README aan.
+
 ## Foutafhandeling
 
 Lees de documentatie over [exception filters](https://docs.nestjs.com/exception-filters) tot aan de sectie "Exception filters".
@@ -417,16 +467,27 @@ Een voorbeeld van zo'n exception is de `NotFoundException`:
 ```ts
 // src/place/place.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
+//...
 
-getById(id: number): PlaceResponseDto {
-  const place = PLACES.find(item => item.id === id);
+ async getById(id: number): Promise<PlaceResponseDto> {
+    const place = await this.db.query.places.findFirst({
+      where: eq(places.id, id),
+      with: {
+        transactions: {
+          with: {
+            user: true,
+            place: true,
+          },
+        },
+      },
+    });
 
-  if (!place) {
-    throw new NotFoundException(`No place with this id exists`); // 👈
+    if (!place) {
+      throw new NotFoundException(`No place with this id exists`); // 👈
+    }
+
+    return place;
   }
-
-  return place;
-}
 ```
 
 Als de plaats niet bestaat dan krijg je automatisch een HTTP 404 exception met volgende respons:
@@ -461,7 +522,7 @@ interface HttpExceptionResponse {
 
 ### Oefening
 
-- Maak een klasse `HttpExceptionFilter`. Zorg ervoor dat de `ExceptionFilter` onderstaande retourneert indien de plaats niet bestaat.
+- Maak een klasse `HttpExceptionFilter` in `http-exception.filter.ts`. Zorg ervoor dat de `ExceptionFilter` onderstaande retourneert indien de plaats niet bestaat.
 - Log bovendien de fout.
 - Maak de filter beschikbaar in de volledige app
 
@@ -700,14 +761,19 @@ export class AppModule implements NestModule {
 
 Roep een endpoint aan en bekijk de logs.
 
+## Oefening - Het voorbeeldproject
+
+Voorzie invoervalidatie voor alle endpoints.
+
 ## Oefening - Je eigen project (indien nog niet gebeurd is)
 
-Voeg volgende componenten toe aan je eigen project:
+Voeg volgende functionaliteiten toe aan je eigen project:
 
-- invoervalidatie in de DTO's
+- invoervalidatie voor alle endpoints
+- transformatie van payloads naar DTO's, transformatie van primitieve types
 - foutafhandeling met exception filters
 - logging met een custom logger en logging middleware
-- werk de `README.md` in de root van je repository bij met instructies om de .env file aan te maken.
+- werk de `README.md` in de root van je repository bij met instructies voor de .env file
 
 > **Oplossing voorbeeldapplicatie**
 >
