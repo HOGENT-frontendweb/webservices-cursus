@@ -29,8 +29,8 @@ Welke soorten invoer kan een HTTP request bevatten?
 
 - Antwoord +
 
-  - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/transactions/1`.
-  - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/transactions?name=loon`.
+  - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/places/1`.
+  - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/places?name=loon`.
   - **Body:** als je een nieuwe plaats maakt, dan geef je de nodige gegevens mee in de body van het request.
   - **Headers:** in het volgende hoofdstuk gaan we zien hoe we een token meegeven in de headers van een request, zo kunnen we de gebruiker authenticeren.
 
@@ -82,7 +82,7 @@ In NestJS gebruik je DTO’s vooral om:
 
 Lees de documentatie over [validatie](https://docs.nestjs.com/techniques/validation) t.e.m. "Transform payload objects".
 
-Pipes maken gebruik van `class-validator` en `class-transformer` libraries. Installeer deze libraries:
+Pipes maken gebruik van de `class-validator` en `class-transformer` libraries. Installeer deze libraries:
 
 ```bash
 pnpm i class-validator class-transformer
@@ -93,7 +93,14 @@ Pas de `CreatePlaceRequestDto` klasse aan:
 
 ```ts
 // src/places/place.dto.ts
-import { IsString, IsNotEmpty, MaxLength, Min, Max, IsInt } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  MaxLength,
+  Min,
+  Max,
+  IsInt,
+} from 'class-validator';
 
 export class CreatePlaceRequestDto {
   @IsString()
@@ -117,7 +124,7 @@ De `ValidationPipe` dien je te activeren in `main.ts` zodat deze wordt toegepast
 ```ts
 // src/main.ts
 import { ValidationPipe } from '@nestjs/common'; // 👈
-//...
+// ...
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
@@ -129,7 +136,7 @@ async function bootstrap() {
       forbidUnknownValues: true, // gooit fout bij onbekende types/waarden
     }),
   );
-  //...
+  // ...
 }
 
 bootstrap();
@@ -292,16 +299,19 @@ Voeg invoervalidatie toe
   //  src/transactions/transaction.dto.ts
   import { Min, IsDate, MaxDate, IsPositive, IsInt } from 'class-validator';
   import { Type } from 'class-transformer';
-  //...
+  // ...
   export class CreateTransactionRequestDto {
     @IsInt()
     @Min(1)
     placeId: number;
+
     @IsInt()
     @Min(1)
     userId: number;
+
     @IsPositive()
     amount: number;
+
     @Type(() => Date)
     @IsDate()
     @MaxDate(new Date(), { message: 'Date must not be in the future' })
@@ -361,7 +371,10 @@ We maken een eigen `CustomLogger` aan. In de `src` map maak je een `core` map aa
 import type { LoggerService } from '@nestjs/common';
 import { ConsoleLogger } from '@nestjs/common';
 
-export default class CustomLogger extends ConsoleLogger implements LoggerService {
+export default class CustomLogger
+  extends ConsoleLogger
+  implements LoggerService
+{
   log(message: string) {
     super.log('📢 ' + message);
   }
@@ -463,7 +476,7 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
     database: DatabaseConfig;
     log: LogConfig;
   }
-  //...
+  // ...
   export interface LogConfig {
     levels: LogLevel[];
   }
@@ -473,15 +486,15 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
 
   ```ts
   // src/main.ts
-  //...
+  // ...
   const log = config.get<LogConfig>('log')!;
 
-    app.useLogger(
-      new CustomLogger({
-        logLevels: log.levels,
-      }),
-    );
-  //...
+  app.useLogger(
+    new CustomLogger({
+      logLevels: log.levels,
+    }),
+  );
+  // ...
   ```
 
   ```ini
@@ -504,7 +517,7 @@ Een voorbeeld van zo'n exception is de `NotFoundException`:
 ```ts
 // src/place/place.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
-//...
+// ...
 
  async getById(id: number): Promise<PlaceResponseDto> {
     const place = await this.db.query.places.findFirst({
