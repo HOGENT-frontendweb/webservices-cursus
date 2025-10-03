@@ -277,11 +277,48 @@ Samenvattend gebeuren volgende validatiestappen alvorens de invoer bij de juiste
 
 ![Validatie](./images/validationpipe.png)
 
-### Oefening - DTO voor paginatie
+### Oefening
 
-Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optioneel.
+Voeg invoervalidatie toe
+
+- voor de endpoints `/api/transactions` en `/api/users`
+- voor de pagination, zie `PaginationQuery`. De parameters `page` en `limit` zijn optioneel.
+
+<br />
 
 - Oplossing +
+
+  ```ts
+  //  src/transactions/transaction.dto.ts
+  import { Min, IsDate, MaxDate, IsPositive, IsInt } from 'class-validator';
+  import { Type } from 'class-transformer';
+  //...
+  export class CreateTransactionRequestDto {
+    @IsInt()
+    @Min(1)
+    placeId: number;
+    @IsInt()
+    @Min(1)
+    userId: number;
+    @IsPositive()
+    amount: number;
+    @Type(() => Date)
+    @IsDate()
+    @MaxDate(new Date(), { message: 'Date must not be in the future' })
+    date: Date;
+  }
+  ```
+
+  ```ts
+  // src/users/user.dto.ts
+  import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
+  export class CreateUserRequestDto {
+    @IsString()
+    @IsNotEmpty()
+    @MaxLength(255)
+    name: string;
+  }
+  ```
 
   ```ts
   // src/common/pagination.dto.ts
@@ -303,7 +340,7 @@ Annoteer het DTO voor de paginatie. De parameters `page` en `limit` zijn optione
   }
   ```
 
-  - `@Type`: Type transformatie, converteert de waarde automatisch naar een Number type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals`@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen.
+  - `@Type`: Type transformatie, converteert de waarde automatisch naar het opgegeven type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals `@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen. Dit geldt ook voor Date types die via JSON worden aangeleverd.
 
 ## Logging
 
@@ -760,10 +797,6 @@ export class AppModule implements NestModule {
    - `forRoutes('*path')`: Zorgt ervoor dat de `LoggerMiddleware` wordt uitgevoerd voor alle routes in je applicatie (de wildcard \* matcht alle paden)
 
 Roep een endpoint aan en bekijk de logs.
-
-## Oefening - Het voorbeeldproject
-
-Voorzie invoervalidatie voor alle endpoints.
 
 ## Oefening - Je eigen project (indien nog niet gebeurd is)
 
