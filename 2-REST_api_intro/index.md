@@ -551,10 +551,10 @@ Normaal gesproken hoef je aan dit bestand niets te wijzigen, tenzij je specifiek
 
 NestJS gebruikt ESLint om de code te linten. Linten is het controleren van de code op stijl- en programmeerfouten. Het bestand `eslint.config.js` bevat de configuratie voor ESLint. Open het bestand en bekijk de inhoud. Ook hier hoef je normaal niets aan te wijzigen, tenzij je specifieke wensen hebt. Meer info over ESLint vind je op <https://eslint.org/docs/latest/user-guide/configuring>.
 
-Indien je de foutmelding ''Delete CR (eslint - prettier/prettier)' krijgt bij het openen van `app.module.ts`, voeg dan volgende regel toe aan de `rules` sectie:
+Indien je de foutmelding ''Delete CR (eslint - prettier/prettier)' krijgt bij het openen van `app.module.ts`, voeg dan volgende regel toe aan `.prettierrc`:
 
-```js
-'prettier/prettier': ['error', { endOfLine: 'auto' }],
+```json
+  "endOfLine": "auto"
 ```
 
 ## Projectstructuur
