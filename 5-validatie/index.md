@@ -161,10 +161,11 @@ Pas de `create` methode aan en doe een POST request. Bekijk de console.
 
 ```ts
 // src/place/place.controller.ts
-
 @Post()
 @HttpCode(HttpStatus.CREATED)
-createplace(@Body() createPlaceDto:CreatePlaceRequestDto): PlaceResponseDto {
+async createPlace(
+  @Body() createPlaceDto: CreatePlaceRequestDto,
+): Promise<PlaceResponseDto> {
   console.log(createPlaceDto instanceof CreatePlaceRequestDto); // 👈
   return this.placeService.create(createPlaceDto);
 }
@@ -208,9 +209,9 @@ Class transformers kunnen ook primitieve types omzetten. Alles wat via `@Param()
 // src/place/place.controller.ts
 
 @Get(':id')
-getPlaceById(@Param('id') id: number): PlaceResponseDto { // 👈
-  console.log(typeof id);
-  return this.placeService.getById(id);
+async getPlaceById(@Param('id') id: number): Promise<PlaceResponseDto> {
+    console.log(typeof id);
+    return this.placeService.getById(id);
 }
 ```
 
@@ -826,7 +827,7 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4-opl TODO:
+> git checkout -b les4-opl cdc1e60
 > pnpm install
 > pnpm start:dev
 > ```
