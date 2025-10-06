@@ -1,4 +1,4 @@
-# REST API bouwen (WIP)
+# REST API bouwen
 
 > **Startpunt voorbeeldapplicatie**
 >
