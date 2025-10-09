@@ -736,6 +736,7 @@ Maak nu je webservice aan:
 1. **Projectnaam**: Kies een duidelijke naam met suffix zoals `-webservice` of `-api`
 2. **Locatie**: Maak het project aan in de root van je GitHub repository
 3. **Setup**: Volg de NestJS setup stappen zoals eerder beschreven
+4. Verwijder .git folder in de webservice map (de .git folder is al in de root van je repository aanwezig).
 
 ### Stap 5: Commit
 
