@@ -368,6 +368,12 @@ async function main() {
 }
 ```
 
+Voer de seeding uit:
+
+  ```bash
+  pnpm db:seed
+  ```
+
 ## PlaceService - getById
 
 We gaan nu de services aanpassen om de relaties te gebruiken. We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
@@ -400,6 +406,49 @@ export class PlaceService {
 Met de `with` optie halen we gerelateerde gegevens op in de ORM-like manier. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
 
 Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover de documentatie t.e.m. "Full Join": <https://orm.drizzle.team/docs/joins>.
+
+### Oefening implementeer PlaceDetailResponseDto
+
+- Oplossing +
+
+  Definieer eerst een `UserResponseDto` in `src/user/user.dto.ts`:
+
+  ```ts
+  // src/user/user.dto.ts
+  export class UserResponseDto {
+    id: number;
+    name: string;
+  }
+  ```
+
+  Definieer ook een `TransactionResponseDto` in `src/transaction/transaction.dto.ts`:
+
+  ```ts
+  // src/transactions/transaction.dto.ts
+  import { PlaceResponseDto } from '../place/place.dto';
+  import { UserResponseDto } from '../user/user.dto';
+
+  export class TransactionResponseDto {
+    id: number;
+    amount: number;
+    date: Date;
+    user: UserResponseDto;
+    place: PlaceResponseDto;
+  }
+  ```
+
+  Definieer tot slot een `PlaceDetailResponseDto` in `src/place/place.dto.ts`:
+
+  ```ts
+  // src/place/place.dto.ts
+  import { TransactionResponseDto } from '../transactions/transaction.dto';
+
+  export class PlaceDetailResponseDto extends PlaceResponseDto {
+    transactions: TransactionResponseDto[];
+  }
+  ```
+
+  Pas het returnType aan in de service en controller voor het ophalen van 1 plaats, de creatie en update van een plaats
 
 ## Creatie TransactionService
 
@@ -440,7 +489,7 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
   ```ts
   // src/transactions/transaction.dto.ts
   import { PlaceResponseDto } from '../place/place.dto';
-  import { PublicUserResponseDto } from '../user/user.dto';
+  import { UserResponseDto } from '../user/user.dto';
 
   export class TransactionListResponseDto {
     items: TransactionResponseDto[];
@@ -515,14 +564,14 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
     @Get(':id')
     async getTransactionById(
-      @Param('id') id: number,
+      @Param('id') id: string,
     ): Promise<TransactionResponseDto> {
       throw new Error('Not implemented');
     }
 
     @Put(':id')
     async updateTransaction(
-      @Param('id') id: number,
+      @Param('id') id: string,
       @Body() updateTransactionDto: UpdateTransactionRequestDto,
     ): Promise<TransactionResponseDto> {
       throw new Error('Not implemented');
@@ -530,7 +579,7 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    async deleteTransaction(@Param('id') id: number): Promise<void> {
+    async deleteTransaction(@Param('id') id: string): Promise<void> {
       throw new Error('Not implemented');
     }
   }
@@ -719,9 +768,9 @@ Roep deze methode in de `TransactionController` aan.
   // src/transactions/transaction.controller.ts
   @Get(':id')
   async getTransactionById(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
   ): Promise<TransactionResponseDto> {
-    return this.transactionService.getById(id); // 👈
+    return this.transactionService.getById(Number(id)); // 👈
   }
   ```
 
@@ -786,9 +835,9 @@ Roep deze methode in de `TransactionController` aan:
 @Delete(':id')
 @HttpCode(HttpStatus.NO_CONTENT)
 async deleteTransaction(
-  @Param('id', ParseIntPipe) id: number,
+  @Param('id') id: string,
 ): Promise<void> {
-  return this.transactionService.deleteById(id);
+  return this.transactionService.deleteById(Number(id));
 }
 ```
 
@@ -830,11 +879,11 @@ Roep deze methode in de `TransactionController` aan.
   // src/transactions/transaction.controller.ts
   @Put(':id')
   async updateTransaction(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateTransactionDto: UpdateTransactionRequestDto,
   ): Promise<TransactionResponseDto> {
     return this.transactionService.updateById(
-      id,
+      Number(id),
       updateTransactionDto,
     );
   }
@@ -894,9 +943,9 @@ export class UserController {
   // 👇 2
   @Get('/:id/favoriteplaces')
   async getFavoritePlaces(
-    @Param('id') id: number,
+    @Param('id') id: string,
   ): Promise<PlaceResponseDto[]> {
-    return await this.placeService.getFavoritePlacesByUserId(id); // 👈 3
+    return await this.placeService.getFavoritePlacesByUserId(Number(id));
   }
 }
 ```
