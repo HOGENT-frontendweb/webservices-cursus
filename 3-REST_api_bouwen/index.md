@@ -584,7 +584,13 @@ export class PlaceService {
   }
 
   getById(id: number): PlaceResponseDto {
-    return PLACES.find((item: Place) => item.id === id);
+    const place = PLACES.find((item: Place) => item.id === id);
+
+    if (!place) {
+      throw new Error('No place with this id exists');
+    }
+
+    return place;
   }
 
   create({ name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
@@ -599,7 +605,7 @@ export class PlaceService {
 
   updateById(
     id: number,
-    { name, rating }: CreatePlaceRequestDto,
+    { name, rating }: UpdatePlaceRequestDto,
   ): PlaceResponseDto {
     throw new Error('not yet implemented');
   }
