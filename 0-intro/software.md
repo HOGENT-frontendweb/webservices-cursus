@@ -73,11 +73,19 @@ Installeer `pnpm` als alternatieve package manager voor `npm`:
 npm install -g pnpm@latest-10
 ```
 
+Laat `pnpm` vervolgens de nodige zaken instellen:
+
+```bash
+pnpm setup
+```
+
 Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. De fout heeft de vorm van `... cannot be loaded because running scripts is disabled on this system`. Indien dit het geval is, open een PowerShell terminal in Administrator-modus. Voer vervolgens het volgende commando uit en antwoord met `A` op de vraag:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
+
+Voer daarna opnieuw het `pnpm` installatiecommando uit.
 
 ## MySQL
 

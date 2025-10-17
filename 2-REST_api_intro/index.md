@@ -446,6 +446,8 @@ Allereerst installeer je de NestJS CLI globaal op je systeem. Dit kan je doen me
 pnpm add -g @nestjs/cli
 ```
 
+?> Krijg je een fout over de globale bin directory van pnpm? Voer dan `pnpm setup` uit, open een nieuwe terminal en probeer opnieuw.
+
 Vervolgens maken we een nieuw project aan met de CLI. Dit kan je doen met het onderstaand commando. Tijdens de installatie kies je voor `pnpm` als package manager.
 
 !> **Info voor de examenopdracht:** zorg ervoor dat je onderstaand commando in de root van jouw GitHub Classroom repository uitvoert, anders zal het project niet in de juiste map aangemaakt worden. Natuurlijk kan je het nadien verplaatsen.
