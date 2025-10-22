@@ -208,6 +208,121 @@ Test de seed uit:
 pnpm db:seed
 ```
 
+## Publieke user data
+
+We willen niet dat gevoelige informatie zoals `passwordHash` en `roles` naar de client gestuurd worden. Daarom maken we een DTO die enkel de publieke informatie van een gebruiker bevat.
+
+### PublicUserResponseDto
+
+We maken een `PublicUserResponseDto` die enkel de publieke velden bevat:
+
+```ts
+// src/user/user.dto.ts
+import { Expose } from 'class-transformer'; // 👈 1
+
+export class PublicUserResponseDto {
+  @Expose() // 👈 2
+  id: number;
+
+  @Expose() // 👈 2
+  name: string;
+
+  @Expose() // 👈 2
+  email: string;
+}
+```
+
+1. We importeren de `Expose` decorator van `class-transformer`. Deze decorator markeert welke velden wel naar de client gestuurd mogen worden.
+2. We markeren de velden `id`, `name` en `email` als publiek met de `@Expose()` decorator.
+
+### plainToInstance gebruiken
+
+In de `UserService` gebruiken we `plainToInstance` om een gebruiker object om te vormen naar een `PublicUserResponseDto`:
+
+```ts
+// src/user/user.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PublicUserResponseDto } from './user.dto';
+import { plainToInstance } from 'class-transformer'; // 👈 1
+import { DatabaseProvider, InjectDrizzle } from '../drizzle/drizzle.provider';
+import { users } from '../drizzle/schema';
+import { eq } from 'drizzle-orm';
+
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectDrizzle()
+    private readonly db: DatabaseProvider,
+  ) {}
+
+  async getById(id: number): Promise<PublicUserResponseDto> {
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
+    if (!user) {
+      throw new NotFoundException('No user with this id exists');
+    }
+
+    // 👇 2
+    return plainToInstance(PublicUserResponseDto, user, {
+      excludeExtraneousValues: true, // 👈 3
+    });
+  }
+
+  // ... andere functies
+}
+```
+
+1. We importeren `plainToInstance` van `class-transformer`.
+2. We gebruiken `plainToInstance` om het gebruiker object om te vormen naar een `PublicUserResponseDto`.
+3. De optie `excludeExtraneousValues: true` zorgt ervoor dat enkel de velden met `@Expose()` worden meegenomen in het resultaat. Alle andere velden (zoals `passwordHash` en `roles`) worden **niet** meegestuurd naar de client.
+
+> **Waarom is dit belangrijk?**
+>
+> Door `plainToInstance` te gebruiken met `excludeExtraneousValues: true`, zorgen we ervoor dat gevoelige informatie zoals wachtwoorden en rollen **nooit** naar de client gestuurd worden. Dit is een belangrijke beveiligingsmaatregel.
+>
+> Zonder deze transformatie zou de volledige gebruiker (inclusief `passwordHash` en `roles`) naar de client gestuurd worden, wat een groot veiligheidsrisico is!
+
+Pas alle functies in de `UserService` aan zodat ze `plainToInstance` gebruiken om enkel publieke user data terug te geven:
+
+```ts
+// src/user/user.service.ts
+export class UserService {
+  // ... constructor
+
+  async getAll(): Promise<UserListResponseDto> {
+    const usersList = await this.db.query.users.findMany();
+    const items = usersList.map((user) =>
+      plainToInstance(PublicUserResponseDto, user, {
+        excludeExtraneousValues: true,
+      }),
+    );
+    return { items };
+  }
+
+  async updateById(
+    id: number,
+    changes: UpdateUserRequestDto,
+  ): Promise<PublicUserResponseDto> {
+    const [result] = await this.db
+      .update(users)
+      .set(changes)
+      .where(eq(users.id, id));
+
+    if (result.affectedRows === 0) {
+      throw new NotFoundException('No user with this id exists');
+    }
+
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, id),
+    });
+    return plainToInstance(PublicUserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
+  }
+}
+```
+
 ## Configuratie voor authenticatie
 
 We voegen de instellingen voor authenticatie en JWT toe aan ons configuratiebestand:
