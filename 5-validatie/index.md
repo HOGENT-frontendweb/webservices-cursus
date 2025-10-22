@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les6 d486627
+> git checkout -b les6 b1ed447
 > yarn install
 > yarn start:dev
 > ```
@@ -827,7 +827,7 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4-opl cdc1e60
+> git checkout -b les4-opl 134c9c2
 > pnpm install
 > pnpm start:dev
 > ```

@@ -979,7 +979,7 @@ Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer 
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5-opl d486627
+> git checkout -b les5-opl b1ed447
 > pnpm install
 > pnpm db:migrate
 > pnpm start:dev
