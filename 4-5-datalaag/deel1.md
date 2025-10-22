@@ -365,7 +365,7 @@ Het ERD waar we uiteindelijk naartoe willen, ziet er zo uit (zie vorig hoofdstuk
 In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
 
 ```ts
-// src/drizzle.schema.ts
+// src/drizzle/schema.ts
 import {
   int,
   mysqlTable,

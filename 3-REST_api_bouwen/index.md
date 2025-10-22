@@ -1,4 +1,4 @@
-# REST API bouwen (WIP)
+# REST API bouwen
 
 > **Startpunt voorbeeldapplicatie**
 >
@@ -584,7 +584,13 @@ export class PlaceService {
   }
 
   getById(id: number): PlaceResponseDto {
-    return PLACES.find((item: Place) => item.id === id);
+    const place = PLACES.find((item: Place) => item.id === id);
+
+    if (!place) {
+      throw new Error('No place with this id exists');
+    }
+
+    return place;
   }
 
   create({ name, rating }: CreatePlaceRequestDto): PlaceResponseDto {
@@ -599,7 +605,7 @@ export class PlaceService {
 
   updateById(
     id: number,
-    { name, rating }: CreatePlaceRequestDto,
+    { name, rating }: UpdatePlaceRequestDto,
   ): PlaceResponseDto {
     throw new Error('not yet implemented');
   }
@@ -610,6 +616,7 @@ export class PlaceService {
 }
 ```
 
+De `getPlaceById` methode zoekt een plaats op basis van het id. Als er geen plaats gevonden wordt, geeft deze methode `undefined` terug. Dit gaan we later verbeteren. Voorlopig verander je het returntype in `PlaceResponseDto | undefined`. Dit zal je ook in de Controller moeten aanpassen.
 In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen deze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
 
 ### Implementatie controller

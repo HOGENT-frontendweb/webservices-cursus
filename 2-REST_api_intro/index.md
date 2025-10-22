@@ -446,6 +446,8 @@ Allereerst installeer je de NestJS CLI globaal op je systeem. Dit kan je doen me
 pnpm add -g @nestjs/cli
 ```
 
+?> Krijg je een fout over de globale bin directory van pnpm? Voer dan `pnpm setup` uit, open een nieuwe terminal en probeer opnieuw.
+
 Vervolgens maken we een nieuw project aan met de CLI. Dit kan je doen met het onderstaand commando. Tijdens de installatie kies je voor `pnpm` als package manager.
 
 !> **Info voor de examenopdracht:** zorg ervoor dat je onderstaand commando in de root van jouw GitHub Classroom repository uitvoert, anders zal het project niet in de juiste map aangemaakt worden. Natuurlijk kan je het nadien verplaatsen.
@@ -736,6 +738,7 @@ Maak nu je webservice aan:
 1. **Projectnaam**: Kies een duidelijke naam met suffix zoals `-webservice` of `-api`
 2. **Locatie**: Maak het project aan in de root van je GitHub repository
 3. **Setup**: Volg de NestJS setup stappen zoals eerder beschreven
+4. Verwijder .git folder in de webservice map (de .git folder is al in de root van je repository aanwezig).
 
 ### Stap 5: Commit
 
