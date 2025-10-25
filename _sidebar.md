@@ -9,7 +9,7 @@
 - [4. Datalaag en places](/4-5-datalaag/deel1.md)
 - [5. Relaties](/4-5-datalaag/deel2.md)
 - [6. Validatie en foutafhandeling](/6-validatie/index.md)
-- [7. Authenticatie & autorisatie (WIP)](/7-authenticatie/index.md)
+- [7. Authenticatie & autorisatie²](/7-authenticatie/index.md)
 - [8. Testing (WIP)](/8-testing/index.md)
 - [9. Testen: authenticatie & autorisatie (WIP)](/9-auth_testing/index.md)
 - [10. API documentatie (WIP)](/10-api_docs/index.md)
