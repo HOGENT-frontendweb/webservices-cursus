@@ -1014,7 +1014,7 @@ Pas de code in `main.ts` aan:
 // ...
 
 app.enableCors({
-  origins: ['http://localhost:5173'],
+  origin: ['http://localhost:5173'],
   maxAge: 3 * 60 * 60,
 });
 
@@ -1083,7 +1083,7 @@ Voeg nu ook een environment variabelen toe voor CORS:
   const cors = config.get<CorsConfig>('cors')!;
   // ...
   app.enableCors({
-    origins: cors.origins,
+    origin: cors.origins,
     maxAge: cors.maxAge,
   });
   ```
