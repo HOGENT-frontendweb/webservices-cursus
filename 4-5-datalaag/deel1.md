@@ -280,7 +280,7 @@ export interface ServerConfig {
 In NestJS wordt de connectie met de databank best als provider aangeboden. Op die manier zijn we zeker dat er slechts één connectie is in de volledige applicatie. We maken hiervoor een `drizzle` module aan:
 
 ```bash
-nest generate module drizzle
+pnpm nest generate module drizzle
 ```
 
 Dit genereert een bestand `src/drizzle/drizzle.module.ts` met onze DrizzleModule.
