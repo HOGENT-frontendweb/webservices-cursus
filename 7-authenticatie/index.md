@@ -1,19 +1,25 @@
-# Authenticatie en autorisatie (WIP)
+# Authenticatie en autorisatie
 
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7 ca4119d
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
+> git checkout -b les7 6504e86
+> pnpm install
+> pnpm db:migrate
+> pnpm db:seed
+> pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
-?> De code die je in de olods Front-end Web Development en Web Services opbouwt, werd vorig jaar door een student gecontroleerd op gebied van security. Een aantal zaken werden reeds dit academiejaar aangepast. Voel je vrij om deze bachelorproef te lezen als inspiratie voor eigen projecten: <br /><br />Vermeersch, J. (2024). Cybersecuritymaatregelen in de opleidingsonderdelen over webapplicatieontwikkeling aan Hogeschool Gent: een analyse en integratie van aanbevelingen in de voorbeeldapplicaties. Gent: s.n. Geraadpleegd op 3 november 2024, via <https://catalogus.hogent.be/catalog/hog01:003132172>.
+In dit hoofdstuk voegen we authenticatie en autorisatie toe aan onze applicatie:
+
+- **Authenticatie** is het proces waarbij je controleert of iemand is wie hij zegt dat hij is. Dit gebeurt typisch door een gebruikersnaam en wachtwoord te vragen.
+- **Autorisatie** is het proces waarbij je controleert of iemand de juiste rechten heeft om bepaalde acties uit te voeren of toegang te krijgen tot bepaalde gegevens.
+
+In deze cursus zullen we deze twee concepten manueel implementeren maar in een echte applicatie gebruik je best een bestaande oplossing zoals [Passport.js](https://www.passportjs.org/) of een externe authenticatieprovider zoals [Auth0](https://auth0.com/) of [Userfront](https://userfront.com/). Door dit toch eens manueel te implementeren, leer je beter hoe het allemaal werkt.
 
 ## JWT
 
@@ -85,209 +91,37 @@ Het token uit het bovenstaande voorbeeld bevat volgende payload:
 
 ### Signature
 
-De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen met een _secret_ om zo de payload te ondertekenen. Het is niet meer dan een handtekening die aangeeft of de payload gewijzigd is. Als iemand de payload wijzigt, zal de signature anders zijn en wordt de token ongeldig beschouwd.
+De signature is wat een JWT veilig maakt. Het neemt de info uit de header, samen met een _secret_ om zo de payload te ondertekenen. Het is niet meer dan een handtekening die aangeeft of de payload gewijzigd is. Als iemand de payload wijzigt, zal de signature anders zijn en wordt de token als ongeldig beschouwd.
 
-## User types uitbreiden
+## User uitbreiden
 
-Voor we aan de slag gaan, breiden we onze `User` interface een beetje uit:
+Voor we aan de slag gaan, breiden we onze `users` tabel uit met een paar extra kolommen:
+
+- `email`: het e-mailadres van de gebruiker, dit moet uniek zijn
+- `password_hash`: de hash van het wachtwoord van de gebruiker
+- `roles`: JSON-kolom met een lijst van rollen die de gebruiker heeft, bv. `user`, `admin`, ...
 
 ```ts
-// src/types/user.ts
-import type { Prisma } from '@prisma/client'; // 👈
-import type { Entity, ListResponse } from './common';
-
-// 👇
-export interface User extends Entity {
-  name: string;
-  email: string;
-  password_hash: string;
-  roles: Prisma.JsonValue;
-}
+// src/drizzle/schema.ts
+export const users = mysqlTable(
+  'users',
+  {
+    id: int('id', { unsigned: true }).primaryKey().autoincrement(),
+    name: varchar('name', { length: 255 }).notNull(),
+    email: varchar('email', { length: 255 }).notNull(), // 👈
+    passwordHash: varchar('password_hash', { length: 255 }).notNull(), // 👈
+    roles: json('roles').notNull(), // 👈
+  },
+  (table) => [uniqueIndex('idx_user_email_unique').on(table.email)], // 👈
+);
 ```
 
-We voegen `email`, `password_hash` en `roles` toe aan de `User` interface. Later zal je zien dat we nooit de volledige `User` interface zullen teruggeven. Die bevat nl. `password_hash` en dat willen we niet zomaar teruggeven. Deze interface is voornamelijk voor intern gebruik in de code.
-
-Verderop zorgen we ervoor dat deze kolommen ook toegevoegd worden aan onze tabel in de databank.
-
-## Helpers voor JWT's
-
-We gebruiken het package [jsonwebtoken](https://www.npmjs.com/package/jsonwebtoken) om JWT's te ondertekenen en verifiëren:
+Maak vervolgens een nieuwe migratie aan en voer deze uit:
 
 ```bash
-yarn add jsonwebtoken
+pnpm db:generate
+pnpm db:migrate
 ```
-
-We voegen wat configuratie toe voor `jsonwebtoken` in `config/development.ts`, `config/production.ts` en `config/test.ts`:
-
-<!-- cSpell: disable -->
-
-```ts
-export default {
-  auth: {
-    jwt: {
-      audience: 'budget.hogent.be',
-      issuer: 'budget.hogent.be',
-      expirationInterval: 60 * 60, // s (1 hour)
-      secret:
-        'eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked',
-    },
-  },
-};
-```
-
-<!-- cSpell: enable -->
-
-- We definiëren wie de JWT uitgeeft (`issuer`) en wie hem mag accepteren (`audience`).
-- `expirationInterval`: onze JWT's zullen in development verlopen na 1 uur, in productie zet je dit typisch langer. Dit hangt ook af van het type applicatie, bv. nooit heel lang bij een bankapplicatie. Je hanteert best één standaard voor tijdseenheden in je configuratie, wij kozen voor seconden. Het kan handig zijn om een human readable tijdseenheid in commentaar te zetten.
-- `secret`: we definiëren het secret waarmee de payload ondertekend zal worden.
-  - Dit secret is voor onze development omgeving, dus deze mag gewoon in onze code staan. Hoe we het secret voor onze productie-omgeving meegeven, zien we in een later hoofdstuk.
-
-We definiëren een module met een aantal helpers om een JWT te maken/controleren in `src/core/jwt.ts`:
-
-```ts
-// src/core/jwt.ts
-import config from 'config'; // 👈 1
-import type {
-  JwtPayload,
-  Secret,
-  SignOptions,
-  VerifyOptions,
-} from 'jsonwebtoken'; // 👈 2
-import jwt from 'jsonwebtoken'; // 👈 2
-import util from 'node:util'; // 👈 3
-import type { User } from '../types/user';
-
-// 👇 1
-const JWT_AUDIENCE = config.get<string>('auth.jwt.audience');
-const JWT_SECRET = config.get<string>('auth.jwt.secret');
-const JWT_ISSUER = config.get<string>('auth.jwt.issuer');
-const JWT_EXPIRATION_INTERVAL = config.get<number>(
-  'auth.jwt.expirationInterval',
-);
-
-// 👇 4
-const asyncJwtSign = util.promisify<JwtPayload, Secret, SignOptions, string>(
-  jwt.sign,
-);
-const asyncJwtVerify = util.promisify<
-  string,
-  Secret,
-  VerifyOptions,
-  JwtPayload
->(jwt.verify);
-
-// 👇 5
-export const generateJWT = async (user: User): Promise<string> => {
-  const tokenData = { roles: user.roles }; // 👈 6
-
-  // 👇 7
-  const signOptions = {
-    expiresIn: Math.floor(JWT_EXPIRATION_INTERVAL),
-    audience: JWT_AUDIENCE,
-    issuer: JWT_ISSUER,
-    subject: `${user.id}`,
-  };
-
-  // 👇 8
-  return asyncJwtSign(tokenData, JWT_SECRET, signOptions);
-};
-
-// 👇 9
-export const verifyJWT = async (authToken: string): Promise<JwtPayload> => {
-  // 👇 10
-  const verifyOptions = {
-    audience: JWT_AUDIENCE,
-    issuer: JWT_ISSUER,
-  };
-
-  // 👇 11
-  return asyncJwtVerify(authToken, JWT_SECRET, verifyOptions);
-};
-```
-
-1. Importeer alle gedefinieerde configuratie.
-2. Importeer het `jsonwebtoken` package. We importeren ook enkele types uit dit package.
-3. We importeren de in Node.js ingebouwde `util` module om de `sign` en `verify` functies van `jsonwebtoken` om te vormen naar `Promise`-gebaseerde functies.
-4. Met de `promisify` functie van `util` kunnen we een callback-gebaseerde functie omvormen naar een `Promise`-gebaseerde functie. De `promisify` functie verwacht dat de callback als laatste argument wordt meegegeven aan de originele functie.
-   - We geven ook de nodige type mee zodat we correcte typechecking hebben bij de geretourneerde functie.
-   - We geven steeds 4 types mee waarvan het laatste type de returnwaarde is. De overige types zijn de argumenten van de originele functie.
-5. Definieer (en exporteer) een helper `generateJWT` om een JWT te maken. Deze krijgt een gebruiker mee als argument en geeft een JWT terug. De functie is asynchroon dus we geven `Promise<string>` terug i.p.v. `string`.
-6. We geven de `roles` mee als extra JWT payload, je moet deze verplicht apart definiëren.
-   - Let wel op: enkel controle op een rol doen in de frontend is niet voldoende. De backend moet altijd controleren of de gebruiker de actie mag uitvoeren. In de frontend wordt nl. de signature van de JWT niet geverifieerd, dus kan een gebruiker in principe zijn rol wijzigen.
-   - Onze API calls zullen dus altijd de nodige rollen controleren.
-7. Daarnaast definiëren we enkele properties nodig voor het ondertekenen van de JWT:
-   - `expiresIn`: hoelang deze token geldig is. Merk op: `expiresIn` moet in seconden meegegeven worden
-   - `audience`: welke servers de token mogen accepteren.
-   - `issuer`: welke server(s) de token uitgeven.
-   - `subject`: voor wie deze token dient (bv. het id van de gebruiker), dit moet een string zijn.
-8. Vervolgens retourneren we het resultaat van de Promise-gebaseerde `sign` functie.
-9. We definiëren (en exporteren) nog een tweede helper `verifyJWT` die een gegeven JWT zal controleren op geldigheid. Deze functie geeft de payload van de JWT terug. Mogelijke problemen:
-   - JWT is verlopen
-   - Er is geprutst aan de payload
-   - JWT is niet bedoeld voor deze server
-   - ...
-10. We geven opnieuw de informatie mee die we verwachten in de token. Hier moeten we enkel de `audience` en `issuer` meegeven omdat we moeten controleren of de token bedoeld is voor onze server.
-11. Vervolgens retourneren we het resultaat van de Promise-gebaseerde `verify` functie.
-
-Kopieer onderstaande code in een `src/testjwt.ts` bestand en test zelf of jouw code werkt! Je kan dit script uitvoeren met het commando `yarn tsx src/testjwt.ts`.
-
-```ts
-process.env.NODE_CONFIG = JSON.stringify({
-  env: 'development',
-});
-
-import { generateJWT, verifyJWT } from './core/jwt';
-
-function messWithPayload(jwt: string) {
-  const [header, payload, signature] = jwt.split('.');
-  const parsedPayload = JSON.parse(
-    Buffer.from(payload!, 'base64url').toString(),
-  );
-
-  // make me admin please ^^
-  parsedPayload.roles.push('admin');
-
-  const newPayload = Buffer.from(
-    JSON.stringify(parsedPayload),
-    'ascii',
-  ).toString('base64url');
-  return [header, newPayload, signature].join('.');
-}
-
-async function main() {
-  const fakeUser = {
-    id: 1,
-    name: 'Thomas Aelbrecht',
-    email: 'thomas.aelbrecht@hogent.be',
-    roles: ['user'],
-    password_hash: 'ongeldigehash',
-  };
-
-  const jwt = await generateJWT(fakeUser);
-  // copy and paste the JWT in the textfield on https://jwt.io
-  // inspect the content
-  console.log('The JWT:', jwt);
-
-  let valid = await verifyJWT(jwt);
-  console.log('This JWT is', valid ? 'valid' : 'incorrect');
-  console.log('\n');
-
-  // Let's mess with the payload
-  const messedUpJwt = messWithPayload(jwt);
-  console.log('Messed up JWT:', messedUpJwt);
-
-  try {
-    console.log('Verifying this JWT will throw an error:');
-    valid = await verifyJWT(messedUpJwt);
-  } catch (err: any) {
-    console.log('We got an error:', err.message);
-  }
-}
-
-main();
-```
-
-?> Het is niet de bedoeling om dit script in je eigen repository te houden! Dit is enkel om te testen of je code werkt, gooi het weg na gebruik.
 
 ## Wachtwoorden opslaan
 
@@ -301,1027 +135,1404 @@ Een hashing algoritme is een one-way algoritme. Het neemt een input en vormt dez
 
 Sommige hashing algoritmes gebruiken een **salt**. Dit is een willekeurig string (met vaste lengte) en wordt gebruikt om een verschillende hash te genereren bij een identieke input. Dus: hetzelfde wachtwoord hashen met een andere salt, geeft een andere hash. Dit maakt bv. [dictionary attacks](https://www.sciencedirect.com/topics/computer-science/dictionary-attack) moeilijker.
 
-### Helpers voor hashing
+### Seed uitbreiden
 
-We gebruiken het package `argon2` om het argon2 algoritme te gebruiken in Node.js:
-
-```bash
-yarn add argon2
-```
-
-We voegen wat configuratie toe voor argon2 `config/development.ts`, `config/production.ts` en `config/test.ts`:
-
-```ts
-export default = {
-  auth: {
-    argon: {
-      hashLength: 32,
-      timeCost: 6,
-      memoryCost: 2 ** 17,
-    },
-  },
-};
-```
-
-- `hashLength`: onze hash moet 32 bytes groot zijn (256 bits)
-- `timeCost`: we laten het hashing algoritme 6 iteraties uitvoeren
-- `memoryCost`: elke thread van het algoritme mag 128 MiB gebruiken
-
-De laatste twee opties bepalen de duur van de hashing: hoe groter deze getallen, hoe langer het duurt. Langer is altijd beter, maar je applicatie moet natuurlijk nog bruikbaar blijven.
-
-Als laatste definiëren we een module met een aantal helpers om een wachtwoord te hashen/controleren in `src/core/password.ts`:
-
-```ts
-// src/core/password.ts
-import config from 'config'; // 👈 1
-import argon2 from 'argon2'; // 👈 2
-
-// 👇 1
-const ARGON_HASH_LENGTH = config.get<number>('auth.argon.hashLength');
-const ARGON_TIME_COST = config.get<number>('auth.argon.timeCost');
-const ARGON_MEMORY_COST = config.get<number>('auth.argon.memoryCost');
-
-// 👇 3
-export const hashPassword = async (password: string): Promise<string> => {
-  // 👇 4
-  return argon2.hash(password, {
-    type: argon2.argon2id,
-    hashLength: ARGON_HASH_LENGTH,
-    timeCost: ARGON_TIME_COST,
-    memoryCost: ARGON_MEMORY_COST,
-  });
-};
-
-// 👇 5
-export const verifyPassword = async (
-  password: string,
-  passwordHash: string,
-): Promise<boolean> => {
-  // 👇 6
-  return argon2.verify(passwordHash, password);
-};
-```
-
-1. Importeer alle gedefinieerde configuratie.
-2. Importeer het `argon2` package.
-3. Definieer (en exporteer) een helper om een wachtwoord te hashen. Deze functie ontvangt het wachtwoord in plain text en retourneert de hash van het wachtwoord.
-4. De argon2 library exporteert een `hash`-functie om een gegeven string te hashen. Het verwacht de string als eerste argument en wat opties als tweede argument. We geven onze configuratie mee aan de juiste optie. We kiezen de `argon2id` versie van het algoritme (resistent tegen GPU en tradeoff attacks).
-5. Definieer (en exporteer) een helper om een wachtwoord te controleren. Deze functie ontvangt het wachtwoord in plain text en de hash van het wachtwoord en retourneert `true` of `false`, afhankelijk of het wachtwoord overeenkomt met de hash.
-6. De argon2 library exporteert een `verify`-functie om te checken of een gegeven string dezelfde hash oplevert. Het verwacht de hash als eerste argument en de string als tweede argument. De opties die gebruikt zijn bij het hashen zitten in de hash zelf, dus deze moeten niet meegegeven worden.
-
-Kopieer deze code in een `src/testpw.ts` bestand en test zelf of jouw code werkt! Speel een beetje met de configuratie en bekijk de invloed op de uitvoeringstijd van het algoritme.
-
-Je kan onderstaande code uitvoeren met het commando `yarn tsx src/testpw.ts`.
-
-<!-- cSpell: disable -->
-
-```ts
-process.env.NODE_CONFIG = JSON.stringify({
-  env: 'development',
-});
-
-import { hashPassword, verifyPassword } from './core/password';
-
-async function main() {
-  const password = 'verydifficult';
-  const wrongPassword = 'verywrong';
-  console.log('The password:', password);
-
-  const hash = await hashPassword(password);
-  // bekijk hoe de hash opgebouwd is, wat herken je?
-  // waar staat de timeCost, memoryCost, salt en de hash zelf?
-  console.log('The hash:', hash);
-
-  let valid = await verifyPassword(password, hash);
-  console.log('The password', password, 'is', valid ? 'valid' : 'incorrect');
-  console.log('');
-
-  valid = await verifyPassword(wrongPassword, hash);
-  console.log(
-    'The password',
-    wrongPassword,
-    'is',
-    valid ? 'valid' : 'incorrect',
-  );
-}
-
-main();
-```
-
-?> Het is niet de bedoeling om dit script in je eigen repository te houden! Dit is enkel om te testen of je code werkt, gooi het weg na gebruik.
-
-<!-- cSpell: enable -->
-
-### Wachtwoord opslaan in de databank
-
-Om te kunnen aanmelden, moeten we extra informatie van onze gebruikers opslaan: o.a. een e-mailadres en een wachtwoord. We voegen deze informatie toe aan onze User entiteit in het Prisma schema. We voegen ook een unique index toe op het e-mailadres, zodat we geen twee gebruikers met hetzelfde e-mailadres kunnen hebben.
-
-```prisma
-// src/data/schema.prisma
-// ...
-
-model User {
-  @@map("users")               // Set the table name to "users"
-
-  id            Int            @id @default(autoincrement()) @db.UnsignedInt
-  name          String         @db.VarChar(255)
-  email         String         @unique(map: "idx_user_email_unique") @db.VarChar(255)
-  password_hash String         @db.VarChar(255)
-  roles         Json
-  transactions  Transaction[]
-}
-```
-
-Vervolgens maken we een nieuwe migratie:
+Als voorbeeld van hashing breiden we de gebruikers in onze seed uit met een aantal gebruikers met een gehashte wachtwoord. Installeer hiervoor eerst `argon2`:
 
 ```bash
-yarn prisma migrate dev --name addAuthInfoToUserTable --create-only
+pnpm install argon2
 ```
 
-We voegen hier de `--create-only` optie toe. Dit zorgt ervoor dat de migratie enkel aangemaakt wordt en nog niet uitgevoerd. We willen eerst onze seed aanpassen voor we de migratie uitvoeren. Het probleem is dat we kolommen toevoegen en dat er (waarschijnlijk) reeds data in de tabel zit. Aangezien we geen default waarde opgeven, zal de migratie falen als er reeds data in de tabel zit.
+Sta via `pnpm approve-builds` toe om `argon2` te builden.
 
-Pas de **seed** voor `users` aan met deze code. Deze seed stelt voor elke user het wachtwoord `12345678` in. Als rollen wordt `user` en/of `admin` toegekend. Negeer eventuele syntaxfouten over de nieuwe properties van de user.
-
-<!-- cSpell: disable -->
+Breid vervolgens de `seed.ts` uit om `12345678` te hashen als wachtwoord voor elke gebruiker:
 
 ```ts
-// ... (imports)
-import { hashPassword } from '../core/password';
-
-const prisma = new PrismaClient();
-
-async function main() {
-  // Seed users
-  // ==========
-  const passwordHash = await hashPassword('12345678');
-
-  await prisma.user.createMany({
-    data: [
-      {
-        id: 1,
-        name: 'Thomas Aelbrecht',
-        email: 'thomas.aelbrecht@hogent.be',
-        password_hash: passwordHash,
-        roles: ['admin', 'user'],
-      },
-      {
-        id: 2,
-        name: 'Pieter Van Der Helst',
-        email: 'pieter.vanderhelst@hogent.be',
-        password_hash: passwordHash,
-        roles: ['user'],
-      },
-      {
-        id: 3,
-        name: 'Karine Samyn',
-        email: 'karine.samyn@hogent.be',
-        password_hash: passwordHash,
-        roles: ['user'],
-      },
-    ],
-  });
-  // ...
-}
-
+// src/drizzle/seed.ts
 // ...
-```
-
-<!-- cSpell: enable -->
-
-Aangezien we nog niet in productie draaien, kunnen we zonder problemen onze lokale databank droppen en opnieuw maken/vullen. Hierna zouden ook de syntaxfouten opgelost moeten zijn.
-
-```bash
-yarn prisma migrate reset
-```
-
-!> Voer dit commando enkel uit als je weet dat het geen problemen zal geven voor bv. je applicatie in productie. Dit kan desastreuze gevolgen hebben!
-
-### Types in servicelaag fixen
-
-De extra kolommen hebben als gevolg dat de user service nu ook een `email` en `password` (geen hash!) en `roles` verwacht als parameter bij `create` en **enkel** een `email` bij de `updateById` functie.
-
-We passen eerst het type aan en voegen meteen een type toe voor de publieke informatie van een gebruiker:
-
-```ts
-// src/types/user.ts
-export interface UserCreateInput {
-  name: string;
-  email: string;
-  password: string;
-}
-
-export interface PublicUser extends Pick<User, 'id' | 'name' | 'email'> {}
-
-export interface UserUpdateInput
-  extends Pick<UserCreateInput, 'name' | 'email'> {}
-```
-
-En vervolgens passen we de user service aan. We hernoemen ook de `create` functie naar `register`:
-
-```ts
-// src/service/user.ts
-// ... (imports)
-import type {
-  // ...
-  PublicUser, // 👈 1
-} from '../types/user';
-import { hashPassword } from '../core/password'; // 👈 3
+import * as argon2 from 'argon2'; // 👈 2
 
 // 👇 1
-const makeExposedUser = ({ id, name, email }: User): PublicUser => ({
-  id,
-  name,
-  email,
-});
-
-export const register = async ({
-  name,
-  email, // 👈 2
-  password, // 👈 2
-}: UserCreateInput): Promise<PublicUser> => {
-  try {
-    const passwordHash = await hashPassword(password); // 👈 3
-
-    // 👇 3
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password_hash: passwordHash,
-        roles: ['user'], // 👈 4
-      },
-    });
-
-    return makeExposedUser(user); // 👈 5
-  } catch (error) {
-    throw handleDBError(error); // 👈 6
-  }
-};
-// ...
-```
-
-1. We voegen een functie toe die een `User` omvormt naar een `PublicUser`. Deze functie zal gebruikt worden om enkel de publieke informatie van een gebruiker terug te geven.
-2. We voegen de nieuwe kolommen toe als parameter.
-3. We maken een hash van het wachtwoord voor we de gebruiker aanmaken.
-4. Standaard maken we nieuwe gebruikers enkel `user`.
-5. We geven enkel de publieke informatie van de gebruiker terug.
-6. We wrappen alles in een try/catch en gebruiken de `handleDBError` functie om de fouten af te handelen.
-
-### Oefening 1 - Publieke user data
-
-- Pas de andere functies in user service aan waar nodig.
-  - Denk hierbij aan het gebruik van `makeExposedUser`. Waar is dat allemaal nodig?
-  - Pas de `updateById` functie aan zodat je ook de `email` kan aanpassen.
-- Pas ook de REST-laag van de users aan waar nodig.
-  - Denk hierbij aan invoervalidatie.
-  - Controleer of er geen fouten zijn rond de types van de request en response.
-
-<br />
-
-- Oplossing +
-
-  Je vindt een voorbeeldoplossing in het voorbeeldproject:
-
-  ```bash
-  git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
-  cd webservices-budget
-  git checkout -b les7-oef1-opl 2db1c8f
-  yarn install
-  yarn prisma migrate dev
-  yarn start:dev
-  ```
-
-  Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
-
-## Aanmelden
-
-We definiëren alle rollen in onze applicatie in een constant object. Zo is het eenvoudig om ze te wijzigen indien nodig. Voeg onderstaande code toe aan `src/core/roles.ts`
-
-```ts
-// src/core/roles.ts
-
-export default {
-  USER: 'user',
-  ADMIN: 'admin',
-};
-```
-
-We updaten de **seed voor users** met deze nieuwe rollen:
-
-<!-- cSpell: disable -->
-
-```ts
-// src/data/seed.ts
-// ... (imports)
-import Role from '../core/roles'; // 👈
-
-const prisma = new PrismaClient();
-
-async function main() {
-  // Seed users
-  // ==========
-  const passwordHash = await hashPassword('12345678');
-
-  await prisma.user.createMany({
-    data: [
-      {
-        id: 1,
-        name: 'Thomas Aelbrecht',
-        email: 'thomas.aelbrecht@hogent.be',
-        password_hash: passwordHash,
-        roles: JSON.stringify([Role.ADMIN, Role.USER]), // 👈
-      },
-      {
-        id: 2,
-        name: 'Pieter Van Der Helst',
-        email: 'pieter.vanderhelst@hogent.be',
-        password_hash: passwordHash,
-        roles: JSON.stringify([Role.USER]), // 👈
-      },
-      {
-        id: 3,
-        name: 'Karine Samyn',
-        email: 'karine.samyn@hogent.be',
-        password_hash: passwordHash,
-        roles: JSON.stringify([Role.USER]), // 👈
-      },
-    ],
-  });
-
-  // ...
-}
-
-// ...
-```
-
-<!-- cSpell: enable -->
-
-Pas in de user service ook de hard gecodeerde rol in de `register` functie aan.
-
-We definiëren eerst een type voor het request en response van onze login API call:
-
-```ts
-// src/types/user.ts
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-}
-```
-
-We definiëren een functie `login` in `src/service/user.ts` die een gebruiker met een bepaald e-mailadres probeert aan te melden. Als de gebruiker is aangemeld, retourneren we het token en de publieke informatie van de gebruiker (id, naam, e-mail en rollen):
-
-```ts
-// src/service/user.ts
-// ... (imports)
-import { hashPassword, verifyPassword } from '../core/password'; // 👈 4
-import { generateJWT } from '../core/jwt'; // 👈 6
-
-// 👇 1
-export const login = async (
-  email: string,
-  password: string,
-): Promise<string> => {
-  const user = await prisma.user.findUnique({ where: { email } }); // 👈 2
-
-  // 👇 3
-  if (!user) {
-    // DO NOT expose we don't know the user
-    throw ServiceError.unauthorized(
-      'The given email and password do not match',
-    );
-  }
-
-  // 👇 4
-  const passwordValid = await verifyPassword(password, user.password_hash);
-
-  // 👇 5
-  if (!passwordValid) {
-    // DO NOT expose we know the user but an invalid password was given
-    throw ServiceError.unauthorized(
-      'The given email and password do not match',
-    );
-  }
-
-  return await generateJWT(user); // 👈 6
-};
-```
-
-1. De (async) functie `login` krijgt een e-mailadres en wachtwoord als parameter en geeft een `string` terug.
-2. We kijken eerst of er een gebruiker met dit e-mailadres bestaat.
-3. Als die gebruiker niet bestaat, doen we alsof het e-mailadres en wachtwoord niet matchen. We willen niet laten blijken dat we de gebruiker kennen.
-4. Als we een gebruiker hebben, verifiëren we het opgegeven wachtwoord met de opgeslagen hash.
-5. Als het wachtwoord fout is, zeggen we opnieuw dat het e-mailadres en wachtwoord niet matchen.
-6. Vervolgens maken we een JWT voor die gebruiker en geven we die terug.
-
-Vervolgens voegen we een nieuw bestand `src/rest/session.ts` toe voor de login route.
-
-```ts
-// src/rest/session.ts
-import Router from '@koa/router';
-import Joi from 'joi';
-import validate from '../core/validation';
-import * as userService from '../service/user';
-import type {
-  KoaContext,
-  KoaRouter,
-  BudgetAppState,
-  BudgetAppContext,
-} from '../types/koa';
-import type { LoginResponse, LoginRequest } from '../types/user';
-
-// 👇 1
-const login = async (ctx: KoaContext<LoginResponse, void, LoginRequest>) => {
+async function hashPassword(password: string): Promise<string> {
   // 👇 2
-  const { email, password } = ctx.request.body;
-  const token = await userService.login(email, password); // 👈 3
-
-  // 👇 4
-  ctx.status = 200;
-  ctx.body = { token };
-};
-// 👇 5
-login.validationScheme = {
-  body: {
-    email: Joi.string().email(),
-    password: Joi.string(),
-  },
-};
-
-// 👇 6
-export default function installSessionRouter(parent: KoaRouter) {
-  const router = new Router<BudgetAppState, BudgetAppContext>({
-    prefix: '/sessions',
+  return argon2.hash(password, {
+    type: argon2.argon2id, // 👈 3
+    hashLength: 32, // 👈 4
+    timeCost: 2, // 👈 5
+    memoryCost: 2 ** 16, // 👈 6
   });
+}
 
-  router.post('/', validate(login.validationScheme), login);
+// ...
 
-  parent.use(router.routes()).use(router.allowedMethods());
+async function seedUsers() {
+  console.log('👥 Seeding users...');
+
+  // 👇 7
+  const passwordHash = await hashPassword('12345678');
+  await db.insert(schema.users).values([
+    {
+      id: 1,
+      name: 'Thomas Aelbrecht',
+      email: 'thomas.aelbrecht@hogent.be', // 👈 9
+      passwordHash: passwordHash, // 👈 8
+      roles: ['admin', 'user'], // 👈 9
+    },
+    {
+      id: 2,
+      name: 'Pieter Van Der Helst',
+      email: 'pieter.vanderhelst@hogent.be', // 👈 9
+      passwordHash: passwordHash, // 👈 8
+      roles: ['user'], // 👈 9
+    },
+    {
+      id: 3,
+      name: 'Karine Samyn',
+      email: 'karine.samyn@hogent.be', // 👈 9
+      passwordHash: passwordHash, // 👈 8
+      roles: ['user'], // 👈 9
+    },
+  ]);
+
+  console.log('✅ Users seeded successfully\n');
+}
+
+// ...
+```
+
+1. We definiëren een functie `hashPassword` die een wachtwoord als string neemt en een gehashte versie teruggeeft.
+2. We importeren de `argon2` bibliotheek.
+3. We gebruiken het `argon2id` algoritme, een combinatie van `argon2i` en `argon2d`, en is momenteel de aanbevolen variant.
+4. We vragen een hash van 32 bytes.
+5. `timeCost` bepaalt hoeveel iteraties het algoritme moet uitvoeren. Dit verhoogt de tijd die nodig is om de hash te berekenen.
+6. `memoryCost` bepaalt hoeveel geheugen (in KiB) het algoritme gebruikt. Dit maakt het moeilijker om de hash te berekenen met gespecialiseerde hardware.
+7. We hashen het wachtwoord `12345678` en gebruiken deze voor alle gebruikers in de seed.
+8. We slaan de gehashte versie van het wachtwoord op in de kolom `password_hash`.
+9. We voegen een e-mailadres en rollen toe aan elke gebruiker. Drizzle zal automatisch de JSON-string genereren voor de `roles` kolom.
+
+Voer de seed uit:
+
+```bash
+pnpm db:seed
+```
+
+### Opbouw argon2 hash
+
+Bekijk de `users` tabel in je databank om te zien hoe de gehashte wachtwoorden eruit zien. Je ziet dat elke gebruiker hetzelfde wachtwoord heeft, maar de hash is verschillend door het gebruik van een salt. De string die `argon2` genereert ziet er als volgt uit:
+
+<!-- cspell: disable -->
+
+<span style="text-wrap: wrap; word-wrap: break-word;">
+  $<span style="color: #fb015b;">argon2id</span>$<span style="color: #00d26a;">v=19</span>$<span style="color: #d63aff;">m=65536,t=2,p=4</span>$<span style="color: #00b9f1;">YYOem9akI1o5UkMkl54yxQ</span>$<span style="color: #ffb700;">BcVhh8Hlh/xfCJxQH4JzO84OeNvoyyYWfKUqrOfM+Js</span>
+</span>
+
+<!-- cspell: enable -->
+
+De argon2 hash bestaat uit 5 delen, gescheiden door `$`:
+
+- <span style="color: #fb015b;">algoritme</span>: `argon2id` variant
+- <span style="color: #00d26a;">versie</span>: versie 19
+- <span style="color: #d63aff;">parameters</span>: `m` (memory cost in KiB), `t` (time cost), `p` (parallelism)
+- <span style="color: #00b9f1;">salt</span>: willekeurige bytes in base64 encoding
+- <span style="color: #ffb700;">hash</span>: de eigenlijke gehashte waarde in base64 encoding
+
+> **Waarom wordt die informatie in de hash opgeslagen?**
+>
+> De parameters die gebruikt zijn om de hash te genereren, worden samen met de hash opgeslagen. Dit maakt het mogelijk om later het wachtwoord te verifiëren zonder dat je deze parameters apart moet opslaan.
+>
+> Dit geeft ook de mogelijkheid om in de toekomst de parameters aan te passen (bv. hogere `timeCost` of `memoryCost`) zonder dat je de bestaande hashes onbruikbaar maakt.
+
+## Publieke user data
+
+We willen niet dat gevoelige informatie zoals `passwordHash` en `roles` naar de client gestuurd worden. Daarom passen we onze DTO aan zodat die enkel de publieke informatie van een gebruiker bevat.
+
+### PublicUserResponseDto
+
+We passen onze `PublicUserResponseDto` aan zodat die enkel de publieke velden van een gebruiker bevat:
+
+```ts
+// src/user/user.dto.ts
+import { Expose } from 'class-transformer'; // 👈 1
+
+export class PublicUserResponseDto {
+  @Expose() // 👈 2
+  id: number;
+
+  @Expose() // 👈 2
+  name: string;
+
+  @Expose() // 👈 2
+  email: string;
 }
 ```
 
-1. We definiëren een functie voor onze `login` route.
-2. We halen het e-mailadres en wachtwoord uit de HTTP body.
-3. We proberen de gebruiker aan te melden.
-4. Als dat gelukt is, stellen we de HTTP statuscode in en geven we de token-informatie mee in de HTTP response body.
-   - Let op! We krijgen een string terug, dus we moeten dit nog omvormen naar een object zodat we een degelijk JSON object teruggeven.
-5. We voorzien ook een validatieschema voor de input.
-6. We definiëren een nieuwe router en de route voor de login (inclusief de invoervalidatie).
+1. We importeren de `Expose` decorator van `class-transformer`. Deze decorator markeert welke velden wel naar de client gestuurd mogen worden.
+2. We markeren de velden `id`, `name` en `email` als publiek met de `@Expose()` decorator.
 
-Als laatste voegen we deze nieuwe router toe aan onze applicatie in `src/rest/index.ts`:
+### plainToInstance gebruiken
+
+In de `UserService` gebruiken we `plainToInstance` om een gebruiker object om te vormen naar een `PublicUserResponseDto`:
 
 ```ts
-// src/rest/index.ts
-// ... (imports)
-import installSessionRouter from './session';
+// src/user/user.service.ts
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PublicUserResponseDto } from './user.dto';
+import { plainToInstance } from 'class-transformer'; // 👈 1
+import { DatabaseProvider, InjectDrizzle } from '../drizzle/drizzle.provider';
+import { users } from '../drizzle/schema';
+import { eq } from 'drizzle-orm';
 
-export default (app: KoaApplication) => {
-  // ... (router aanmaken + routes installeren)
-  installSessionRouter(router);
+@Injectable()
+export class UserService {
+  constructor(
+    @InjectDrizzle()
+    private readonly db: DatabaseProvider,
+  ) {}
 
-  // ... (router in app plaatsen)
-};
-```
-
-Waarom definiëren we een API call `POST /api/sessions` i.p.v. `POST /api/users/login`?
-
-- Antwoord +
-
-  Een API call moet altijd RESTful zijn. Dit betekent dat je geen werkwoorden of acties in je URL's steekt (dus ook geen `login`). Je werkt met resources en je voert acties uit op die resources. In dit geval is de resource een sessie en de actie is aanmelden. Daarom is `POST /api/sessions` correct en `POST /api/users/login` niet.
-
-### Oefening 2 - Register
-
-Pas ook de `register` functie in de user service aan. Deze functie retourneert nu ook een JWT token i.p.v. de publieke user data.
-
-## Registreren
-
-We overlopen hier nog eens de belangrijkste code van het registreerproces. Indien je oefening 2 gemaakt hebt, zou je deze oplossing min of meer moeten hebben.
-
-In `src/service/user.ts` hebben we:
-
-```ts
-export const register = async ({
-  name,
-  email,
-  password,
-}: RegisterUserRequest): Promise<string> => {
-  // 👆 1
-  try {
-    const passwordHash = await hashPassword(password);
-
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password_hash: passwordHash,
-        roles: [Role.USER],
-      },
+  async getById(id: number): Promise<PublicUserResponseDto> {
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, id),
     });
-
-    // 👇 2
     if (!user) {
-      throw ServiceError.internalServerError(
-        'An unexpected error occured when creating the user',
-      );
+      throw new NotFoundException('No user with this id exists');
     }
 
-    return await generateJWT(user); // 👈 1
-  } catch (error: any) {
-    throw handleDBError(error);
+    // 👇 2
+    return plainToInstance(PublicUserResponseDto, user, {
+      excludeExtraneousValues: true, // 👈 3
+    });
   }
-};
+
+  // ... andere functies
+}
 ```
 
-1. We retourneren, net zoals bij het aanmelden, een `string`.
-2. We gooien een interne serverfout als de gebruiker niet gemaakt kon worden.
+1. We importeren `plainToInstance` van `class-transformer`.
+2. We gebruiken `plainToInstance` om het gebruiker object om te vormen naar een `PublicUserResponseDto`.
+   - Pas ook het returntype van de functie aan naar `Promise<PublicUserResponseDto>`.
+3. De optie `excludeExtraneousValues: true` zorgt ervoor dat enkel de velden met `@Expose()` worden meegenomen in het resultaat. Alle andere velden (zoals `passwordHash` en `roles`) worden **niet** meegestuurd naar de client.
 
-We bekijken ook nog eens de request handler voor het registreren in `src/rest/user.ts`:
+> **Waarom is dit belangrijk?**
+>
+> Door `plainToInstance` te gebruiken met `excludeExtraneousValues: true`, zorgen we ervoor dat gevoelige informatie zoals wachtwoorden en rollen **nooit** naar de client gestuurd worden. Dit is een belangrijke beveiligingsmaatregel.
+>
+> Zonder deze transformatie zou de volledige gebruiker (inclusief `passwordHash` en `roles`) naar de client gestuurd worden, wat een groot veiligheidsrisico is!
+
+Pas alle functies in de `UserService` aan zodat ze `plainToInstance` gebruiken om enkel publieke user data terug te geven:
 
 ```ts
-const registerUser = async (
-  ctx: KoaContext<LoginResponse, void, RegisterUserRequest>,
-) => {
-  const token = await userService.register(ctx.request.body); // 👈 1
+// src/user/user.service.ts
+export class UserService {
+  // ... constructor
 
-  // 👇 2
-  ctx.status = 200;
-  ctx.body = { token };
-};
-// 👇 3
-registerUser.validationScheme = {
-  body: {
-    name: Joi.string().max(255),
-    email: Joi.string().email(),
-    password: Joi.string().min(12).max(128),
+  async getAll(): Promise<UserListResponseDto> {
+    const usersList = await this.db.query.users.findMany();
+    const items = usersList.map((user) =>
+      plainToInstance(PublicUserResponseDto, user, {
+        excludeExtraneousValues: true,
+      }),
+    );
+    return { items };
+  }
+
+  async updateById(
+    id: number,
+    changes: UpdateUserRequestDto,
+  ): Promise<PublicUserResponseDto> {
+    const [result] = await this.db
+      .update(users)
+      .set(changes)
+      .where(eq(users.id, id));
+
+    if (result.affectedRows === 0) {
+      throw new NotFoundException('No user with this id exists');
+    }
+
+    const user = await this.getById(id);
+    return plainToInstance(PublicUserResponseDto, user, {
+      excludeExtraneousValues: true,
+    });
+  }
+}
+```
+
+Voorlopig negeer je de fout in de `create` functie uit de `UserService`. We zullen gebruikers later aanmaken via een `register` functie in de `AuthService`.
+
+## Configuratie voor authenticatie
+
+We voegen de instellingen voor authenticatie, nl. het hashen van het password en het aanmaken, verifiëren van een JWT token toe aan ons configuratiebestand:
+
+```ts
+// src/config/configuration.ts
+export default () => ({
+  // ... andere configuratie
+  auth: {
+    hashLength: parseInt(process.env.AUTH_HASH_LENGTH || '32'), // 👈 1
+    timeCost: parseInt(process.env.AUTH_HASH_TIME_COST || '6'), // 👈 2
+    memoryCost: parseInt(process.env.AUTH_HASH_MEMORY_COST || '65536'), // 👈 3
+    jwt: {
+      expirationInterval:
+        Number(process.env.AUTH_JWT_EXPIRATION_INTERVAL) || 3600, // 👈 4
+      secret: process.env.AUTH_JWT_SECRET || '', // 👈 5
+      audience: process.env.AUTH_JWT_AUDIENCE || 'budget.hogent.be', // 👈 6
+      issuer: process.env.AUTH_JWT_ISSUER || 'budget.hogent.be', // 👈 7
+    },
   },
-};
+});
 
-export default (parent: KoaRouter) => {
+// ...
+
+export interface JwtConfig {
+  expirationInterval: number;
+  secret: string;
+  audience: string;
+  issuer: string;
+}
+
+export interface AuthConfig {
+  hashLength: number;
+  timeCost: number;
+  memoryCost: number;
+  jwt: JwtConfig;
+}
+
+export interface ServerConfig {
   // ...
-  router.post('/', validate(registerUser.validationScheme), registerUser); // 👈 4
-  // ...
-};
+  auth: AuthConfig;
+}
 ```
 
-1. We registreren de nieuwe gebruiker (alle informatie zit in de HTTP body). We krijgen de token-informatie en publieke user informatie terug.
-   - We hebben de interface `RegisterResponse` niet meer nodig, die mag je weggooien uit `src/types/user.ts`.
-2. We retourneren deze token-informatie en publieke user informatie in de HTTP response body, evenals een statuscode 200.
-3. We voorzien ook een validatieschema voor de input. We vereisen een wachtwoord van minimum 12 karakters en maximum 128 karakters.
-4. We geven deze functie mee aan de POST op `/api/users` en doen ook de invoervalidatie.
-   - Merk op: we gebruiken niet `POST /api/users/register` omdat dit geen RESTful route is. Je mag nl. geen werkwoorden of acties in je URL's steken.
+1. `hashLength`: onze hash moet 32 bytes groot zijn (256 bits)
+2. `timeCost`: we laten het hashing algoritme 6 iteraties uitvoeren
+3. `memoryCost`: elke thread van het algoritme mag 65536 KiB (64 MiB) gebruiken
+4. `expirationInterval`: onze JWT's zullen verlopen na 3600 seconden (1 uur)
+5. `secret`: het geheim waarmee de JWT ondertekend wordt
+6. `audience`: welke servers de token mogen accepteren
+7. `issuer`: welke server(s) de token uitgeven
 
-## Helpers voor authenticatie/autorisatie
+De laatste twee opties (`timeCost` en `memoryCost`) bepalen de duur van de hashing: hoe groter deze getallen, hoe langer het duurt. Langer is altijd beter, maar je applicatie moet natuurlijk nog bruikbaar blijven.
 
-We definiëren een module `src/core/auth.ts` die twee helpers exporteert.
+> ⚠️ **Belangrijk**: We geven het JWT secret op via een environment variable en zetten dit **nooit** in de code.
 
-- De eerste helper dwingt af dat de gebruiker moet aangemeld zijn om een endpoint uit te voeren. Dit is een middleware.
-- De tweede helper dwingt af dat de gebruiker de juiste rollen heeft om een endpoint uit te voeren. Deze helper geeft een middleware terug (= currying).
+Voeg de volgende environment variable toe aan je `.env` bestand:
 
-```ts
-// src/core/auth.ts
-import type { Next } from 'koa'; // 👈 1
-import type { KoaContext } from '../types/koa'; // 👈 1
-import * as userService from '../service/user'; // 👈 1
-
-// 👇 1
-export const requireAuthentication = async (ctx: KoaContext, next: Next) => {
-  const { authorization } = ctx.headers; // 👈 3
-
-  //  👇 4
-  ctx.state.session = await userService.checkAndParseSession(authorization);
-
-  return next(); // 👈 5
-};
-
-// 👇 6
-export const makeRequireRole =
-  (role: string) => async (ctx: KoaContext, next: Next) => {
-    const { roles = [] } = ctx.state.session; // 👈 7
-
-    userService.checkRole(role, roles); // 👈 8
-
-    return next(); // 👈 9
-  };
+```env
+AUTH_JWT_SECRET=eensuperveiligsecretvoorindevelopment
 ```
 
-1. Importeer de nodige types voor de middleware, alsook de user service.
-2. Een eerste helper dwingt af om aangemeld te zijn (= **authenticatie**).
-3. We halen de `Authorization` header op.
-4. We laten de user service deze token verifiëren en parsen, en verwachten sessie-informatie terug. We implementeren deze functie later. We slaan de sessie-informatie op in de `state` van de huidige `context`. In de `ctx.state` kan je bijhouden wat je wil.
-   - Later passen we het type van de `ctx.state` aan zodat we correcte typechecking hebben.
-5. We roepen de volgende middleware in de rij aan.
-6. Een andere helper maakt een middleware die een bepaalde rol afdwingt (= **autorisatie**).
-7. We halen de rollen uit de sessie-informatie.
-   - **Merk op:** deze middleware vereist dat de `requireAuthentication` middleware reeds uitgevoerd is, let dus op de volgorde!!!
-8. We laten de user service checken of de aangemelde gebruiker de vereiste rol heeft. We implementeren deze functie ook later.
-9. Als laatste roepen we ook de volgende middleware in de rij aan.
+Je kan eventueel aanvullen met andere environment variables zoals we in de configuratie hierboven gedefinieerd hebben.
 
-Vervolgens definiëren we een nieuw type in `src/types/auth.ts`:
+## Oefening - README eigen project
+
+Vul de README van je eigen project aan met de nodige documentatie over de environment variables voor authenticatie.
+
+## Rollen definiëren
+
+We definiëren alle rollen in onze applicatie in een enum. Zo is het eenvoudig om ze te wijzigen indien nodig:
 
 ```ts
-export interface SessionInfo {
-  userId: number;
+// src/auth/roles.ts
+export enum Role {
+  USER = 'user',
+  ADMIN = 'admin',
+}
+```
+
+Importeer de `Role` enum in de seed en gebruik deze om rollen toe te wijzen aan gebruikers:
+
+```ts
+// src/drizzle/seed.ts
+// ...
+import { Role } from '../auth/roles'; // 👈
+// ...
+
+async function seedUsers() {
+  console.log('👥 Seeding users...');
+
+  const passwordHash = await hashPassword('12345678');
+  await db.insert(schema.users).values([
+    {
+      id: 1,
+      name: 'Thomas Aelbrecht',
+      email: 'thomas.aelbrecht@hogent.be',
+      passwordHash: passwordHash,
+      roles: [Role.ADMIN, Role.USER], // 👈
+    },
+    {
+      id: 2,
+      name: 'Pieter Van Der Helst',
+      email: 'pieter.vanderhelst@hogent.be',
+      passwordHash: passwordHash,
+      roles: [Role.USER], // 👈
+    },
+    {
+      id: 3,
+      name: 'Karine Samyn',
+      email: 'karine.samyn@hogent.be',
+      passwordHash: passwordHash,
+      roles: [Role.USER], // 👈
+    },
+  ]);
+
+  console.log('✅ Users seeded successfully\n');
+}
+```
+
+## Authentication module en service
+
+We maken een `AuthModule` en een `AuthService` die alle authenticatie-logica bevat:
+
+```bash
+pnpm nest g module auth
+pnpm nest g service auth --no-spec
+```
+
+Controlleer of de `AuthService` in de `AuthModule` is geregistreerd en de `AuthModule` geïmporteerd wordt in de `AppModule`.
+
+### Service opzetten
+
+De `AuthService` bevat functies voor:
+
+- Wachtwoorden hashen en verifiëren
+- JWT's aanmaken en verifiëren
+- Gebruikers aanmelden (login)
+- Gebruikers registreren (register)
+
+Als eerste installeren we `@nestjs/jwt` zodat we JWT's kunnen ondertekenen en verifiëren:
+
+```bash
+pnpm install @nestjs/jwt
+```
+
+Neem de documentatie over [JWT tokens](https://docs.nestjs.com/security/authentication#jwt-token) door.
+
+Vervolgens beginnen we met de basis van de service en de nodige imports:
+
+```ts
+// src/auth/auth.service.ts
+import { Injectable } from '@nestjs/common';
+import {
+  type DatabaseProvider,
+  InjectDrizzle,
+} from '../drizzle/drizzle.provider'; // 👈 1
+import { JwtService } from '@nestjs/jwt'; // 👈 2
+import { ConfigService } from '@nestjs/config'; // 👈 3
+import { ServerConfig } from '../config/configuration'; // 👈 3
+
+@Injectable()
+export class AuthService {
+  constructor(
+    @InjectDrizzle()
+    private readonly db: DatabaseProvider, // 👈 1
+    private readonly jwtService: JwtService, // 👈 2
+    private readonly configService: ConfigService<ServerConfig>, // 👈 3
+  ) {}
+
+  // Functies komen hier...
+}
+```
+
+1. We injecteren de database provider om gebruikers op te halen uit de database.
+2. We injecteren de `JwtService` om JWT's te ondertekenen en verifiëren.
+3. We injecteren de `ConfigService` om onze configuratie op te halen.
+
+Importeer de `DrizzleModule` en de `JwtModule`, en exporteer de `AuthService` in de `AuthModule`:
+
+```ts
+import { Module } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { DrizzleModule } from '../drizzle/drizzle.module';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { ServerConfig, AuthConfig } from '../config/configuration';
+
+@Module({
+  imports: [
+    // 👇 1
+    JwtModule.registerAsync({
+      inject: [ConfigService], // 👈 2
+      global: true, // 👈 3
+      useFactory: (configService: ConfigService<ServerConfig>) => {
+        const authConfig = configService.get<AuthConfig>('auth')!; // 👈 4
+
+        // 👇 5
+        return {
+          secret: authConfig.jwt.secret,
+          signOptions: {
+            expiresIn: `${authConfig.jwt.expirationInterval}s`,
+            audience: authConfig.jwt.audience,
+            issuer: authConfig.jwt.issuer,
+          },
+        };
+      },
+    }),
+    DrizzleModule,
+  ],
+  providers: [AuthService],
+  exports: [AuthService],
+})
+export class AuthModule {}
+```
+
+1. We importeren de `JwtModule` en configureren deze asynchroon met onze `AuthConfig`.
+2. We injecteren de `ConfigService` om de configuratie op te halen.
+3. We maken de module ook global zodat we deze niet in andere modules moeten importeren.
+4. We halen onze authenticatie configuratie op.
+5. We geven de nodige opties mee aan de `JwtModule`, opgehaald uit onze configuratie:
+   - `secret`: het geheim waarmee de JWT ondertekend wordt
+   - `signOptions`: opties voor het ondertekenen van de JWT, zoals vervaldatum, audience en issuer
+
+### Wachtwoord hashen
+
+We voegen een functie toe om wachtwoorden te hashen met argon2:
+
+```ts
+import * as argon2 from 'argon2'; // 👈 1
+import { AuthConfig, ServerConfig } from '../config/configuration'; // 👈 2
+
+// src/auth/auth.service.ts
+export class AuthService {
+  // ... constructor
+
+  async hashPassword(password: string): Promise<string> {
+    const authConfig = this.configService.get<AuthConfig>('auth')!; // 👈 2
+    // 👇 3
+    return argon2.hash(password, {
+      type: argon2.argon2id,
+      hashLength: authConfig.hashLength,
+      timeCost: authConfig.timeCost,
+      memoryCost: authConfig.memoryCost,
+    });
+  }
+}
+```
+
+1. We importeren de `argon2` bibliotheek.
+2. We vragen de `auth` configuratie op.
+3. We gebruiken het `argon2id` algoritme, een combinatie van `argon2i` en `argon2d`, en is momenteel de aanbevolen variant. Daarnaast gebruiken we onze gedefinieerde configuratie.
+
+### Wachtwoord verifiëren
+
+We voegen een functie toe om wachtwoorden te verifiëren:
+
+```ts
+// src/auth/auth.service.ts
+export class AuthService {
+  // ... andere functies
+
+  async verifyPassword(password: string, hash: string): Promise<boolean> {
+    return await argon2.verify(hash, password);
+  }
+}
+```
+
+De opties die gebruikt zijn bij het hashen zitten in de hash zelf, dus deze moeten niet meegegeven worden.
+
+### JWT ondertekenen
+
+We voegen een type toe voor de gebruikers in onze databank. We hergebruiken hiervoor types die Drizzle automatisch genereert:
+
+```ts
+// src/types/user.ts
+import { users } from '../drizzle/schema';
+
+export type User = typeof users.$inferInsert;
+```
+
+We voegen een private functie toe om een JWT te ondertekenen voor een gebruiker:
+
+```ts
+// src/auth/auth.service.ts
+// ...
+import { User } from '../types/user';
+
+export class AuthService {
+  // ... andere functies
+
+  private signJwt(user: User): string {
+    const authConfig = this.configService.get<AuthConfig>('auth')!;
+    return this.jwtService.sign(
+      { sub: user.id, email: user.email, roles: user.roles }, // 👈 1
+      {
+        // 👇 2
+        secret: authConfig.jwt.secret,
+        audience: authConfig.jwt.audience,
+        issuer: authConfig.jwt.issuer,
+        expiresIn: authConfig.jwt.expirationInterval, // 👈 3
+      },
+    );
+  }
+}
+```
+
+1. We stoppen het gebruikers id, email en rollen in de JWT payload.
+   - Hiervoor gebruiken we de `sub` claim voor het gebruikers id. Dit is een standaard claim in JWT's.
+   - De overige velden zijn custom claims, die mag je zelf kiezen.
+   - Let wel op: enkel controle op een rol doen in de frontend is niet voldoende. De backend moet altijd controleren of de gebruiker de actie mag uitvoeren.
+2. Verder geven we de nodige opties mee om de JWT te ondertekenen, opgehaald uit de configuratie.
+3. We geven de `expirationInterval` mee om de JWT te laten verlopen na een bepaalde tijd. Je kiest deze tijd zelf, afhankelijk van het type applicatie.
+
+### JWT verifiëren
+
+Definieer een type voor de payload van de JWT:
+
+```ts
+// src/types/auth.ts
+
+export interface JwtPayload {
+  sub: number;
+  email: string;
   roles: string[];
 }
 ```
 
-En passen we de `BudgetAppState` interface aan in `src/types/koa.ts`:
+We voegen een functie toe om een JWT te verifiëren:
 
 ```ts
-import type { SessionInfo } from './auth';
+// src/auth/auth.service.ts
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 
-export interface BudgetAppState {
-  session: SessionInfo;
-}
-```
+export class AuthService {
+  // ... andere functies
 
-Daarna definiëren we in `src/service/user.ts` een eerste functie om een JWT te verifiëren en te parsen:
+  async verifyJwt(token: string): Promise<JwtPayload> {
+    const authConfig = this.configService.get<AuthConfig>('auth')!;
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
+      secret: authConfig.jwt.secret,
+      audience: authConfig.jwt.audience,
+      issuer: authConfig.jwt.issuer,
+    });
 
-```ts
-// src/service/user.ts
-import config from 'config'; // 👈 7
-import jwt from 'jsonwebtoken'; // 👈 9
-import { getLogger } from '../core/logging'; // 👈 4
-import { generateJWT, verifyJWT } from '../core/jwt'; // 👈 5
-import type { SessionInfo } from '../types/auth'; // 👈 1
-
-// 👇 1
-export const checkAndParseSession = async (
-  authHeader?: string,
-): Promise<SessionInfo> => {
-  // 👇 2
-  if (!authHeader) {
-    throw ServiceError.unauthorized('You need to be signed in');
-  }
-
-  // 👇 3
-  if (!authHeader.startsWith('Bearer ')) {
-    throw ServiceError.unauthorized('Invalid authentication token');
-  }
-
-  // 👇 4
-  const authToken = authHeader.substring(7);
-
-  // 👇 5
-  try {
-    const { roles, sub } = await verifyJWT(authToken); // 👈 6
-
-    // 👇 7
-    return {
-      userId: Number(sub),
-      roles,
-    };
-  } catch (error: any) {
-    // 👇 8
-    getLogger().error(error.message, { error });
-
-    // 👇 9
-    if (error instanceof jwt.TokenExpiredError) {
-      throw ServiceError.unauthorized('The token has expired');
-    } else if (error instanceof jwt.JsonWebTokenError) {
-      throw ServiceError.unauthorized(
-        `Invalid authentication token: ${error.message}`,
-      );
-    } else {
-      throw ServiceError.unauthorized(error.message);
+    if (!payload) {
+      throw new UnauthorizedException('Invalid authentication token');
     }
+
+    return payload;
   }
-};
-```
-
-1. We definiëren een functie die de sessie-informatie controleert en parset. Ze krijgt de `Authorization` header mee en retourneert de sessie-informatie.
-2. Als er geen header meegegeven werd aan het request, gooien we een gepaste fout.
-3. Indien de header niet start met "Bearer " gooien we ook een gepast fout, dit moet zo per definitie.
-4. Vervolgens verwijderen we de "Bearer " van de token, zo hebben we enkel de JWT over.
-5. We wrappen alles in een try-catch om de fouten nog eens afzonderlijk te loggen. Alle fouten die gegooid worden, hebben te maken met de geldigheid van de JWT (verlopen, ongeldig signature...)
-6. We verifiëren de JWT. Als deze geldig is, dan krijgen we de payload van de token terug.
-   - Merk op: de `sub` property van de payload bevat de id van de gebruiker maar als string. We zetten deze om naar een getal.
-7. Als laatste retourneren we alle sessie-informatie: het id van de gebruiker en de rollen.
-8. Als er een fout optreedt, loggen we deze alvast.
-9. We proberen de fout om te vormen naar een gepaste foutmelding. Als de token verlopen is, geven we een andere foutmelding dan als de token ongeldig is. We kunnen dit afleiden uit het type van de fout.
-
-De laatste functie in de user service zal checken of een gegeven rol in de array van rollen voorkomt. De array bevat alle rollen van de gebruiker (uit de JWT payload gehaald). De functie geeft niets terug, maar gooit een gepaste fout als de rol niet voorkomt.
-
-```ts
-// src/service/user.ts
-export const checkRole = (role: string, roles: string[]): void => {
-  const hasPermission = roles.includes(role); // 👈 1
-
-  // 👇 2
-  if (!hasPermission) {
-    throw ServiceError.forbidden(
-      'You are not allowed to view this part of the application',
-    );
-  }
-};
-```
-
-1. Met de `includes` functie kunnen we controleren of de rol voorkomt in de array
-2. Als de rol niet in de array voorkomt, wordt een forbidden fout geworpen. Die zal worden afgehandeld door onze middleware uit het vorige hoofdstuk.
-
-### Auth middlewares toevoegen aan de REST-laag
-
-Pas `src/rest/user.ts` als volgt aan:
-
-```ts
-// src/rest/user.ts
-// ... (imports)
-import { requireAuthentication, makeRequireRole } from '../core/auth'; // 👈 2
-import Role from '../core/roles'; // 👈 4
-
-export default function installUsersRoutes(parent: KoaRouter) {
-  // ...
-
-  // 👇 1
-  router.post('/', validate(registerUser.validationScheme), registerUser);
-
-  const requireAdmin = makeRequireRole(Role.ADMIN); // 👈 4
-
-  router.get(
-    '/',
-    requireAuthentication, // 👈 3
-    requireAdmin, // 👈 4
-    validate(getAllUsers.validationScheme),
-    getAllUsers,
-  );
-  router.get(
-    '/:id',
-    requireAuthentication, // 👈 3
-    validate(getUserById.validationScheme),
-    getUserById,
-  );
-  router.put(
-    '/:id',
-    requireAuthentication, // 👈 3
-    validate(updateUserById.validationScheme),
-    updateUserById,
-  );
-  router.delete(
-    '/:id',
-    requireAuthentication, // 👈 3
-    validate(deleteUserById.validationScheme),
-    deleteUserById,
-  );
-
-  // ...
 }
 ```
 
-1. De register route laten we staan, daarvoor is geen authenticatie of autorisatie nodig.
-   - Het leest eenvoudiger als je dergelijke routes bovenaan zet.
-2. We importeren onze nieuwe middlewares.
-3. En dwingen op elke andere route authenticatie af, we moeten dus aangemeld zijn.
-   - Aangemeld zijn = `Authorization` header bevat een geldige JWT.
-4. We willen ook de `GET /api/users` enkel toegankelijk maken voor admins. Daarom maken we een middleware die op deze rol checkt en voegen deze toe aan de route.
+Deze functie verifieert de JWT en geeft de payload terug. We geven alle nodige configuratie-opties mee zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
 
-Bij onze routes voor transactions of places, kunnen we dit veel korter doen:
+Als de JWT ongeldig is, wordt een `UnauthorizedException` gegooid.
 
-```ts
-// src/rest/place.ts
-export default (parent: KoaRouter) => {
-  const router = new Router<BudgetAppState, BudgetAppContext>({
-    prefix: '/places',
-  });
+## Aanmelden
 
-  router.use(requireAuthentication); // 👈
-
-  // ... (route definities)
-};
-```
-
-Op die manier dwingen we meteen authenticatie af voor alle routes in deze router.
-
-Nu merk je waarschijnlijk een type error op in de `requireAuthentication` middleware. Dit komt omdat we onze types voor `BudgetAppContext` en `KoaContext` foutief gedefinieerd hebben. Dat kom je wel eens vaker tegen bij het werken met TypeScript, soms is het onduidelijk hoe je een bepaald type moet gebruiken. We passen deze types aan in `src/types/koa.ts`:
+Aanmelden op onze API zal gebeuren via een `POST /api/sessions` endpoint. Daarvoor definiëren we eerst de nodige DTO's:
 
 ```ts
-// src/types/koa.ts
-export interface BudgetAppContext<
-  Params = unknown,
-  RequestBody = unknown,
-  Query = unknown,
-> {
-  request: {
-    body: RequestBody;
-    query: Query;
-  };
-  params: Params;
+// src/session/session.dto.ts
+import { IsEmail, IsString } from 'class-validator';
+
+export class LoginRequestDto {
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  password: string;
 }
 
-export type KoaContext<
-  ResponseBody = unknown,
-  Params = unknown,
-  RequestBody = unknown,
-  Query = unknown,
-> = ParameterizedContext<
-  BudgetAppState,
-  BudgetAppContext<Params, RequestBody, Query>,
-  ResponseBody
->;
+export class LoginResponseDto {
+  token: string;
+}
 ```
 
-Wat is het verschil met de vorige versie?
+We geven een e-mailadres en wachtwoord mee in de `LoginRequestDto` en krijgen een JWT token terug in de `LoginResponseDto`.
 
-- Antwoord +
-
-  Hiervoor was `BudgetAppContext` leeg en was `KoaContext` een samenvoeging van `ParameterizedContext` en de inhoud van `BudgetAppContext`. Dit laatste is fout. We moeten de `ParameterizedContext` gebruiken en de `BudgetAppContext` als een type meegeven aan `ParameterizedContext`.
-
-## Controleer of de aangemelde gebruiker toegang heeft tot de gegeven user info
-
-We dienen nog te controleren of de aangemelde gebruiker wel toegang heeft tot de gevraagde user informatie. Enkel de admin en de gebruiker zelf hebben toegang tot de gegevens van een gebruiker. We voegen een nieuwe middleware toe die controleert of de aangemelde gebruiker toegang heeft tot de gevraagde user info.
-
-Voeg toe aan `src/rest/user.ts`:
+We voegen een `login` functie toe aan de `AuthService` die een gebruiker probeert aan te melden:
 
 ```ts
-// src/rest/user.ts
-// ... (imports)
-import type { Next } from 'koa';
-import type {
-  // ...
-  GetUserRequest, // 👈
-} from '../types/user';
+// src/auth/auth.service.ts
+import { LoginRequestDto } from '../session/session.dto';
+import { users } from '../drizzle/schema';
+import { eq } from 'drizzle-orm';
 
-// 👇
-const checkUserId = (ctx: KoaContext<unknown, GetUserRequest>, next: Next) => {
-  const { userId, roles } = ctx.state.session;
-  const { id } = ctx.params;
+export class AuthService {
+  // ... andere functies
 
-  // You can only get our own data unless you're an admin
-  if (id !== 'me' && id !== userId && !roles.includes(Role.ADMIN)) {
-    return ctx.throw(
-      403,
-      "You are not allowed to view this user's information",
-      { code: 'FORBIDDEN' },
+  async login({ email, password }: LoginRequestDto): Promise<string> {
+    // 👇 1
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.email, email),
+    });
+
+    // 👇 2
+    if (!user) {
+      throw new UnauthorizedException(
+        'The given email and password do not match',
+      );
+    }
+
+    // 👇 3
+    const passwordValid = await this.verifyPassword(
+      password,
+      user.passwordHash,
     );
-  }
-  return next();
-};
 
+    // 👇 4
+    if (!passwordValid) {
+      throw new UnauthorizedException(
+        'The given email and password do not match',
+      );
+    }
+
+    return this.signJwt(user); // 👈 5
+  }
+}
+```
+
+1. We zoeken de gebruiker op basis van het e-mailadres.
+2. Als de gebruiker niet bestaat, gooien we een `UnauthorizedException`. We willen niet laten blijken dat we de gebruiker kennen, dus we zeggen dat het e-mailadres en wachtwoord niet matchen.
+3. Als de gebruiker bestaat, verifiëren we het wachtwoord.
+4. Als het wachtwoord niet klopt, gooien we opnieuw een `UnauthorizedException` met dezelfde foutmelding.
+5. Als alles klopt, ondertekenen we een JWT en geven deze terug.
+
+Vervolgens maken we een controller voor de login route:
+
+```bash
+pnpm nest g module session
+pnpm nest g controller session --no-spec
+```
+
+Controleer of de `SessionController` in de `SessionModule` is geregistreerd en de `SessionModule` geïmporteerd wordt in de `AppModule`.
+
+Daarin definiëren we de `POST /api/sessions` route:
+
+```ts
+// src/sessions/sessions.controller.ts
+import { Controller, Post, Body } from '@nestjs/common';
+import { AuthService } from '../auth/auth.service';
+import { LoginRequestDto, LoginResponseDto } from './session.dto';
+
+@Controller('sessions') // 👈 1
+export class SessionController {
+  constructor(private authService: AuthService) {}
+
+  @Post() // 👈 2
+  async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
+    const token = await this.authService.login(loginDto); // 👈 3
+    return { token }; // 👈 4
+  }
+}
+```
+
+1. De controller luistert naar requests op `/sessions`.
+2. De route luistert naar POST requests op `/sessions`.
+3. We roepen de `login` functie van de `AuthService` aan.
+4. We geven de JWT token terug in een object.
+
+> **Waarom definiëren we een API call `POST /api/sessions` i.p.v. `POST /api/users/login`?**
+>
+> Een API call moet altijd RESTful zijn. Dit betekent dat je geen werkwoorden of acties in je URL's steekt (dus ook geen `login`). Je werkt met resources en je voert acties uit op die resources. In dit geval is de resource een sessie en de actie is aanmelden. Daarom is `POST /api/sessions` correct en `POST /api/users/login` niet.
+
+Importeer de `AuthModule` in de `SessionModule` zodat we de `AuthService` kunnen gebruiken.
+
+## Registreren
+
+Registreren van een nieuwe gebruiker zal gebeuren via een `POST /api/users` endpoint. We definiëren eerst de nodige DTO:
+
+```ts
+// src/user/user.dto.ts
+import { IsString, IsEmail, MinLength, MaxLength } from 'class-validator';
+
+export class RegisterUserRequestDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(255)
+  name: string;
+
+  @IsString()
+  @IsEmail()
+  email: string;
+
+  @IsString()
+  @MinLength(8)
+  @MaxLength(128)
+  password: string;
+}
+```
+
+Verwijder de bestaande `CreateUserRequestDto` uit de `user.dto.ts`, deze wordt niet meer gebruikt. Pas `UpdateUserRequestDto` aan naar:
+
+```ts
+// src/user/user.dto.ts
+
+export class UpdateUserRequestDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(255)
+  name: string;
+
+  @IsString()
+  @IsEmail()
+  email: string;
+}
+```
+
+Eventueel kan je opteren om het wachtwoord optioneel mee te geven in `UpdateUserRequestDto`. Als het wachtwoord meegegeven wordt, zal het ook aangepast worden in de databank. We doen dit niet in deze cursus.
+
+We voegen ook een `register` functie toe aan de `AuthService`:
+
+```ts
+// src/auth/auth.service.ts
 // ...
+import { Role } from './roles';
+import { RegisterUserRequestDto } from '../user/user.dto';
 
-router.get(
-  '/:id',
-  requireAuthentication,
-  validate(getUserById.validationScheme),
-  checkUserId, // 👈
-  getUserById,
-);
-router.put(
-  '/:id',
-  requireAuthentication,
-  validate(updateUserById.validationScheme),
-  checkUserId, // 👈
-  updateUserById,
-);
-router.delete(
-  '/:id',
-  requireAuthentication,
-  validate(deleteUserById.validationScheme),
-  checkUserId, // 👈
-  deleteUserById,
-);
-```
+export class AuthService {
+  // ... andere functies
 
-Je zou er ook voor kunnen kiezen om een HTTP 404 terug te geven om niet prijs te geven dat je de gebruiker kent. Dit is een veiligheidsmaatregel zijn. In dit geval geven we een HTTP 403 terug.
+  async register({
+    name,
+    email,
+    password,
+  }: RegisterUserRequestDto): Promise<string> {
+    // 👇 1
+    const passwordHash = await this.hashPassword(password);
 
-We passen ook de `getUserById` functie aan in `src/rest/user.ts` zodat we `me` kunnen gebruiken om de informatie van de aangemelde gebruiker op te vragen:
+    // 👇 2
+    const [newUser] = await this.db
+      .insert(users)
+      .values({
+        name,
+        email,
+        passwordHash: passwordHash,
+        roles: [Role.USER], // 👈 3
+      })
+      .$returningId();
 
-```ts
-const getUserById = async (
-  ctx: KoaContext<GetUserByIdResponse, GetUserRequest>, // 👈
-) => {
-  // 👇
-  const user = await userService.getById(
-    ctx.params.id === 'me' ? ctx.state.session.userId : ctx.params.id,
-  );
-  ctx.status = 200;
-  ctx.body = user;
-};
-getUserById.validationScheme = {
-  params: {
-    // 👇
-    id: Joi.alternatives().try(
-      Joi.number().integer().positive(),
-      Joi.string().valid('me'),
-    ),
-  },
-};
-```
+    // 👇 4
+    const user = await this.db.query.users.findFirst({
+      where: eq(users.id, newUser.id),
+    });
 
-Hierdoor moeten we ook het type van `GetUserRequest` toevoegen aan `src/types/user.ts`:
-
-```ts
-// src/types/user.ts
-
-export interface GetUserRequest {
-  id: number | 'me'; // 👈
+    // 👇 5
+    return this.signJwt(user!);
+  }
 }
 ```
 
-## Willekeurige vertragingsfunctie
+1. We hashen het wachtwoord voordat we de gebruiker aanmaken.
+2. We maken een nieuwe gebruiker aan in de database.
+3. Standaard krijgt elke nieuwe gebruiker de `USER` rol.
+4. We halen de volledige gebruiker op uit de database.
+5. We ondertekenen een JWT en geven deze terug.
+   - We weten dat de `user` bestaat omdat we deze net aangemaakt hebben, dus we gebruiken de non-null assertion operator `!`.
 
-Om zogenaamde [timing attacks](https://en.wikipedia.org/wiki/Timing_attack) te voorkomen, kunnen we een willekeurige vertragingsfunctie toevoegen aan onze authenticatie. Deze functie wacht een willekeurige tijd vooraleer het request effectief te verwerken. Zo kan een aanvaller bv. niet aan de hand van de responstijd afleiden of een wachtwoord correct is of niet.
-
-We voegen een nieuwe middleware-functie toe aan `src/core/auth.ts`:
-
-```ts
-// src/core/auth.ts
-import config from 'config'; // 👈 1
-
-const AUTH_MAX_DELAY = config.get<number>('auth.maxDelay'); // 👈 1
-
-// 👇 2
-export const authDelay = async (_: KoaContext, next: Next) => {
-  // 👇 3
-  await new Promise((resolve) => {
-    const delay = Math.round(Math.random() * AUTH_MAX_DELAY);
-    setTimeout(resolve, delay);
-  });
-  // 👇 4
-  return next();
-};
-```
-
-1. We importeren de configuratie en halen de maximale vertraging op.
-   - Voeg zelf `auth.maxDelay` toe aan elk configuratiebestand. Stel dit default in op 5000 ms (= 5 seconden).
-2. We definiëren een middleware die een willekeurige vertraging toevoegt aan het request. De vertraging is tussen 0 en de maximale vertraging.
-3. We maken een Promise die na een willekeurige tijd opgelost wordt.
-4. We roepen de volgende middleware in de rij aan wanneer de Promise afgelopen is en de vertraging dus voorbij is.
-
-Voeg vervolgens deze middleware toe aan het request voor registreren in `src/rest/user.ts`:
+En we refactoren de `POST /api/users` route in de `UserController`:
 
 ```ts
-// src/rest/user.ts
+// src/user/user.controller.ts
 import {
   // ...
-  authDelay, // 👈
-} from '../core/auth';
+  RegisterUserRequestDto, // 👈 2
+} from './user.dto';
+import { LoginResponseDto } from '../session/session.dto';
+import { AuthService } from '../auth/auth.service'; // 👈 1
 
-// ...
+@Controller('users')
+export class UserController {
+  constructor(
+    // ... andere services
+    private readonly authService: AuthService, // 👈 1
+  ) {}
 
-router.post(
-  '/',
-  authDelay, // 👈
-  validate(register.validationScheme),
-  register,
-);
+  @Post() // 👇 1
+  async registerUser(
+    @Body() registerDto: RegisterUserRequestDto,
+  ): Promise<LoginResponseDto> {
+    const token = await this.authService.register(registerDto); // 👈 2
+    return { token }; // 👈 3
+  }
+
+  // ... andere routes
+}
 ```
 
-Herhaal hetzelfde voor de login route in `src/rest/session.ts`:
+1. We injecteren de `AuthService`.
+2. We hernoemen een `POST /api/users` route handler naar `registerUser`, we gebruiken ook het juist DTO.
+3. We roepen de `register` functie van de `AuthService` aan.
+4. We geven de JWT token terug in een object.
+
+> ⚠️ **Belangrijk**: We gebruiken niet `POST /api/users/register` omdat dit geen RESTful route is. Je mag nl. geen werkwoorden of acties in je URL's steken.
+
+Verwijder de oude `create` functie uit de`UserService`, deze wordt niet meer gebruikt.
+
+Importeer de `AuthModule` in de `UserModule` zodat we de `AuthService` kunnen gebruiken.
+
+## Endpoints testen
+
+Test het `POST /api/sessions` endpoint via Postman of een gelijkaardige tool. Je zou een JWT token moeten ontvangen bij een succesvolle aanmelding. Gebruik hiervoor volgende JSON body:
+
+```json
+{
+  "email": "thomas.aelbrecht@hogent.be",
+  "password": "12345678"
+}
+```
+
+Test ook het `POST /api/users` endpoint om een nieuwe gebruiker te registreren. Je zou ook hier een JWT token moeten ontvangen bij een succesvolle registratie. Gebruik hiervoor volgende JSON body:
+
+```json
+{
+  "name": "Nieuwe Gebruiker",
+  "email": "nieuwe.gebruiker@hogent.be",
+  "password": "12345678"
+}
+```
+
+Probeer nadien aan te melden met de nieuw geregistreerde gebruiker via het `POST /api/sessions` endpoint.
+
+## Decorators
+
+We gebruiken custom decorators om metadata toe te voegen aan routes. We voegen twee decorators toe, `@Public()` en `@Roles()`, die we later gebruiken in onze guards. Zonder guards hebben deze decorators geen effect.
+
+### @Public()
+
+Als eerste definiëren we een `@Public()` decorator die een route als publiek markeert (dus geen authenticatie vereist):
 
 ```ts
-import { authDelay } from '../core/auth'; // 👈
+// src/auth/decorators/public.decorator.ts
+import { SetMetadata } from '@nestjs/common';
 
-// ...
+export const IS_PUBLIC_KEY = 'isPublic';
+export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
+```
 
-router.post(
-  '/',
-  authDelay, // 👈
-  validate(login.validationScheme),
-  login,
+Voeg de `@Public()` decorator toe aan login en register routes, bijvoorbeeld:
+
+```ts
+// src/sessions/sessions.controller.ts
+import { Public } from '../auth/decorators/public.decorator'; // 👈 1
+
+@Controller('sessions')
+export class SessionController {
+  // ... constructor
+
+  @Public() // 👈 2
+  @Post()
+  async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
+    // ...
+  }
+}
+```
+
+### @Roles()
+
+De `@Roles()` decorator markeert welke rollen vereist zijn voor een route:
+
+```ts
+// src/auth/decorators/roles.decorator.ts
+import { SetMetadata } from '@nestjs/common';
+
+export const ROLES_KEY = 'roles';
+export const Roles = (...roles: string[]) => SetMetadata(ROLES_KEY, roles);
+```
+
+Voeg de `@Roles()` decorator toe aan de route om alle gebruikers op te halen:
+
+```ts
+// src/user/user.controller.ts
+import { Roles } from '../auth/decorators/roles.decorator'; // 👈 1
+import { Role } from '../auth/roles';
+
+@Controller('users')
+export class UserController {
+  // ... constructor
+
+  @Get() // 👇 1
+  @Roles(Role.ADMIN) // 👈 2
+  async getAllUsers(): Promise<UserResponseDto[]> {
+    // ...
+  }
+}
+```
+
+## Guards voor authenticatie en autorisatie
+
+Als laatste stap implementeren het afdwingen van authenticatie en autorisatie op onze routes. Zo kunnen we bepalen welke routes publiek zijn, welke routes enkel voor aangemelde gebruikers zijn en welke routes enkel voor gebruikers met bepaalde rollen.
+
+Lees eerst de documentatie over [Guards](https://docs.nestjs.com/guards) (t.e.m. "Authorization guard").
+
+In NestJS gebruiken we **guards** om authenticatie en autorisatie af te dwingen. Guards zijn klassen die bepalen of een request mag doorgaan of niet. Ze geven simpelweg `true` of `false` terug, of gooien een foutmelding.
+
+### AuthGuard
+
+De eerste guard die we maken is de `AuthGuard` en controleert of de gebruiker is aangemeld:
+
+```ts
+// src/auth/guards/auth.guard.ts
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { Request } from 'express';
+import { AuthService } from '../auth.service';
+import { IS_PUBLIC_KEY } from '../decorators';
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(
+    private authService: AuthService,
+    private reflector: Reflector, // 👈 1
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    // 👇 2
+    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (isPublic) {
+      return true;
+    }
+
+    // 👇 3
+    const request = context.switchToHttp().getRequest();
+    const token = this.extractTokenFromHeader(request);
+    if (!token) {
+      throw new UnauthorizedException('You need to be signed in');
+    }
+
+    try {
+      // 👇 4
+      const payload = await this.authService.verifyJwt(token);
+
+      // 👇 5
+      request.user = {
+        id: payload.sub,
+        roles: payload.roles,
+        email: payload.email,
+      };
+    } catch (err) {
+      // 👇 6
+      if (err.name === 'TokenExpiredError') {
+        throw new UnauthorizedException('Token has expired');
+      } else {
+        throw new UnauthorizedException('Invalid authentication token');
+      }
+    }
+    return true; // 👈 7
+  }
+
+  // 👇 3
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
+}
+```
+
+1. We injecteren de `Reflector` om metadata van decorators te kunnen lezen.
+   - Zie <https://docs.nestjs.com/fundamentals/execution-context#executioncontext-class>
+   - `context.getHandler()` geeft de methode van de controller terug.
+   - `context.getClass()` geeft de controller klasse terug.
+2. We controleren of de route publiek is (via de `@Public()` decorator). Als dat zo is, laten we het request door.
+3. We halen de JWT uit de `Authorization` header en controleren of deze bestaat. Als er geen token is, gooien we een `UnauthorizedException`.
+   - We gebruiken hiervoor de helper functie `extractTokenFromHeader`. Deze haalt de token uit de header en controleert of de prefix `Bearer` is.
+4. We verifiëren de JWT en krijgen de payload terug.
+5. We slaan de gebruikersinformatie op in `request.user` zodat we deze later kunnen gebruiken.
+6. Als er een fout optreedt bij het verifiëren van de JWT, gooien we een gepaste foutmelding.
+7. Als alles goed is, laten we het request door.
+
+In deze guard krijgen we een aantal linting fouten. Voorlopig schakelen we deze regels uit. Voeg volgende toe aan het `rules` object in het `eslint.config.mjs` bestand:
+
+```text
+'@typescript-eslint/no-unsafe-argument': 'off',
+'@typescript-eslint/no-unsafe-assignment': 'off',
+'@typescript-eslint/no-unsafe-call': 'off',
+'@typescript-eslint/no-unsafe-member-access': 'off',
+'@typescript-eslint/no-unsafe-return': 'off',
+```
+
+### RolesGuard
+
+De `RolesGuard` controleert of de gebruiker de juiste rollen heeft:
+
+```ts
+// src/auth/guards/roles.guard.ts
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import { ROLES_KEY } from '../decorators/roles.decorator';
+
+@Injectable()
+export class RolesGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
+  canActivate(context: ExecutionContext): boolean {
+    // 👇 1
+    const requiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    // 👇 2
+    if (!requiredRoles) {
+      return true;
+    }
+
+    const request = context.switchToHttp().getRequest();
+
+    // 👇 3
+    if (!request.user) {
+      throw new UnauthorizedException('You need to be signed in');
+    }
+
+    const { roles } = request.user;
+
+    // 👇 4
+    const hasRole = requiredRoles.some((role) => roles?.includes(role));
+
+    // 👇 5
+    if (!hasRole) {
+      throw new ForbiddenException('You do not have access to this resource');
+    }
+
+    return true; // 👈 6
+  }
+}
+```
+
+1. We halen de vereiste rollen op uit de metadata van de route (via de `@Roles()` decorator).
+2. Als er geen rollen vereist zijn, laten we het request door.
+3. We controleren of de gebruiker is aangemeld.
+4. We controleren of de gebruiker één van de vereiste rollen heeft.
+5. Als de gebruiker niet de juiste rol heeft, gooien we een `ForbiddenException`.
+6. Op het einde geven we `true` terug om het request door te laten.
+
+### Guards globaal registreren
+
+We registreren de guards globaal in de `AppModule` zodat ze automatisch op alle routes worden toegepast:
+
+```ts
+// src/app.module.ts
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth/guards/auth.guard';
+import { RolesGuard } from './auth/guards/roles.guard';
+
+@Module({
+  // ... imports
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard, // 👈
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard, // 👈
+    },
+    // ... andere providers
+  ],
+})
+export class AppModule {}
+```
+
+We registreren de `AuthGuard` en de `RolesGuard` globaal. Hierdoor worden deze guard automatisch op alle routes toegepast. Heb je meer controle nodig over welke guards op welke routes toegepast worden, dan kan je ze ook per controller of per route registreren via de `@UseGuards()` decorator.
+
+## Gebruikersspecifieke toegangscontrole
+
+Naast algemene authenticatie en autorisatie, willen we ook controleren of een gebruiker toegang heeft tot zijn eigen gegevens.
+
+### CheckUserAccessGuard
+
+We maken hiervoor een speciale guard:
+
+```ts
+// src/auth/guards/userAccess.guard.ts
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Role } from '../roles';
+
+@Injectable()
+export class CheckUserAccessGuard implements CanActivate {
+  canActivate(context: ExecutionContext): boolean {
+    const request = context.switchToHttp().getRequest();
+
+    // 👇 1
+    if (!request.user) {
+      throw new UnauthorizedException('You need to be signed in');
+    }
+
+    const { id: userId, roles } = request.user;
+    const id = request.params.id;
+
+    // 👇 2
+    if (id !== 'me' && id !== String(userId) && !roles.includes(Role.ADMIN)) {
+      throw new NotFoundException('No user with this id exists');
+    }
+
+    return true;
+  }
+}
+```
+
+1. We controleren of de gebruiker is aangemeld.
+2. We controleren of de gebruiker toegang heeft tot de gevraagde gebruiker:
+   - Als het id `'me'` is, heeft de gebruiker altijd toegang.
+   - Als het id overeenkomt met het id van de aangemelde gebruiker, heeft de gebruiker toegang.
+   - Als de gebruiker een admin is, heeft hij altijd toegang.
+   - Anders gooien we een `NotFoundException` om niet prijs te geven dat de gebruiker bestaat.
+
+### @CurrentUser()
+
+Om de huidige gebruiker eenvoudig op te halen in onze route handlers, maken we een `@CurrentUser()` decorator. Deze decorator haalt de gebruiker op uit het request object dat we in de `AuthGuard` gezet hebben.
+
+```ts
+// src/auth/decorators/currentUser.decorator.ts
+import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+
+export const CurrentUser = createParamDecorator(
+  (_: unknown, ctx: ExecutionContext) => {
+    const request = ctx.switchToHttp().getRequest();
+    return request.user;
+  },
 );
 ```
 
-## Opmerking
+We voegen ook nog een type toe voor de gebruikerssessie:
+
+```ts
+// src/types/auth.ts
+export interface Session {
+  userId: number;
+  email: string;
+  roles: string[];
+}
+```
+
+### ParseUserIdPipe
+
+We maken ook een pipe die het `id` parameter kan parsen naar een `number` of `'me'`:
+
+```ts
+// src/auth/pipes/parseUserId.pipe.ts
+import type { PipeTransform } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
+
+@Injectable()
+export class ParseUserIdPipe implements PipeTransform {
+  transform(value: string) {
+    if (value === 'me') {
+      return 'me';
+    }
+
+    const parsedId = Number(value);
+    if (isNaN(parsedId)) {
+      throw new BadRequestException('User ID must be a number or "me"');
+    }
+
+    return parsedId;
+  }
+}
+```
+
+### Implementatie in UserController
+
+Deze guard gebruiken we op routes waar we gebruikersspecifieke data ophalen. Als de gebruiker `'me'` als id opgeeft, gebruiken we de id van de aangemelde gebruiker. Anders gebruiken we het opgegeven id.
+
+```ts
+// src/user/user.controller.ts
+// ...
+import {
+  // ...
+  UseGuards,
+} from '@nestjs/common';
+import { CheckUserAccessGuard } from '../auth/guards/userAccess.guard';
+import { type Session } from '../types/auth';
+
+@Controller('users')
+export class UserController {
+  @Get(':id')
+  @UseGuards(CheckUserAccessGuard) // 👈
+  async getUserById(
+    @Param('id', ParseUserIdPipe) id: 'me' | number, // 👈
+    @CurrentUser() user: Session, // 👈
+  ): Promise<PublicUserResponseDto> {
+    const userId = id === 'me' ? user.id : id; // 👈
+    return await this.userService.getById(userId);
+  }
+
+  @Put(':id')
+  @UseGuards(CheckUserAccessGuard) // 👈
+  async updateUserById(
+    @Param('id', ParseUserIdPipe) id: 'me' | number, // 👈
+    @CurrentUser() user: Session, // 👈
+    @Body() dto: UpdateUserRequestDto,
+  ): Promise<PublicUserResponseDto> {
+    return await this.userService.updateById(
+      id === 'me' ? user.id : id, // 👈
+      dto,
+    );
+  }
+
+  @Delete(':id')
+  @UseGuards(CheckUserAccessGuard) // 👈
+  async deleteUserById(
+    @Param('id', ParseUserIdPipe) id: 'me' | number, // 👈
+    @CurrentUser() user: Session, // 👈
+  ): Promise<void> {
+    return await this.userService.deleteById(
+      id === 'me' ? user.id : id, // 👈
+    );
+  }
+}
+```
+
+### Endpoints testen
+
+#### Gewone gebruiker
+
+Meld je aan met een gebruiker via `POST /api/sessions` en met onderstaande body:
+
+```json
+{
+  "email": "karine.samyn@hogent.be",
+  "password": "12345678"
+}
+```
+
+Kopieer de JWT token uit het response.
+
+Voer een `GET /api/users/me` request uit en kies in Postman bij het tabblad `Authorization` voor `Bearer Token`. Plak de JWT token in het veld. Je zou de gegevens van de aangemelde gebruiker moeten ontvangen.
+
+Je kan ook `GET /api/users/3` uitvoeren om deze gebruiker op te vragen. Bij een ander user id krijg je een 404.
+
+> :bulb: **Tip:** bekijk de inhoud van de JWT op <https://jwt.io/> door de token in te plakken. Zo kan je zien welke gegevens er in de token zitten.
+
+#### Admin gebruiker
+
+Meld je nu aan met een admin gebruiker via `POST /api/sessions` en met onderstaande body:
+
+```json
+{
+  "email": "thomas.aelbrecht@hogent.be",
+  "password": "12345678"
+}
+```
+
+Kopieer de JWT token uit het response.
+
+Voer een `GET /api/users/1` request uit (met de token van de admin). Je krijgt de eigen user te zien. Probeer daarna een `GET /api/users/3`, je zou nu ook deze gebruiker moeten kunnen opvragen.
+
+## Timing attack beveiliging
+
+Om zogenaamde [timing attacks](https://en.wikipedia.org/wiki/Timing_attack) te voorkomen, kunnen we een willekeurige vertraging toevoegen aan onze authenticatie. Deze vertraging maakt het moeilijker voor een aanvaller om aan de hand van de responstijd te achterhalen of een wachtwoord correct is of niet.
+
+In NestJS kunnen we dit implementeren met een interceptor:
+
+```ts
+// src/auth/interceptors/authDelay.interceptor.ts
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { delay } from 'rxjs/operators';
+
+@Injectable()
+export class AuthDelayInterceptor implements NestInterceptor {
+  constructor(private configService: ConfigService) {}
+
+  intercept(_: ExecutionContext, next: CallHandler) {
+    const maxDelay = this.configService.get<number>('auth.maxDelay')!;
+    const randomDelay = Math.round(Math.random() * maxDelay);
+    return next.handle().pipe(delay(randomDelay));
+  }
+}
+```
+
+Je kan deze interceptor toevoegen aan de login en register routes, bijvoorbeeld:
+
+```ts
+// src/sessions/sessions.controller.ts
+// ...
+import {
+  // ...
+  UseInterceptors,
+} from '@nestjs/common';
+import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
+
+@UseInterceptors(AuthDelayInterceptor)
+@Post()
+async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
+  // ...
+}
+```
+
+Vergeet niet om een getal `auth.maxDelay` toe te voegen aan je configuratie!
+
+Test dit uit via Postman. je zou moeten merken dat beide requests willekeurig langer duren.
+
+## Opmerking over real-world projecten
 
 In de praktijk wil je liever externe services gebruiken voor authenticatie en autorisatie. Dit geeft minder problemen met o.a. veiligheid, GDPR... Authenticatie en autorisatie is ook altijd hetzelfde!
 
-Voorbeelden zijn [Auth0](https://auth0.com/), [Userfront](https://userfront.com/), [SuperTokens (open source)](https://supertokens.com/), [Amazon Cognito](https://aws.amazon.com/cognito/)...
+Voorbeelden zijn [better-auth](https://www.better-auth.com/), [Auth0](https://auth0.com/), [Userfront](https://userfront.com/), [SuperTokens (open source)](https://supertokens.com/), [Amazon Cognito](https://aws.amazon.com/cognito/)...
 
-Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implementeren. Bij Enterprise Web Development: C# zal je zien hoe je hiervoor Auth0 kan gebruiken.
+Bij Web Services zie je hoe je manueel authenticatie en autorisatie kan implementeren. In andere olods zal je zien hoe je hiervoor externe services kan gebruiken.
 
-## Oefening 3 - Authenticatie
+## Oefeningen
+
+### Oefening 1 - Places beveiligen
+
+Pas `POST /api/places`, `PUT /api/places/:id` en `DELETE /api/places/:id` zijn enkel toegankelijk voor admins. Doe de nodige aanpassingen in de `PlacesController`.
+
+### Oefening 2 - Transacties beveiligen
 
 !> Dit is een zeer belangrijke oefening! Heel wat applicaties voegen simpel authenticatie en autorisatie op routeniveau toe, maar vergeten vaak autorisatie op entiteitsniveau. In ons project mag bv. niet elke gebruiker elke transactie zien. Denk hierover in je eigen project ook goed na!
 
-- Scherm de routes van transactions af. Authenticatie is overal vereist.
-- We passen ook volgende routes aan:
-  - `GET /api/transactions` mag enkel de transacties van de aangemelde gebruiker retourneren, niet langer alle transacties. Pas ook de servicelaag aan.
-    - Een admin mag wel alle transacties ophalen.
-  - `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
-    - Een admin mag wel alle transacties ophalen.
-  - `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Dit geldt ook voor de `PUT /api/transactions/:id`.
-  - `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
-  - Pas, indien nodig, ook de transaction service aan.
+Pas de routes en service van transactions aan:
+
+1. `GET /api/transactions` retourneert enkel de transacties van de aangemelde gebruiker.
+   - Een admin mag wel alle transacties ophalen.
+   - **Tip**: Pas de service aan zodat je het `userId` en de `roles` kan meegeven als parameter.
+   - Controleer of de user niet meer informatie bevat dan het id, de naam en het e-mailadres.
+2. `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
+   - Een admin mag wel alle transacties ophalen.
+   - **Tip**: Pas de service aan zodat je het `userId` en de `roles` kan meegeven als parameter.
+   - Controleer of de user niet meer informatie bevat dan het id, de naam en het e-mailadres.
+3. `POST /api/transactions`: de `userId` van de te creëren transactie is de id van de aangemelde gebruiker. Verwijder dit veld uit de request DTO en gebruik de `@CurrentUser()` decorator om het id van de gebruiker op te halen en door te geven aan de service.
+4. `PUT /api/transactions/:id`: controleer of de transactie behoort tot de aangemelde gebruiker voordat je deze aanpast.
+5. `DELETE /api/transactions/:id`: verwijder enkel transacties van de aangemelde gebruiker.
+
+Optioneel: Pas de CUD-operaties aan zodat de admin deze operaties op alle transacties mag uitvoeren.
 
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 42e1886
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
+> git checkout -b les7-opl 361c611
+> pnpm install
+> pnpm db:migrate
+> pnpm db:seed
+> pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Extra's voor de examenopdracht
 
-- Gebruik van een externe authenticatieprovider (bv. [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
-- Schrijf een custom validator voor Joi om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
+  - NestJS heeft uitstekende ondersteuning voor Passport.js, zie de [NestJS documentatie](https://docs.nestjs.com/security/authentication#implementing-passport-strategies).
+- Gebruik van een externe authenticatieprovider (bv. [better-auth](https://www.better-auth.com/), [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
+- Schrijf een custom validator om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
   - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.

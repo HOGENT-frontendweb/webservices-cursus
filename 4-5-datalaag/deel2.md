@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 e27a0a6
+> git checkout -b les5 e27a0a6
 > pnpm install
 > pnpm db:migrate
 > pnpm db:seed
@@ -370,9 +370,9 @@ async function main() {
 
 Voer de seeding uit:
 
-  ```bash
-  pnpm db:seed
-  ```
+```bash
+pnpm db:seed
+```
 
 ## PlaceService - getById
 
@@ -411,11 +411,11 @@ Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover 
 
 - Oplossing +
 
-  Definieer eerst een `UserResponseDto` in `src/user/user.dto.ts`:
+  Definieer eerst een `PublicUserResponseDto` in `src/user/user.dto.ts`:
 
   ```ts
   // src/user/user.dto.ts
-  export class UserResponseDto {
+  export class PublicUserResponseDto {
     id: number;
     name: string;
   }
@@ -426,13 +426,13 @@ Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover 
   ```ts
   // src/transactions/transaction.dto.ts
   import { PlaceResponseDto } from '../place/place.dto';
-  import { UserResponseDto } from '../user/user.dto';
+  import { PublicUserResponseDto } from '../user/user.dto';
 
   export class TransactionResponseDto {
     id: number;
     amount: number;
     date: Date;
-    user: UserResponseDto;
+    user: PublicUserResponseDto;
     place: PlaceResponseDto;
   }
   ```
@@ -489,7 +489,7 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
   ```ts
   // src/transactions/transaction.dto.ts
   import { PlaceResponseDto } from '../place/place.dto';
-  import { UserResponseDto } from '../user/user.dto';
+  import { PublicUserResponseDto } from '../user/user.dto';
 
   export class TransactionListResponseDto {
     items: TransactionResponseDto[];
@@ -499,7 +499,7 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
     id: number;
     amount: number;
     date: Date;
-    user: UserResponseDto;
+    user: PublicUserResponseDto;
     place: PlaceResponseDto;
   }
 
@@ -513,17 +513,7 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
   export class UpdateTransactionRequestDto extends CreateTransactionRequestDto {}
   ```
 
-  Definieer ook een `UserResponseDto` in `src/user/user.dto.ts`:
-
-  ```ts
-  // src/user/user.dto.ts
-  export class UserResponseDto {
-    id: number;
-    name: string;
-  }
-  ```
-
-  Importeer de `UserResponseDto` in `src/transactions/transaction.dto.ts`.
+  Importeer de `PublicUserResponseDto` in `src/transactions/transaction.dto.ts`.
 
   Definieer tot slot de routes in de controller:
 
