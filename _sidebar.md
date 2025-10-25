@@ -8,7 +8,7 @@
 - [3. REST API bouwen](/3-REST_api_bouwen/index.md)
 - [4. Datalaag en places](/4-5-datalaag/deel1.md)
 - [5. Relaties](/4-5-datalaag/deel2.md)
-- [6. Validatie en foutafhandeling (WIP)](/6-validatie/index.md)
+- [6. Validatie en foutafhandeling](/6-validatie/index.md)
 - [7. Authenticatie & autorisatie (WIP)](/7-authenticatie/index.md)
 - [8. Testing (WIP)](/8-testing/index.md)
 - [9. Testen: authenticatie & autorisatie (WIP)](/9-auth_testing/index.md)
