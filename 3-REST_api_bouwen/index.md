@@ -616,8 +616,7 @@ export class PlaceService {
 }
 ```
 
-De `getPlaceById` methode zoekt een plaats op basis van het id. Als er geen plaats gevonden wordt, geeft deze methode `undefined` terug. Dit gaan we later verbeteren. Voorlopig verander je het returntype in `PlaceResponseDto | undefined`. Dit zal je ook in de Controller moeten aanpassen.
-In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen deze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
+De `getById` methode zoekt een plaats op basis van het id. Als er geen plaats gevonden wordt, gooit deze methode een simpele `Error`. Dit zullen we later verbeteren. In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen deze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
 
 ### Implementatie controller
 
