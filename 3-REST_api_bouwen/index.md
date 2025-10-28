@@ -444,8 +444,8 @@ Gebruik deze DTO in de `getAllPlaces` methode.
   ```ts
   // src/common/common.dto.ts
   export class PaginationQuery {
-    page?: number = 1;
-    limit?: number = 10;
+    page = 1;
+    limit = 10;
   }
   ```
 
@@ -455,7 +455,7 @@ Gebruik deze DTO in de `getAllPlaces` methode.
   getAllPlaces(
     @Query() paginationQuery: PaginationQuery
   ) {
-    const { page = 1, limit = 10 } = paginationQuery;
+    const { page, limit } = paginationQuery;
     return `This action returns all places. Limit ${limit}, page: ${page}`;
   }
   ```
