@@ -12,7 +12,7 @@ Indien je in het keuzepakket `Development` zit, dan volg je waarschijnlijk Front
 
 Concreet maken we een back-end met JavaScript, meer specifiek TypeScript. Er zijn ontzettend veel frameworks en libraries om een back-end te maken, elk met hun eigen voor- en nadelen.
 
-Wij hebben gekozen voor [NestJS](https://nestjs.com/). Waarom? NestJS is een modern framework dat gebouwd is met en voor TypeScript. Het is geïnspireerd door Angular (vooral qua structuur) en maakt gebruik van de nieuwste JavaScript features. Het is modulair opgebouwd, wat het makkelijk maakt om te schalen. Daarnaast heeft het een grote community en veel ingebouwde functionaliteiten zoals dependency injection, wat de ontwikkeling versnelt. Je kan relatief snel een robuuste en onderhoudbare back-end opzetten met NestJS.
+Wij hebben gekozen voor [NestJS](https://nestjs.com/). Waarom? NestJS is een modern framework dat gebouwd is met en voor TypeScript. Het is geïnspireerd door Angular (vooral qua structuur) en maakt gebruik van de nieuwste JavaScript features. Het is modulair opgebouwd, wat het makkelijk maakt om te schalen. Daarnaast heeft het een grote community en veel ingebouwde functionaliteiten zoals dependency injection, wat de ontwikkeling versnelt. Je kan relatief snel een robuuste en onderhoudbare back-end opzetten met NestJS. NestJS staat ook op plaats 2 in de [State of JS 2024 Backend Frameworks](https://2024.stateofjs.com/en-US/other-tools/#backend_frameworks), net onder Express. Wat is nu toevallig? NestJS gebruikt standaard Express onder de motorkap, twee vliegen in één klap dus!
 
 ## Wat gaan jullie doen?
 
@@ -54,8 +54,6 @@ Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stel
 
 ## Planning
 
-<!-- TODO: planning updaten -->
-
 Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 
 | Week    | Inhoud                                        |
@@ -64,14 +62,14 @@ Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 | week 2  | TypeScript, REST API intro                    |
 | week 3  | REST API intro + bouwen                       |
 | week 4  | REST API bouwen                               |
-| week 5  | datalaag en CRUD                              |
-| week 6  | datalaag en CRUD                              |
-| week 7  | (geen nieuwe theorie, aan de opdracht werken) |
-| week 8  | testen                                        |
-| week 9  | validatie en foutafhandeling                  |
-| week 10 | authenticatie / autorisatie                   |
-| week 11 | testen authenticatie / autorisatie + Swagger  |
-| week 12 | CI/CD (= online zetten)                       |
+| week 5  | Datalaag en places                            |
+| week 6  | Relaties                                      |
+| week 7  | Validatie en foutafhandeling                  |
+| week 8  | Authenticatie / autorisatie                   |
+| week 9  | Testen                                        |
+| week 10 | API documentatie                              |
+| week 11 | CI/CD (= online zetten)                       |
+| week 12 | (geen nieuwe theorie, aan de opdracht werken) |
 
 ## Help, ik zit vast!
 

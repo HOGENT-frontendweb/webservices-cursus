@@ -73,13 +73,23 @@ Installeer `pnpm` als alternatieve package manager voor `npm`:
 npm install -g pnpm@latest-10
 ```
 
+Laat `pnpm` vervolgens de nodige zaken instellen:
+
+```bash
+pnpm setup
+```
+
 Windows-gebruikers kunnen een fout krijgen bij het uitvoeren van dit commando. De fout heeft de vorm van `... cannot be loaded because running scripts is disabled on this system`. Indien dit het geval is, open een PowerShell terminal in Administrator-modus. Voer vervolgens het volgende commando uit en antwoord met `A` op de vraag:
 
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned
 ```
 
+Voer daarna opnieuw het `pnpm` installatiecommando uit.
+
 ## MySQL
+
+?> Het is niet verplicht om MySQL lokaal te installeren. In het cursusmateriaal wordt ook uitgelegd hoe je een MySQL server in een Docker container kan draaien. Die kan je na het olod gewoon verwijderen en MySQL is dan ook weg.
 
 Installeer MySQL via een package manager:
 
@@ -87,17 +97,15 @@ Installeer MySQL via een package manager:
 - macOS: `brew install mysql`
 - Linux: [distro afhankelijk](https://dev.mysql.com/doc/mysql-installation-excerpt/8.0/en/linux-installation.html)
 
-?> Natuurlijk kan je ook MySQL uitvoeren in een [Docker container](https://hub.docker.com/_/mysql).
-
 ## MySQL Workbench
+
+?> Je bent vrij om een andere tool te gebruiken om met MySQL te werken.
 
 Installeer MySQL Workbench via een package manager of download het van de website:
 
 - Windows: <https://dev.mysql.com/downloads/workbench/>
 - macOS: `brew install --cask mysqlworkbench`
 - Linux: <https://dev.mysql.com/downloads/workbench/>
-
-?> Je bent vrij om een andere tool te gebruiken om met MySQL te werken.
 
 ## Visual Studio Code
 
@@ -124,6 +132,7 @@ Een aantal optionele, maar wel handige extensies:
 - [GitLens](https://marketplace.visualstudio.com/items?itemName=eamodio.gitlens)
 - [Todo Tree](https://marketplace.visualstudio.com/items?itemName=Gruntfuggly.todo-tree)
 - [TODO Highlight](https://marketplace.visualstudio.com/items?itemName=wayou.vscode-todo-highlight)
+- [Markdown lint](https://marketplace.visualstudio.com/items?itemName=DavidAnson.vscode-markdownlint)
 
 ### Configuratie VS Code <!-- omit in toc -->
 

@@ -8,7 +8,8 @@
 > git checkout -b les5 3acce6c
 > pnpm install
 > pnpm start:dev
-> ```
+
+ ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
@@ -109,6 +110,7 @@ DATABASE_URL=mysql://<username>:<password>@localhost:3306/budgettest
 We wensen tijdens het runnen van de testen gebruik te maken van `.env.test`. Jest kent de optie `--env-file` niet (NestJS CLI). Je kan dit oplossen door gebruik te maken van `env-cmd` package.
 
 Installeer:
+
 ```bash
 pnpm add -D env-cmd
 ```
@@ -126,12 +128,15 @@ Pas de test scripts aan in `package.json`:
   }
 }
 ```
+
 `--runInBand`: JEST voert de testsuites in parallel uit. Daar we met een database zullen werken en deze consistent dient te blijven dienen we de testsuites 1 na 1 uit te voeren.
 
 ## Logging in test omgeving
+
 Om de logging te disablen in testomgeving hebben we reeds de omgevingsvariabele `LOG_DISABLED` toegevoegd.
 
 We dienen ook de config hiervoor aan te passen
+
 ```typescript
 // src/config/configuration.ts
  export default () => ({
@@ -214,12 +219,13 @@ describe('Health', () => {// 👈 2
 });
 ```
 
-
 1. We importeren de NestJS testing utilities en supertest voor HTTP requests.
-  - `Test`: een statische klasse die factory methoden biedt om `TestingModule` instanties te maken. Het is de startpunt voor alle NestJS testing.
-  - `TestingModule`: creëert een geïsoleerde instantie van de NestJS applicatie speciaal voor testing.
-  - `INestApplication`: een interface uit NestJS die het hoofdapplicatie-object representeert.
-  - `supertest`: stelt je in staat om HTTP requests te maken naar je API (GET, POST, PUT, DELETE, etc.), responses te valideren (status codes, body content, headers). Dit alles te doen zonder een echte server op te starten.
+
+- `Test`: een statische klasse die factory methoden biedt om `TestingModule` instanties te maken. Het is de startpunt voor alle NestJS testing.
+- `TestingModule`: creëert een geïsoleerde instantie van de NestJS applicatie speciaal voor testing.
+- `INestApplication`: een interface uit NestJS die het hoofdapplicatie-object representeert.
+- `supertest`: stelt je in staat om HTTP requests te maken naar je API (GET, POST, PUT, DELETE, etc.), responses te valideren (status codes, body content, headers). Dit alles te doen zonder een echte server op te starten.
+
 2. Groepeer de testen voor de health in een test suite met naam "Health".
 3. Definieer de variabele `app` die een instantie van onze app zal bevatten
 4. Gebruik `Test.createTestingModule()` om een complete NestJS applicatie op te zetten in test modus. Importeer AppModule. `compile()`compileert en retourneert een gebruiksklare TestingModule
@@ -255,6 +261,7 @@ describe('Health', () => {
 Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt.
 
 ### Refactoring
+
 De setup zal in elke TestSuite opnieuw moeten gebeuren, daarom maken we een helper functie om de App te initialiseren. In de `/test/helpers`folder maak je een bestand `create-app.ts`. Dit bevat de code uit `beforeAll`
 
 ```typescript
@@ -278,6 +285,7 @@ export async function createTestApp(): Promise<INestApplication> {
 ```
 
 Pas de code in `health.e2e-spec.ts` aan.
+
 ```typescript
 // test/health.e2e-spec.ts
 import { createTestApp } from './helpers/create-app';
@@ -288,7 +296,6 @@ import { createTestApp } from './helpers/create-app';
   ...
 ```
 
-
 ## Testdata
 
 Om de andere endpoints te testen hebben we testdata nodig. Hiervoor maken we gebruik van een testdatabase. Voeg onderstaand script toe aan package.json en run het script om de tabellen aan te maken.
@@ -298,6 +305,7 @@ Om de andere endpoints te testen hebben we testdata nodig. Hiervoor maken we geb
 ```
 
 ### seeding
+
 We starten met het testen van de places endpoints. Hiervoor dienen we testdata aan de database toe te voegen.
 
 Maak een folder `/test/seeds` aan en het bestand `places.ts`. Voor het runnen van een test wordt de database geseed met de data, na de test wordt de data terug verwijderd.
@@ -339,6 +347,7 @@ export async function clearPlaces(drizzle: DatabaseProvider) {
 Maak een nieuwe file `test/places.e2e-spec.ts` aan.
 
 ### de test setup
+
 ```typescript
 import { INestApplication } from '@nestjs/common';
 import {
@@ -371,12 +380,14 @@ describe('Places', () => {
 ```
 
 De setup is analoog aan de Health test, maar nu dienen we ook de database te seeden.
+
 1. Maak een variabele aan van het type `DatabaseProvider`
 2. Localiseer een instantie van `DrizzleAsyncProvider`.
 3. Seed de tabel `places`
 4. Ruim deze data op na de testen.
 
 ### GET /api/places/
+
 ```typescript
  describe('GET /api/places', () => {
     it('should 200 and return all places', async () => {
@@ -435,12 +446,12 @@ Schrijf een test voor het endpoint `GET /api/places/:id`:
   ```
 
 D.i. de positieve test case (happy path). Wat zijn de mogelijke alternatieve scenario's?
+
 - Negatieve test cases (error scenarios)
 - Edge cases (grenssituaties)
 - Validatie tests
 
 Schrijf ook hiervoor testen.
-
 
 - Oplossing +
 
@@ -716,10 +727,10 @@ Vraag de coverage op van je testen met `pnpm test:cov`. Bekijk de gegenereerde H
 
   In de service laag hebben we misschien nog geen 100% omdat we bijvoorbeeld nog niet alle edge cases testen (zoals error handling voor ongeldige input).
 
-
 ### Oefening 5 - Testen voor de andere endpoints
 
 Maak de testen aan voor alle endpoints in je applicatie. Denk na over:
+
 - Positieve test cases (happy path)
 - Negatieve test cases (error scenarios)
 - Edge cases (grenssituaties)

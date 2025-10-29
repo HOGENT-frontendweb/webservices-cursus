@@ -18,19 +18,25 @@ Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Cha
 
 ## 2. Ontvankelijkheidscriteria
 
-Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal ontvankelijkheidscriteria. Indien deze niet voldaan zijn, krijg je een score van 0/20. Deze criteria zijn:
+Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal ontvankelijkheidscriteria.
+
+!> Als niet voldaan is aan de ontvankelijkheidscriteria, krijg je de score "Afwezig" (conform het DOER).
+
+Deze criteria zijn:
 
 - Het dossier is volledig en tijdig ingediend (zie [sectie 4](#4-dossier-vereisten) voor de vereisten)
 - Er werden voldoende (kleine) commits gemaakt
   - Als je per 2 werkt, moeten we een aantal pull requests met feedback zien
+- De demo duurt niet langer dan 15 minuten (incl. Front-end Web Development indien van toepassing)
 - De applicatie is gemaakt in NodeJS en TypeScript met NestJS als web framework
 - De applicatie draait online
-- De applicatie start zonder problemen op gebruik makend van de instructies in de README
+- De applicatie start zonder problemen op a.d.h.v. de instructies in de README en gebruikt hiervoor Docker
 - De applicatie wijkt voldoende af van de voorbeeldapplicatie
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
 - Er is een extra technologie gebruikt (zie [sectie 6](#6-voorbeelden-van-extras) voor voorbeelden)
 - Er werden een aantal niet-triviale en werkende integratietesten gemaakt (naast de testen voor user)
-- De demo duurt niet langer dan 15 minuten (incl. Front-end Web Development indien van toepassing)
+- Het databankschema is voldoende complex en correct. Het bestaat uit minstens 3 tabellen (naast de user tabel) die verbonden zijn met elkaar en bevat minstens 1 veel-op-veel relatie. De tabellen bevatten meerdere kolommen (naast het id).
+- Er is degelijke autorisatie/authenticatie op alle routes.
 
 ## 3. Evaluatiecriteria
 
@@ -38,7 +44,7 @@ Jouw project wordt beoordeeld op verschillende onderdelen en criteria, met elk h
 
 ### Datalaag
 
-- voldoende complex en correct (meer dan één tabel (naast de user tabel), tabellen bevatten meerdere kolommen, 2 een-op-veel of veel-op-veel relaties)
+- voldoende complex en correct: minstens 3 tabellen (naast de user tabel) verbonden met elkaar, minstens 1 veel-op-veel relaties, tabellen bevatten meerdere kolommen (naast het id)
 - één module beheert de connectie + connectie wordt gesloten bij sluiten server
 - heeft migraties - indien van toepassing
 - heeft seeds
@@ -69,16 +75,21 @@ Jouw project wordt beoordeeld op verschillende onderdelen en criteria, met elk h
 ### Algemeen
 
 - er is een minimum aan logging en configuratie voorzien
-- een aantal niet-triviale én werkende integratietesten (min. 1 entiteit in REST-laag >= 90% coverage, naast de testen voor user)
-- minstens één extra technologie die we niet gezien hebben in de les (zie [sectie 6](#6-voorbeelden-van-extras) voor voorbeelden)
+- een aantal niet-triviale én werkende integratietesten (min. 1 entiteit in REST-laag >= 90% coverage, naast de user testen)
+- de api is gedocumenteerd
+- node_modules, .env, productiecredentials... werden niet gepushed op GitHub
+- minstens één extra technologie
 - maakt gebruik van de laatste ES-features (async/await, object destructuring, spread operator...)
+- de applicatie start zonder problemen op a.d.h.v. 1 commando zoals vermeld in de README
+- de API draait online
 - duidelijke en volledige README.md
+- duidelijk en volledig dossier
 
 ### Demo
 
 - de student toont een werkende REST API in NodeJS
-- de student overloopt de projectstructuur
-- de student kan de API calls (CRUD operaties) voor 1 of meerdere entiteiten demonstreren
+- de student overloopt de projectstructuur - indien van toepassing
+- de student kan de API calls (CRUD operaties) voor 1 of meerdere entiteiten demonstreren op de online versie
 - de student toont de implementatie/werking van de extra technologie
 - alle testen slagen
 - de student toont een stukje code waar die fier op is
@@ -169,7 +180,7 @@ Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het s
 - Het ingevulde dossier, als pdf ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
 
-Zorg ervoor dat jouw applicatie aan alle ontvankelijkheidscriteria voldoet op het moment van de deadline. Indien dit niet het geval is, krijg je een score van 0/20.
+Zorg ervoor dat jouw applicatie aan alle ontvankelijkheidscriteria voldoet op het moment van de deadline. Indien dit niet het geval is, krijg je een score 'AFWEZIG".
 
 **De deadline voor het portfolio is het einde van week 13 (vrijdag 19 december 2025, 23u59).**
 
