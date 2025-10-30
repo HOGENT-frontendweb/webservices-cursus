@@ -8,8 +8,7 @@
 > git checkout -b les5 3acce6c
 > pnpm install
 > pnpm start:dev
-
- ```
+> ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
@@ -63,11 +62,11 @@ Om testen te kunnen maken heb je nood aan een test library en een test runner. B
 ## NestJS Testing
 
 NestJS heeft ingebouwde testing utilities die samenwerken met `Jest`. NestJS onderscheidt twee hoofdtypen van testen:
+
 - **Unit tests**: Testen van individuele services, controllers of modules in isolatie
 - **Integration tests (e2e)**: Testen van de hele applicatie met alle dependencies
 
 Als je `nest new project` gebruikt, krijg je automatisch een mapje `test` met een voorbeeld van een e2e-test (`app.e2e-spec.ts`). Ook krijgt elke gegenereerde service en controller een bijhorend `.spec.ts` bestand voor unit tests. NestJS gebruikt `Jest`. Maar je kan dit aanpassen indien gewenst.
-
 
 ## Integratietesten
 
@@ -80,47 +79,62 @@ NestJS heeft ingebouwde testing utilities die het testen vergemakkelijken. Voor 
 - [**@nestjs/testing**](https://docs.nestjs.com/fundamentals/testing): NestJS testing utilities voor het maken van TestingModules. Het biedt een `TestingModule` om onze applicatie te testen zonder deze op een echte poort te laten draaien.
 
 ### De hierarchie
+
 ![Hierarchie](./images/testhierarchy.png)
-- `JEST` is de Test Runner, de engine die de tests uitvoert. Het zoekt alle .spec.ts en .test.ts bestanden op, voert de `describe`,... uit, rapporteert de resultaten en beheert de test lifecycle.
-- `@nestjs/testing` is het NestJS Testing framework die de testing utilities bevat. Het is de brug tussen Jest en NestJS en maakt dependency injection in testen mogelijk
-- `TestingModule`, werkt bijna hetzelfde als een gewone NestJS-module (@Module), maar wordt volledig in een testcontext opgezet. Zo kun je controllers, providers en services isoleren en testen zonder dat je je hele applicatie hoeft op te starten.
-- `INestApplication` is een draaiende app instantie voor de testen, de HTTP server voor supertest.
+
+- **Jest** is de Test Runner - dit is de motor die je tests uitvoert. Jest zoekt automatisch alle `.spec.ts` en `.test.ts` bestanden in je project, voert functies zoals `describe()` en `it()` uit, toont de testresultaten in je terminal en beheert wanneer tests starten en stoppen.
+
+- **@nestjs/testing** is het NestJS Testing framework met handige hulpmiddelen voor het testen van NestJS applicaties. Het vormt de brug tussen Jest (de test runner) en NestJS (je framework), en zorgt ervoor dat dependency injection ook in je tests werkt.
+
+- **TestingModule** is vergelijkbaar met een gewone NestJS module (met `@Module()` decorator), maar dan speciaal gemaakt voor testen. Het laat je controllers, services en providers isoleren en testen zonder dat je je volledige applicatie moet opstarten. Je krijgt een 'mini-versie' van je app om mee te werken.
+
+- **INestApplication** is een werkende applicatie-instantie die je in je tests gebruikt. Het is de HTTP server waarmee `supertest` communiceert om requests te versturen en responses te controleren.
 
 ## Configuratie
 
 NestJS projecten hebben standaard al Jest configuratie. Controleer je `package.json` en je zult zien dat er al een Jest configuratie is opgenomen.
 
-Voor onze integratietesten krijgen een aantal omgevingsvariabelen een andere waarde dan in development. Maak een `.env.test` bestand aan in de root van je project. We gaan gebruik maken van een test database.
+Voor onze integratietesten krijgen een aantal omgevingsvariabelen een andere waarde dan in development. Maak een `.env.test` bestand aan in de root van je project. We gaan gebruik maken van een test database in bvb de docker container.
 
 ```ini
 # General configuration
 NODE_ENV=testing
-HOST=localhost
-PORT=9000
+PORT=3000
+
+# CORS configuration
+CORS_ORIGINS=["http://localhost:5173"]
+CORS_MAX_AGE=10800
+
+# Database configuration
+DATABASE_URL=mysql://devusr:devpwd@localhost:3306/budgettest
+
+# Auth configuration
+AUTH_JWT_SECRET=eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked
+AUTH_JWT_AUDIENCE=budget.hogent.be
+AUTH_JWT_ISSUER=budget.hogent.be
+AUTH_HASH_LENGTH=32
+AUTH_HASH_TIME_COST=6
+AUTH_HASH_MEMORY_COST=65536
+AUTH_MAX_DELAY=2000
 
 # Logging configuration
 LOG_DISABLED=false
-
-# Database configuration
-DATABASE_URL=mysql://<username>:<password>@localhost:3306/budgettest
 ```
 
-`LOG_DISABLED`: het is performanter om de logging in een test omgeving uit te schakelen. Voeg deze variabele ook toe in de `.env` file en plaats deze op true
+- `LOG_DISABLED`: het is performanter om de logging in een test omgeving uit te schakelen. Voeg deze variabele ook toe in de `.env` file en plaats deze op true. Zie verder voor meer info.
 
-We wensen tijdens het runnen van de testen gebruik te maken van `.env.test`. Jest kent de optie `--env-file` niet (NestJS CLI). Je kan dit oplossen door gebruik te maken van `env-cmd` package.
-
-Installeer:
+We wensen tijdens het runnen van de testen gebruik te maken van `.env.test`. Jest kent de optie `--env-file` niet (NestJS CLI). Je kan dit oplossen door gebruik te maken van `env-cmd` package. Installeer deze als dev dependency.
 
 ```bash
 pnpm add -D env-cmd
 ```
 
-Pas de test scripts aan in `package.json`:
+Pas de test scripts aan in `package.json` zodat ze gebruik maken van `env-cmd` om de `.env.test` file te laden:
 
 ```json
 {
   "scripts": {
-   "test": "env-cmd -f .env.test jest --runInBand",
+    "test": "env-cmd -f .env.test jest --runInBand",
     "test:watch": "pnpm test --watch",
     "test:cov": "pnpm test --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register --env-file .env.test node_modules/.bin/jest --runInBand",
@@ -139,14 +153,23 @@ We dienen ook de config hiervoor aan te passen
 
 ```typescript
 // src/config/configuration.ts
- export default () => ({
+export default () => ({
   env: process.env.NODE_ENV,
   port: parseInt(process.env.PORT || '9000'),
-  logging: {
-    disabled: process.env.LOG_DISABLED === 'true',
-  },// 👈
+  log: {
+    levels: process.env.LOG_LEVELS
+      ? (JSON.parse(process.env.LOG_LEVELS) as LogLevel[])
+      : ['log', 'error', 'warn'],
+    disabled: process.env.LOG_DISABLED === 'true',// 👈
+  },
   ...
-  });
+});
+//...
+export interface LogConfig {
+  levels: LogLevel[];
+  disabled: boolean;// 👈
+}
+//...
 ```
 
 Pas ook `app.module.ts` aan
@@ -159,9 +182,9 @@ export class AppModule {
   constructor(private configService: ConfigService) { }// 👈 1
 
   configure(consumer: MiddlewareConsumer) {// 👈 2
-    const isLoggingDisabled = this.configService.get<boolean>('logging.disabled', false);// 👈 3
+    const isLogDisabled = this.configService.get<boolean>('log.disabled', false);// 👈 3
 
-    if (!isLoggingDisabled) {
+    if (!isLogDisabled) {
       consumer.apply(LoggerMiddleware).forRoutes('*path');
     }// 👈 4
   }
@@ -195,43 +218,49 @@ Alvorens we dit endpoint kunnen testen dienen we een instantie van de applicatie
 
 ```typescript
 // test/health.e2e-spec.ts
-import { Test, TestingModule } from '@nestjs/testing';// 👈 1
-import { INestApplication } from '@nestjs/common';// 👈 1
-import * as request from 'supertest';// 👈 1
-import { AppModule } from '../src/app.module';// 👈 1
+import { Test, TestingModule } from '@nestjs/testing'; // 👈 1
+import { INestApplication } from '@nestjs/common'; // 👈 1
+import { AppModule } from '../src/app.module'; // 👈 1
+import request from 'supertest'; // 👈 1
 
-describe('Health', () => {// 👈 2
-  let app: INestApplication;// 👈 3
+describe('Health', () => {
+  // 👈 2
+  let app: INestApplication; // 👈 3
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();// 👈 4
+    }).compile(); // 👈 4
 
-    app = moduleFixture.createNestApplication();// 👈 5
-    await app.init();// 👈 6
+    app = moduleFixture.createNestApplication(); // 👈 5
+    app.setGlobalPrefix('api'); // 👈 6
+    await app.init(); // 👈 7
   });
 
   afterAll(async () => {
     await app.close();
-  });// 👈 7
-
+  }); // 👈 8
 });
+
 ```
 
 1. We importeren de NestJS testing utilities en supertest voor HTTP requests.
 
-- `Test`: een statische klasse die factory methoden biedt om `TestingModule` instanties te maken. Het is de startpunt voor alle NestJS testing.
-- `TestingModule`: creëert een geïsoleerde instantie van de NestJS applicatie speciaal voor testing.
-- `INestApplication`: een interface uit NestJS die het hoofdapplicatie-object representeert.
-- `supertest`: stelt je in staat om HTTP requests te maken naar je API (GET, POST, PUT, DELETE, etc.), responses te valideren (status codes, body content, headers). Dit alles te doen zonder een echte server op te starten.
+    **Test**: Dit is de startpunt voor het maken van testomgevingen in NestJS. Het is een klasse met één belangrijke methode: `createTestingModule()`. Deze methode laat je een testversie van je applicatie opbouwen door aan te geven welke modules, controllers en services je wilt laden.
+
+    **TestingModule**: Dit is het resultaat van `Test.createTestingModule().compile()`. Het is vergelijkbaar met een echte NestJS module, maar dan speciaal voor testen. Het bevat alle services en controllers die je wilt testen, en je kan er instanties van ophalen met de `.get()` methode. Het is een geïsoleerde instantie van de NestJS applicatie speciaal voor testing.
+
+    **INestApplication**: Dit is een volledig werkende NestJS applicatie die je kan gebruiken in je tests. Het heeft een HTTP server die supertest kan gebruiken om requests naar te sturen. In plaats van je applicatie op bijvoorbeeld poort 3000 te laten draaien, maakt INestApplication een tijdelijke server die alleen bestaat tijdens het testen.
+
+    [**supertest**](https://github.com/forwardemail/supertest): Dit is een tool die HTTP requests kan simuleren naar je applicatie. Het werkt samen met INestApplication om GET, POST, PUT, DELETE requests te versturen en de responses te controleren (status codes, body inhoud, headers). Het voordeel is dat je geen echte server hoeft op te starten - supertest communiceert rechtstreeks met de INestApplication instantie.
 
 2. Groepeer de testen voor de health in een test suite met naam "Health".
 3. Definieer de variabele `app` die een instantie van onze app zal bevatten
 4. Gebruik `Test.createTestingModule()` om een complete NestJS applicatie op te zetten in test modus. Importeer AppModule. `compile()`compileert en retourneert een gebruiksklare TestingModule
 5. `moduleFixture.createNestApplication()` creëert een `INestApplication` instantie uit de `TestingModule`.
-6. `app.init()` initialiseert de applicatie, inclusief alle modules, controllers en services.
-7. Nadat alle testen gerund hebben, sluiten we de applicatie netjes af met `app.close()`.
+6. Stel een globale prefix 'api' in voor alle routes in de testapplicatie.
+7. `app.init()` initialiseert de applicatie, inclusief alle modules, controllers en services.
+8. Nadat alle testen gerund hebben, sluiten we de applicatie netjes af met `app.close()`.
 
 #### De test zelf
 
@@ -243,7 +272,7 @@ describe('Health', () => {
   // ...
 
    describe('GET /api/health/ping', () => {
-    const url = '/health/ping';
+    const url = '/api/health/ping';
 
     it('should return pong', async () => {// 👈 1
       const response = await request(app.getHttpServer()).get(url);// 👈 2
@@ -252,11 +281,12 @@ describe('Health', () => {
       expect(response.body).toEqual({ pong: true });// 👈 3
     });
   });
+})
 ```
 
-1. We maken een nieuwe test aan voor de `GET /api/health/ping` endpoint.
-2. We sturen een GET request naar `/api/health/ping` met `supertest`.
-3. We verwachten statuscode 200 en controleren de response.
+1. Definieer een test met `it()`. De test beschrijft wat we verwachten van de endpoint.
+2. Gebruik `supertest` om een GET request naar `/api/health/ping` te sturen.
+3. We verwachten status code 200 en de response body 'pong'.
 
 Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt.
 
@@ -268,10 +298,17 @@ De setup zal in elke TestSuite opnieuw moeten gebeuren, daarom maken we een help
 // test/helpers/create-app.ts
 import {
   INestApplication,
+  ValidationPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { TestingModule, Test } from '@nestjs/testing';
+import { ValidationError } from 'class-validator';
 import { AppModule } from '../../src/app.module';
-
+import { DrizzleQueryErrorFilter } from '../../src/drizzle/drizzle-query-error.filter';
+import { HttpExceptionFilter } from '../../src/lib/http-exception.filter';
+import { ConfigService } from '@nestjs/config';
+import { ServerConfig, LogConfig } from '../../src/config/configuration';
+import CustomLogger from '../../src/core/customLogger';
 
 export async function createTestApp(): Promise<INestApplication> {
   const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -279,10 +316,45 @@ export async function createTestApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
+  app.setGlobalPrefix('api');
+  app.useGlobalFilters(new DrizzleQueryErrorFilter());
+  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      forbidUnknownValues: true,
+      exceptionFactory: (errors: ValidationError[] = []) => {
+        const formattedErrors = errors.reduce(
+          (acc, err) => {
+            acc[err.property] = Object.values(err.constraints || {});
+            return acc;
+          },
+          {} as Record<string, string[]>,
+        );
+
+        return new BadRequestException({
+          details: { body: formattedErrors },
+        });
+      },
+    }),
+  );
+  const config = app.get(ConfigService<ServerConfig>);
+  const log = config.get<LogConfig>('log')!;
+
+  app.useLogger(
+    new CustomLogger({
+      logLevels: log.levels,
+    }),
+  );
   await app.init();
+
   return app;
 }
 ```
+
+We voegen ook alle filters, pipes, configuratie toe die we nodig hebben om de app te initialiseren in test.
 
 Pas de code in `health.e2e-spec.ts` aan.
 
@@ -298,7 +370,15 @@ import { createTestApp } from './helpers/create-app';
 
 ## Testdata
 
-Om de andere endpoints te testen hebben we testdata nodig. Hiervoor maken we gebruik van een testdatabase. Voeg onderstaand script toe aan package.json en run het script om de tabellen aan te maken.
+Om de andere endpoints te testen hebben we testdata nodig. Hiervoor maken we gebruik van een testdatabase.
+
+### test database
+
+TODO : We maken eerst een testdatabase aan in de MySQL container.
+
+### database migraties
+
+Voeg onderstaand script toe aan package.json en run het script om de tabellen aan te maken.
 
 ```json
     "db:migrate:test": "env-cmd -f .env.test drizzle-kit migrate",
@@ -342,7 +422,7 @@ export async function clearPlaces(drizzle: DatabaseProvider) {
 }
 ```
 
-## GET /api/places/:id
+## GET /api/places
 
 Maak een nieuwe file `test/places.e2e-spec.ts` aan.
 
@@ -353,29 +433,27 @@ import { INestApplication } from '@nestjs/common';
 import {
   DatabaseProvider,
   DrizzleAsyncProvider,
-} from '../src/drizzle/drizzle.provider';// 👈 1
+} from '../src/drizzle/drizzle.provider'; // 👈 1
 import { createTestApp } from './helpers/create-app';
 import { seedPlaces, clearPlaces } from './seeds/places';
 
 describe('Places', () => {
   let app: INestApplication;
-  let drizzle: DatabaseProvider;// 👈 1
+  let drizzle: DatabaseProvider; // 👈 1
 
-  const url = '/places';
+  const url = '/api/places';
 
   beforeAll(async () => {
     app = await createTestApp();
-    drizzle = app.get(DrizzleAsyncProvider);// 👈 2
+    drizzle = app.get(DrizzleAsyncProvider); // 👈 2
 
-    await seedPlaces(drizzle);// 👈 3
-
+    await seedPlaces(drizzle); // 👈 3
   });
 
   afterAll(async () => {
-    await clearPlaces(drizzle);// 👈 4
+    await clearPlaces(drizzle); // 👈 4
     await app.close();
   });
-
 });
 ```
 
@@ -390,31 +468,23 @@ De setup is analoog aan de Health test, maar nu dienen we ook de database te see
 
 ```typescript
  describe('GET /api/places', () => {
-    it('should 200 and return all places', async () => {
-      const response = await request(app.getHttpServer())
-        .get(url);
-
-      expect(response.statusCode).toBe(200);
-
-      expect(response.body.items.length).toBe(3);
-
-      expect(response.body.items).toEqual(
-        expect.arrayContaining([
-          {
-            id: 2,
-            name: 'Benzine',
-            rating: 2,
-          },
-          {
-            id: 3,
-            name: 'Irish pub',
-            rating: 4,
-          },
-        ]),
-      );
-    });
+    it('should 200 and return all places', () => {
+      request(app.getHttpServer())
+        .get(url)
+        .auth(userAuthToken, { type: 'bearer' })
+        .expect(200)
+        .expect({ items: PLACES_SEED });
   });
+});
 ```
+
+Run de test en controleer of deze slaagt.
+De gebruiker is niet authenticeerd, dus we verwachten een 401 Unauthorized.
+Maak de methode een Public en run de test opnieuw.
+
+## authenticatie in integratietesten
+
+In deze sectie behandelen we hoe we authenticatie kunnen testen in onze integratietests.
 
 ### Oefening 1 - GET /api/places/:id
 
