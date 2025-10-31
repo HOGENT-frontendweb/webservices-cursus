@@ -215,6 +215,7 @@ We gaan nu de seed data aanvullen met users, transactions en favoriete places. V
 async function resetDatabase() {
   console.log('🗑️ Resetting database...');
 
+  await db.delete(schema.userFavoritePlaces);
   await db.delete(schema.transactions);
   await db.delete(schema.places);
   await db.delete(schema.users);
