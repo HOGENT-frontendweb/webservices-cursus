@@ -75,6 +75,9 @@ getPlaceById(@Param('id', ParseIntPipe) id: number): PlaceResponseDto { // 👈 
 1. We geven een klasse (`ParseIntPipe`) door, niet een instantie. We laten de verantwoordelijkheid voor instantiëring over aan het framework en maken daarmee dependency injection mogelijk. Je kan ook een instantie doorgeven met extra opties.
 2. Het type van de id parameter wordt nu een `number`. We hoeven het id niet langer naar een `number` om te zetten bij aanroep van de methode `getById` uit de `PlaceService`.
 
+Doe dit ook voor PUT en DELETE. We hoeven `Number` functie niet langer te gebruiken.
+Probeer eens te GETen met een niet-numerieke id, bv. `/api/places/abc`. We krijgen een HTTP 400 terug.
+
 ### ValidationPipe
 
 In NestJS gebruik je DTO’s vooral om:
@@ -202,22 +205,6 @@ bootstrap();
 `transform:true`: zet de inkomende JSON om naar een instance van de DTO-klasse m.b.v. `plainToInstance` methode van `class-transformer`.
 
 Voer een POST request uit en bekijk het type.
-
-### Primitieve types transformeren
-
-Class transformers kunnen ook primitieve types omzetten. Alles wat via `@Param()`, `@Query()`,... binnenkomt is van type `string`. Als we in de `getPlaceById` methode het type van de id veranderen in `number` zal `ValidationPipe` dit proberen om te zetten. Verwijder de `ParseIntPipe` en pas aan.
-
-```ts
-// src/place/place.controller.ts
-
-@Get(':id')
-async getPlaceById(@Param('id') id: number): Promise<PlaceResponseDto> {
-    console.log(typeof id);
-    return this.placeService.getById(id);
-}
-```
-
-Doe dit ook voor PUT en DELETE. We hoeven `Number` functie niet langer te gebruiken. Merk op dat deze feature invloed heeft op de performantie van je applicatie.
 
 ### Formatteren van validatie fouten
 
@@ -725,6 +712,72 @@ export class HttpExceptionFilter implements ExceptionFilter {
 ```
 
 Voer een POST request uit met validatie fouten en bekijk het resultaat.
+
+### Database fouten omzetten naar gebruiksvriendelijke HTTP exceptions
+
+We voorzien ook een exception filter die database fouten opvangt en omzet naar gebruiksvriendelijke HTTP exceptions. Dit is belangrijk omdat database fouten vaak technische details bevatten die niet relevant zijn voor de API-gebruiker. Bovendien wil je niet dat gevoelige informatie over je database-structuur uitlekt.
+
+Maak een bestand `drizzle-query-error.filter.ts` aan in de map `src/drizzle/`.
+
+```ts
+// src/drizzle/drizzle-query-error.filter.ts
+import type { ExceptionFilter } from '@nestjs/common';
+import { Catch, ConflictException, NotFoundException } from '@nestjs/common';
+import { DrizzleQueryError } from 'drizzle-orm';
+
+@Catch(DrizzleQueryError)
+export class DrizzleQueryErrorFilter implements ExceptionFilter {
+  catch(error: DrizzleQueryError) {
+    if (!error.cause || !('code' in error.cause)) {
+      throw new Error(error.message || 'Unknown database error');
+    }// 👈 1
+
+    const {
+      cause: { code, message },
+    } = error;// 👈 2
+
+    switch (code) {
+      case 'ER_DUP_ENTRY':
+        if (message.includes('idx_place_name_unique')) {
+          throw new ConflictException('A place with this name already exists');
+        } else if (message.includes('idx_user_email_unique')) {
+          throw new ConflictException(
+            'There is already a user with this email address',
+          );
+        } else {
+          throw new ConflictException('This item already exists');
+        }
+      case 'ER_NO_REFERENCED_ROW_2':
+        if (message.includes('transactions_user_id')) {
+          throw new NotFoundException('No user with this id exists');
+        } else if (message.includes('transactions_place_id')) {
+          throw new NotFoundException('No place with this id exists');
+        }
+        break;
+    }// 👈 3
+
+    throw error;
+  }
+}
+```
+
+1. Controleer of de `error.cause` (de onderliggende oorzaak van de fout) bestaat en of deze dan een `code` property heeft (d.i. MySQL error code zoals ER_DUP_ENTRY). Indien dit niet het geval gooi een generieke error.
+2. Destructuring : `code` is de MySQL error code, `message` is de gedetailleerde foutmelding van MySQL (bijv. "Duplicate entry 'HoGent' for key 'idx_place_name_unique'")
+3. Afhankelijk van de MySQL error code wordt een specifieke HTTP exception gegooid met een gebruiksvriendelijke boodschap.
+
+    - ER_DUP_ENTRY (Duplicate entry error): wanneer je een duplicaat probeert aan te maken in de database, geef een HTTP 409 Conflict terug met een gebruiksvriendelijke boodschap.
+    - ER_NO_REFERENCED_ROW_2 (Foreign key constraint violation): wanneer je een record probeert aan te maken dat verwijst naar een niet-bestaand record, geef een HTTP 404 Not Found terug met een gebruiksvriendelijke boodschap.
+
+Voeg de filter toe in `main.ts`.
+
+```ts
+import { DrizzleQueryErrorFilter } from './drizzle/drizzle-query-error.filter';
+//...
+  app.useGlobalFilters(new DrizzleQueryErrorFilter());
+//
+```
+
+Probeer een duplicate plaats aan te maken en bekijk de respons.
 
 ## Logging middleware
 
