@@ -1179,7 +1179,7 @@ Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
       expect(response.body.message).toBe('No place with this id exists');
     });
     testAuthHeader(() =>
-      request(app.getHttpServer()).get(`${url}/1/transactions`),
+      request(app.getHttpServer()).delete(`${url}/1`),
     );
   });
   ```
