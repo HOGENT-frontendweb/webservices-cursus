@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5 3acce6c
+> git checkout -b les8 3acce6c
 > pnpm install
 > pnpm start:dev
 > ```
@@ -94,7 +94,7 @@ NestJS heeft ingebouwde testing utilities die het testen vergemakkelijken. Voor 
 
 NestJS projecten hebben standaard al Jest configuratie. Controleer je `package.json` en je zult zien dat er al een Jest configuratie is opgenomen.
 
-Voor onze integratietesten krijgen een aantal omgevingsvariabelen een andere waarde dan in development. Maak een `.env.test` bestand aan in de root van je project. We gaan gebruik maken van een test database in bvb de docker container.
+Voor onze integratietesten krijgen een aantal omgevingsvariabelen een andere waarde dan in development. Maak een `.env.test` bestand aan in de root van je project.
 
 ```ini
 # General configuration
@@ -106,7 +106,7 @@ CORS_ORIGINS=["http://localhost:5173"]
 CORS_MAX_AGE=10800
 
 # Database configuration
-DATABASE_URL=mysql://devusr:devpwd@localhost:3306/budgettest
+DATABASE_URL=mysql://devusr:devpwd@localhost:3306/budgettest # 👈 1
 
 # Auth configuration
 AUTH_JWT_SECRET=eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked
@@ -118,10 +118,11 @@ AUTH_HASH_MEMORY_COST=65536
 AUTH_MAX_DELAY=2000
 
 # Logging configuration
-LOG_DISABLED=false
+LOG_DISABLED=true # 👈 2
 ```
 
-- `LOG_DISABLED`: het is performanter om de logging in een test omgeving uit te schakelen. Voeg deze variabele ook toe in de `.env` file en plaats deze op true. Zie verder voor meer info.
+1. We gebruiken een test database in bvb de docker container.
+2. `LOG_DISABLED`: het is performanter om de logging in een test omgeving uit te schakelen. Voeg deze variabele ook toe in de `.env` file en plaats deze op true. Zie verder voor meer info.
 
 We wensen tijdens het runnen van de testen gebruik te maken van `.env.test`. Jest kent de optie `--env-file` niet (NestJS CLI). Je kan dit oplossen door gebruik te maken van `env-cmd` package. Installeer deze als dev dependency.
 
@@ -139,11 +140,14 @@ Pas de test scripts aan in `package.json` zodat ze gebruik maken van `env-cmd` o
     "test:cov": "pnpm test --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register --env-file .env.test node_modules/.bin/jest --runInBand",
     "test:e2e": "env-cmd -f .env.test jest --config ./test/jest-e2e.json",
+    "test:e2e:cov": "env-cmd -f .env.test jest --config ./test/jest-e2e.json --runInBand --coverage",
   }
 }
 ```
 
-`--runInBand`: JEST voert de testsuites in parallel uit. Daar we met een database zullen werken en deze consistent dient te blijven dienen we de testsuites 1 na 1 uit te voeren.
+- `test`: draait unit testen. Maakt gebruik van de Jest config in package.json. Zoekt naar `*.spec.ts` bestanden (`"testRegex": ".*\\.spec\\.ts$"`) in de `src` folder (`"rootDir": "src"`).
+- `test:e2e`: draait e2e testen. Maakt gebruik van een aparte Jest config (`./test/jest-e2e.json`) en zoekt naar de bestanden  `*.e2e-spec.ts` bestanden (`"testRegex": ".*\\.e2e-spec\\.ts$"`) in de `test` folder (`"rootDir": "."`).
+- `--runInBand`: JEST voert de testsuites in parallel uit. Daar we met een database zullen werken en deze consistent dient te blijven dienen we de testsuites 1 na 1 uit te voeren.
 
 ## Logging in test omgeving
 
@@ -285,7 +289,7 @@ describe('Health', () => {
 ```
 
 1. Definieer een test met `it()`. De test beschrijft wat we verwachten van de endpoint.
-2. Gebruik `supertest` om een GET request naar `/api/health/ping` te sturen.
+2. Gebruik `supertest` om een GET request naar `/api/health/ping` te sturen. We maken gebruik van de [async/await syntax](https://www.npmjs.com/package/supertest).
 3. We verwachten status code 200 en de response body 'pong'.
 
 Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt.
@@ -340,16 +344,7 @@ export async function createTestApp(): Promise<INestApplication> {
       },
     }),
   );
-  const config = app.get(ConfigService<ServerConfig>);
-  const log = config.get<LogConfig>('log')!;
-
-  app.useLogger(
-    new CustomLogger({
-      logLevels: log.levels,
-    }),
-  );
   await app.init();
-
   return app;
 }
 ```
@@ -374,7 +369,37 @@ Om de andere endpoints te testen hebben we testdata nodig. Hiervoor maken we geb
 
 ### test database
 
-TODO : We maken eerst een testdatabase aan in de MySQL container.
+Maak een MySQL database aan in je docker-compose file `docker-compose.test.yml`:
+
+```yaml
+services:
+  db-test:
+    image: mysql:8.0
+    ports:
+      - '3310:3306'
+    volumes:
+      - db_data_test:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: budget
+      MYSQL_USER: devusr
+      MYSQL_PASSWORD: devpwd
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--silent']
+      timeout: 30s
+      interval: 30s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  db_data_test:
+```
+
+Run de docker container:
+
+```bash
+docker-compose -f docker-compose.test.yml up -d
+```
 
 ### database migraties
 
@@ -464,125 +489,378 @@ De setup is analoog aan de Health test, maar nu dienen we ook de database te see
 3. Seed de tabel `places`
 4. Ruim deze data op na de testen.
 
+Opmerking: In een echte testomgeving zou je best voor elke test de database terug naar een gekende staat brengen. Dit kan door na elke test de data op te ruimen (`afterEach`) en voor elke test opnieuw te seeden (`beforeEach`). Voor de eenvoud doen we dit hier niet. Je kan ook voor elke test de specifieke data aanmaken die je nodig hebt.
+
 ### GET /api/places/
 
 ```typescript
  describe('GET /api/places', () => {
-    it('should 200 and return all places', () => {
-      request(app.getHttpServer())
+    it('should 200 and return all places', async () => {
+        const response = await request(app.getHttpServer())
+        .get(url);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.body.items).toEqual(expect.arrayContaining(PLACES_SEED));
+    });
+  });
+```
+
+Met `expect.arrayContaining` controleren we of de array `response.body.items` minstens de objecten bevat die we verwachten. De objecten moeten niet in dezelfde volgorde staan, maar ze moeten wel allemaal aanwezig zijn
+
+Run de test en controleer of deze slaagt.`pnpm test:e2e -- places.e2e-spec`.
+De test faalt omdat authenticatie vereist is voor dit endpoint.
+Maak het endpoint public (@Public-decorator) en run de test opnieuw.
+
+## authenticatie in e2e testen
+
+Om endpoints te testen die authenticatie vereisen, dienen we testgebruikers aan te maken en ons aan te melden om een JWT token te verkrijgen. Dit token voegen we vervolgens toe aan de Authorization header van onze requests.
+
+### Seeding users
+
+We dienen ook testgebruikers aan te maken in de database. Maak een bestand `test/seeds/users.ts` aan:
+
+```typescript
+// test/seeds/users.ts
+import { INestApplication } from '@nestjs/common';
+import { AuthService } from '../../src/auth/auth.service';
+import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
+import { users } from '../../src/drizzle/schema';
+import { Role } from '../../src/auth/roles';
+
+export async function seedUsers(
+  app: INestApplication,
+  drizzle: DatabaseProvider,
+) {
+  const authService = app.get(AuthService);
+  const passwordHash = await authService.hashPassword('12345678');
+
+  await drizzle.insert(users).values([
+    {
+      id: 1,
+      name: 'Test User',
+      email: 'test.user@hogent.be',
+      passwordHash,
+      roles: [Role.USER],
+    },
+    {
+      id: 2,
+      name: 'Admin User',
+      email: 'admin.user@hogent.be',
+      passwordHash,
+      roles: [Role.ADMIN, Role.USER],
+    },
+  ]);
+}
+
+export async function clearUsers(drizzle: DatabaseProvider) {
+  await drizzle.delete(users);
+}
+
+```
+
+### Login helper
+
+Vervolgens definiëren we een helper-functie om de admin en een gewone gebruiker aan te melden en een token te verkrijgen. Maak een bestand `test/helper/login.ts`:
+
+```ts
+// test/helpers/login.ts
+import { INestApplication } from '@nestjs/common';
+import { AuthService } from '../../src/auth/auth.service';
+
+export const login = async (app: INestApplication): Promise<string> => {
+  const authService = app.get(AuthService);// 👈 1
+  const token = await authService.login({
+    email: 'test.user@hogent.be',
+    password: '12345678',
+  });// 👈 2
+
+  if (!token) {
+    throw new Error('No token received');
+  }// 👈 3
+
+  return token;// 👈 4
+};
+
+export const loginAdmin = async (app: INestApplication): Promise<string> => {
+  const authService = app.get(AuthService);
+  const token = await authService.login({
+    email: 'admin.user@hogent.be',
+    password: '12345678',
+  });
+
+  if (!token) {
+    throw new Error('No token received');
+  }
+
+  return token;
+};// 👈 5
+```
+
+De methode `login` meldt een gewone gebruiker aan
+
+1. Vraag een instantie van AuthService op
+2. De functie `login` kunnen we gebruiken om aan te melden voor elke test. Retourneer het token
+3. Als het geen succesvol request was, dan gooien we een error. De error zal onze test(s) laten falen, in de meeste gevallen is dit een hele test suite.
+4. We retourneren het token
+5. We doen hetzelfde voor de admin
+
+### Gebruik van het token in requests
+
+We kunnen nu in onze tests het token gebruiken om geauthenticeerde requests te maken. Pas `places.e2e-spec.ts` aan:
+
+```typescript
+import { INestApplication } from '@nestjs/common';
+import {
+  DatabaseProvider,
+  DrizzleAsyncProvider,
+} from '../src/drizzle/drizzle.provider';
+import request from 'supertest';
+import { createTestApp } from './helpers/create-app';
+import { seedPlaces, clearPlaces, PLACES_SEED } from './seeds/places';
+import { clearUsers, seedUsers } from './seeds/users'; // 👈 1
+import { login, loginAdmin } from './helpers/login'; // 👈 2
+
+
+describe('Places', () => {
+  let app: INestApplication;
+  let drizzle: DatabaseProvider;
+  let userAuthToken: string; // 👈 2
+  let adminToken: string; // 👈 2
+
+  const url = '/api/places';
+
+  beforeAll(async () => {
+    app = await createTestApp();
+    drizzle = app.get(DrizzleAsyncProvider);
+
+    await seedPlaces(drizzle);
+    await seedUsers(app, drizzle); // 👈 1
+
+    userAuthToken = await login(app);// 👈 2
+    adminToken = await loginAdmin(app);// 👈 2
+  });
+
+  describe('GET /api/places', () => {
+    it('should 200 and return all places', async() => {
+      const response= await request(app.getHttpServer())
         .get(url)
-        .auth(userAuthToken, { type: 'bearer' })
-        .expect(200)
-        .expect({ items: PLACES_SEED });
+        .auth(userAuthToken, { type: 'bearer' });
+      expect(response.statusCode).toBe(200);
+      expect(response.body.items).toEqual(expect.arrayContaining(PLACES_SEED));
+    });
+  });
+
+   afterAll(async () => {
+    await clearPlaces(drizzle);
+    await clearUsers(drizzle);// 👈 1
+    await app.close();
   });
 });
 ```
 
-Run de test en controleer of deze slaagt.
-De gebruiker is niet authenticeerd, dus we verwachten een 401 Unauthorized.
-Maak de methode een Public en run de test opnieuw.
+1. Seed en clear ook de users tabel
+2. Definieer variabelen om de tokens op te slaan. Meld de gebruiker en admin aan en sla de tokens op.
+3. Gebruik `.auth(token, { type: 'bearer' })` om het token toe te voegen aan de Authorization header van het request.
 
-## authenticatie in integratietesten
+### Test unauthorized
 
-In deze sectie behandelen we hoe we authenticatie kunnen testen in onze integratietests.
+We voegen een functie toe die de nagaat of voor een bepaalde URL de juiste statuscode geretourneerd wordt als de gebruiker niet is aangemeld of een ongeldig token wordt verstuurd. Aangezien deze testen voor elk van de endpoints dienen te gebeuren maken we hiervoor een aparte functie aan in `test/helpers/testAuthHeader.ts`:
+
+```ts
+// test/helpers/testAuthHeader.ts
+import type supertest from 'supertest';
+
+// 👇 1
+export default function testAuthHeader(
+  requestFactory: () => supertest.Test,
+): void {
+  // 👇 2
+  it('should respond with 401 when not authenticated', async () => {
+    const response = await requestFactory();
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.message).toBe('You need to be signed in');
+  });
+
+  // 👇 3
+  it('should respond with 401 with a malformed token', async () => {
+    const response = await requestFactory().set(
+      'Authorization',
+      'Bearer INVALID TOKEN',
+    );
+
+    expect(response.statusCode).toBe(401);
+    expect(response.body.message).toBe('Invalid authentication token');
+  });
+}
+```
+
+1. De functie heeft één parameter, nl. een `requestFactory`. Deze factory functie moet het request voor een bepaalde HTTP methode en URL creëren. Op die manier kunnen we onze testen voor eender welk request gebruiken, het is de taak van de factory om het juiste request te maken.
+2. De eerste test controleert het retourneren van een statuscode 401 als de gebruiker niet is aangemeld en hierdoor niet gemachtigd is om het endpoint te bevragen.
+3. De tweede test controleert het retourneren van een statuscode 401 als een ongeldig token wordt meegestuurd en de gebruiker hierdoor niet gemachtigd is om het endpoint te bevragen.
+
+Voeg deze testen nu ook toe voor het uittesten van de api/places endpoint in `places.e2e-spec.ts`:
+
+```typescript
+import testAuthHeader from './helpers/testAuthHeader'; // 👈 1
+//...
+  describe('GET /api/places', () => {
+    it('should 200 and return all places', () => {
+      return request(app.getHttpServer())
+        .get(url)
+        .auth(userAuthToken, { type: 'bearer' })
+        .expect(200)
+        .expect({ items: PLACES_SEED });
+    });
+
+    testAuthHeader(() => request(app.getHttpServer()).get(url));
+  });
+  //...
+```
 
 ### Oefening 1 - GET /api/places/:id
 
 Schrijf een test voor het endpoint `GET /api/places/:id`:
 
-1. Maak een nieuwe test suite aan voor het endpoint `GET /api/places/:id`.
-2. Voer de test uit:
+1. Daar bij het ophalen van een plaats ook de transacties worden opgehaald, dien je eerst de seed en clear functies voor transacties toe te voegen in `test/seeds/transactions.ts` en deze ook te gebruiken in `places.e2e-spec.ts`.
+2. Maak een nieuwe test suite aan voor het endpoint `GET /api/places/:id`.
+3. Voer de test uit:
    1. Check of de statuscode gelijk is aan 200.
    2. Check of de geretourneerde plaats zoals verwacht is.
 
 - Oplossing +
 
   ```typescript
-  describe('GET /api/places/:id', () => {
-      it('should 200 and return the requested place', async () => {
-        const response = await request(app.getHttpServer())
-          .get(`${url}/1`);
+  // test/seeds/transactions.ts
+  import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
+  import { transactions } from '../../src/drizzle/schema';
 
-        expect(response.statusCode).toBe(200);
+  export const TRANSACTIONS_SEED = [
+    {
+      id: 1,
+      userId: 1,
+      placeId: 1,
+      amount: 3500,
+      date: new Date(2021, 4, 25, 19, 40),
+    },
+    {
+      id: 2,
+      userId: 2,
+      placeId: 1,
+      amount: -220,
+      date: new Date(2021, 4, 8, 20, 0),
+    },
+    {
+      id: 3,
+      userId: 1,
+      placeId: 1,
+      amount: -74,
+      date: new Date(2021, 4, 21, 14, 30),
+    },
+  ];
 
-        expect(response.body).toMatchObject({
-          id: 1,
-          name: 'Loon',
-          rating: 5,
-        });
-      });
+  export async function seedTransactions(drizzle: DatabaseProvider) {
+    await drizzle.insert(transactions).values(TRANSACTIONS_SEED);
+  }
 
-    });
+  export async function clearTransactions(drizzle: DatabaseProvider) {
+    await drizzle.delete(transactions);
+  }
   ```
 
-D.i. de positieve test case (happy path). Wat zijn de mogelijke alternatieve scenario's?
+  ```typescript
+  // test/places.e2e-spec.ts
+  import {
+    seedTransactions,
+    clearTransactions,
+  } from './seeds/transactions'; // 👈
 
-- Negatieve test cases (error scenarios)
-- Edge cases (grenssituaties)
-- Validatie tests
+    beforeAll(async () => {
+    app = await createTestApp();
+    drizzle = app.get(DrizzleAsyncProvider);
 
-Schrijf ook hiervoor testen.
+    await seedPlaces(drizzle);
+    await seedUsers(app, drizzle);
+    await seedTransactions(drizzle);// 👈
+
+    userAuthToken = await login(app);
+    adminToken = await loginAdmin(app);
+  });
+  //...
+
+  describe('GET /api/places/:id', () => {
+    it('should 200 and return the requested place', async () => {
+        const response = await request(app.getHttpServer())
+          .get(`${url}/1`)
+          .auth(userAuthToken, { type: 'bearer' });
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toMatchObject(PLACES_SEED[0]);
+        expect(response.body).toHaveProperty('transactions');
+      });
+  });
+
+  afterAll(async () => {
+    await clearTransactions(drizzle);// 👈
+    await clearPlaces(drizzle);
+    await clearUsers(drizzle);
+    await app.close();
+  });
+  ```
+
+4. Schrijf ook de testen voor de alternatieve scenario's
+
+  Wat zijn de mogelijke alternatieve scenario's?
+
+    - Negatieve test cases (error scenarios)
+    - Edge cases (grenssituaties)
+    - Validatie tests
+
+  Schrijf ook hiervoor testen.
 
 - Oplossing +
 
   ```typescript
   describe('GET /api/places/:id', () => {
-    it('should 404 when requesting not existing place', async () => {
+       it('should 404 when requesting not existing place', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/5`);
+        .get(`${url}/5`)
+        .auth(userAuthToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(404);
-
-      expect(response.body.message).toEqual('No place with this id exists');
+      expect(response.body.message).toBe('No place with this id exists');
     });
 
     it('should 400 with invalid place id', async () => {
       const response = await request(app.getHttpServer())
-        .get(`${url}/invalid`);
+        .get(`${url}/invalid`)
+        .auth(userAuthToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toBe(
         'Validation failed (numeric string is expected)',
       );
     });
-    });
-  ```
 
-### POST /api/places
+    testAuthHeader(() => request(app.getHttpServer()).get(url));
+  });
 
-Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testcases hebben we hier?
-
-```typescript
   describe('POST /api/places', () => {
-    it('should 201 and return the created place', async () => {
-      const response = await request(app.getHttpServer())
-        .post(url)
-        .send({ name: 'New place' });
-
-      expect(response.statusCode).toBe(201);
-
-      expect(response.body.id).toBeTruthy();
-
-      expect(response.body.name).toBe('New place');
-
-      expect(response.body.rating).toBeNull();
-    });
-
     it("should 200 and return the created place with it's rating", async () => {
       const response = await request(app.getHttpServer())
         .post(url)
         .send({
           name: 'Lovely place',
           rating: 5,
-        });
+        })
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(201);
-
       expect(response.body).toEqual(
         expect.objectContaining({
           id: expect.any(Number),
           name: 'Lovely place',
           rating: 5,
+          transactions: [],
         }),
       );
     });
@@ -590,7 +868,8 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testc
     it('should 409 for duplicate place name', async () => {
       const response = await request(app.getHttpServer())
         .post(url)
-        .send({ name: 'Lovely place' });
+        .send({ name: 'Lovely place', rating: 5 })
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(409);
       expect(response.body).toMatchObject({
@@ -601,10 +880,10 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testc
     it('should 400 when missing name', async () => {
       const response = await request(app.getHttpServer())
         .post(url)
-        .send({ rating: 3 });
+        .send({ rating: 3 })
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(400);
-
       expect(response.body.details.body).toHaveProperty('name');
     });
 
@@ -614,10 +893,10 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testc
         .send({
           name: 'The wrong place',
           rating: 0,
-        });
+        })
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(400);
-
       expect(response.body.details.body).toHaveProperty('rating');
     });
 
@@ -627,10 +906,10 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testc
         .send({
           name: 'The wrong place',
           rating: 6,
-        });
+        })
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(400);
-
       expect(response.body.details.body).toHaveProperty('rating');
     });
 
@@ -640,14 +919,117 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testc
         .send({
           name: 'The wrong place',
           rating: 3.5,
-        });
+        })
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(400);
-
       expect(response.body.details.body).toHaveProperty('rating');
     });
   });
-```
+  ```
+
+5. Voeg ook de authenticatie testen toe met `testAuthHeader`.
+
+- Oplossing +
+
+  ```typescript
+  describe('GET /api/places/:id', () => {
+   testAuthHeader(() => request(app.getHttpServer()).get(`${url}/1`));
+  });
+  ```
+
+### POST /api/places
+
+Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke testcases hebben we hier?
+
+```typescript
+  describe('POST /api/places', () => {
+    it("should 200 and return the created place with it's rating", async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'Lovely place',
+          rating: 5,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(201);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: expect.any(Number),
+          name: 'Lovely place',
+          rating: 5,
+          transactions: [],
+        }),
+      );
+    });
+
+    it('should 409 for duplicate place name', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({ name: 'Lovely place', rating: 5 })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(409);
+      expect(response.body).toMatchObject({
+        message: 'A place with this name already exists',
+      });
+    });
+
+    it('should 400 when missing name', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({ rating: 3 })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('name');
+    });
+
+    it('should 400 when rating lower than one', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'The wrong place',
+          rating: 0,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('rating');
+    });
+
+    it('should 400 when rating higher than five', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'The wrong place',
+          rating: 6,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('rating');
+    });
+
+    it('should 400 when rating is a decimal', async () => {
+      const response = await request(app.getHttpServer())
+        .post(url)
+        .send({
+          name: 'The wrong place',
+          rating: 3.5,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('rating');
+    });
+
+    testAuthHeader(() =>
+      request(app.getHttpServer()).post(url).send({ name: 'New place' }),
+    );
+  });
+  ```
 
 ### Oefening 2 - PUT /api/places/:id
 
@@ -663,87 +1045,96 @@ Schrijf een test voor het endpoint `PUT /api/places/:id`:
 
   ```typescript
   describe('PUT /api/places/:id', () => {
-      it('should 200 and return the updated place', async () => {
-        const response = await request(app.getHttpServer())
-          .put(`${url}/1`)
-          .send({
-            name: 'Changed name',
-            rating: 1,
-          });
+    it('should 200 and return the updated place', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/1`)
+        .send({
+          name: 'Changed name',
+          rating: 1,
+        })
+        .auth(adminToken, { type: 'bearer' });
 
-        expect(response.statusCode).toBe(200);
-
-        expect(response.body).toEqual(
-          expect.objectContaining({
-            id: 1,
-            name: 'Changed name',
-            rating: 1,
-          }),
-        );
-      });
-
-      it('should 409 for duplicate place name', async () => {
-        const response = await request(app.getHttpServer())
-          .put(`${url}/2`)
-          .send({
-            name: 'Changed name',
-            rating: 1,
-          });
-
-        expect(response.statusCode).toBe(409);
-        expect(response.body.message).toEqual(
-          'A place with this name already exists',
-        );
-      });
-
-      it('should 400 when missing name', async () => {
-        const response = await request(app.getHttpServer())
-          .put(`${url}/1`)
-          .send({ rating: 3 });
-
-        expect(response.statusCode).toBe(400);
-
-        expect(response.body.details.body).toHaveProperty('name');
-      });
-
-      it('should 400 when rating lower than one', async () => {
-        const response = await request(app.getHttpServer())
-          .put(`${url}/1`)
-          .send({
-            name: 'The wrong place',
-            rating: 0,
-          });
-
-        expect(response.statusCode).toBe(400);
-        expect(response.body.details.body).toHaveProperty('rating');
-      });
-
-      it('should 400 when rating higher than five', async () => {
-        const response = await request(app.getHttpServer())
-          .put(`${url}/1`)
-          .send({
-            name: 'The wrong place',
-            rating: 6,
-          });
-
-        expect(response.statusCode).toBe(400);
-
-        expect(response.body.details.body).toHaveProperty('rating');
-      });
-
-      it('should 400 when rating is a decimal', async () => {
-        const response = await request(app.getHttpServer())
-          .put(`${url}/1`)
-          .send({
-            name: 'The wrong place',
-            rating: 3.5,
-          });
-
-        expect(response.statusCode).toBe(400);
-
-        expect(response.body.details.body).toHaveProperty('rating');
-      });
+      expect(response.statusCode).toBe(200);
+      expect(response.body).toEqual(
+        expect.objectContaining({
+          id: 1,
+          name: 'Changed name',
+          rating: 1,
+        }),
+      );
     });
+
+    it('should 409 for duplicate place name', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/2`)
+        .send({
+          name: 'Changed name',
+          rating: 1,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(409);
+      expect(response.body.message).toEqual(
+        'A place with this name already exists',
+      );
+    });
+
+    it('should 400 when missing name', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/1`)
+        .send({ rating: 3 })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('name');
+    });
+
+    it('should 400 when rating lower than one', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/1`)
+        .send({
+          name: 'The wrong place',
+          rating: 0,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('rating');
+    });
+
+    it('should 400 when rating higher than five', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/1`)
+        .send({
+          name: 'The wrong place',
+          rating: 6,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('rating');
+    });
+
+    it('should 400 when rating is a decimal', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`${url}/1`)
+        .send({
+          name: 'The wrong place',
+          rating: 3.5,
+        })
+        .auth(adminToken, { type: 'bearer' });
+
+      expect(response.statusCode).toBe(400);
+      expect(response.body.details.body).toHaveProperty('rating');
+    });
+
+    testAuthHeader(() =>
+      request(app.getHttpServer()).put(`${url}/1`).send({
+        name: 'Changed name',
+        rating: 1,
+      }),
+    );
+  });
   ```
 
 ### Oefening 3 - DELETE /api/places/:id
@@ -751,7 +1142,7 @@ Schrijf een test voor het endpoint `PUT /api/places/:id`:
 Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
 
 1. Maak een nieuwe test suite aan voor het endpoint `DELETE /api/places/:id`.
-4. Voer de testen uit:
+2. Voer de testen uit:
    1. Check of de statuscode gelijk is aan 204.
    2. Check of de plaats daadwerkelijk verwijderd is uit de database.
 
@@ -761,7 +1152,8 @@ Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
   describe('DELETE /api/places/:id', () => {
     it('should 204 and return nothing', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`${url}/3`);
+        .delete(`${url}/3`)
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(204);
       expect(response.body).toEqual({});
@@ -769,7 +1161,8 @@ Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
 
     it('should 400 with invalid place id', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`${url}/invalid`);
+        .delete(`${url}/invalid`)
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(400);
       expect(response.body.message).toBe(
@@ -779,17 +1172,21 @@ Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
 
     it('should 404 with not existing place', async () => {
       const response = await request(app.getHttpServer())
-        .delete(`${url}/3`);
+        .delete(`${url}/5`)
+        .auth(adminToken, { type: 'bearer' });
 
       expect(response.statusCode).toBe(404);
       expect(response.body.message).toBe('No place with this id exists');
     });
+    testAuthHeader(() =>
+      request(app.getHttpServer()).get(`${url}/1/transactions`),
+    );
   });
   ```
 
 ### Oefening 4 - Coverage
 
-Vraag de coverage op van je testen met `pnpm test:cov`. Bekijk de gegenereerde HTML pagina in het bestand `test/coverage/lcov-report/index.html`. Wat merk je op?
+Vraag de coverage op van je testen met `pnpm test:e2e:cov`. Bekijk de gegenereerde HTML pagina in het bestand `test/coverage/lcov-report/index.html`. Wat merk je op?
 
 - Oplossing +
 
@@ -806,6 +1203,82 @@ Maak de testen aan voor alle endpoints in je applicatie. Denk na over:
 - Edge cases (grenssituaties)
 - Validatie tests
 
+### Automatiseer het opzetten van de test database
+
+We wensen dat bij het starten van de testen automatisch een test database wordt opgezet in een Docker container. Hiervoor maken we gebruik van [Testcontainers](https://www.testcontainers.org/).
+
+```bash
+pnpm add -D testcontainers @testcontainers/mysql
+```
+
+We voegen een Jest globale setup functie toe die één keer draait vóór alle tests beginnen. Het zet een complete test database omgeving op. Maak een bestand `test/jest.global-setup.ts` aan:
+
+```typescript
+import {
+  MySqlContainer,
+  type StartedMySqlContainer,
+} from '@testcontainers/mysql';
+import { drizzle } from 'drizzle-orm/mysql2';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+import mysql from 'mysql2/promise';
+import * as path from 'path';
+
+declare global {
+  var mySQLContainer: StartedMySqlContainer;
+}// 👈 1
+
+module.exports = async () => {
+  const container = await new MySqlContainer('mysql:8.0').start();// 👈 2
+  process.env.DATABASE_URL = container.getConnectionUri();// 👈 3
+  globalThis.mySQLContainer = container;// 👈 4
+
+  const connection = await mysql.createConnection(process.env.DATABASE_URL);
+  const db = drizzle(connection);// 👈 5
+
+  console.log('⏳ Running migrations...');
+  await migrate(db, {
+    migrationsFolder: path.resolve(__dirname, '../migrations'),
+  });// 👈 6
+  console.log('✅ Migrations completed!');
+
+  await connection.end();// 👈 7
+};
+```
+
+1. Vertelt TypeScript dat er een globale variabele mySQLContainer bestaat
+2. Start een nieuwe MySQL Docker container met Testcontainers
+3. Zet de omgevingsvariabele DATABASE_URL naar de connectiestring van de container in deze testomgeving (.env.test)
+4. Sla de container instantie op in de globale variabele zodat we deze later kunnen stoppen
+5. Maak een verbinding met de database in de container
+6. Voer de database migraties uit om de tabellen aan te maken
+7. Sluit de database verbinding
+
+En de teardown file `test/jest.global-teardown.ts`:
+
+```typescript
+module.exports = async () => {
+  await globalThis.mySQLContainer.stop();
+};
+```
+
+Dit stopt en verwijdert de Testcontainers MySQL Docker container na het uitvoeren van de tests.
+
+Pas `jest.config.ts` aan om de globale setup en teardown bestanden te gebruiken:
+
+```typescript
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "globalSetup": "./jest.global-setup.ts",// 👈
+  "globalTeardown": "./jest.global-teardown.ts",// 👈
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  }
+}
+```
+
 ## Oefening 6 - README
 
 Vervolledig je `README.md` met de nodige informatie over het testen van je applicatie.
@@ -815,10 +1288,9 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5-opl 88651f0
-> yarn install
-> yarn prisma migrate dev
-> yarn start:dev
+> git checkout -b les8-opl TODO
+> pnpm install
+> pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
