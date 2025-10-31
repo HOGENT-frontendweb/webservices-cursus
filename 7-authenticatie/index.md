@@ -7,6 +7,7 @@
 > cd webservices-budget
 > git checkout -b les7 6504e86
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
@@ -1522,6 +1523,7 @@ Optioneel: Pas de CUD-operaties aan zodat de admin deze operaties op alle transa
 > cd webservices-budget
 > git checkout -b les7-opl 361c611
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev

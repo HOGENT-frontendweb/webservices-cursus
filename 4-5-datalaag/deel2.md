@@ -7,6 +7,7 @@
 > cd webservices-budget
 > git checkout -b les5 e27a0a6
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
@@ -214,6 +215,7 @@ We gaan nu de seed data aanvullen met users, transactions en favoriete places. V
 async function resetDatabase() {
   console.log('🗑️ Resetting database...');
 
+  await db.delete(schema.userFavoritePlaces);
   await db.delete(schema.transactions);
   await db.delete(schema.places);
   await db.delete(schema.users);
@@ -971,6 +973,7 @@ Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer 
 > cd webservices-budget
 > git checkout -b les5-opl b1ed447
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm start:dev
 > ```
