@@ -892,6 +892,7 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
 > cd webservices-budget
 > git checkout -b les4-opl e27a0a6
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev

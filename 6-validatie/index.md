@@ -7,6 +7,7 @@
 > cd webservices-budget
 > git checkout -b les6 b1ed447
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
@@ -889,5 +890,8 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > cd webservices-budget
 > git checkout -b les6-opl 6504e86
 > pnpm install
+> docker compose up -d
+> pnpm db:migrate
+> pnpm db:seed
 > pnpm start:dev
 > ```
