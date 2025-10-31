@@ -76,7 +76,7 @@ getPlaceById(@Param('id', ParseIntPipe) id: number): PlaceResponseDto { // 👈 
 2. Het type van de id parameter wordt nu een `number`. We hoeven het id niet langer naar een `number` om te zetten bij aanroep van de methode `getById` uit de `PlaceService`.
 
 Doe dit ook voor PUT en DELETE. We hoeven `Number` functie niet langer te gebruiken.
-Probeer eens te GETen met een niet-numerieke id, bv. `/api/places/abc`. We krijgen een HTTP 400 terug.
+Probeer eens een GET request met een niet-numerieke id, bv. `/api/places/abc`. We krijgen een HTTP 400 terug.
 
 ### ValidationPipe
 
@@ -728,14 +728,17 @@ import { DrizzleQueryError } from 'drizzle-orm';
 @Catch(DrizzleQueryError)
 export class DrizzleQueryErrorFilter implements ExceptionFilter {
   catch(error: DrizzleQueryError) {
+    // 👇 1
     if (!error.cause || !('code' in error.cause)) {
       throw new Error(error.message || 'Unknown database error');
-    }// 👈 1
+    }
 
+    // 👇 2
     const {
       cause: { code, message },
-    } = error;// 👈 2
+    } = error;
 
+    // 👇 3
     switch (code) {
       case 'ER_DUP_ENTRY':
         if (message.includes('idx_place_name_unique')) {
@@ -754,30 +757,32 @@ export class DrizzleQueryErrorFilter implements ExceptionFilter {
           throw new NotFoundException('No place with this id exists');
         }
         break;
-    }// 👈 3
+    }
 
     throw error;
   }
 }
 ```
 
-1. Controleer of de `error.cause` (de onderliggende oorzaak van de fout) bestaat en of deze dan een `code` property heeft (d.i. MySQL error code zoals ER_DUP_ENTRY). Indien dit niet het geval gooi een generieke error.
+1. Controleer of de `error.cause` (de onderliggende oorzaak van de fout) bestaat en of deze dan een `code` property heeft (d.i. MySQL error code zoals `ER_DUP_ENTRY`). Indien dit niet het geval gooi een generieke error.
 2. Destructuring : `code` is de MySQL error code, `message` is de gedetailleerde foutmelding van MySQL (bijv. "Duplicate entry 'HoGent' for key 'idx_place_name_unique'")
 3. Afhankelijk van de MySQL error code wordt een specifieke HTTP exception gegooid met een gebruiksvriendelijke boodschap.
 
-    - ER_DUP_ENTRY (Duplicate entry error): wanneer je een duplicaat probeert aan te maken in de database, geef een HTTP 409 Conflict terug met een gebruiksvriendelijke boodschap.
-    - ER_NO_REFERENCED_ROW_2 (Foreign key constraint violation): wanneer je een record probeert aan te maken dat verwijst naar een niet-bestaand record, geef een HTTP 404 Not Found terug met een gebruiksvriendelijke boodschap.
+   - `ER_DUP_ENTRY` (Duplicate entry error): wanneer je een duplicaat probeert aan te maken in de database, geef een HTTP 409 Conflict terug met een gebruiksvriendelijke boodschap.
+   - `ER_NO_REFERENCED_ROW_2` (Foreign key constraint violation): wanneer je een record probeert aan te maken dat verwijst naar een niet-bestaand record, geef een HTTP 404 Not Found terug met een gebruiksvriendelijke boodschap.
 
 Voeg de filter toe in `main.ts`.
 
 ```ts
-import { DrizzleQueryErrorFilter } from './drizzle/drizzle-query-error.filter';
 //...
-  app.useGlobalFilters(new DrizzleQueryErrorFilter());
-//
+import { DrizzleQueryErrorFilter } from './drizzle/drizzle-query-error.filter';
+
+// ...
+app.useGlobalFilters(new DrizzleQueryErrorFilter());
+// ...
 ```
 
-Probeer een duplicate plaats aan te maken en bekijk de respons.
+Probeer een duplicate plaats aan te maken en bekijk het response.
 
 ## Logging middleware
 
