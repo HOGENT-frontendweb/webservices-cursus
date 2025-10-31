@@ -712,7 +712,18 @@ export class HttpExceptionFilter implements ExceptionFilter {
 }
 ```
 
-Voer een POST request uit met validatie fouten en bekijk het resultaat.
+Voeg de filter toe in `main.ts`.
+
+```ts
+//...
+import { HttpExceptionFilter } from './lib/http-exception.filter';
+
+// ...
+app.useGlobalFilters(new HttpExceptionFilter());
+// ...
+```
+
+Voer een GET request uit voor een onbestaande plaats en bekijk het resultaat. Voer ook een POST request uit met validatie fouten en bekijk het resultaat.
 
 ### Database fouten omzetten naar gebruiksvriendelijke HTTP exceptions
 
@@ -888,7 +899,7 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les6-opl 6504e86
+> git checkout -b les6-opl 68970b1
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate

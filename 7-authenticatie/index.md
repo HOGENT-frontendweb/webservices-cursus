@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7 6504e86
+> git checkout -b les7 bd9ccc9
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
@@ -1521,7 +1521,7 @@ Optioneel: Pas de CUD-operaties aan zodat de admin deze operaties op alle transa
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 361c611
+> git checkout -b les7-opl cbf35fd
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
