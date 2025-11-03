@@ -161,6 +161,7 @@ async function hashPassword(password: string): Promise<string> {
     hashLength: 32, // 👈 4
     timeCost: 2, // 👈 5
     memoryCost: 2 ** 16, // 👈 6
+    saltLength: 16, // Deze geeft de syntax error, ook geen idee welke lengte interessant is
   });
 }
 
@@ -170,27 +171,26 @@ async function seedUsers() {
   console.log('👥 Seeding users...');
 
   // 👇 7
-  const passwordHash = await hashPassword('12345678');
   await db.insert(schema.users).values([
     {
       id: 1,
       name: 'Thomas Aelbrecht',
       email: 'thomas.aelbrecht@hogent.be', // 👈 9
-      passwordHash: passwordHash, // 👈 8
+      passwordHash: await hashPassword('12345678'), // 👈 8
       roles: ['admin', 'user'], // 👈 9
     },
     {
       id: 2,
       name: 'Pieter Van Der Helst',
       email: 'pieter.vanderhelst@hogent.be', // 👈 9
-      passwordHash: passwordHash, // 👈 8
+      passwordHash: await hashPassword('12345678'), // 👈 8
       roles: ['user'], // 👈 9
     },
     {
       id: 3,
       name: 'Karine Samyn',
       email: 'karine.samyn@hogent.be', // 👈 9
-      passwordHash: passwordHash, // 👈 8
+      passwordHash: await hashPassword('12345678'), // 👈 8
       roles: ['user'], // 👈 9
     },
   ]);
@@ -369,6 +369,7 @@ export default () => ({
   // ... andere configuratie
   auth: {
     hashLength: parseInt(process.env.AUTH_HASH_LENGTH || '32'), // 👈 1
+    saltLength: parseInt(process.env.AUTH_SALT_LENGTH || '16'), // Wederom, geen idee welke lengte interessant is
     timeCost: parseInt(process.env.AUTH_HASH_TIME_COST || '6'), // 👈 2
     memoryCost: parseInt(process.env.AUTH_HASH_MEMORY_COST || '65536'), // 👈 3
     jwt: {
@@ -392,6 +393,7 @@ export interface JwtConfig {
 
 export interface AuthConfig {
   hashLength: number;
+  saltLength: number;
   timeCost: number;
   memoryCost: number;
   jwt: JwtConfig;
@@ -449,28 +451,27 @@ import { Role } from '../auth/roles'; // 👈
 
 async function seedUsers() {
   console.log('👥 Seeding users...');
-
-  const passwordHash = await hashPassword('12345678');
+  
   await db.insert(schema.users).values([
     {
       id: 1,
       name: 'Thomas Aelbrecht',
       email: 'thomas.aelbrecht@hogent.be',
-      passwordHash: passwordHash,
+      passwordHash: await hashPassword('12345678'),
       roles: [Role.ADMIN, Role.USER], // 👈
     },
     {
       id: 2,
       name: 'Pieter Van Der Helst',
       email: 'pieter.vanderhelst@hogent.be',
-      passwordHash: passwordHash,
+      passwordHash: await hashPassword('12345678'),
       roles: [Role.USER], // 👈
     },
     {
       id: 3,
       name: 'Karine Samyn',
       email: 'karine.samyn@hogent.be',
-      passwordHash: passwordHash,
+      passwordHash: await hashPassword('12345678'),
       roles: [Role.USER], // 👈
     },
   ]);
@@ -603,6 +604,7 @@ export class AuthService {
       hashLength: authConfig.hashLength,
       timeCost: authConfig.timeCost,
       memoryCost: authConfig.memoryCost,
+      saltLength: authConfig.saltLength
     });
   }
 }
