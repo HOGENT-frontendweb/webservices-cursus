@@ -349,15 +349,12 @@ export class UserService {
       throw new NotFoundException('No user with this id exists');
     }
 
-    const user = await this.getById(id);
-    return plainToInstance(PublicUserResponseDto, user, {
-      excludeExtraneousValues: true,
-    });
+    return user = await this.getById(id);
   }
 }
 ```
 
-Voorlopig negeer je de fout in de `create` functie uit de `UserService`. We zullen gebruikers later aanmaken via een `register` functie in de `AuthService`.
+Voorlopig negeer je de fout in de `create` functie uit de `UserService`. We zullen gebruikers later aanmaken via een `register` functie in de `AuthService`. Pas ook de `UserController` en `UserListResponseDto` aan waar nodig.
 
 ## Configuratie voor authenticatie
 
@@ -451,7 +448,7 @@ import { Role } from '../auth/roles'; // 👈
 
 async function seedUsers() {
   console.log('👥 Seeding users...');
-  
+
   await db.insert(schema.users).values([
     {
       id: 1,
@@ -653,16 +650,8 @@ export class AuthService {
   // ... andere functies
 
   private signJwt(user: User): string {
-    const authConfig = this.configService.get<AuthConfig>('auth')!;
     return this.jwtService.sign(
-      { sub: user.id, email: user.email, roles: user.roles }, // 👈 1
-      {
-        // 👇 2
-        secret: authConfig.jwt.secret,
-        audience: authConfig.jwt.audience,
-        issuer: authConfig.jwt.issuer,
-        expiresIn: authConfig.jwt.expirationInterval, // 👈 3
-      },
+      { sub: user.id, email: user.email, roles: user.roles }
     );
   }
 }
@@ -672,8 +661,7 @@ export class AuthService {
    - Hiervoor gebruiken we de `sub` claim voor het gebruikers id. Dit is een standaard claim in JWT's.
    - De overige velden zijn custom claims, die mag je zelf kiezen.
    - Let wel op: enkel controle op een rol doen in de frontend is niet voldoende. De backend moet altijd controleren of de gebruiker de actie mag uitvoeren.
-2. Verder geven we de nodige opties mee om de JWT te ondertekenen, opgehaald uit de configuratie.
-3. We geven de `expirationInterval` mee om de JWT te laten verlopen na een bepaalde tijd. Je kiest deze tijd zelf, afhankelijk van het type applicatie.
+2. De nodige opties mee om de JWT te ondertekenen dienen we niet mee te geven, want reeds doorgegeven bij de registratie van de `JwtModule`.
 
 ### JWT verifiëren
 
@@ -699,12 +687,7 @@ export class AuthService {
   // ... andere functies
 
   async verifyJwt(token: string): Promise<JwtPayload> {
-    const authConfig = this.configService.get<AuthConfig>('auth')!;
-    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
-      secret: authConfig.jwt.secret,
-      audience: authConfig.jwt.audience,
-      issuer: authConfig.jwt.issuer,
-    });
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
 
     if (!payload) {
       throw new UnauthorizedException('Invalid authentication token');
@@ -715,7 +698,7 @@ export class AuthService {
 }
 ```
 
-Deze functie verifieert de JWT en geeft de payload terug. We geven alle nodige configuratie-opties mee zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
+Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
 
 Als de JWT ongeldig is, wordt een `UnauthorizedException` gegooid.
 
@@ -1075,7 +1058,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AuthService } from '../auth.service';
-import { IS_PUBLIC_KEY } from '../decorators';
+import { IS_PUBLIC_KEY } from '../decorators/auth.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
