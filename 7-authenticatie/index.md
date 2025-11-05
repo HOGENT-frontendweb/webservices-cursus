@@ -1296,7 +1296,7 @@ We voegen ook nog een type toe voor de gebruikerssessie:
 ```ts
 // src/types/auth.ts
 export interface Session {
-  userId: number;
+  id: number;
   email: string;
   roles: string[];
 }
@@ -1458,6 +1458,7 @@ import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor
 
 @UseInterceptors(AuthDelayInterceptor)
 @Post()
+@Public()
 async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
   // ...
 }
