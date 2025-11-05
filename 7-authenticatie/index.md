@@ -161,7 +161,6 @@ async function hashPassword(password: string): Promise<string> {
     hashLength: 32, // 👈 4
     timeCost: 2, // 👈 5
     memoryCost: 2 ** 16, // 👈 6
-    saltLength: 16, // Deze geeft de syntax error, ook geen idee welke lengte interessant is
   });
 }
 
@@ -366,7 +365,6 @@ export default () => ({
   // ... andere configuratie
   auth: {
     hashLength: parseInt(process.env.AUTH_HASH_LENGTH || '32'), // 👈 1
-    saltLength: parseInt(process.env.AUTH_SALT_LENGTH || '16'), // Wederom, geen idee welke lengte interessant is
     timeCost: parseInt(process.env.AUTH_HASH_TIME_COST || '6'), // 👈 2
     memoryCost: parseInt(process.env.AUTH_HASH_MEMORY_COST || '65536'), // 👈 3
     jwt: {
@@ -390,7 +388,6 @@ export interface JwtConfig {
 
 export interface AuthConfig {
   hashLength: number;
-  saltLength: number;
   timeCost: number;
   memoryCost: number;
   jwt: JwtConfig;
@@ -601,7 +598,6 @@ export class AuthService {
       hashLength: authConfig.hashLength,
       timeCost: authConfig.timeCost,
       memoryCost: authConfig.memoryCost,
-      saltLength: authConfig.saltLength
     });
   }
 }
