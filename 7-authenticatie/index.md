@@ -170,27 +170,26 @@ async function seedUsers() {
   console.log('👥 Seeding users...');
 
   // 👇 7
-  const passwordHash = await hashPassword('12345678');
   await db.insert(schema.users).values([
     {
       id: 1,
       name: 'Thomas Aelbrecht',
       email: 'thomas.aelbrecht@hogent.be', // 👈 9
-      passwordHash: passwordHash, // 👈 8
+      passwordHash: await hashPassword('12345678'), // 👈 8
       roles: ['admin', 'user'], // 👈 9
     },
     {
       id: 2,
       name: 'Pieter Van Der Helst',
       email: 'pieter.vanderhelst@hogent.be', // 👈 9
-      passwordHash: passwordHash, // 👈 8
+      passwordHash: await hashPassword('12345678'), // 👈 8
       roles: ['user'], // 👈 9
     },
     {
       id: 3,
       name: 'Karine Samyn',
       email: 'karine.samyn@hogent.be', // 👈 9
-      passwordHash: passwordHash, // 👈 8
+      passwordHash: await hashPassword('12345678'), // 👈 8
       roles: ['user'], // 👈 9
     },
   ]);
@@ -349,15 +348,12 @@ export class UserService {
       throw new NotFoundException('No user with this id exists');
     }
 
-    const user = await this.getById(id);
-    return plainToInstance(PublicUserResponseDto, user, {
-      excludeExtraneousValues: true,
-    });
+    return this.getById(id);
   }
 }
 ```
 
-Voorlopig negeer je de fout in de `create` functie uit de `UserService`. We zullen gebruikers later aanmaken via een `register` functie in de `AuthService`.
+Voorlopig negeer je de fout in de `create` functie uit de `UserService`. We zullen gebruikers later aanmaken via een `register` functie in de `AuthService`. Pas ook de `UserController` en `UserListResponseDto` aan waar nodig.
 
 ## Configuratie voor authenticatie
 
@@ -450,27 +446,26 @@ import { Role } from '../auth/roles'; // 👈
 async function seedUsers() {
   console.log('👥 Seeding users...');
 
-  const passwordHash = await hashPassword('12345678');
   await db.insert(schema.users).values([
     {
       id: 1,
       name: 'Thomas Aelbrecht',
       email: 'thomas.aelbrecht@hogent.be',
-      passwordHash: passwordHash,
+      passwordHash: await hashPassword('12345678'),
       roles: [Role.ADMIN, Role.USER], // 👈
     },
     {
       id: 2,
       name: 'Pieter Van Der Helst',
       email: 'pieter.vanderhelst@hogent.be',
-      passwordHash: passwordHash,
+      passwordHash: await hashPassword('12345678'),
       roles: [Role.USER], // 👈
     },
     {
       id: 3,
       name: 'Karine Samyn',
       email: 'karine.samyn@hogent.be',
-      passwordHash: passwordHash,
+      passwordHash: await hashPassword('12345678'),
       roles: [Role.USER], // 👈
     },
   ]);
@@ -651,17 +646,11 @@ export class AuthService {
   // ... andere functies
 
   private signJwt(user: User): string {
-    const authConfig = this.configService.get<AuthConfig>('auth')!;
-    return this.jwtService.sign(
-      { sub: user.id, email: user.email, roles: user.roles }, // 👈 1
-      {
-        // 👇 2
-        secret: authConfig.jwt.secret,
-        audience: authConfig.jwt.audience,
-        issuer: authConfig.jwt.issuer,
-        expiresIn: authConfig.jwt.expirationInterval, // 👈 3
-      },
-    );
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      roles: user.roles,
+    });
   }
 }
 ```
@@ -670,8 +659,7 @@ export class AuthService {
    - Hiervoor gebruiken we de `sub` claim voor het gebruikers id. Dit is een standaard claim in JWT's.
    - De overige velden zijn custom claims, die mag je zelf kiezen.
    - Let wel op: enkel controle op een rol doen in de frontend is niet voldoende. De backend moet altijd controleren of de gebruiker de actie mag uitvoeren.
-2. Verder geven we de nodige opties mee om de JWT te ondertekenen, opgehaald uit de configuratie.
-3. We geven de `expirationInterval` mee om de JWT te laten verlopen na een bepaalde tijd. Je kiest deze tijd zelf, afhankelijk van het type applicatie.
+2. De nodige opties mee om de JWT te ondertekenen dienen we niet mee te geven, want reeds doorgegeven bij de registratie van de `JwtModule`.
 
 ### JWT verifiëren
 
@@ -697,12 +685,7 @@ export class AuthService {
   // ... andere functies
 
   async verifyJwt(token: string): Promise<JwtPayload> {
-    const authConfig = this.configService.get<AuthConfig>('auth')!;
-    const payload = await this.jwtService.verifyAsync<JwtPayload>(token, {
-      secret: authConfig.jwt.secret,
-      audience: authConfig.jwt.audience,
-      issuer: authConfig.jwt.issuer,
-    });
+    const payload = await this.jwtService.verifyAsync<JwtPayload>(token);
 
     if (!payload) {
       throw new UnauthorizedException('Invalid authentication token');
@@ -713,7 +696,7 @@ export class AuthService {
 }
 ```
 
-Deze functie verifieert de JWT en geeft de payload terug. We geven alle nodige configuratie-opties mee zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
+Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
 
 Als de JWT ongeldig is, wordt een `UnauthorizedException` gegooid.
 
@@ -1073,7 +1056,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AuthService } from '../auth.service';
-import { IS_PUBLIC_KEY } from '../decorators';
+import { IS_PUBLIC_KEY } from '../decorators/auth.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -1311,7 +1294,7 @@ We voegen ook nog een type toe voor de gebruikerssessie:
 ```ts
 // src/types/auth.ts
 export interface Session {
-  userId: number;
+  id: number;
   email: string;
   roles: string[];
 }
@@ -1389,6 +1372,17 @@ export class UserController {
     @CurrentUser() user: Session, // 👈
   ): Promise<void> {
     return await this.userService.deleteById(
+      id === 'me' ? user.id : id, // 👈
+    );
+  }
+
+  @Get('/:id/favoriteplaces')
+  @UseGuards(CheckUserAccessGuard) // 👈
+  async getFavoritePlaces(
+    @Param('id', ParseUserIdPipe) id: number | 'me', // 👈
+    @CurrentUser() user: Session, // 👈
+  ): Promise<PlaceResponseDto[]> {
+    return this.placeService.getFavoritePlacesByUserId(
       id === 'me' ? user.id : id, // 👈
     );
   }
@@ -1473,6 +1467,7 @@ import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor
 
 @UseInterceptors(AuthDelayInterceptor)
 @Post()
+@Public()
 async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
   // ...
 }
@@ -1521,7 +1516,7 @@ Optioneel: Pas de CUD-operaties aan zodat de admin deze operaties op alle transa
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl cbf35fd
+> git checkout -b les7-opl 0e74e68
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
