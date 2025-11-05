@@ -348,7 +348,7 @@ export class UserService {
       throw new NotFoundException('No user with this id exists');
     }
 
-    return user = await this.getById(id);
+    return this.getById(id);
   }
 }
 ```
@@ -646,9 +646,11 @@ export class AuthService {
   // ... andere functies
 
   private signJwt(user: User): string {
-    return this.jwtService.sign(
-      { sub: user.id, email: user.email, roles: user.roles }
-    );
+    return this.jwtService.sign({
+      sub: user.id,
+      email: user.email,
+      roles: user.roles,
+    });
   }
 }
 ```
