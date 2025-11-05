@@ -1377,6 +1377,17 @@ export class UserController {
       id === 'me' ? user.id : id, // 👈
     );
   }
+
+  @Get('/:id/favoriteplaces')
+  @UseGuards(CheckUserAccessGuard) // 👈
+  async getFavoritePlaces(
+    @Param('id', ParseUserIdPipe) id: number | 'me', // 👈
+    @CurrentUser() user: Session, // 👈
+  ): Promise<PlaceResponseDto[]> {
+    return this.placeService.getFavoritePlacesByUserId(
+      id === 'me' ? user.id : id, // 👈
+    );
+  }
 }
 ```
 
