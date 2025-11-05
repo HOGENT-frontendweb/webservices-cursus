@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 0e74e68
+> git checkout -b les8 981f3b8
 > docker compose up -d
 > pnpm install
 > pnpm db:migrate
