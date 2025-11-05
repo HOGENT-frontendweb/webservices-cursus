@@ -878,7 +878,7 @@ export class AppModule implements NestModule {
 }
 ```
 
-1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middlewares te configureren
+1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middlewares te configureren tijdens initialisatie van de module.
 2. `consumer.apply(LoggerMiddleware)`: Registreert de `LoggerMiddleware` bij de DI container.
    - `forRoutes('*path')`: Zorgt ervoor dat de `LoggerMiddleware` wordt uitgevoerd voor alle routes in je applicatie (de wildcard \* matcht alle paden)
 
