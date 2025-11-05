@@ -9,6 +9,7 @@ Voor het schrijven van API documentatie bestaan verschillende tools. Swagger is 
 > cd webservices-budget
 > git checkout -b les9 TODO:
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
@@ -39,6 +40,7 @@ Swagger is een set van open source tools opgebouwd rond de OpenAPI specificatie 
 ## Swagger installeren in NestJS
 
 NestJS heeft uitstekende ondersteuning voor Swagger via de `@nestjs/swagger` package. Deze package genereert automatisch de OpenAPI specificatie op basis van decorators in je code.
+Lees eerst de [OPENAPI introductie](https://docs.nestjs.com/openapi/introduction).
 
 Installeer de nodige packages:
 
@@ -76,15 +78,15 @@ async function bootstrap() {
   // 👇 2
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Budget Web Services') // 👈 3
-    .setDescription('API application') // 👈 4
+    .setDescription('The Budget API application') // 👈 4
     .setVersion('1.0') // 👈 5
     .addBearerAuth() // 👈 6
-    .build();
-
-  // 👇 7
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+    .build(); // 👈 7
 
   // 👇 8
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+
+  // 👇 9
   SwaggerModule.setup('docs', app, document);
 
   await app.listen(port);
@@ -94,17 +96,22 @@ bootstrap();
 ```
 
 1. We importeren `SwaggerModule` en `DocumentBuilder` van `@nestjs/swagger`.
-2. We maken een nieuwe Swagger configuratie aan met `DocumentBuilder`.
+2. We maken een nieuwe Swagger configuratie aan met `DocumentBuilder`. De `DocumentBuilder` biedt een kettingbare API om de Swagger/OpenAPI specificatie te configureren.
 3. We geven de API een titel.
 4. We voegen een beschrijving toe.
 5. We specificeren de API versie.
-6. We voegen ondersteuning toe voor Bearer authentication (JWT).
-7. We genereren het OpenAPI document op basis van de configuratie en de decorators in onze code.
-8. We maken de Swagger UI beschikbaar op `/docs`.
+6. We voegen ondersteuning toe voor Bearer authentication (JWT). Dit voegt een Authorize knop toe in de Swagger UI.
+7. Maakt het configuratie-object dat wordt gebruikt om de volledige OpenAPI/Swagger documentatie te genereren
+8. We genereren het OpenAPI document op basis van de configuratie en een instantie van de applicatie. Dit proces omvat:
+    - Scannen van de applicatie - Analyseren van alle controllers, routes, DTOs en decorators in de AppModule en alle geïmporteerde modules
+    - Extraheren van API informatie: Alle HTTP endpoints, route parameters, query parameters, request body schemas, response types, Swagger decorators
+    - Combineren met configuratie - Neemt de metadata uit swaggerConfig (titel, versie, authenticatie) en voegt dat samen met de gegenereerde API informatie
+    - Creëren van een compleet OpenAPI 3.0 JSON document dat alle API endpoints, schemas en configuratie beschrijft
+9. We maken de Swagger UI beschikbaar op `/docs`.
 
-Start je applicatie en navigeer naar <http://localhost:9000/docs>. Je zou de Swagger UI moeten zien met de basis configuratie.
+Start je applicatie en navigeer naar <http://localhost:3000/docs>. Je zou de Swagger UI moeten zien met de basis configuratie.
 
-De JSON specificatie is beschikbaar op <http://localhost:9000/docs-json>.
+De JSON specificatie is beschikbaar op <http://localhost:3000/docs-json>.
 
 ## DTO's documenteren
 
@@ -112,7 +119,7 @@ In NestJS documenteren we onze API door decorators toe te voegen aan onze DTO's 
 
 ### Response DTO's
 
-Laten we de `PlaceResponseDto` documenteren:
+Laten we de `PlaceResponseDto` documenteren. We gebruiken de `@ApiProperty` decorator om elk veld te documenteren:
 
 ```ts
 // src/place/place.dto.ts
@@ -142,7 +149,7 @@ export class PlaceResponseDto {
 1. We importeren `ApiProperty` van `@nestjs/swagger`.
 2. We voegen een `@ApiProperty` decorator toe aan elk veld. We geven een voorbeeld en beschrijving mee.
 3. Hetzelfde voor de `name` property.
-4. Voor `rating` specificeren we dat het `nullable` is (kan `null` zijn), en dat het een integer is met format `int32`.
+4. Voor `rating` specificeren we dat het `nullable` is (kan `null` zijn), en dat het een integer is met format `int32` (32-bit). Swagger kan het type hier niet automatisch afleiden omdat dit een union type is (`number | null`).
 
 Voor lijst responses maken we een aparte DTO:
 
@@ -170,20 +177,19 @@ export class CreatePlaceRequestDto {
 
   @IsNumber({
     name: 'rating',
-    min: 1, // 👈 3
-    max: 5, // 👈 3
-    optional: true, // 👈 4
+    min: 1,
+    max: 5,
     format: 'int32',
     type: 'integer',
-  })
+  })// 👈 3
   rating?: number;
 }
 ```
 
 1. We importeren de decorators van `nestjs-swagger-dto` (niet van `class-validator`!).
 2. `@IsString` valideert dat de waarde een string is en documenteert dit automatisch in Swagger. We geven ook de naam en maximale lengte mee.
-3. Voor `@IsNumber` specificeren we minimum en maximum waarden.
-4. We markeren `rating` als optioneel.
+3. Voor `@IsNumber` specificeren we minimum en maximum waarden en het type/format.
+Als een veld optioneel is (zoals `rating`), voeg je een `?` toe aan de property naam en 'optional: true' in de Swagger decorator.
 
 De `nestjs-swagger-dto` decorators zorgen automatisch voor:
 
@@ -206,21 +212,15 @@ Nu gaan we de controller endpoints documenteren. We voegen decorators toe aan de
 
 ### Controller-niveau documentatie
 
-Voeg de `@ApiBearerAuth()` decorator toe aan de controller om aan te geven dat authenticatie vereist is:
+`@ApiTag()` groepeert de endpoints van deze controller. Voeg de `@ApiBearerAuth()` decorator toe aan de controller om aan te geven dat authenticatie vereist is voor alle routes in de controller:
 
 ```ts
 // src/place/place.controller.ts
-import { Controller, Get, Post, Put, Delete, Body, Param, ParseIntPipe } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse } from '@nestjs/swagger'; // 👈 1
-import { PlaceService } from './place.service';
-import {
-  CreatePlaceRequestDto,
-  PlaceResponseDto,
-  PlaceListResponseDto,
-  UpdatePlaceRequestDto,
-} from './place.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger'; // 👈 1
+//... andere imports
 
-@ApiBearerAuth() // 👈 2
+@ApiTag('places') // 👈2
+@ApiBearerAuth() // 👈 3
 @Controller('places')
 export class PlaceController {
   constructor(private placeService: PlaceService) {}
@@ -229,19 +229,21 @@ export class PlaceController {
 }
 ```
 
-1. We importeren `ApiBearerAuth` en `ApiResponse` van `@nestjs/swagger`.
-2. We voegen `@ApiBearerAuth()` toe om aan te geven dat alle routes in deze controller authenticatie vereisen.
+1. We importeren `ApiBearerAuth` en `ApiTags` van `@nestjs/swagger`.
+2. We voegen `@ApiTag('places')` toe om alle routes in deze controller te groeperen onder de "places" tag in Swagger UI.
+3. We voegen `@ApiBearerAuth()` toe om aan te geven dat alle routes in deze controller authenticatie vereisen.
 
 ### GET /api/places
 
-Documenteer de route om alle places op te halen:
+Documenteer de route om alle places op te halen a.d.h.v. `@ApiResponse`:
 
 ```ts
 // src/place/place.controller.ts
+import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger'; // 👈 1
 @ApiResponse({
-  status: 200, // 👈 1
-  description: 'Get all places', // 👈 2
-  type: PlaceListResponseDto, // 👈 3
+  status: 200, // 👈 2
+  description: 'Get all places', // 👈 3
+  type: PlaceListResponseDto, // 👈 4
 })
 @Get()
 async getAllPlaces(): Promise<PlaceListResponseDto> {
@@ -249,9 +251,10 @@ async getAllPlaces(): Promise<PlaceListResponseDto> {
 }
 ```
 
-1. We specificeren de HTTP status code voor een succesvolle response.
-2. We geven een beschrijving van wat deze route doet.
-3. We specificeren het type van de response (het DTO).
+1. Importeer `ApiResponse` van `@nestjs/swagger`.
+2. We specificeren de HTTP status code voor een succesvolle response.
+3. We geven een beschrijving van wat deze route doet.
+4. We specificeren het type van de response (het DTO).
 
 ### POST /api/places
 
@@ -259,17 +262,19 @@ Documenteer de route om een nieuwe place aan te maken:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 201,
-  description: 'Create place',
-  type: PlaceResponseDto,
-})
-@Post()
-async createPlace(
-  @Body() createPlaceDto: CreatePlaceRequestDto,
-): Promise<PlaceResponseDto> {
-  return await this.placeService.create(createPlaceDto);
-}
+  @ApiResponse({
+    status: 201,
+    description: 'Create place',
+    type: PlaceResponseDto,
+  })
+  @Post()
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.CREATED)
+  async createPlace(
+    @Body() createPlaceDto: CreatePlaceRequestDto,
+  ): Promise<PlaceDetailResponseDto> {
+    return this.placeService.create(createPlaceDto);
+  }
 ```
 
 NestJS herkent automatisch dat `createPlaceDto` een request body is en documenteert dit in Swagger, inclusief het schema dat we met `nestjs-swagger-dto` hebben gedefinieerd.
@@ -280,17 +285,17 @@ Documenteer de route om een specifieke place op te halen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
-  description: 'Get place by ID',
-  type: PlaceResponseDto,
-})
-@Get(':id')
-async getPlaceById(
-  @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceResponseDto> {
-  return await this.placeService.getById(id);
-}
+ @ApiResponse({
+    status: 200,
+    description: 'Get place by ID',
+    type: PlaceResponseDto,
+  })
+  @Get(':id')
+  async getPlaceById(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PlaceDetailResponseDto> {
+    return this.placeService.getById(id);
+  }
 ```
 
 De `:id` parameter wordt automatisch herkend en gedocumenteerd door NestJS.
@@ -301,18 +306,19 @@ Documenteer de route om een place te updaten:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
-  description: 'Update place',
-  type: PlaceResponseDto,
-})
-@Put(':id')
-async updatePlace(
-  @Param('id', ParseIntPipe) id: number,
-  @Body() updatePlaceDto: UpdatePlaceRequestDto,
-): Promise<PlaceResponseDto> {
-  return await this.placeService.updateById(id, updatePlaceDto);
-}
+  @ApiResponse({
+    status: 200,
+    description: 'Update place',
+    type: PlaceResponseDto,
+  })
+  @Put(':id')
+  @Roles(Role.ADMIN)
+  async updatePlace(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updatePlaceDto: UpdatePlaceRequestDto,
+  ): Promise<PlaceDetailResponseDto> {
+    return this.placeService.updateById(id, updatePlaceDto);
+  }
 ```
 
 ### DELETE /api/places/:id
@@ -321,14 +327,18 @@ Documenteer de route om een place te verwijderen:
 
 ```ts
 // src/place/place.controller.ts
-@Delete(':id')
-@HttpCode(HttpStatus.NO_CONTENT)
-async deletePlace(@Param('id', ParseIntPipe) id: number): Promise<void> {
-  await this.placeService.deleteById(id);
-}
+  @ApiResponse({
+    description: 'Delete place',
+  })
+  @Delete(':id')
+  @Roles(Role.ADMIN)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deletePlace(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.placeService.deleteById(id);
+  }
 ```
 
-Voor een DELETE zonder response body hoeven we geen `@ApiResponse` toe te voegen. NestJS documenteert automatisch de 204 status code.
+NestJS documenteert automatisch de 204 status code.
 
 ## Meerdere response types documenteren
 
@@ -359,25 +369,39 @@ async getPlaceById(
 
 Je kan meerdere `@ApiResponse` decorators toevoegen voor verschillende status codes.
 
+Omdat je moet aangemeld zijn voor alle routes in places, is het handig om ook de 401 Unauthorized response te documenteren op controller-niveau:
+
+```ts
+@ApiBearerAuth()
+@ApiResponse({
+  status: 401,
+  description: 'Unauthorized - you need to be signed in',
+})
+@Controller('places')
+export class PlaceController {...}
+```
+
 ## Login route documenteren
 
 Laten we ook de login route documenteren:
 
 ```ts
 // src/sessions/sessions.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
+import { Controller, Post, Body, UseInterceptors } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
-import { LoginRequestDto, LoginResponseDto } from './sessions.dto';
+import { LoginRequestDto, LoginResponseDto } from './session.dto';
 import { Public } from '../auth/decorators/public.decorator';
+import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('sessions')
 @Controller('sessions')
-export class SessionsController {
+export class SessionController {
   constructor(private authService: AuthService) {}
 
   @ApiResponse({
     status: 200,
-    description: 'Login successful',
+    description: 'Login',
     type: LoginResponseDto,
   })
   @ApiResponse({
@@ -386,6 +410,7 @@ export class SessionsController {
   })
   @Public()
   @Post()
+  @UseInterceptors(AuthDelayInterceptor)
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     const token = await this.authService.login(loginDto);
     return { token };
@@ -398,16 +423,24 @@ En de bijbehorende DTO's:
 ```ts
 // src/sessions/sessions.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsString } from 'class-validator';
+import { IsEmail } from 'class-validator';
+import { IsString } from 'nestjs-swagger-dto';
 
 export class LoginRequestDto {
-  @ApiProperty({ example: 'thomas.aelbrecht@hogent.be' })
+  @IsString({
+    name: 'email',
+    example: 'user@email.com',
+  })
   @IsEmail()
   email: string;
 
-  @ApiProperty({ example: '12345678' })
-  @IsString()
+  @IsString({ name: 'password', minLength: 8, maxLength: 128 })
   password: string;
+}
+
+export class LoginResponseDto {
+  @ApiProperty({ description: 'JWT authentication token' })
+  token: string;
 }
 
 export class LoginResponseDto {
@@ -423,7 +456,7 @@ export class LoginResponseDto {
 
 Nu is het tijd om de API te testen via de Swagger UI:
 
-1. Open <http://localhost:9000/docs> in je browser.
+1. Open <http://localhost:3000/docs> in je browser.
 2. Klik op de `POST /api/sessions` route.
 3. Klik op **"Try it out"**.
 4. Voer de volgende gegevens in:
@@ -457,51 +490,17 @@ Probeer de verschillende routes uit:
 
 Documenteer de volledige `transactions` module:
 
-1. Maak de nodige DTO's aan voor transactions:
-   - `TransactionResponseDto` - Voor een enkele transaction
-   - `TransactionListResponseDto` - Voor een lijst van transactions
-   - `CreateTransactionRequestDto` - Voor het aanmaken van een transaction
-   - `UpdateTransactionRequestDto` - Voor het updaten van een transaction
-
-2. Voeg Swagger decorators toe aan de DTO's:
+1. Voeg Swagger decorators toe aan de DTO's:
    - Gebruik `@ApiProperty` voor response DTO's
    - Gebruik `nestjs-swagger-dto` decorators voor request DTO's
 
-3. Documenteer alle routes in `TransactionController`:
-   - `GET /api/transactions` - Alle transactions ophalen (van aangemelde gebruiker)
-   - `POST /api/transactions` - Een nieuwe transaction aanmaken
-   - `GET /api/transactions/:id` - Een specifieke transaction ophalen
-   - `PUT /api/transactions/:id` - Een transaction updaten
-   - `DELETE /api/transactions/:id` - Een transaction verwijderen
+2. Documenteer alle routes in `TransactionController`:
 
-4. Vergeet niet om meerdere response types te documenteren waar nodig (200, 401, 403, 404).
-
-**Tips:**
-
-- Een transaction heeft een `amount` (number), `date` (Date), `placeId` (number), en `userId` (number).
-- Voor de response DTO kan je de volledige `place` en `user` objecten includen (zoals in de BudgetBackend).
-- Gebruik de [NestJS Swagger documentatie](https://docs.nestjs.com/openapi/types-and-parameters) als referentie.
-- Kijk naar de `place.dto.ts` en `place.controller.ts` voor inspiratie.
+3. Vergeet niet om meerdere response types te documenteren waar nodig (200, 401, 403, 404).
 
 ## Oefening 2 - Users documenteren
 
-Documenteer de `users` module:
-
-1. De `PublicUserResponseDto` is al gedocumenteerd in hoofdstuk 7, maar voeg eventueel extra Swagger decorators toe indien nodig.
-
-2. Documenteer alle routes in `UserController`:
-   - `GET /api/users` - Alle users ophalen (enkel voor admins)
-   - `POST /api/users` - Een nieuwe user registreren (publieke route)
-   - `GET /api/users/:id` - Een specifieke user ophalen (enkel eigen data of als admin)
-   - `PUT /api/users/:id` - Een user updaten (enkel eigen data of als admin)
-   - `DELETE /api/users/:id` - Een user verwijderen (enkel eigen data of als admin)
-
-3. Speciale aandacht voor:
-   - De `POST /api/users` route is publiek (gebruik `@Public()` decorator)
-   - Voor registratie is een `RegisterUserRequestDto` nodig met `name`, `email` en `password`
-   - De `GET /api/users/:id` route accepteert ook `'me'` als ID
-
-**Let op:** Documenteer NOOIT het wachtwoord in response DTO's! We geven enkel publieke user data terug (id, name, email).
+Documenteer de `users` module.
 
 ## Oefening 3 - Eigen project
 
@@ -530,6 +529,7 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > cd webservices-budget
 > git checkout -b les9-opl TODO:
 > pnpm install
+> docker compose up -d
 > pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
@@ -538,21 +538,6 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Geavanceerde Swagger features
-
-### Tags gebruiken
-
-Je kan routes groeperen met tags:
-
-```ts
-import { ApiTags } from '@nestjs/swagger';
-
-@ApiTags('places') // 👈
-@ApiBearerAuth()
-@Controller('places')
-export class PlaceController {
-  // ...
-}
-```
 
 ### Query parameters documenteren
 
@@ -624,7 +609,5 @@ export class CreatePlaceRequestDto {
 
 ## Mogelijke extra's voor de examenopdracht
 
-- Voeg paginatie toe aan je lijst endpoints en documenteer deze correct met query parameters
-- Gebruik `@ApiTags` om je endpoints logisch te groeperen
-- Voeg voorbeelden toe aan je DTO's met de `example` property
+- Voeg paginatie toe aan je lijst endpoints en documenteer deze correct met query parameters (wordt niet als extra aangerekend, maar is wel een goede oefening)
 - Genereer een client library op basis van je OpenAPI spec met [OpenAPI Generator](https://openapi-generator.tech/)
