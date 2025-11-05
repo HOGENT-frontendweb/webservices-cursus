@@ -73,6 +73,8 @@ NestJS heeft ingebouwde testing utilities die samenwerken met Jest. NestJS onder
 
 Als je `nest new project` gebruikt, krijg je automatisch een map `test` met een voorbeeld van een e2e-test (`app.e2e-spec.ts`). Ook krijgt elke gegenereerde service en controller een bijhorend `.spec.ts` bestand voor unit testen. NestJS gebruikt standaard Jest, maar je kan dit aanpassen, indien gewenst.
 
+?> Het bestand `test/app.e2e-spec.ts` mag weggegooid worden, dit gebruiken we niet.
+
 ## Integratietesten
 
 In deze cursus focussen we ons op integratietesten. We schrijven hier integratietesten om te testen of de verschillende onderdelen van onze applicatie goed samenwerken (bv. validatie, authenticatie...). We gebruiken hiervoor [Jest](https://jestjs.io/), een populaire test library voor JavaScript. Jest is een uitgebreid framework, dus we beperken ons tot wat wij specifiek nodig hebben.
@@ -1234,6 +1236,12 @@ export default {
   },
 } satisfies Config;
 ```
+
+Na deze aanpassing mag je volgende zaken weggooien:
+
+- de `docker-compose.test.yml`
+- het script `db:migrate:test` uit de `package.json`
+- de `DATABASE_URL` in `.env.test`
 
 ## Oefening 6 - README
 

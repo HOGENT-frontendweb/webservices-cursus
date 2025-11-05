@@ -288,7 +288,7 @@ Voeg invoervalidatie toe
 
   ```ts
   //  src/transactions/transaction.dto.ts
-  import { Min, IsDate, MaxDate, IsPositive, IsInt } from 'class-validator';
+  import { Min, IsDate, MaxDate, IsInt } from 'class-validator';
   import { Type } from 'class-transformer';
   // ...
   export class CreateTransactionRequestDto {
@@ -300,7 +300,7 @@ Voeg invoervalidatie toe
     @Min(1)
     userId: number;
 
-    @IsPositive()
+    @IsInt()
     amount: number;
 
     @Type(() => Date)
