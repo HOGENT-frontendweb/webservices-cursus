@@ -47,7 +47,7 @@ jobs:
           restore-keys: cache-lychee-
 
       - name: Check links in markdown files
-        uses: lycheeverse/lychee-action@v2.6.1
+        uses: lycheeverse/lychee-action@v2.7.0
         with:
           args: "'./**/*.md' '*.md' --cache --max-cache-age 7d --scheme https"
 
