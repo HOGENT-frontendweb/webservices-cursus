@@ -1,27 +1,27 @@
-[User]
+[users]
 *id
 name
 email
 password_hash
 roles
 
-[Transaction]
+[transactions]
 *id
 amount
 date
 +user_id
 +place_id
 
-[Place]
+[places]
 *id
 name
 rating
 
-[User_favorite_places]
+[user_favorite_places]
 *+user_id
 *+place_id
 
-Transaction *--1 Place
-Transaction *--1 User
-User 1--* User_favorite_places
-Place 1--* User_favorite_places
+transactions*--1 places
+transactions*--1 users
+users 1--* user_favorite_places
+places 1--* user_favorite_places
