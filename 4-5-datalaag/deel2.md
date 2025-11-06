@@ -475,13 +475,13 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
   Maak eerst een nieuwe module aan:
 
   ```bash
-  pnpm nest g module transaction
+  nest generate module transaction
   ```
 
   Maak vervolgens de controller aan:
 
   ```bash
-  pnpm nest g controller transaction --no-spec
+  nest generate controller transaction --no-spec
   ```
 
   Controleer of deze controller in de `TransactionModule` gedefinieerd werd (in de `controllers` array).
@@ -586,7 +586,7 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
   Maak een nieuwe service aan:
 
   ```bash
-  pnpm nest g service transaction --no-spec
+  nest generate service transaction --no-spec
   ```
 
   Controleer of deze service in de `TransactionModule` gedefinieerd werd (in de `providers` array). Exporteer de service ook in de `TransactionModule`.
@@ -916,8 +916,8 @@ Om de favoriete places van een user op te halen, maken we gebruik van de tussent
 Maak vervolgens een `UserModule` met bijbehorende `UserController` aan:
 
 ```bash
-pnpm nest g module user
-pnpm nest g controller user --no-spec
+nest generate module user
+nest generate controller user --no-spec
 ```
 
 Definieer in de `UserController` een route om de favoriete places van een user op te halen:

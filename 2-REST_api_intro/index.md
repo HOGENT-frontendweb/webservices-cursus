@@ -596,7 +596,7 @@ Controllers in NestJS zijn verantwoordelijk voor het afhandelen van inkomende ve
 Genereer een nieuwe controller met de naam `health`:
 
 ```bash
-pnpm nest generate controller health
+nest generate controller health
 ```
 
 Dit commando maakt de volgende bestanden aan:

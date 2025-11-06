@@ -479,8 +479,8 @@ async function seedUsers() {
 We maken een `AuthModule` en een `AuthService` die alle authenticatie-logica bevat:
 
 ```bash
-pnpm nest g module auth
-pnpm nest g service auth --no-spec
+nest generate module auth
+nest generate service auth --no-spec
 ```
 
 Controlleer of de `AuthService` in de `AuthModule` is geregistreerd en de `AuthModule` geïmporteerd wordt in de `AppModule`.
@@ -775,8 +775,8 @@ export class AuthService {
 Vervolgens maken we een controller voor de login route:
 
 ```bash
-pnpm nest g module session
-pnpm nest g controller session --no-spec
+nest generate module session
+nest generate controller session --no-spec
 ```
 
 Controleer of de `SessionController` in de `SessionModule` is geregistreerd en de `SessionModule` geïmporteerd wordt in de `AppModule`.

@@ -787,7 +787,7 @@ Lees de documentatie over [modules](https://docs.nestjs.com/modules).
 NestJS biedt een CLI commando om automatisch een module te genereren:
 
 ```bash
-nest g module place
+nest generate module place
 ```
 
 De module klasse wordt toegevoegd aan de `place` folder en wordt geïmporteerd in de `AppModule`.
