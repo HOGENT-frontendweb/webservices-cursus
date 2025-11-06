@@ -20,6 +20,7 @@ In dit hoofdstuk zullen we ervoor zorgen dat onze testen terug slagen. We zullen
 Allereerst passen we een aantal dingen aan in Jest. We willen een betere output van de coverage en voorzien een aantal helpers om de testen te vereenvoudigen.
 
 ### Configuratie
+
 TODO: doen we dit?
 Om betere coverage uitvoer te krijgen, passen we nog een aantal parameters aan in `jest.config.ts`:
 
@@ -77,13 +78,14 @@ export const loginAdmin = async (app: INestApplication): Promise<string> => {
   return token;
 };// 👈 5
 ```
+
 De methode `login` meldt een gewone gebruiker aan
+
 1. Vraag een instantie van AuthService op
 2. De functie `login` kunnen we gebruiken om aan te melden voor elke test. Retourneer het token
 3. Als het geen succesvol request was, dan gooien we een error. De error zal onze test(s) laten falen, in de meeste gevallen is dit een hele test suite.
 4. We retourneren het token
 5. We doen hetzelfde voor de admin
-
 
 ### Test unauthorized
 
@@ -168,18 +170,18 @@ describe('Places', () => {
 3. Voeg aan elk request deze login header toe.
 4. Voeg ook de testen toe die controleren of de juiste statuscode geretourneerd wordt als een gebruiker niet geauthenticeerd of geautoriseerd is.
 
-
 Je kan enkel de testen voor de places uitvoeren door het volgende commando uit te voeren :
+
 - druk w in en zoek op places
 - of
+
 ```bash
 yarn test "./test/places.e2e-spec.ts"
 ```
 
 ?> Probeer test per test te doen slagen i.p.v. allemaal tegelijk. Dit maakt het makkelijker om fouten te vinden. Je kan gebruik maken van [`describe.only`](https://jestjs.io/docs/api#describeonlyname-fn) of [`it.only`](https://jestjs.io/docs/api#testonlyname-fn-timeout) gebruiken om enkel bepaalde test suites of testen uit te voeren. Dit geldt wel enkel binnen het huidige testbestand. Daarom is het handig om nu slechts één testbestand uit te voeren.
 
-
-### TODO : Auth delay
+### Auth delay
 
 Soms merk je misschien dat de testen falen omdat de maximale duur van een Jest hook (5 seconden) overschreden wordt. Dit kan gebeuren omdat de `auth.maxDelay` instelling in `config/testing.ts` nog te hoog ingesteld staat. Pas deze aan naar `0`, tijdens de testen is geen vertraging nodig.
 
