@@ -444,8 +444,8 @@ Gebruik deze DTO in de `getAllPlaces` methode.
   ```ts
   // src/common/common.dto.ts
   export class PaginationQuery {
-    page?: number = 1;
-    limit?: number = 10;
+    page = 1;
+    limit = 10;
   }
   ```
 
@@ -455,7 +455,7 @@ Gebruik deze DTO in de `getAllPlaces` methode.
   getAllPlaces(
     @Query() paginationQuery: PaginationQuery
   ) {
-    const { page = 1, limit = 10 } = paginationQuery;
+    const { page, limit } = paginationQuery;
     return `This action returns all places. Limit ${limit}, page: ${page}`;
   }
   ```
@@ -616,8 +616,7 @@ export class PlaceService {
 }
 ```
 
-De `getPlaceById` methode zoekt een plaats op basis van het id. Als er geen plaats gevonden wordt, geeft deze methode `undefined` terug. Dit gaan we later verbeteren. Voorlopig verander je het returntype in `PlaceResponseDto | undefined`. Dit zal je ook in de Controller moeten aanpassen.
-In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen deze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
+De `getById` methode zoekt een plaats op basis van het id. Als er geen plaats gevonden wordt, gooit deze methode een simpele `Error`. Dit zullen we later verbeteren. In de `create` methode creëren we een nieuwe plaats met het id erbij en voegen deze toe aan onze array. We genereren een nieuw id voor onze plaats door het hoogste id te zoeken en er 1 bij op te tellen.
 
 ### Implementatie controller
 
@@ -1014,7 +1013,7 @@ Pas de code in `main.ts` aan:
 // ...
 
 app.enableCors({
-  origins: ['http://localhost:5173'],
+  origin: ['http://localhost:5173'],
   maxAge: 3 * 60 * 60,
 });
 
@@ -1083,7 +1082,7 @@ Voeg nu ook een environment variabelen toe voor CORS:
   const cors = config.get<CorsConfig>('cors')!;
   // ...
   app.enableCors({
-    origins: cors.origins,
+    origin: cors.origins,
     maxAge: cors.maxAge,
   });
   ```
