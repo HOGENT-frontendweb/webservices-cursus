@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 981f3b8
+> git checkout -b les9 a0b165d
 > docker compose up -d
 > pnpm install
 > pnpm db:migrate
@@ -1252,7 +1252,7 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8-opl TODO
+> git checkout -b les9-opl TODO
 > pnpm install
 > pnpm start:dev
 > ```
