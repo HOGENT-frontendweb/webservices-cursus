@@ -1139,6 +1139,8 @@ Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
 
 Vraag de coverage op van je testen met `pnpm test:e2e:cov`. Bekijk de gegenereerde HTML pagina in het bestand `test/coverage/lcov-report/index.html`. Wat merk je op?
 
+Voeg ook de `coverage/` map toe aan de `.gitignore` zodat deze niet per ongeluk mee gecommit wordt.
+
 - Oplossing +
 
   Je ziet dat we al een goede coverage hebben op de API endpoints. NestJS toont coverage voor controllers, services en andere modules.
