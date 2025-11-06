@@ -36,9 +36,8 @@ The repository follows a **numbered chapter structure**:
 - `6-validatie/` - Validation and error handling
 - `7-authenticatie/` - Authentication and authorization (JWT, guards, decorators)
 - `8-testing/` - Testing with Jest
-- `9-auth_testing/` - Testing authentication/authorization
-- `10-api_docs/` - API documentation (Swagger/OpenAPI)
-- `11-cicd/` - CI/CD and deployment
+- `9-api_docs/` - API documentation (Swagger/OpenAPI)
+- `10-cicd/` - CI/CD and deployment
 
 Each chapter contains an `index.md` (or multiple `.md` files) with course content.
 
@@ -61,12 +60,14 @@ Each chapter contains an `index.md` (or multiple `.md` files) with course conten
 1. **Language**: All content is in Dutch (Belgian)
 
 2. **Code Examples**:
+
    - Use NestJS patterns and conventions
    - Reference the BudgetBackend example app at `/Users/thomasaelbrecht/Development/frontendweb/BudgetBackend`
    - Include numbered code annotations (👈 1, 👈 2, etc.) with explanations below
    - Show progressive code building (first empty class, then methods incrementally)
 
 3. **Framework Migration**:
+
    - The course is transitioning from Koa to NestJS
    - When converting chapters, ensure all code examples use NestJS patterns:
      - Controllers with decorators (`@Controller`, `@Get`, `@Post`, etc.)
@@ -78,6 +79,7 @@ Each chapter contains an `index.md` (or multiple `.md` files) with course conten
    - Do NOT include `@nestjs/swagger` decorators unless explicitly working on chapter 10
 
 4. **Security Examples**:
+
    - Show `plainToInstance` with `excludeExtraneousValues: true` when exposing user data
    - Always use `@Expose()` decorator on public DTO fields
    - Never expose `passwordHash` or sensitive fields in responses
@@ -107,11 +109,13 @@ When presenting service classes or complex code:
 ## Companion Repositories
 
 - **Example Backend**: <https://github.com/HOGENT-frontendweb/webservices-budget>
+
   - NestJS REST API with Drizzle ORM
   - Budget tracking application
   - Each chapter has a corresponding branch
 
 - **Example Frontend**: <https://github.com/HOGENT-frontendweb/frontendweb-budget>
+
   - React frontend consuming the API
 
 - **Local BudgetBackend**: `/Users/thomasaelbrecht/Development/frontendweb/BudgetBackend`
