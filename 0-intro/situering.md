@@ -56,20 +56,20 @@ Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stel
 
 Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
 
-| Week    | Inhoud                                        |
-| ------- | --------------------------------------------- |
-| week 1  | Inleiding, TypeScript                         |
-| week 2  | TypeScript, REST API intro                    |
-| week 3  | REST API intro + bouwen                       |
-| week 4  | REST API bouwen                               |
-| week 5  | Datalaag en places                            |
-| week 6  | Relaties                                      |
-| week 7  | Validatie en foutafhandeling                  |
-| week 8  | Authenticatie / autorisatie                   |
-| week 9  | Testen                                        |
-| week 10 | API documentatie                              |
-| week 11 | CI/CD (= online zetten)                       |
-| week 12 | (geen nieuwe theorie, aan de opdracht werken) |
+| Week    | Inhoud                                         |
+| ------- | ---------------------------------------------- |
+| week 1  | Inleiding, TypeScript                          |
+| week 2  | TypeScript, REST API intro                     |
+| week 3  | REST API intro + bouwen                        |
+| week 4  | REST API bouwen                                |
+| week 5  | Datalaag en places                             |
+| week 6  | Relaties                                       |
+| week 7  | Validatie en foutafhandeling                   |
+| week 8  | Authenticatie / autorisatie                    |
+| week 9  | Authenticatie / autorisatie + API documentatie |
+| week 10 | Testen                                         |
+| week 11 | CI/CD (= online zetten)                        |
+| week 12 | (geen nieuwe theorie, aan de opdracht werken)  |
 
 ## Help, ik zit vast!
 
