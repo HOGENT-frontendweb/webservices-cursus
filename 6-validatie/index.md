@@ -593,11 +593,12 @@ interface HttpExceptionResponse {
     details?: object | null;
   }
 
-  @Catch(HttpException) // 👈 1
+  // 👇 1
+  @Catch(HttpException)
+  // 👇 2
   export class HttpExceptionFilter implements ExceptionFilter {
-    // 👈 2
+    // 👇 3
     catch(exception: HttpException, host: ArgumentsHost) {
-      // 👈 3
       const ctx = host.switchToHttp(); // 👈 4
       const response = ctx.getResponse<Response>(); // 👈 5
       const status = exception.getStatus(); // 👈 6
@@ -822,15 +823,14 @@ import type { NestMiddleware } from '@nestjs/common';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Request, Response, NextFunction } from 'express';
 
-@Injectable() // 👈 1
+@Injectable() // 👈 👇 1
 export class LoggerMiddleware implements NestMiddleware {
-  // 👈 1
   private readonly logger = new Logger(LoggerMiddleware.name); // 👈 2
 
+  // 👇 3
   use(req: Request, res: Response, next: NextFunction) {
-    // 👈 3
+    // 👇 4
     res.on('finish', () => {
-      // 👈 4
       // 👇 5
       const statusCode = res.statusCode;
 
@@ -871,8 +871,8 @@ import { LoggerMiddleware } from './lib/logger.middleware';
 
 // ...
 export class AppModule implements NestModule {
+  // 👇 1
   configure(consumer: MiddlewareConsumer) {
-    // 👈 1
     consumer.apply(LoggerMiddleware).forRoutes('*path'); // 👈 2
   }
 }

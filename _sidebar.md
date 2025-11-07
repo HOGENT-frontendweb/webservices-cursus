@@ -10,6 +10,6 @@
 - [5. Relaties](/4-5-datalaag/deel2.md)
 - [6. Validatie en foutafhandeling](/6-validatie/index.md)
 - [7. Authenticatie & autorisatie](/7-authenticatie/index.md)
-- [8. API documentatie (WIP)](/8-api_docs/index.md)
+- [8. API documentatie](/8-api_docs/index.md)
 - [9. Testing](/9-testing/index.md)
 - [10. CI/CD (WIP)](/10-cicd/index.md)
