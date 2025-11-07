@@ -1181,7 +1181,7 @@ declare global {
   var mySQLContainer: StartedMySqlContainer;
 }
 
-module.exports = async () => {
+export default async () => {
   console.log('🚢 Pulling and starting MySQL container');
   const container = await new MySqlContainer('mysql:8.0').start(); // 👈 2
   process.env.DATABASE_URL = container.getConnectionUri(); // 👈 3
@@ -1214,7 +1214,7 @@ module.exports = async () => {
 Maak ook een teardown bestand `test/jest.global-teardown.ts`:
 
 ```typescript
-module.exports = async () => {
+export default async () => {
   await globalThis.mySQLContainer.stop();
 };
 ```
@@ -1254,7 +1254,7 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9-opl 4cd96ec
+> git checkout -b les9-opl 698cfb6
 > pnpm install
 > pnpm start:dev
 > ```
