@@ -1,4 +1,4 @@
-# Testing (WIP)
+# Testing
 
 > **Startpunt voorbeeldapplicatie**
 >
@@ -1254,7 +1254,7 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9-opl TODO
+> git checkout -b les9-opl 4cd96ec
 > pnpm install
 > pnpm start:dev
 > ```
