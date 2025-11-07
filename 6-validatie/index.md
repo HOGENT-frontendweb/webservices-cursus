@@ -288,7 +288,7 @@ Voeg invoervalidatie toe
 
   ```ts
   //  src/transactions/transaction.dto.ts
-  import { Min, IsDate, MaxDate, IsPositive, IsInt } from 'class-validator';
+  import { Min, IsDate, MaxDate, IsInt } from 'class-validator';
   import { Type } from 'class-transformer';
   // ...
   export class CreateTransactionRequestDto {
@@ -300,7 +300,7 @@ Voeg invoervalidatie toe
     @Min(1)
     userId: number;
 
-    @IsPositive()
+    @IsInt()
     amount: number;
 
     @Type(() => Date)
@@ -878,7 +878,7 @@ export class AppModule implements NestModule {
 }
 ```
 
-1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middlewares te configureren
+1. `configure()`: Deze methode wordt automatisch aangeroepen door NestJS om middlewares te configureren tijdens initialisatie van de module.
 2. `consumer.apply(LoggerMiddleware)`: Registreert de `LoggerMiddleware` bij de DI container.
    - `forRoutes('*path')`: Zorgt ervoor dat de `LoggerMiddleware` wordt uitgevoerd voor alle routes in je applicatie (de wildcard \* matcht alle paden)
 
