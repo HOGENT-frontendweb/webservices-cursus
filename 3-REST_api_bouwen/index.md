@@ -705,11 +705,12 @@ Maak vervolgens zelf de PUT en DELETE routes en hun bijhorende service-methoden:
   ```ts
   // src/place/place.service.ts
   updateById(id: number, { name, rating }: UpdatePlaceRequestDto): PlaceResponseDto {
-    let existingplace = this.getById(id);
-    if (existingplace) {
-      existingplace = { id: id, name, rating }
+    const existingPlace = this.getById(id);
+    if (existingPlace) {
+      existingPlace.name = name;
+      existingPlace.rating = rating;
     }
-    return existingplace;
+    return existingPlace;
   }
 
   deleteById(id: number): void {
