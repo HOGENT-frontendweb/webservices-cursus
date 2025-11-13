@@ -7,7 +7,7 @@ Voor het schrijven van API documentatie bestaan verschillende tools. Swagger is 
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 0e74e68
+> git checkout -b les8 7bf0724
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
@@ -531,7 +531,7 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8-opl a0b165d
+> git checkout -b les8-opl 16a4131
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate

@@ -1542,9 +1542,9 @@ Activeer Helmet in je `main.ts`:
 import helmet from 'helmet';
 
 async function bootstrap() {
-//..
+  //..
   app.use(helmet()); // 👈 Voeg Helmet toe
-//..
+  //..
 }
 bootstrap();
 ```
@@ -1557,11 +1557,10 @@ Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 
 ## Oplossing voorbeeldapplicatie
 
->
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 0e74e68
+> git checkout -b les7-opl 7bf0724
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
