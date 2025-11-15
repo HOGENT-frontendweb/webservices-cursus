@@ -52,6 +52,7 @@ Om de back-end en front-end online te zetten, zijn er een aantal services nodig:
 
 - [Render](https://render.com/)
 - MySQL databank in het VIC (= Virtual IT Company van HOGENT): zie mail (ook spam) voor de inloggegevens
+- Docker
 
 ?> Studenten die reeds geslaagd zijn voor het olod Web Services en een databank nodig hebben om hun back-end van vorig jaar te hergebruiken, gelieve een mail te sturen naar [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be).
 
@@ -77,10 +78,23 @@ We zijn geen gigantisch datacenter, dus we kunnen niet garanderen dat de databan
 
 Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be).
 
-## Refactoring
+### Docker
+
+Voor het online zetten van onze backend willen we naar een mature development manier gaan.
+Daarom gaan we docker gebruiken, zodat we onafhankelijk van onze host-systemen kunnen werken.
+Gezien we met Render werken, volstaat het voor ons om een Dockerfile aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
+
+Het opstellen van de Dockerfiles zullen we specifiek in de volgende secties bespreken.
+Ook zullen we de docker-compose.yml file gebruiken om onze applicatie lokaal te kunnen draaien in een identieke setup als op Render.
+
+Het grote voordeel van Docker is dat we op de server geen installatie van software gaan moeten doen, dit wordt allemaal gedaan in Docker.
+Het enige dat we nodig hebben op de server is docker zelf.
+
+## Aanpassingen
 
 Deze sectie is verdeeld in een stuk voor de [back-end](#back-end) en een stuk voor de front-end. De back-end sectie is enkel van toepassing voor het olod Web Services. De [front-end](#front-end) sectie is enkel van toepassing voor het olod Front-end Web Development.
 
+[//]: # TODO()
 ### Back-end
 
 Allereerst moeten we ervoor zorgen dat onze back-end klaar is om in een productie-omgeving te draaien.
@@ -170,9 +184,297 @@ Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van 
 
 Nu zijn we klaar om onze back-end online te zetten. **Commit en push deze wijziging.**
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ### Front-end
 
-Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst. **Commit en push deze wijziging!**
+Het klaarmaken van de applicatie voor productie gaan we gradueel verbeteren. 
+Zo zullen we beginnen met een eerste, maar naïve poging, waarbij we telkens een probleem zullen tegenkomen en oplossen met een verbetering.
+
+#### Eerste naïve poging
+
+Bij de eerste, maar naïve poging zullen we van onze applicatie een build maken. Hiervoor gaan we gebruik maken van het build-script.
+Voer hiervoor `pnpm build` uit.
+Deze build zal ervoor zorgen dat we een folder genaamd `dist` krijgen. 
+Deze gaan we laten draaien dankzij een Nginx-server in docker.
+
+##### Nginx
+
+Eerst en vooral moeten we een plan hebben om onze front-end te serven.
+Hiervoor zullen we gebruik maken van Nginx.
+De onderstaande configuratie is gebaseerd op de documentatie van [Nginx Serve Static Content](https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/).
+Deze zal er voor ons voor zorgen dat onze productie build van de front-end als static files geleverd kunnen worden.
+
+Maak hiervoor een bestand `nginx.conf` aan in de root van de frontend-code.
+Een standaard, maar productie klare Nginx configuratie leveren we hieronder aan:
+
+```
+events{} 👈 1
+http {
+    include /etc/nginx/mime.types; 👈 2
+    server {
+        listen 80; 👈 3
+        server_name localhost; 👈 4
+        root /usr/share/nginx/html; 👈 5
+        index index.html; 👈 6
+        location / {
+            try_files $uri $uri/ /index.html; 👈 7
+        }
+    }
+}
+```
+
+1. Deze regel is vereist voor Nginx om te kunnen opstarten. De defaults zijn echter voldoende, waardoor we niets overschrijven.
+2. Deze regel zorgt ervoor dat de mime-type mappings ingeladen worden, zodat Nginx de correct Content-type headers kan meegeven.
+3. Deze regel zorgt ervoor dat de Nginx server luistert op poort 80.
+4. Deze regel zorgt ervoor dat de server reageert op bevragingen naar localhost. Dit is in orde omdat dit draait in Docker.
+5. Deze regel geeft aan aan Nginx waar de static files te vinden zijn.
+6. Deze regel geeft aan wat de naam van de index file is.
+7. Deze regel probeert de inkomende request te verwerken door de static files te verwerken. Hiervoor zoekt hij eerste naar de specifieke file, dan naar de directory en tenslotte een fallback naar de index file. Dit laatste is cruciaal voor SPA's.
+
+##### Docker
+
+Om nu deze Nginx server te laten draaien, zullen we zelf een `Dockerfile` maken, waarin we beschrijven wat er allemaal moet gebeuren om onze applicatie te laten draaien.
+Hiervoor maken we een `Dockerfile` aan in de root van de frontend-code, met de volgende inhoud:
+
+```
+FROM nginx:1.27.4-alpine 👈 1
+
+COPY ./nginx.conf /etc/nginx/nginx.conf 👈 2
+
+RUN rm -rf /usr/share/nginx/html/* 👈 3
+
+COPY ./dist /usr/share/nginx/html 👈 4
+
+EXPOSE 80 👈 5
+
+CMD ["nginx", "-g", "daemon off;"] 👈 6
+```
+
+1. Deze regel zorgt ervoor dat de Nginx-image van Docker wordt gebruikt.
+2. Deze regel kopieert de Nginx configuratie uit onze code naar de juiste locatie in de Docker-container.
+3. Deze regel verwijdert de bestaande (default) static files uit de Nginx-server.
+4. Deze regel kopieert de build van de front-end naar de Nginx-server.
+5. Deze regel geeft aan aan Docker dat poort 80 moet worden geopend (de standaardpoort voor Nginx). Dit is nodig omdat we de Nginx-server draaien in Docker, en niet op de hostmachine.
+6. Deze regel start de Nginx-server.
+
+##### Docker-compose
+
+Om ervoor te zorgen dat we lokaal een geautomatiseerde opstart hebben, die bovendien zo dicht mogelijk aanleunt bij de productieomgeving, maken we gebruik van Docker-compose.
+Hiervoor maken we een bestand `docker-compose.yml` aan in de root van de frontend-code, met de volgende inhoud:
+
+```
+services:
+  budget-app-frontend:
+    image: budget-app-frontend 👈 1
+    build:
+      context: .
+      dockerfile: ./Dockerfile 👈 2
+    container_name: budget-app-frontend
+    ports:
+      - '80:80' 👈 3
+```
+
+1. Deze regel geeft aan welke naam de gemaakte image zal krijgen.
+2. Deze regel beschrijft hoe de Docker-image van onze front-end wordt gebouwd. Wij zeggen hiermee dat dit gebouwd moet worden uit de `Dockerfile` in de root van de frontend-code.
+3. Deze regel zal poort 80 van de hostmachine naar poort 80 in de Docker-container binden. Dit is nodig omdat we de Nginx-server draaien in Docker, en niet op de hostmachine. Bovendien is poort 80 de default voor http, waardoor we zullen kunnen surfen naar `http://localhost`.
+
+##### Eerste test
+
+Wanner we nu `docker compose up` uitvoeren, zullen we een Nginx-server draaien met onze front-end.
+We kunnen nu naar `http://localhost` surfen om te controleren of alles goed werkt.
+Hierbij valt op dat onze api-calls niet correct werken, hierbij zien we dat de baseUrl van onze api-client niet juist is.
+Deze hebben we tot nu toe ingesteld in de `.env` file, maar een productie build gebruikt dit niet. 
+De productie build gaat kijken naar de environment-variabelen van ons systeem.
+
+##### Oplossing bug
+
+[//]: # (TODO: OPMERKING VOOR DE REVIEWER: kan iemand dat windows commando uitproberen ajb? ik kan dit zelf niet testen.)
+
+Om dit op te lossen moeten we de environment-variabelen van ons systeem instellen.
+Dit doen we in bash met het command `VITE_API_URL="http://localhost:3000/api"` of in windows met `set  VITE_API_URL="http://localhost:3000/api"`.
+Dit is ook hoe je bij een professionele applicatie deze environment variabelen zou instellen op het systeem waarop de applicatie wordt uitgevoerd.
+
+Vervolgens moeten we wel de bestaande container en image opkuisen, de stappen `pnpm build` en `docker compose up` opnieuw uitvoeren.
+Nu kunnen we naar `http://localhost` surfen en zien dat onze front-end correct werkt.
+
+Wanneer we nu onze container nog kort even analyseren, dan valt op dat de docker image een grootte heeft van ongeveer 50 MB.
+Dit is belangrijk om zo meteen te onthouden bij poging 2.
+
+##### Problemen naïve poging
+
+De problemen hiermee zijn vooral dat er veel manuele stappen zijn om de applicatie in docker op te starten.
+Ons doel is om deze stappen te automatiseren.
+
+#### Tweede poging: automatisering
+
+##### Aanpassingen
+
+In de plaats van nu zelf de code te builden, zullen we docker dit laten doen voor ons in de `Dockerfile`.
+Belangrijk hierbij is te onthouden dat we nog steeds de environment variables moeten instellen, maar dat dit niet meer op onze hostmachine gebeurt.
+Hiervoor zullen we deze als volgt aanpassen: 
+
+```
+FROM nginx:1.27.4-alpine
+
+COPY ./nginx.conf /etc/nginx/nginx.conf 👈 1
+RUN rm -rf /usr/share/nginx/html/* 👈 1
+
+WORKDIR /usr/src/app 👈 2
+COPY . . 👈 2
+
+ARG VITE_API_URL 👈 3
+ENV VITE_API_URL=$VITE_API_URL 👈 3
+
+ENV PNPM_HOME="/pnpm" 👈 4
+ENV PATH="$PNPM_HOME:$PATH" 👈 4
+
+RUN apk add --update nodejs npm 👈 5
+RUN npm install -g pnpm@10.15.0 👈 5
+RUN pnpm add -D vite 👈 5
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile 👈 6
+RUN pnpm run build 👈 6
+
+RUN mv ./dist/* /usr/share/nginx/html 👈 7
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+1. Net zoals voorheen willen we nog steeds dezelfde nginx configuratie gebruiken en de default static files van nginx verwijderen.
+2. Ditmaal gaan we eerst naar een working directory verplaatsen, zodat we onze build kunnen zetten op een plaats die niet gebruikt wordt door de container.
+3. We willen de environment variables kunnen doorgeven aan de container. Deze moeten we vervolgens ook instellen in de environment van de container.
+4. Omdat we pnpm willen gebruiken, gaan we al instellen in de container waar pnpm komt te staan.
+5. Voordat we onze productie build kunnen uitvoeren, moeten we eerst de afhankelijkheden installeren. Hiervoor hebben we nodejs, pnpm en vite nodig. Om pnpm te installeren hebben we echter ook npm nodig.
+6. Nu kunnen we eindelijk onze productie build uitvoeren. hierbij hebben we eerst ook een install waarbij wat instellingen gebeuren om alles performant te laten werken (gebruikmakend van caching), en waarbij we instellen dat pnpm de versies uit onze lockfile moet gebruiken.
+7. Tot slot kunnen we de dist folder naar de verwachte locatie van de Nginx-server kopieren. Let er hierbij op dat we het mv commando moeten gebruiken, dus dat de syntax een beetje verschilt tegenover het voorheen was.
+
+We moeten echter ook nog de docker-compose file aanpassen, zodat voor ons gemak van lokaal testen deze environment variables doorgegeven worden:
+```
+services:
+  budget-app-frontend:
+    image: budget-app-frontend
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - "VITE_API_URL=http://localhost:3000/api"
+    container_name: budget-app-frontend
+    ports:
+      - '80:80'
+```
+
+Tot Slot zijn er nog een aantal files die we sowieso niet mee willen in onze container, gezien deze alles zelf moet opbouwen vanaf onze codebase.
+Maak hiervoor een bestand `.dockerignore` aan in de root van de frontend-code, met de volgende inhoud:
+
+```
+node_modules
+.vscode
+cypress
+dist
+```
+
+Let erop, als je wijzigingen aanbrengt in de code en opnieuw wil builden, dan moet je telkens de docker-image verwijderen, want anders zorgt docker zijn caching van layers en versioning ervoor dat de vorige versie gebruikt wordt.
+
+##### Problemen tweede poging
+
+Als eerste valt het op hoeveel software we manueel moeten installeren in de container om onze applicatie te kunnen laten draaien.
+Dit is veel omslachtiger dan gewenst is.
+
+Daarnaast is er een tweede probleem, dat veel ernstiger is. 
+Docker-images willen we light-weight houden, maar wanneer we nu kijken naar de grootte van de image, dan zien we dat deze drastisch vergroot is, tot bijna 1.2 GB.
+
+#### Finale poging: Multi-stage build
+
+Deze laatste problemen zullen we oplossen door gebruik te maken van een [multi-stage build](https://docs.docker.com/build/building/multi-stage/).
+
+Bij een multi-stage docker build, zullen we een container gebruiken om een deel van de "heavy lifting" voor ons te doen.
+Deze container zal vertrekken van een image die voor ons geschikt is om dat specifieke deel van het werk te doen. 
+Daarna zullen we een nieuwe container maken die verder bouwt op het resultaat van de vorige container, maar die zelf ook weer vertrekt van een image die wederom ideaal is voor de volgende stap.
+Dit proces van de eerste container naar de tweede container wordt ook wel "multi-stage build" genoemd.
+
+Het einde van een stage herken je eenvoudige door het `FROM` keyword die opnieuw gebruikt wordt.
+
+##### Aanpassingen
+
+
+```
+FROM node:24-alpine AS base 👈 1
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable 👈 2
+
+WORKDIR /usr/src/app
+COPY . .
+
+FROM base AS build 👈 1
+
+ARG VITE_API_URL 👈 3
+ENV VITE_API_URL=$VITE_API_URL 👈 3
+
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile 👈 3
+RUN pnpm run build 👈 3
+
+
+FROM nginx:1.27.4-alpine 👈 1
+
+COPY ./nginx.conf /etc/nginx/nginx.conf
+RUN rm -rf /usr/share/nginx/html/*
+
+COPY --from=build /usr/src/app/dist /usr/share/nginx/html 👈 4
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+1. Bij de finale oplossing zullen we drie stage gebruiken:
+   1. De eerste stage vertrekt van een nodejs image, waarmee we de nodige software reeds hebben. Deze stage wordt bij ons `base` genoemd.
+   2. De tweede stage bouwt verder op de eerste, en gebruiken we om de specifieke build van de applicatie te maken. Deze is strikt gezien niet noodzakelijk, maar zorgt voor een mooie scheiding van verantwoordelijkheden. Deze stage wordt bij ons `build` genoemd.
+   3. De laatste stage vertrekt van een nginx image, zodat we de server eenvoudig zullen kunnen starten.
+2. We zitten hier in een nodejs docker, corepack enable zorgt ervoor dat we pnpm zullen kunnen gebruiken in het verdere verloop
+3. In onze build stage geven we de environment variables door aan de container en maken we de effectieve productie build.
+4. Tot slot moeten we enkel nog de dist folder van onze vorige stage kopiëren naar de verwachte locatie van de Nginx-server.
+
+##### Besluit
+
+Deze finale poging zorgt ervoor dat het hele build process van de applicatie volledig automatisch wordt uitgevoerd. 
+Het heeft ook het installeren van de nodige software voor ons vereenvoudigd.
+
+Tot slot als we nu opnieuw kijken naar de grootte van de image, dan zien we dat deze opnieuw mooi op 50 MB uitkomt.
+
+
+
+
+
+
+
+
+
+Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. 
+Voeg onderstaand fragment toe onderaan jouw `package.json`. 
+Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. 
+Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst. 
+**Commit en push deze wijziging!**
 
 ```json
 {
