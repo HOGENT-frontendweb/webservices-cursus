@@ -620,7 +620,7 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8-opl 16a4131
+> git checkout -b les8-opl 4402433
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
