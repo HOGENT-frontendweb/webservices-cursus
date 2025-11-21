@@ -297,7 +297,7 @@ Momenteel worden enkel de properties van `PlaceResponseDto` gedocumenteerd in `P
 - Oplossing +
 
   ```ts
-    // src/place/place.dto.ts
+  // src/place/place.dto.ts
   export class PlaceDetailResponseDto extends PlaceResponseDto {
     @ApiProperty({ type: () => [TransactionResponseDto] })
     transactions: TransactionResponseDto[];
@@ -494,6 +494,7 @@ import {
   Body,
   UseInterceptors,
   HttpStatus,
+  HttpCode,
 } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
@@ -518,7 +519,7 @@ export class SessionController {
   @ApiResponse({
     status: 400,
     description: 'Invalid input data',
- })
+  })
   @Post()
   @Public()
   @UseInterceptors(AuthDelayInterceptor)

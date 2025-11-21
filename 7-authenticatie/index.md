@@ -785,7 +785,7 @@ Daarin definiëren we de `POST /api/sessions` route:
 
 ```ts
 // src/sessions/sessions.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, HttpCode } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 
@@ -794,6 +794,7 @@ export class SessionController {
   constructor(private authService: AuthService) {}
 
   @Post() // 👈 2
+  @HttpCode(HttpStatus.OK) // 👈 2
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     const token = await this.authService.login(loginDto); // 👈 3
     return { token }; // 👈 4
@@ -802,7 +803,7 @@ export class SessionController {
 ```
 
 1. De controller luistert naar requests op `/sessions`.
-2. De route luistert naar POST requests op `/sessions`.
+2. De route luistert naar POST requests op `/sessions` en geeft een 200 OK status terug bij succes.
 3. We roepen de `login` functie van de `AuthService` aan.
 4. We geven de JWT token terug in een object.
 
@@ -996,6 +997,7 @@ export class SessionController {
 
   @Public() // 👈 2
   @Post()
+  @HttpCode(HttpStatus.OK)
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     // ...
   }
@@ -1468,6 +1470,7 @@ import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor
 @UseInterceptors(AuthDelayInterceptor)
 @Post()
 @Public()
+@HttpCode(HttpStatus.OK)
 async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
   // ...
 }
