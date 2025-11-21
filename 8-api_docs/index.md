@@ -488,7 +488,13 @@ Laten we ook de login route documenteren:
 
 ```ts
 // src/sessions/sessions.controller.ts
-import { Controller, Post, Body, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseInterceptors,
+  HttpStatus,
+} from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 import { Public } from '../auth/decorators/public.decorator';
@@ -516,6 +522,7 @@ export class SessionController {
   @Post()
   @Public()
   @UseInterceptors(AuthDelayInterceptor)
+  @HttpCode(HttpStatus.OK)
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     const token = await this.authService.login(loginDto);
     return { token };
