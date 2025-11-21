@@ -32,7 +32,7 @@ Daarom is het noodzakelijk om een efficiëntere methode te gebruiken om gegevens
 
 ## REST
 
-**Representational state transfer (REST)** is een **architectuurstijl** waarmee software met andere software kan communiceren. De term werd geïntroduceerd en gedefinieerd in 2000 door Roy Fielding in zijn [doctoraatsstudie](http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm). REST wordt veelal gebruikt voor het ontwerpen van API's voor het internet. REST gebruikt de **HTTP-methoden (GET / POST / PUT /DELETE)** om data tussen een client en een server op te halen en te verzenden.
+**Representational state transfer (REST)** is een **architectuurstijl** waarmee software met andere software kan communiceren. De term werd geïntroduceerd en gedefinieerd in 2000 door Roy Fielding in zijn [doctoraatsstudie](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf). REST wordt veelal gebruikt voor het ontwerpen van API's voor het internet. REST gebruikt de **HTTP-methoden (GET / POST / PUT /DELETE)** om data tussen een client en een server op te halen en te verzenden.
 
 Met het HTTP-protocol kunnen REST API’s software op het ene apparaat laten praten met software op een ander apparaat (of op hetzelfde apparaat), zelfs als deze verschillende besturingssystemen en architecturen gebruiken. De client kan om **resources** vragen in een taal die de server begrijpt, en de server reageert met de resource in een taal die de client kan verwerken. De server retourneert de **resource** in **JSON** (JavaScript Object Notation), XML (Extensible Markup Language) of tekstindelingen, maar veel API’s ondersteunen responses in aanvullende talen.
 
@@ -122,7 +122,7 @@ Een volledige lijst van HTTP status codes kan je vinden op [developer.mozilla.or
 
 ### REST architectuurstijl
 
-REST is [een reeks principes](https://ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_1_7) die een ontwikkelaar moet volgen voordat die zijn API als "RESTful" kan beschouwen. De principes zeggen niets over hoe de API moet worden geïmplementeerd.
+REST is [een reeks principes](https://roy.gbiv.com/pubs/dissertation/fielding_dissertation.pdf) die een ontwikkelaar moet volgen voordat die zijn API als "RESTful" kan beschouwen. De principes zeggen niets over hoe de API moet worden geïmplementeerd.
 
 <!-- markdownlint-disable ol-prefix -->
 
