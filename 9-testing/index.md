@@ -1171,10 +1171,7 @@ import {
   MySqlContainer,
   type StartedMySqlContainer,
 } from '@testcontainers/mysql';
-import { drizzle } from 'drizzle-orm/mysql2';
-import { migrate } from 'drizzle-orm/mysql2/migrator';
-import mysql from 'mysql2/promise';
-import * as path from 'path';
+import { execSync } from 'child_process';
 
 // 👇 1
 declare global {
@@ -1188,18 +1185,12 @@ export default async () => {
   globalThis.mySQLContainer = container; // 👈 4
   console.log('✅ MySQL container started');
 
-  const connection = await mysql.createConnection(process.env.DATABASE_URL);
-  const db = drizzle(connection); // 👈 5
-
   console.log('⏳ Running migrations...');
 
-  // 👇 6
-  await migrate(db, {
-    migrationsFolder: path.resolve(__dirname, '../migrations'),
-  });
-  console.log('✅ Migrations completed!');
+  // 👇 5
+  execSync('pnpm db:migrate')
 
-  await connection.end(); // 👈 7
+  console.log('✅ Migrations completed!');
 };
 ```
 
@@ -1207,9 +1198,7 @@ export default async () => {
 2. Start een nieuwe MySQL Docker container via Testcontainers.
 3. Zet de omgevingsvariabele `DATABASE_URL` naar de connectiestring van de container in deze testomgeving.
 4. Sla de container instantie op in de globale variabele zodat we deze later kunnen stoppen.
-5. Maak een verbinding met de databank in de container.
-6. Voer de migraties uit om de tabellen aan te maken.
-7. Sluit de verbinding met de databank.
+5. Voer de migraties uit om de tabellen aan te maken.
 
 Maak ook een teardown bestand `test/jest.global-teardown.ts`:
 
