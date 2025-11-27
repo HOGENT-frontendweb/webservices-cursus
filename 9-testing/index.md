@@ -1243,7 +1243,7 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9-opl 9add025
+> git checkout -b les9-opl 8f55ab5
 > pnpm install
 > pnpm start:dev
 > ```
