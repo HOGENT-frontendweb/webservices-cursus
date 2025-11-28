@@ -896,7 +896,7 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke test 
 ```typescript
 // test/places.e2e-spec.ts
 describe('POST /api/places', () => {
-  it("should 200 and return the created place with it's rating", async () => {
+  it('should 201 and return the created place with its rating', async () => {
     const response = await request(app.getHttpServer())
       .post(url)
       .send({
