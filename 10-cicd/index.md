@@ -692,15 +692,6 @@ CORS kan je enkel oplossen door in de back-end de juiste headers te zetten. Gezi
  
 ![CORS fix](./images/10_17.2_frontend_cors.png ':size=80%')
 
-### 404 probleem
-
-[//]: # (TODO: moet ik hier iets voor veranderen?)
-Probeer nu op jouw front-end rechtstreeks naar een URL verschillend van `/` te gaan. In ons voorbeeld gaan we naar `/transactions`. Je zal merken dat je een 404 krijgt. Dit moeten we oplossen in de front-end!
-
-Ga naar het Render dashboard van jouw front-end en klik op "Redirects/Rewrites". Voeg een nieuwe Rewrite-regel toe zoals op onderstaande afbeelding. Klik vervolgens op "Save Changes". Je kan meteen testen of het werkt! Deze regel zorgt ervoor dat alle requests naar de front-end die niet naar `/` gaan, als antwoord de `index.html` van de front-end krijgen. [Lees meer over het verschil tussen redirects en rewrites](https://render.com/docs/redirects-rewrites).
-
-![Front-end rewrite](./images/10_18_frontend_rewrite.png ':size=80%')
-
 ## Hosting remarks
 
 Dit was maar een (eenvoudig) voorbeeld om je applicatie online te zetten. Onze hoofdbekommernis was bovendien om alles 100% gratis te kunnen regelen, wat niet altijd het eenvoudigst of handigst is.
