@@ -5,7 +5,7 @@
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9 a0b165d
+> git checkout -b les9 4402433
 > docker compose up -d
 > pnpm install
 > pnpm db:migrate
@@ -433,7 +433,7 @@ volumes:
 Start de Docker container:
 
 ```bash
-docker-compose -f docker-compose.test.yml up -d
+docker compose -f docker-compose.test.yml up -d
 ```
 
 ### Migraties
@@ -896,7 +896,7 @@ Maak een nieuwe test suite aan voor het endpoint `POST /api/places`. Welke test 
 ```typescript
 // test/places.e2e-spec.ts
 describe('POST /api/places', () => {
-  it("should 200 and return the created place with it's rating", async () => {
+  it('should 201 and return the created place with its rating', async () => {
     const response = await request(app.getHttpServer())
       .post(url)
       .send({
@@ -1171,10 +1171,7 @@ import {
   MySqlContainer,
   type StartedMySqlContainer,
 } from '@testcontainers/mysql';
-import { drizzle } from 'drizzle-orm/mysql2';
-import { migrate } from 'drizzle-orm/mysql2/migrator';
-import mysql from 'mysql2/promise';
-import * as path from 'path';
+import { execSync } from 'child_process';
 
 // 👇 1
 declare global {
@@ -1188,18 +1185,12 @@ export default async () => {
   globalThis.mySQLContainer = container; // 👈 4
   console.log('✅ MySQL container started');
 
-  const connection = await mysql.createConnection(process.env.DATABASE_URL);
-  const db = drizzle(connection); // 👈 5
-
   console.log('⏳ Running migrations...');
 
-  // 👇 6
-  await migrate(db, {
-    migrationsFolder: path.resolve(__dirname, '../migrations'),
-  });
-  console.log('✅ Migrations completed!');
+  // 👇 5
+  execSync('pnpm db:migrate')
 
-  await connection.end(); // 👈 7
+  console.log('✅ Migrations completed!');
 };
 ```
 
@@ -1207,9 +1198,7 @@ export default async () => {
 2. Start een nieuwe MySQL Docker container via Testcontainers.
 3. Zet de omgevingsvariabele `DATABASE_URL` naar de connectiestring van de container in deze testomgeving.
 4. Sla de container instantie op in de globale variabele zodat we deze later kunnen stoppen.
-5. Maak een verbinding met de databank in de container.
-6. Voer de migraties uit om de tabellen aan te maken.
-7. Sluit de verbinding met de databank.
+5. Voer de migraties uit om de tabellen aan te maken.
 
 Maak ook een teardown bestand `test/jest.global-teardown.ts`:
 
@@ -1254,7 +1243,7 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9-opl 698cfb6
+> git checkout -b les9-opl 8f55ab5
 > pnpm install
 > pnpm start:dev
 > ```

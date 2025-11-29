@@ -7,7 +7,7 @@ Voor het schrijven van API documentatie bestaan verschillende tools. Swagger is 
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 0e74e68
+> git checkout -b les8 7bf0724
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
@@ -273,15 +273,10 @@ Documenteer de route om een nieuwe place aan te maken:
 
 ```ts
 // src/place/place.controller.ts
-import {
-  // ...
-  PlaceResponseDto,
-} from './place.dto';
-
 @ApiResponse({
   status: 201,
   description: 'Create place',
-  type: PlaceResponseDto,
+  type: PlaceDetailResponseDto,
 })
 @Post()
 @Roles(Role.ADMIN)
@@ -295,6 +290,81 @@ async createPlace(
 
 NestJS herkent automatisch dat `createPlaceDto` een request body is en documenteert dit in Swagger, inclusief het schema dat we met `nestjs-swagger-dto` hebben gedefinieerd. Handig toch?
 
+### Oefening: Documenteer PlaceDetailResponseDto
+
+Momenteel worden enkel de properties van `PlaceResponseDto` gedocumenteerd in `PlaceDetailResponseDto`.Documenteer de andere properties in `PlaceDetailResponseDto` zodat de volledige response correct wordt weergegeven in Swagger UI.
+
+- Oplossing +
+
+  ```ts
+  // src/place/place.dto.ts
+  export class PlaceDetailResponseDto extends PlaceResponseDto {
+    @ApiProperty({ type: () => [TransactionResponseDto] })
+    transactions: TransactionResponseDto[];
+  }
+
+  // src/transaction/transaction.dto.ts
+  export class TransactionResponseDto {
+    @ApiProperty({ example: 1, description: 'ID of the transaction' })
+    id: number;
+
+    @ApiProperty({
+      description: 'Transaction amount',
+      minimum: 1,
+      type: 'number',
+    })
+    amount: number;
+
+    @ApiProperty({
+      description: 'Transaction date',
+      type: 'string',
+      format: 'date-time',
+    })
+    date: Date;
+
+    @ApiProperty({
+      description: 'User who made the transaction',
+      type: () => PublicUserResponseDto,
+    })
+    user: PublicUserResponseDto;
+
+    @ApiProperty({
+      description: 'Place where the transaction occurred',
+      type: () => PlaceResponseDto,
+    })
+    place: PlaceResponseDto;
+  }
+
+  // src/user/user.dto.ts
+  export class PublicUserResponseDto {
+    @ApiProperty({
+      description: 'User ID',
+      minimum: 1,
+      example: 1,
+    })
+    @Expose()
+    id: number;
+
+    @ApiProperty({
+      description: 'User name',
+      minLength: 2,
+      maxLength: 255,
+      example: 'John Doe',
+    })
+    @Expose()
+    name: string;
+
+    @ApiProperty({
+      description: 'User email address',
+      example: 'user@email.com',
+      type: 'string',
+      format: 'email',
+    })
+    @Expose()
+    email: string;
+  }
+  ```
+
 ### GET /api/places/:id
 
 Documenteer de route om een specifieke place op te halen:
@@ -304,7 +374,7 @@ Documenteer de route om een specifieke place op te halen:
 @ApiResponse({
   status: 200,
   description: 'Get place by ID',
-  type: PlaceResponseDto,
+  type: PlaceDetailResponseDto,
 })
 @Get(':id')
 async getPlaceById(
@@ -325,7 +395,7 @@ Documenteer de route om een place te updaten:
 @ApiResponse({
   status: 200,
   description: 'Update place',
-  type: PlaceResponseDto,
+  type: PlaceDetailResponseDto,
 })
 @Put(':id')
 @Roles(Role.ADMIN)
@@ -364,7 +434,7 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 @ApiResponse({
   status: 200,
   description: 'Get place by ID',
-  type: PlaceResponseDto,
+  type: PlaceDetailResponseDto,
 })
 @ApiResponse({
   status: 404,
@@ -377,7 +447,7 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceResponseDto> {
+): Promise<PlaceDetailResponseDto> {
   return await this.placeService.getById(id);
 }
 ```
@@ -397,13 +467,35 @@ Omdat je moet aangemeld zijn voor alle routes in places, is het handig om ook de
 export class PlaceController {...}
 ```
 
+### Oefening: Documenteer 400 Bad Request voor PUT en POST in de PlaceController
+
+- Oplossing +
+
+  Voeg de volgende code toe aan zowel de POST als de PUT route in de PlaceController:
+
+  ```ts
+    // src/place/place.controller.ts
+    @ApiResponse({
+      status: 400,
+      description: 'Invalid input data',
+  })
+
+  ```
+
 ## Login route documenteren
 
 Laten we ook de login route documenteren:
 
 ```ts
 // src/sessions/sessions.controller.ts
-import { Controller, Post, Body, UseInterceptors } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  UseInterceptors,
+  HttpStatus,
+  HttpCode,
+} from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 import { Public } from '../auth/decorators/public.decorator';
@@ -424,9 +516,14 @@ export class SessionController {
     status: 401,
     description: 'Invalid credentials',
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid input data',
+  })
   @Post()
   @Public()
   @UseInterceptors(AuthDelayInterceptor)
+  @HttpCode(HttpStatus.OK)
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     const token = await this.authService.login(loginDto);
     return { token };
@@ -502,7 +599,7 @@ Probeer de verschillende routes uit:
       - Gebruik `nestjs-swagger-dto` decorators voor request DTO's
    2. Documenteer alle routes in `TransactionController`:
    3. Vergeet niet om meerdere response types te documenteren waar nodig (200, 401, 403, 404).
-2. Documenteer de `UserModule` op dezelfde manier.
+2. Documenteer de `UserModule` op dezelfde manier. Voor de documentatie van een Parameterized route (zoals `GET /api/users/:id`), kan je gebruik maken van de `@ApiParam` decorator als je extra informatie wil toevoegen over de parameter.
 3. Kopieer het antwoord van `/docs-json` naar de [Swagger Editor](https://editor.swagger.io/) en controleer of alles correct is. Rechts bovenaan zal je eventuele fouten of waarschuwingen zien.
 4. Test alle routes via de Swagger UI op `/docs`.
 
@@ -531,7 +628,7 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8-opl a0b165d
+> git checkout -b les8-opl 4402433
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate

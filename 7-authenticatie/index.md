@@ -785,7 +785,7 @@ Daarin definiëren we de `POST /api/sessions` route:
 
 ```ts
 // src/sessions/sessions.controller.ts
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, HttpStatus, HttpCode } from '@nestjs/common';
 import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 
@@ -794,6 +794,7 @@ export class SessionController {
   constructor(private authService: AuthService) {}
 
   @Post() // 👈 2
+  @HttpCode(HttpStatus.OK) // 👈 2
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     const token = await this.authService.login(loginDto); // 👈 3
     return { token }; // 👈 4
@@ -802,7 +803,7 @@ export class SessionController {
 ```
 
 1. De controller luistert naar requests op `/sessions`.
-2. De route luistert naar POST requests op `/sessions`.
+2. De route luistert naar POST requests op `/sessions` en geeft een 200 OK status terug bij succes.
 3. We roepen de `login` functie van de `AuthService` aan.
 4. We geven de JWT token terug in een object.
 
@@ -996,6 +997,7 @@ export class SessionController {
 
   @Public() // 👈 2
   @Post()
+  @HttpCode(HttpStatus.OK)
   async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
     // ...
   }
@@ -1056,7 +1058,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { AuthService } from '../auth.service';
-import { IS_PUBLIC_KEY } from '../decorators/auth.decorator';
+import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -1468,6 +1470,7 @@ import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor
 @UseInterceptors(AuthDelayInterceptor)
 @Post()
 @Public()
+@HttpCode(HttpStatus.OK)
 async signIn(@Body() loginDto: LoginRequestDto): Promise<LoginResponseDto> {
   // ...
 }
@@ -1511,12 +1514,56 @@ Pas de routes en service van transactions aan:
 
 Optioneel: Pas de CUD-operaties aan zodat de admin deze operaties op alle transacties mag uitvoeren.
 
-> **Oplossing voorbeeldapplicatie**
->
+## Helmet
+
+[Helmet](https://github.com/helmetjs/helmet) is een middleware die verschillende HTTP response headers instelt om de beveiliging van je webapplicatie te verbeteren. NestJS heeft ingebouwde ondersteuning voor Helmet omdat het onder de motorkap Express gebruikt.
+
+Enkele van de beveiligingsheaders die door Helmet worden ingesteld:
+
+- **Content Security Policy (CSP)**: helpt Cross-Site Scripting (XSS) aanvallen te voorkomen. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
+- **X-Content-Type-Options**: voorkomt content-sniffing attacks door de browser te dwingen zich aan het aangegeven Content-Type te houden. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options)
+- **Strict-Transport-Security**: dwingt het gebruik van veilige HTTPS-verbindingen af. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
+- **X-Frame-Options**: voorkomt [clickjacking](https://developer.mozilla.org/en-US/docs/Web/Security/Types_of_attacks#click-jacking)-aanvallen door te beperken waar jouw site in een `iframe` kan worden ingesloten. [Lees meer](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)
+
+Lees [Helmet in NestJS](https://docs.nestjs.com/security/helmet)
+
+### Installatie
+
+Installeer Helmet:
+
+```bash
+pnpm install helmet
+```
+
+### Configuratie
+
+Activeer Helmet in je `main.ts`:
+
+```typescript
+// src/main.ts
+//..
+import helmet from 'helmet';
+
+async function bootstrap() {
+  //..
+  app.use(helmet()); // 👈 Voeg Helmet toe
+  //..
+}
+bootstrap();
+```
+
+Met deze configuratie worden automatisch verschillende beveiligingsheaders aan alle responses toegevoegd, wat de algehele beveiliging van je applicatie verbetert.
+
+### Oefening - Je eigen project
+
+Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
+
+## Oplossing voorbeeldapplicatie
+
 > ```bash
 > git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 0e74e68
+> git checkout -b les7-opl 7bf0724
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
