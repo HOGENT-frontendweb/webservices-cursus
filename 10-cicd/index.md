@@ -8,7 +8,7 @@ Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Ser
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
 | [Continuous Integration/Delivery](#continuous-integrationdelivery) | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Nodige services](#nodige-services)                                | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Refactoring](#refactoring)                                        | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Aanpassingen](#aanpassingen)                                      | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Render account aanmaken](#render-account-aanmaken)                | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Back-end online zetten](#back-end-online-zetten)                  | :heavy_multiplication_x:  | :heavy_check_mark:       |
 | [Front-end online zetten](#front-end-online-zetten)                | :heavy_check_mark:        | :heavy_multiplication_x: |
@@ -32,7 +32,7 @@ Al snel bleek dat de manier om software snel in een stabiele staat te krijgen, w
 
 ### Feature branches
 
-Als iedereen door elkaar commit op deze branch, lukt dat nooit natuurlijk. Er is dus een andere git-strategie nodig.
+Als iedereen door elkaar commits doet op deze branch, lukt dat nooit natuurlijk. Er is dus een andere git-strategie nodig.
 
 ![Feature branch](./images/10_1_git_branches_merge.png ':size=50%')
 
@@ -66,7 +66,7 @@ Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](http
 
 ### MySQL databank in het VIC
 
-Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruik MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
+Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruiken MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
 
 Er bestaan heel wat gratis MySQL services online maar eigenlijk geen enkele degelijke waar je geen kredietkaart voor nodig hebt, ofwel zien ze er sketchy uit of zijn ze vaak down.
 
@@ -80,7 +80,7 @@ Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailt
 
 ### Docker
 
-Voor het online zetten van onze backend willen we naar een mature development manier gaan.
+Voor het online zetten van onze back-end willen we naar een mature development manier gaan.
 Daarom gaan we docker gebruiken, zodat we onafhankelijk van onze host-systemen kunnen werken.
 Gezien we met Render werken, volstaat het voor ons om een `Dockerfile` aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
 
@@ -117,7 +117,7 @@ Deze gaan we laten draaien dankzij een Nginx-server in docker.
 Eerst en vooral moeten we een plan hebben om onze front-end te serven.
 Hiervoor zullen we gebruik maken van Nginx.
 De onderstaande configuratie is gebaseerd op de documentatie van [Nginx Serve Static Content](https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/).
-Deze zal er voor ons voor zorgen dat onze productie build van de front-end als static files geleverd kunnen worden.
+Deze zal ervoor zorgen dat onze productie build van de front-end als static files geleverd kunnen worden.
 
 Maak hiervoor een bestand `nginx.conf` aan in de root van de frontend-code.
 Een standaard, maar productie klare Nginx configuratie leveren we hieronder aan:
@@ -152,7 +152,7 @@ http {
 4. Deze regel zorgt ervoor dat de server reageert op requests naar localhost. Dit is in orde omdat dit draait in Docker.
 5. Deze regel geeft aan aan Nginx waar de static files te vinden zijn.
 6. Deze regel geeft aan wat de naam van de index file is.
-7. Deze regel probeert de inkomende request te verwerken door de static files te verwerken. Hiervoor zoekt hij eerste naar de specifieke file, dan naar de directory en tenslotte een fallback naar de index file. Dit laatste is cruciaal voor SPA's.
+7. Deze regel probeert de inkomende request te verwerken als static files. Hiervoor zoekt hij eerste naar de specifieke file, dan naar de directory en tenslotte een fallback naar de index file. Dit laatste is cruciaal voor SPA's.
 
 ##### Docker
 
@@ -216,7 +216,7 @@ De productie build gaat kijken naar de environment-variabelen van ons systeem.
 ##### Oplossing bug
 
 Om dit op te lossen moeten we de environment-variabelen van ons systeem instellen.
-Dit doen we op Linux/macOS met het command `VITE_API_URL="http://localhost:3000/api"` of op Windows met `set VITE_API_URL="http://localhost:3000/api"`.
+Dit doen we op Linux/macOS met het commando `VITE_API_URL="http://localhost:3000/api"` of op Windows met `set VITE_API_URL="http://localhost:3000/api"`.
 Dit is ook hoe je bij een professionele applicatie deze environment variabelen zou instellen op het systeem waarop de applicatie wordt uitgevoerd.
 
 Vervolgens moeten we wel de bestaande container en image opkuisen, de stappen `pnpm build` en `docker compose up` opnieuw uitvoeren.
@@ -234,7 +234,7 @@ Ons doel is om deze stappen te automatiseren.
 
 ##### Aanpassingen
 
-In de plaats van nu zelf de code te builden, zullen we docker dit laten doen voor ons in de `Dockerfile`.
+In plaats van nu zelf de code te builden, zullen we docker dit laten doen voor ons in de `Dockerfile`.
 Belangrijk hierbij is te onthouden dat we nog steeds de environment variables moeten instellen, maar dat dit niet meer op onze hostmachine gebeurt.
 Hiervoor zullen we deze als volgt aanpassen:
 
@@ -275,12 +275,12 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 1. Net zoals voorheen willen we nog steeds dezelfde Nginx configuratie gebruiken en de default static files van Nginx verwijderen.
-2. Ditmaal gaan we eerst naar een working directory verplaatsen, zodat we onze build kunnen zetten op een plaats die niet gebruikt wordt door de container.
+2. Ditmaal verplaatsen we ons eerst naar een working directory, zodat we onze build kunnen zetten op een plaats die niet gebruikt wordt door de container.
 3. We willen de environment variables kunnen doorgeven aan de container. Deze moeten we vervolgens ook instellen in de environment van de container.
 4. Omdat we pnpm willen gebruiken, gaan we al instellen in de container waar pnpm komt te staan.
 5. Voordat we onze productie build kunnen uitvoeren, moeten we eerst de afhankelijkheden installeren. Hiervoor hebben we nodejs, pnpm en vite nodig. Om pnpm te installeren hebben we echter ook npm nodig.
 6. Nu kunnen we eindelijk onze productie build uitvoeren. Hierbij hebben we eerst ook een install waarbij wat instellingen gebeuren om alles performant te laten werken (gebruikmakend van caching), en waarbij we instellen dat pnpm de versies uit onze lockfile moet gebruiken.
-7. Tot slot kunnen we de dist folder naar de verwachte locatie van de Nginx-server kopiëren. Let er hierbij op dat we het `mv` commando moeten gebruiken, dus dat de syntax een beetje verschilt tegenover het voorheen was.
+7. Tot slot kunnen we de dist folder naar de verwachte locatie van de Nginx-server kopiëren. Let er hierbij op dat we het `mv` commando moeten gebruiken, dus dat de syntax een beetje verschilt tegenover voorheen.
 
 We moeten echter ook nog het Docker Compose bestand aanpassen, zodat voor ons gemak van lokaal testen deze environment variables doorgegeven worden:
 
@@ -298,7 +298,7 @@ services:
       - '80:80'
 ```
 
-Tot slot zijn er nog een aantal files die we sowieso niet mee willen in onze container, gezien deze alles zelf moet opbouwen vanaf onze codebase. Maak hiervoor een bestand `.dockerignore` aan in de root van de frontend-code, met de volgende inhoud:
+Tot slot zijn er nog een aantal bestanden die we sowieso niet mee willen in onze container, gezien deze alles zelf moet opbouwen vanaf onze codebase. Maak hiervoor een bestand `.dockerignore` aan in de root van de frontend-code, met de volgende inhoud:
 
 ```text
 node_modules
@@ -307,7 +307,7 @@ cypress
 dist
 ```
 
-Let erop, als je wijzigingen aanbrengt in de code en opnieuw wil builden, dan moet je telkens de Docker image verwijderen, want anders zorgen de caching van layers en versioning van Docker ervoor dat de vorige versie gebruikt wordt.
+Let erop: als je wijzigingen aanbrengt in de code en opnieuw wil builden, dan moet je telkens de Docker image verwijderen, want anders zorgen de caching van layers en versioning van Docker ervoor dat de vorige versie gebruikt wordt.
 
 ##### Problemen tweede poging
 
@@ -325,7 +325,7 @@ Deze container zal vertrekken van een image die voor ons geschikt is om dat spec
 Daarna zullen we een nieuwe container maken die verder bouwt op het resultaat van de vorige container, maar die zelf ook weer vertrekt van een image die wederom ideaal is voor de volgende stap.
 Dit proces van de eerste container naar de tweede container wordt ook wel "multi-stage build" genoemd.
 
-Het einde van een stage herken je eenvoudige door het `FROM` keyword dat opnieuw gebruikt wordt.
+Het einde van een stage herken je eenvoudig door het `FROM` keyword dat opnieuw gebruikt wordt.
 
 ##### Aanpassingen
 
@@ -374,7 +374,7 @@ CMD ["nginx", "-g", "daemon off;"]
    1. De eerste stage vertrekt van een nodejs image, waarmee we de nodige software reeds hebben. Deze stage wordt bij ons `base` genoemd.
    2. De tweede stage bouwt verder op de eerste, en gebruiken we om de specifieke build van de applicatie te maken. Deze is strikt gezien niet noodzakelijk, maar zorgt voor een mooie scheiding van verantwoordelijkheden. Deze stage wordt bij ons `build` genoemd.
    3. De laatste stage vertrekt van een nginx image, zodat we de server eenvoudig zullen kunnen starten.
-2. We zitten hier in een nodejs docker, corepack enable zorgt ervoor dat we pnpm zullen kunnen gebruiken in het verdere verloop
+2. We zitten hier in een nodejs docker-container, het commando `corepack enable` zorgt ervoor dat we pnpm zullen kunnen gebruiken in het verdere verloop
 3. In onze build stage geven we de environment variables door aan de container en maken we de effectieve productie build.
 4. Tot slot moeten we enkel nog de dist folder van onze vorige stage kopiëren naar de verwachte locatie van de Nginx-server.
 
@@ -391,9 +391,9 @@ Nu zijn we klaar om onze front-end online te zetten. **Commit en push deze wijzi
 
 #### Eerste poging
 
-Bij de backend kunnen we dezelfde stappen herhalen zoals we dit in de front-end hebben gedaan.
+Bij de back-end kunnen we dezelfde stappen herhalen zoals we dit in de front-end hebben gedaan.
 We gaan dit echter niet doen, gezien we nu al beter weten waar we naartoe willen.
-Indien je het OLOD Front-end Web Development niet volgt, lees dan zeker toch de vorige sectie, waarin de uitleg staat over multi-stage builds in Docker, en waarom dit net zo belangrijk is.
+Indien je het olod Front-end Web Development niet volgt, lees dan zeker toch de vorige sectie, waarin de uitleg staat over multi-stage builds in Docker, en waarom dit net zo belangrijk is.
 
 ##### Dockerfile
 
@@ -567,8 +567,8 @@ CMD ["node", "dist/src/main"]
 ```
 
 1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:24-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
-   1. Opgelet, hier wordt de base-layer nu opgebouwd vanuit een alpine image, hierdoor moeten we ook de libc6-compat library installeren. Dit is een library die packages die native C code nodige hebben zal helpen (voorbeelden hiervan zijn argon2 en swc).
-2. Deze lijnen doen, net zoals bij de front-end, een geoptimaliseerde installaties van de dependencies. Let hierbij op een speciaal geval, we hebben een stage dev-deps en een stage prod-deps. Dit is omdat het build-commando een aantal devDependencies nodig heeft, maar onze effectief productie code heeft enkel de echte dependencies nodig. We willen uiteraard de devDependencies dus niet mee in onze uiteindelijke image.
+   1. Opgelet, hier wordt de base-layer nu opgebouwd vanuit een alpine image, hierdoor moeten we ook de libc6-compat library installeren. Dit is een library die packages die native C code nodig hebben zal helpen (voorbeelden hiervan zijn argon2 en swc).
+2. Deze lijnen doen, net zoals bij de front-end, geoptimaliseerde installaties van de dependencies. Let hierbij op een speciaal geval, we hebben een stage dev-deps en een stage prod-deps. Dit is omdat het build-commando een aantal devDependencies nodig heeft, maar onze effectief productie code heeft enkel de echte dependencies nodig. We willen uiteraard de devDependencies dus niet mee in onze uiteindelijke image.
 3. Let hier op de `--prod`, dit zorgt ervoor dat alle devDependencies verwijderd worden.
 4. Op deze manier kunnen we bestanden van de ene stage kopiëren naar een andere stage. Opgelet dat we hier dus de node_modules met devDependencies gebruiken.
 5. Tot slot hebben we de node_modules, de dist folder en de migrations nodig in de runner-stage. Opgelet dat we hier dus de node_modules zonder devDependencies gebruiken.
@@ -581,7 +581,7 @@ We hebben bovendien een mooie scheiding van verantwoordelijkheden.
 #### Migraties
 
 Het enige wat we nog kunnen verbeteren is het automatisch uitvoeren van migraties bij het starten van de back-end.
-Voor dit op te lossen moeten we wat code toevoegen aan onze DrizzleModule
+Om dit op te lossen moeten we wat code toevoegen aan onze DrizzleModule
 (Opmerking: Dit kan ook de AppModule zijn, maar gezien het over de database migraties gaat, voelt DrizzleModule correct aan):
 
 ```ts
@@ -661,9 +661,9 @@ Vul vervolgens alle nodige settings in:
 - Kies een unieke naam voor je service (hint: je repository-naam is uniek).
 - Maak eventueel een project aan zodat alle resources van je applicatie gegroepeerd zijn.
 - Kies als language voor `Docker`.
-- Kies voor branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
+- Kies als branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
 - Kies "Frankfurt (EU Central)" als regio.
-- Vul bij "Root Directory" de naam van de map in waar je back-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
+- Vul bij "Root Directory" de naam van de map in waar jouw back-end-code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
 - Laat het Dockerfile path leeg, tenzij je zou afwijken van de standaardwaarde.
 - Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
 
@@ -708,9 +708,9 @@ Vul vervolgens alle nodige settings in:
 - Kies een unieke naam voor je statische website (hint: je repository-naam is uniek).
 - Selecteer eventueel een project.
 - Kies als language voor `Docker`.
-- Kies voor branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
+- Kies als branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
 - Kies "Frankfurt (EU Central)" als regio.
-- Vul bij "Root Directory" de naam van de map in waar je fronted-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
+- Vul bij "Root Directory" de naam van de map in waar je front-end-code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
 - Laat het Dockerfile path leeg, tenzij je zou afwijken van de standaardwaarde.
 - Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de front-end online is.
 
