@@ -301,10 +301,14 @@ services:
 Tot slot zijn er nog een aantal bestanden die we sowieso niet mee willen in onze container, gezien deze alles zelf moet opbouwen vanaf onze codebase. Maak hiervoor een bestand `.dockerignore` aan in de root van de frontend-code, met de volgende inhoud:
 
 ```text
-node_modules
+.env*
+.gitignore
 .vscode
+
 cypress
 dist
+eslint.config.js
+node_modules
 ```
 
 Let erop: als je wijzigingen aanbrengt in de code en opnieuw wil builden, dan moet je telkens de Docker image verwijderen, want anders zorgen de caching van layers en versioning van Docker ervoor dat de vorige versie gebruikt wordt.
@@ -482,9 +486,18 @@ Dit bestand kan je tot slot uitvoeren met het commando `docker compose -f docker
 Vergeet ook niet om nog een bestand `.dockerignore` aan te maken in de root van de backend, met de volgende inhoud:
 
 ```text
-node_modules
+.env*
+.gitignore
+.prettierrc
 .vscode
+
+coverage
+docker-compose*.yml
+Dockerfile
 dist
+eslint.config.mjs
+jest-e2e.config.ts
+node_modules
 ```
 
 ##### Problemen
