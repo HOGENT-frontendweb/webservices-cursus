@@ -12,4 +12,4 @@
 - [7. Authenticatie & autorisatie](/7-authenticatie/index.md)
 - [8. API documentatie](/8-api_docs/index.md)
 - [9. Testing](/9-testing/index.md)
-- [10. CI/CD (WIP)](/10-cicd/index.md)
+- [10. CI/CD](/10-cicd/index.md)
