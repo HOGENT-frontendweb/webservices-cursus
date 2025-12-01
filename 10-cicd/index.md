@@ -263,7 +263,7 @@ RUN npm install -g pnpm@10.15.0
 RUN pnpm add -D vite
 
 # 👇 6
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 RUN pnpm run build
 
 # 👇 7
@@ -292,7 +292,7 @@ services:
       context: .
       dockerfile: ./Dockerfile
       args:
-        - 'VITE_API_URL=http://localhost:3000/api'
+        VITE_API_URL: http://localhost:3000/api
     container_name: budget-app-frontend
     ports:
       - '80:80'
@@ -335,7 +335,7 @@ Het einde van een stage herken je eenvoudig door het `FROM` keyword dat opnieuw 
 
 ```Dockerfile
 # 👇 1
-FROM node:24-alpine AS base
+FROM node:22-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -404,7 +404,7 @@ Indien je het olod Front-end Web Development niet volgt, lees dan zeker toch de 
 Voor het maken van onze Dockerfile voor de back-end, zullen we vertrekken van de aanzet die de [NestJS documentatie](https://docs.nestjs.com/deployment#dockerizing-your-application) ons aanbiedt:
 
 ```Dockerfile
-FROM node:24
+FROM node:22
 
 # 👇 1
 ENV PNPM_HOME="/pnpm"
@@ -414,30 +414,6 @@ RUN corepack enable
 WORKDIR /usr/src/app
 
 COPY . .
-
-# 👇 2
-ARG NODE_ENV
-ENV NODE_ENV=$NODE_ENV
-
-# 👇 2
-ARG PORT
-ENV PORT=$PORT
-
-# 👇 2
-ARG CORS_ORIGINS
-ENV CORS_ORIGINS=$CORS_ORIGINS
-
-# 👇 2
-ARG CORS_MAX_AGE
-ENV CORS_MAX_AGE=$CORS_MAX_AGE
-
-# 👇 2
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
-# 👇 2
-ARG AUTH_JWT_SECRET
-ENV AUTH_JWT_SECRET=$AUTH_JWT_SECRET
 
 RUN pnpm install
 RUN pnpm build
@@ -464,18 +440,18 @@ services:
       context: .
       dockerfile: Dockerfile
       # 👇 1
-      args:
-        - 'NODE_ENV=production'
-        - 'PORT=3000'
-        - 'CORS_ORIGINS=["http://localhost:5173", "http://localhost"]' # 👈 2
-        - 'CORS_MAX_AGE=10800'
-        - 'DATABASE_URL=mysql://devusr:devpwd@host.docker.internal:3306/budget' # 👈 3
-        - 'AUTH_JWT_SECRET=eensuperveiligsecretvoorindevelopment'
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      CORS_ORIGINS: "[\"http://localhost:5173\", \"http://localhost\"]" # 👈 2
+      CORS_MAX_AGE: 10800
+      DATABASE_URL: mysql://devusr:devpwd@host.docker.internal:3306/budget # 👈 3
+      AUTH_JWT_SECRET: eensuperveiligsecretvoorindevelopment
     ports:
       - '3000:3000'
 ```
 
-1. Bijna alles uit dit bestand is identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden.
+1. Bijna alles uit dit bestand is identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden als environment variables en niet als build arguments.
 2. Opgelet bij de `CORS_ORIGINS` variabele, hier is een vreemde syntax nodig, omdat dit een array is, maar tegelijkertijd ook correcte json in een configuratie bestand moet zijn. Hierbij zijn twee hosts toegevoegd, zodat we zowel op de normale manier de frontend kunnen starten, als wanneer we deze in docker draaien.
 3. Opgelet bij de `DATABASE_URL` variabele, hier wordt de host van de database gezet op `host.docker.internal`, wat betekent dat we de database zoeken op de host machine. Dit is nodig omdat de database niet in dezelfde docker compose staat, waardoor we geen gebruik kunnen maken van de DNS voorzien door Docker Compose. Wanneer we de database van VIC gebruiken zal dit eenvoudiger zijn.
 
@@ -510,25 +486,7 @@ De aanpassingen die nodig zijn zullen zich enkel in de `Dockerfile` bevinden:
 
 ```Dockerfile
 # 👇 1
-FROM node:24-alpine AS base
-
-ARG NODE_ENV
-ENV NODE_ENV=$NODE_ENV
-
-ARG PORT
-ENV PORT=$PORT
-
-ARG CORS_ORIGINS
-ENV CORS_ORIGINS=$CORS_ORIGINS
-
-ARG CORS_MAX_AGE
-ENV CORS_MAX_AGE=$CORS_MAX_AGE
-
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
-ARG AUTH_JWT_SECRET
-ENV AUTH_JWT_SECRET=$AUTH_JWT_SECRET
+FROM node:22-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -579,7 +537,7 @@ EXPOSE 3000
 CMD ["node", "dist/src/main"]
 ```
 
-1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:24-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
+1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:22-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
    1. Opgelet, hier wordt de base-layer nu opgebouwd vanuit een alpine image, hierdoor moeten we ook de libc6-compat library installeren. Dit is een library die packages die native C code nodig hebben zal helpen (voorbeelden hiervan zijn argon2 en swc).
 2. Deze lijnen doen, net zoals bij de front-end, geoptimaliseerde installaties van de dependencies. Let hierbij op een speciaal geval, we hebben een stage dev-deps en een stage prod-deps. Dit is omdat het build-commando een aantal devDependencies nodig heeft, maar onze effectief productie code heeft enkel de echte dependencies nodig. We willen uiteraard de devDependencies dus niet mee in onze uiteindelijke image.
 3. Let hier op de `--prod`, dit zorgt ervoor dat alle devDependencies verwijderd worden.
@@ -637,11 +595,6 @@ export class DrizzleModule implements OnModuleDestroy, OnModuleInit {
 1. We zorgen dat de DrizzleModule de `OnModuleInit` interface implementeert. Zo kunnen we een `onModuleInit` methode implementeren, waarin we de migraties laten uitvoeren bij het initialiseren van de module die de database connectie verzorgd.
 2. We gebruiken onze geconfigureerde logger, zodat we bij de opstart wat logging kunnen uitvoeren. Zo kunnen we zien of de migratie succesvol is uitgevoerd.
 3. We gebruiken de `migrate` functie van de `drizzle-orm` library. Hieraan moeten we meegeven waar deze de migraties zal kunnen terugvinden.
-
-#### Seeding
-
-Voor de seeding van de database zullen we dit manueel moeten oplossen. Hiervoor kan je tijdelijk je `.env` aanpassen, zodat de `DATABASE_URL` verwijst naar je online database.
-Hierna kan je het `pnpm db:seed` commando uitvoeren om de seeding uit te voeren.
 
 ## Render account aanmaken
 
@@ -738,6 +691,12 @@ We moeten onze front-end nog vertellen waar onze back-end draait. Dit doen we do
 Klik vervolgens op "Deploy" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende front-end moeten hebben. De URL van jouw front-end vind je linksboven.
 
 ![Front-end is online](./images/10_16_frontend_online.png ':size=80%')
+
+### Seeding
+
+Voor de seeding van de VIC-database zullen we dit manueel moeten oplossen.
+Hiervoor kan je tijdelijk je `.env` aanpassen, zodat de `DATABASE_URL` verwijst naar je online database.
+Hierna kan je het `pnpm db:seed` commando uitvoeren om de seeding uit te voeren.
 
 ### CORS probleem
 
