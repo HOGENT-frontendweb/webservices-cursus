@@ -1,4 +1,4 @@
-# CI/CD (WIP)
+# CI/CD
 
 Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Services. Onderstaande tabel geeft aan welke secties van toepassing zijn voor welk olod. In de secties waar één olod niet van toepassing is, wordt dit in de tekst ook nog eens expliciet vermeld.
 
@@ -8,7 +8,7 @@ Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Ser
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
 | [Continuous Integration/Delivery](#continuous-integrationdelivery) | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Nodige services](#nodige-services)                                | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Refactoring](#refactoring)                                        | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Aanpassingen](#aanpassingen)                                      | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Render account aanmaken](#render-account-aanmaken)                | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Back-end online zetten](#back-end-online-zetten)                  | :heavy_multiplication_x:  | :heavy_check_mark:       |
 | [Front-end online zetten](#front-end-online-zetten)                | :heavy_check_mark:        | :heavy_multiplication_x: |
@@ -32,7 +32,7 @@ Al snel bleek dat de manier om software snel in een stabiele staat te krijgen, w
 
 ### Feature branches
 
-Als iedereen door elkaar commit op deze branch, lukt dat nooit natuurlijk. Er is dus een andere git-strategie nodig.
+Als iedereen door elkaar commits doet op deze branch, lukt dat nooit natuurlijk. Er is dus een andere git-strategie nodig.
 
 ![Feature branch](./images/10_1_git_branches_merge.png ':size=50%')
 
@@ -52,8 +52,9 @@ Om de back-end en front-end online te zetten, zijn er een aantal services nodig:
 
 - [Render](https://render.com/)
 - MySQL databank in het VIC (= Virtual IT Company van HOGENT): zie mail (ook spam) voor de inloggegevens
+- Docker
 
-?> Studenten die reeds geslaagd zijn voor het olod Web Services en een databank nodig hebben om hun back-end van vorig jaar te hergebruiken, gelieve een mail te sturen naar [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be).
+?> Studenten die reeds geslaagd zijn voor het olod Web Services en een databank nodig hebben om hun back-end van vorig jaar te hergebruiken, gelieve een mail te sturen naar [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be). Houd er rekening mee dat het 1 à 2 werkdagen kan duren vooraleer je een antwoord krijgt, mail dus niet vlak voor de deadline.
 
 ### Render
 
@@ -65,7 +66,7 @@ Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](http
 
 ### MySQL databank in het VIC
 
-Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruik MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
+Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruiken MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
 
 Er bestaan heel wat gratis MySQL services online maar eigenlijk geen enkele degelijke waar je geen kredietkaart voor nodig hebt, ofwel zien ze er sketchy uit of zijn ze vaak down.
 
@@ -75,113 +76,525 @@ Daarom hosten we zelf een MySQL databank in het VIC (Virtual IT Company van HOGE
 
 We zijn geen gigantisch datacenter, dus we kunnen niet garanderen dat de databank altijd online zal zijn of snel zal reageren. We doen ons best om de databank zo goed mogelijk online te houden.
 
-Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be).
+Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be). Houd er rekening mee dat het 1 à 2 werkdagen kan duren vooraleer je een antwoord krijgt, mail dus niet vlak voor de deadline.
 
-## Refactoring
+### Docker
+
+Voor het online zetten van onze back-end willen we naar een mature development manier gaan.
+Daarom gaan we docker gebruiken, zodat we onafhankelijk van onze host-systemen kunnen werken.
+Gezien we met Render werken, volstaat het voor ons om een `Dockerfile` aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
+
+Het opstellen van de Dockerfiles zullen we specifiek in de volgende secties bespreken.
+Ook zullen we de `docker-compose.yml` file gebruiken om onze applicatie lokaal te kunnen draaien in een identieke setup als op Render.
+
+Docker levert ons zo een aantal voordelen:
+
+- Consistency: Docker zorgt ervoor dat onze applicatie op dezelfde manier draait, op eender welke machine. Zo voorkomen we het "it works on my machine" probleem.
+- Isolation: Dankzij onze containers waarop de dependencies voor de applicaties geïnstalleerd zijn, voorkomen we dat er conflicten van dependencies optreden.
+- Scalability: Dankzij Docker kunnen we onze applicatie eenvoudig opschalen, door meerdere keren dezelfde container te starten over verschillende machines in de cloud. (Dit valt wel buiten de scope van het OLOD).
+- Portability: We zullen de container eenvoudig op verschillende omgevingen kunnen draaien, zonder dat we iets hoeven te wijzigen aan de container.
+
+Het enige wat we dus op de server zelf nodig hebben is Docker.
+
+## Aanpassingen
 
 Deze sectie is verdeeld in een stuk voor de [back-end](#back-end) en een stuk voor de front-end. De back-end sectie is enkel van toepassing voor het olod Web Services. De [front-end](#front-end) sectie is enkel van toepassing voor het olod Front-end Web Development.
 
-### Back-end
-
-Allereerst moeten we ervoor zorgen dat onze back-end klaar is om in een productie-omgeving te draaien.
-
-#### Dynamisch poortnummer en JWT secret
-
-We moeten eerst een paar kleine aanpassingen doen aan onze code zodat deze werkt in onze productie-omgeving. Wij starten onze server altijd op poort 9000, maar op Render kan je de poort niet zomaar kiezen (je bent niet alleen op de server). Render kiest zelf een poort die het beschikbaar heeft, geeft die door aan je proces, en verwacht dan dat je je daaraan bindt.
-
-Pas daarom de code van de `start` functie uit `src/createServer.ts` aan zodat de poort uit configuratie gelezen wordt:
-
-```ts
-// ... (imports)
-import config from 'config'; // 👈
-
-const PORT = config.get<number>('port'); // 👈
-
-return {
-  // ...
-
-  start() {
-    return new Promise<void>((resolve) => {
-      app.listen(PORT); // 👈
-      getLogger().info(`🚀 Server listening on http://localhost:${PORT}`); // 👈
-      resolve();
-    });
-  },
-
-  // ...
-};
-```
-
-Vervolgens zorgen we ervoor dat we de environment variabele `PORT` mappen naar het configuratieproperty `port`. Daarnaast zorgen we er ook voor dat we de environment variabele `AUTH_JWT_SECRET` mappen naar het configuratieproperty `auth.jwt.secret` zodat we het JWT secret kunnen instellen vanuit environment variabelen. Je wil nl. het secret niet publiek in je code hebben staan.
-
-Controleer of het bestand `config/custom-environment-variables.ts` minstens onderstaande inhoud heeft. Je mag dit uiteraard uitbreiden met andere environment variabelen die je nodig hebt in je eigen project.
-
-```ts
-export default {
-  env: 'NODE_ENV',
-  port: 'PORT',
-  auth: {
-    jwt: {
-      secret: 'AUTH_JWT_SECRET',
-    },
-  },
-};
-```
-
-Voeg vervolgens poort 9000 toe aan de **alle** configuratiebestanden.
-
-```ts
-export default {
-  port: 9000,
-  // ... (andere properties)
-};
-```
-
-#### Default configuratie
-
-Je merkt dat we heel wat identieke configuratie op meerdere plekken hebben, dat is niet ideaal. Je kan dit oplossen door een bestand `config/default.ts` toe te voegen met de default configuratie. Vervolgens kan je in elk configuratiebestand enkel de verschillen met de default configuratie opgeven.
-
-Zonder alle gedeelde configuratie af in een bestand `config/default.ts` en pas de andere configuratiebestanden aan zodat ze enkel de verschillen bevatten. Deze properties moet je momenteel minimaal hebben in elk configuratiebestand:
-
-- `config/development.ts`
-  - `auth.jwt.expirationInterval`
-  - `auth.jwt.secret`
-- `config/production.ts`
-  - `auth.jwt.expirationInterval`
-- `config/testing.ts`:
-  - `auth.maxDelay`
-  - `auth.jwt.expirationInterval`
-  - `auth.jwt.secret`
-
-Het secret zetten we niet in de default configuratie omdat we willen dat dit in productie expliciet ingesteld wordt, of een fout oplevert als het niet ingesteld is.
-
-#### Versies van Node.js en Yarn
-
-Het laatste moeten ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst.
-
-```json
-{
-  "engines": {
-    "node": "20.6.0",
-    "yarn": "4.4.0"
-  }
-}
-```
-
-Nu zijn we klaar om onze back-end online te zetten. **Commit en push deze wijziging.**
-
 ### Front-end
 
-Ook hier moeten we ervoor zorgen dat Render beschikt over de juiste versies van Node.js en Yarn. Voeg onderstaand fragment toe onderaan jouw `package.json`. Voeg eventueel komma's toe om een correct JSON-syntax te krijgen. Uiteraard laat je de buitenste accolades weg! Je kan de versies aanpassen als je dat wenst. **Commit en push deze wijziging!**
+Het klaarmaken van de applicatie voor productie gaan we gradueel verbeteren.
+Zo zullen we beginnen met een eerste, maar naïve poging, waarbij we telkens een probleem zullen tegenkomen en oplossen met een verbetering.
 
-```json
-{
-  "engines": {
-    "node": "20.6.0",
-    "yarn": "4.4.0"
+#### Eerste naïve poging
+
+Bij de eerste, maar naïve poging zullen we van onze applicatie een build maken. Hiervoor gaan we gebruik maken van het build-script.
+Voer hiervoor `pnpm build` uit.
+Deze build zal ervoor zorgen dat we een folder genaamd `dist` krijgen.
+Deze gaan we laten draaien dankzij een Nginx-server in docker.
+
+##### Nginx
+
+Eerst en vooral moeten we een plan hebben om onze front-end te serven.
+Hiervoor zullen we gebruik maken van Nginx.
+De onderstaande configuratie is gebaseerd op de documentatie van [Nginx Serve Static Content](https://docs.nginx.com/nginx/admin-guide/web-server/serving-static-content/).
+Deze zal ervoor zorgen dat onze productie build van de front-end als static files geleverd kunnen worden.
+
+Maak hiervoor een bestand `nginx.conf` aan in de root van de frontend-code.
+Een standaard, maar productie klare Nginx configuratie leveren we hieronder aan:
+
+```nginx
+# 👇 1
+events{}
+
+http {
+    # 👇 2
+    include /etc/nginx/mime.types;
+    server {
+        # 👇 3
+        listen 80;
+        # 👇 4
+        server_name localhost;
+        # 👇 5
+        root /usr/share/nginx/html;
+        # 👇 6
+        index index.html;
+        location / {
+            # 👇 7
+            try_files $uri $uri/ /index.html;
+        }
+    }
+}
+```
+
+1. Deze regel is vereist voor Nginx om te kunnen opstarten. De defaults zijn echter voldoende, waardoor we niets overschrijven.
+2. Deze regel zorgt ervoor dat de mime-type mappings ingeladen worden, zodat Nginx de correct `Content-Type` headers kan meegeven.
+3. Deze regel zorgt ervoor dat de Nginx server luistert op poort 80.
+4. Deze regel zorgt ervoor dat de server reageert op requests naar localhost. Dit is in orde omdat dit draait in Docker.
+5. Deze regel geeft aan aan Nginx waar de static files te vinden zijn.
+6. Deze regel geeft aan wat de naam van de index file is.
+7. Deze regel probeert de inkomende request te verwerken als static files. Hiervoor zoekt hij eerste naar de specifieke file, dan naar de directory en tenslotte een fallback naar de index file. Dit laatste is cruciaal voor SPA's.
+
+##### Docker
+
+Om nu deze Nginx server te laten draaien, zullen we zelf een `Dockerfile` maken, waarin we beschrijven wat er allemaal moet gebeuren om onze applicatie te laten draaien. Hiervoor maken we een `Dockerfile` aan in de root van de frontend-code, met de volgende inhoud:
+
+```Dockerfile
+# 👇 1
+FROM nginx:1.27.4-alpine
+
+# 👇 2
+COPY ./nginx.conf /etc/nginx/nginx.conf
+
+# 👇 3
+RUN rm -rf /usr/share/nginx/html/*
+
+# 👇 4
+COPY ./dist /usr/share/nginx/html
+
+# 👇 5
+EXPOSE 80
+
+# 👇 6
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+1. Deze regel zorgt ervoor dat de Nginx-image van Docker wordt gebruikt.
+2. Deze regel kopieert de Nginx configuratie uit onze code naar de juiste locatie in de Docker-container.
+3. Deze regel verwijdert de bestaande (default) static files uit de Nginx-server.
+4. Deze regel kopieert de build van de front-end naar de Nginx-server.
+5. Deze regel geeft aan aan Docker dat poort 80 moet worden geopend (de standaardpoort voor Nginx). Dit is nodig omdat we de Nginx-server draaien in Docker, en niet op de host machine.
+6. Deze regel start de Nginx-server.
+
+##### Docker Compose
+
+Om ervoor te zorgen dat we lokaal een geautomatiseerde opstart hebben, die bovendien zo dicht mogelijk aanleunt bij de productieomgeving, maken we gebruik van Docker Compose. Hiervoor maken we een bestand `docker-compose.yml` aan in de root van de frontend-code, met de volgende inhoud:
+
+```yml
+services:
+  budget-app-frontend:
+    container_name: budget-app-frontend
+    image: budget-app-frontend # 👈 1
+    build:
+      context: .
+      dockerfile: ./Dockerfile # 👈 2
+    ports:
+      - '80:80' # 👈 3
+```
+
+1. Deze regel geeft aan welke naam de gemaakte image zal krijgen.
+2. Deze regel beschrijft hoe de Docker-image van onze front-end wordt gebouwd. Wij zeggen hiermee dat dit gebouwd moet worden uit de `Dockerfile` in de root van de frontend-code.
+3. Deze regel zal poort 80 van de host machine naar poort 80 in de Docker-container binden. Dit is nodig omdat we de Nginx-server draaien in Docker, en niet op de host machine. Bovendien is poort 80 de default voor http, waardoor we zullen kunnen surfen naar `http://localhost`.
+
+##### Eerste test
+
+Wanneer we nu `docker compose up` uitvoeren, zullen we een Nginx-server draaien met onze front-end.
+We kunnen nu naar `http://localhost` surfen om te controleren of alles goed werkt.
+Hierbij valt op dat onze api-calls niet correct werken, hierbij zien we dat de baseUrl van onze api-client niet juist is.
+Deze hebben we tot nu toe ingesteld in de `.env` file, maar een productie build gebruikt dit niet.
+De productie build gaat kijken naar de environment-variabelen van ons systeem.
+
+##### Oplossing bug
+
+Om dit op te lossen moeten we de environment-variabelen van ons systeem instellen.
+Dit doen we op Linux/macOS met het commando `VITE_API_URL="http://localhost:3000/api"` of op Windows met `set VITE_API_URL="http://localhost:3000/api"`.
+Dit is ook hoe je bij een professionele applicatie deze environment variabelen zou instellen op het systeem waarop de applicatie wordt uitgevoerd.
+
+Vervolgens moeten we wel de bestaande container en image opkuisen, de stappen `pnpm build` en `docker compose up` opnieuw uitvoeren.
+Nu kunnen we naar `http://localhost` surfen en zien dat onze front-end correct werkt.
+
+Wanneer we nu onze container nog kort even analyseren, dan valt op dat de docker image een grootte heeft van ongeveer 50 MB.
+Dit is belangrijk om zo meteen te onthouden bij poging 2.
+
+##### Problemen naïve poging
+
+De problemen hiermee zijn vooral dat er veel manuele stappen zijn om de applicatie in docker op te starten.
+Ons doel is om deze stappen te automatiseren.
+
+#### Tweede poging: automatisering
+
+##### Aanpassingen
+
+In plaats van nu zelf de code te builden, zullen we docker dit laten doen voor ons in de `Dockerfile`.
+Belangrijk hierbij is te onthouden dat we nog steeds de environment variables moeten instellen, maar dat dit niet meer op onze hostmachine gebeurt.
+Hiervoor zullen we deze als volgt aanpassen:
+
+```Dockerfile
+FROM nginx:1.27.4-alpine
+
+# 👇 1
+COPY ./nginx.conf /etc/nginx/nginx.conf
+RUN rm -rf /usr/share/nginx/html/*
+
+# 👇 2
+WORKDIR /usr/src/app
+COPY . .
+
+# 👇 3
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
+
+# 👇 4
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+# 👇 5
+RUN apk add --update nodejs npm
+RUN npm install -g pnpm@10.15.0
+RUN pnpm add -D vite
+
+# 👇 6
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm run build
+
+# 👇 7
+RUN mv ./dist/* /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+1. Net zoals voorheen willen we nog steeds dezelfde Nginx configuratie gebruiken en de default static files van Nginx verwijderen.
+2. Ditmaal verplaatsen we ons eerst naar een working directory, zodat we onze build kunnen zetten op een plaats die niet gebruikt wordt door de container.
+3. We willen de environment variables kunnen doorgeven aan de container. Deze moeten we vervolgens ook instellen in de environment van de container.
+4. Omdat we pnpm willen gebruiken, gaan we al instellen in de container waar pnpm komt te staan.
+5. Voordat we onze productie build kunnen uitvoeren, moeten we eerst de afhankelijkheden installeren. Hiervoor hebben we nodejs, pnpm en vite nodig. Om pnpm te installeren hebben we echter ook npm nodig.
+6. Nu kunnen we eindelijk onze productie build uitvoeren. Hierbij hebben we eerst ook een install waarbij wat instellingen gebeuren om alles performant te laten werken (gebruikmakend van caching), en waarbij we instellen dat pnpm de versies uit onze lockfile moet gebruiken.
+7. Tot slot kunnen we de dist folder naar de verwachte locatie van de Nginx-server kopiëren. Let er hierbij op dat we het `mv` commando moeten gebruiken, dus dat de syntax een beetje verschilt tegenover voorheen.
+
+We moeten echter ook nog het Docker Compose bestand aanpassen, zodat voor ons gemak van lokaal testen deze environment variables doorgegeven worden:
+
+```yml
+services:
+  budget-app-frontend:
+    image: budget-app-frontend
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        VITE_API_URL: http://localhost:3000/api
+    container_name: budget-app-frontend
+    ports:
+      - '80:80'
+```
+
+Tot slot zijn er nog een aantal bestanden die we sowieso niet mee willen in onze container, gezien deze alles zelf moet opbouwen vanaf onze codebase. Maak hiervoor een bestand `.dockerignore` aan in de root van de frontend-code, met de volgende inhoud:
+
+```text
+.env*
+.gitignore
+.vscode
+
+cypress
+dist
+eslint.config.js
+node_modules
+```
+
+Let erop: als je wijzigingen aanbrengt in de code en opnieuw wil builden, dan moet je telkens de Docker image verwijderen, want anders zorgen de caching van layers en versioning van Docker ervoor dat de vorige versie gebruikt wordt.
+
+##### Problemen tweede poging
+
+Als eerste valt het op hoeveel software we manueel moeten installeren in de container om onze applicatie te kunnen laten draaien.
+Dit is veel omslachtiger dan gewenst is.
+
+Daarnaast is er een tweede probleem, dat veel ernstiger is. Docker images willen we zo klein mogelijk houden, maar wanneer we nu kijken naar de grootte van de image, dan zien we dat deze drastisch vergroot is, tot bijna 1.2 GB.
+
+#### Finale poging: Multi-stage build
+
+Deze laatste problemen zullen we oplossen door gebruik te maken van een [multi-stage build](https://docs.docker.com/build/building/multi-stage/).
+
+Bij een multi-stage docker build, zullen we een container gebruiken om een deel van de "heavy lifting" voor ons te doen.
+Deze container zal vertrekken van een image die voor ons geschikt is om dat specifieke deel van het werk te doen.
+Daarna zullen we een nieuwe container maken die verder bouwt op het resultaat van de vorige container, maar die zelf ook weer vertrekt van een image die wederom ideaal is voor de volgende stap.
+Dit proces van de eerste container naar de tweede container wordt ook wel "multi-stage build" genoemd.
+
+Het einde van een stage herken je eenvoudig door het `FROM` keyword dat opnieuw gebruikt wordt.
+
+##### Aanpassingen
+
+```Dockerfile
+# 👇 1
+FROM node:22-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+# 👇 2
+RUN corepack enable
+
+WORKDIR /usr/src/app
+COPY . .
+
+# 👇 1
+FROM base AS build
+
+# 👇 3
+ARG VITE_API_URL
+# 👇 3
+ENV VITE_API_URL=$VITE_API_URL
+
+# 👇 3
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+# 👇 3
+RUN pnpm run build
+
+
+# 👇 1
+FROM nginx:1.27.4-alpine
+
+COPY ./nginx.conf /etc/nginx/nginx.conf
+RUN rm -rf /usr/share/nginx/html/*
+
+# 👇 4
+COPY --from=build /usr/src/app/dist /usr/share/nginx/html
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+1. Bij de finale oplossing zullen we drie stages gebruiken:
+   1. De eerste stage vertrekt van een nodejs image, waarmee we de nodige software reeds hebben. Deze stage wordt bij ons `base` genoemd.
+   2. De tweede stage bouwt verder op de eerste, en gebruiken we om de specifieke build van de applicatie te maken. Deze is strikt gezien niet noodzakelijk, maar zorgt voor een mooie scheiding van verantwoordelijkheden. Deze stage wordt bij ons `build` genoemd.
+   3. De laatste stage vertrekt van een nginx image, zodat we de server eenvoudig zullen kunnen starten.
+2. We zitten hier in een nodejs docker-container, het commando `corepack enable` zorgt ervoor dat we pnpm zullen kunnen gebruiken in het verdere verloop
+3. In onze build stage geven we de environment variables door aan de container en maken we de effectieve productie build.
+4. Tot slot moeten we enkel nog de dist folder van onze vorige stage kopiëren naar de verwachte locatie van de Nginx-server.
+
+##### Besluit
+
+Deze finale poging zorgt ervoor dat het hele build process van de applicatie volledig automatisch wordt uitgevoerd.
+Het heeft ook het installeren van de nodige software voor ons vereenvoudigd.
+
+Als we tot slot opnieuw kijken naar de grootte van de image, dan zien we dat deze opnieuw mooi op 50 MB uitkomt.
+
+Nu zijn we klaar om onze front-end online te zetten. **Commit en push deze wijziging.**
+
+### Back-end
+
+#### Eerste poging
+
+Bij de back-end kunnen we dezelfde stappen herhalen zoals we dit in de front-end hebben gedaan.
+We gaan dit echter niet doen, gezien we nu al beter weten waar we naartoe willen.
+Indien je het olod Front-end Web Development niet volgt, lees dan zeker toch de vorige sectie, waarin de uitleg staat over multi-stage builds in Docker, en waarom dit net zo belangrijk is.
+
+##### Dockerfile
+
+Voor het maken van onze Dockerfile voor de back-end, zullen we vertrekken van de aanzet die de [NestJS documentatie](https://docs.nestjs.com/deployment#dockerizing-your-application) ons aanbiedt:
+
+```Dockerfile
+FROM node:22
+
+# 👇 1
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN pnpm install
+RUN pnpm build
+
+EXPOSE 3000
+
+CMD ["node", "dist/src/main"]
+```
+
+1. Deze lijnen zijn identiek aan de `Dockerfile` van de front-end, we willen hier wederom gebruik kunnen maken van pnpm.
+2. Deze lijnen zijn er om alle environment variables door te geven aan de container.
+
+##### Docker Compose bestand
+
+We moeten echter ook nog de Docker Compose bestand aanpassen, zodat voor ons gemak van lokaal testen deze environment variables doorgegeven worden.
+Noem dit bestand ditmaal `docker-compose-backend.yml`. Deze zal de backend starten, maar niet de database. Dit willen we gescheiden houden:
+
+```yml
+services:
+  budget-app-backend:
+    container_name: budget-app-backend
+    image: budget-app-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # 👇 1
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      CORS_ORIGINS: "[\"http://localhost:5173\", \"http://localhost\"]" # 👈 2
+      CORS_MAX_AGE: 10800
+      DATABASE_URL: mysql://devusr:devpwd@host.docker.internal:3306/budget # 👈 3
+      AUTH_JWT_SECRET: eensuperveiligsecretvoorindevelopment
+    ports:
+      - '3000:3000'
+```
+
+1. Bijna alles uit dit bestand is identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden als environment variables en niet als build arguments.
+2. Opgelet bij de `CORS_ORIGINS` variabele, hier is een vreemde syntax nodig, omdat dit een array is, maar tegelijkertijd ook correcte json in een configuratie bestand moet zijn. Hierbij zijn twee hosts toegevoegd, zodat we zowel op de normale manier de frontend kunnen starten, als wanneer we deze in docker draaien.
+3. Opgelet bij de `DATABASE_URL` variabele, hier wordt de host van de database gezet op `host.docker.internal`, wat betekent dat we de database zoeken op de host machine. Dit is nodig omdat de database niet in dezelfde docker compose staat, waardoor we geen gebruik kunnen maken van de DNS voorzien door Docker Compose. Wanneer we de database van VIC gebruiken zal dit eenvoudiger zijn.
+
+Dit bestand kan je tot slot uitvoeren met het commando `docker compose -f docker-compose-backend.yml up`.
+
+##### Dockerignore
+
+Vergeet ook niet om nog een bestand `.dockerignore` aan te maken in de root van de backend, met de volgende inhoud:
+
+```text
+.env*
+.gitignore
+.prettierrc
+.vscode
+
+coverage
+docker-compose*.yml
+Dockerfile
+dist
+eslint.config.mjs
+jest-e2e.config.ts
+node_modules
+```
+
+##### Problemen
+
+Net zoals bij de front-end, hebben we hier het probleem dat onze image veel te groot is. Voor onze voorbeeldapplicatie is deze ongeveer 1.4 GB.
+
+#### Multi-stage build
+
+De aanpassingen die nodig zijn zullen zich enkel in de `Dockerfile` bevinden:
+
+```Dockerfile
+# 👇 1
+FROM node:22-alpine AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+# 👇 1.1
+RUN apk add --no-cache libc6-compat
+
+# 👇 1
+FROM base AS dev-deps
+
+WORKDIR /app
+
+# 👇 2
+COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+
+# 👇 1
+FROM base AS prod-deps
+
+WORKDIR /app
+
+# 👇 3
+COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+
+# 👇 1
+FROM base AS builder
+WORKDIR /app
+
+# 👇 4
+COPY --from=dev-deps /app/node_modules ./node_modules
+COPY . .
+
+RUN pnpm build
+
+# 👇 1
+FROM base AS runner
+
+WORKDIR /app
+
+# 👇 5
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/migrations ./dist/migrations
+
+EXPOSE 3000
+
+CMD ["node", "dist/src/main"]
+```
+
+1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:22-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
+   1. Opgelet, hier wordt de base-layer nu opgebouwd vanuit een alpine image, hierdoor moeten we ook de libc6-compat library installeren. Dit is een library die packages die native C code nodig hebben zal helpen (voorbeelden hiervan zijn argon2 en swc).
+2. Deze lijnen doen, net zoals bij de front-end, geoptimaliseerde installaties van de dependencies. Let hierbij op een speciaal geval, we hebben een stage dev-deps en een stage prod-deps. Dit is omdat het build-commando een aantal devDependencies nodig heeft, maar onze effectief productie code heeft enkel de echte dependencies nodig. We willen uiteraard de devDependencies dus niet mee in onze uiteindelijke image.
+3. Let hier op de `--prod`, dit zorgt ervoor dat alle devDependencies verwijderd worden.
+4. Op deze manier kunnen we bestanden van de ene stage kopiëren naar een andere stage. Opgelet dat we hier dus de node_modules met devDependencies gebruiken.
+5. Tot slot hebben we de node_modules, de dist folder en de migrations nodig in de runner-stage. Opgelet dat we hier dus de node_modules zonder devDependencies gebruiken.
+
+##### Besluit
+
+Bij de finale poging zien we nu dat de image van onze back-end drastisch kleiner geworden is, deze is nu ongeveer 220 MB.
+We hebben bovendien een mooie scheiding van verantwoordelijkheden.
+
+#### Migraties
+
+Het enige wat we nog kunnen verbeteren is het automatisch uitvoeren van migraties bij het starten van de back-end.
+Om dit op te lossen moeten we wat code toevoegen aan onze DrizzleModule
+(Opmerking: Dit kan ook de AppModule zijn, maar gezien het over de database migraties gaat, voelt DrizzleModule correct aan):
+
+```ts
+import { Logger, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import {
+  type DatabaseProvider,
+  DrizzleAsyncProvider,
+  drizzleProvider,
+  InjectDrizzle,
+} from './drizzle.provider';
+import path from 'path';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+
+@Module({
+  providers: [...drizzleProvider],
+  exports: [DrizzleAsyncProvider],
+})
+// 👇 1
+export class DrizzleModule implements OnModuleDestroy, OnModuleInit {
+  private readonly logger = new Logger(DrizzleModule.name); // 👈 2
+
+  constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
+
+  // 👇 1
+  async onModuleInit() {
+    this.logger.log('⏳ Running migrations...');
+    // 👇 3
+    await migrate(this.db, {
+      migrationsFolder: path.resolve(__dirname, '../../migrations'),
+    });
+    this.logger.log('✅ Migrations completed!');
+  }
+
+  async onModuleDestroy() {
+    await this.db.$client.end();
   }
 }
 ```
+
+1. We zorgen dat de DrizzleModule de `OnModuleInit` interface implementeert. Zo kunnen we een `onModuleInit` methode implementeren, waarin we de migraties laten uitvoeren bij het initialiseren van de module die de database connectie verzorgd.
+2. We gebruiken onze geconfigureerde logger, zodat we bij de opstart wat logging kunnen uitvoeren. Zo kunnen we zien of de migratie succesvol is uitgevoerd.
+3. We gebruiken de `migrate` functie van de `drizzle-orm` library. Hieraan moeten we meegeven waar deze de migraties zal kunnen terugvinden.
 
 ## Render account aanmaken
 
@@ -213,18 +626,16 @@ Vul vervolgens alle nodige settings in:
 
 - Kies een unieke naam voor je service (hint: je repository-naam is uniek).
 - Maak eventueel een project aan zodat alle resources van je applicatie gegroepeerd zijn.
+- Kies als language voor `Docker`.
+- Kies als branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
 - Kies "Frankfurt (EU Central)" als regio.
-- Vul bij "Root Directory" de naam van de map in waar je back-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
-- Vul `corepack enable && yarn install && yarn build && yarn prisma migrate deploy` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je back-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies, bouwen vervolgens onze applicatie en migreren onze databank.
-  - Wens je de databank te resetten? Voer dan lokaal `yarn prisma migrate reset --force` uit maar dan met de juiste `DATABASE_URL` in je `.env` bestand. **Gebruik dit commando NOOIT in de instellingen van Render!** Je gooit hiermee de hele databank weg en dat is niet de bedoeling.
-- Vul `node build/src/index.js` in bij "Start Command". Dit is het commando dat Render zal uitvoeren om je back-end te starten. We starten onze back-end vanuit de `build` directory.
+- Vul bij "Root Directory" de naam van de map in waar jouw back-end-code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
+- Laat het Dockerfile path leeg, tenzij je zou afwijken van de standaardwaarde.
 - Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
 
 De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw situatie**.
 
-![Render back-end settings part 1](./images/10_7_backend_settings_part_1.png ':size=80%')
-
-![Render back-end settings part 2](./images/10_8_backend_settings_part_2.png ':size=80%')
+![Render back-end settings part 1](./images/10_7_backend_settings.png ':size=80%')
 
 Vul onder de instance types de nodige environment variabelen in. Check je mail voor de nodige credentials voor jouw persoonlijke databank. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
 
@@ -248,9 +659,9 @@ Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan ka
 
 ?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Web Services.
 
-Het is tijd om onze front-end online te zetten. Onze front-end is (na het builden) niet meer dan een statische website met wat HTML, JS, CSS... Veel hebben we hiervoor dus niet nodig.
+Het is tijd om onze front-end online te zetten. Onze front-end draait ook op docker, dus kan je dezelfde stappen volgen als bij de back-end.
 
-Open het Render dashboard en klik rechtsboven op "+ New" en "Static Site" (of klik op "New Static Site" indien je geen back-end hebt).
+Open het Render dashboard en klik rechtsboven op "+ New" en "Web service" (of klik op "New Web service" indien je geen back-end hebt).
 
 ![Render new web service](./images/10_12_new_static_site.png ':size=80%')
 
@@ -262,21 +673,30 @@ Vul vervolgens alle nodige settings in:
 
 - Kies een unieke naam voor je statische website (hint: je repository-naam is uniek).
 - Selecteer eventueel een project.
-- Vul bij "Root Directory" de naam van de map in waar je front-end code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
-- Vul `corepack enable && yarn install && yarn build` in bij "Build Command". Dit is het commando dat Render zal uitvoeren om je front-end te bouwen. We zorgen ervoor dat we Yarn v2 kunnen gebruiken, installeren eerst onze dependencies en bouwen vervolgens onze applicatie.
-- Vul `dist` in bij de "Publish directory".
+- Kies als language voor `Docker`.
+- Kies als branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
+- Kies "Frankfurt (EU Central)" als regio.
+- Vul bij "Root Directory" de naam van de map in waar je front-end-code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
+- Laat het Dockerfile path leeg, tenzij je zou afwijken van de standaardwaarde.
+- Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de front-end online is.
 
 De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw situatie**.
 
 ![Render front-end settings part 1](./images/10_14_frontend_settings_part_1.png ':size=80%')
 
-We moeten onze front-end nog vertellen waar onze back-end draait. Dit doen we door een environment variabele in te stellen. Kopieer de URL van jouw back-end van het Render dashboard naar een environment variabele met naam `VITE_API_URL`. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie. Daarnaast voegen we ook `SKIP_INSTALL_DEPS` toe met waarde `true` zodat Render onze dependencies niet automatisch installeert. Indien dit wel zou gebeuren, zou dit een foutmelding geven omdat corepack nog niet ingeschakeld is.
+We moeten onze front-end nog vertellen waar onze back-end draait. Dit doen we door een environment variabele in te stellen. Kopieer de URL van jouw back-end van het Render dashboard naar een environment variabele met naam `VITE_API_URL`. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie.
 
 ![Render front-end settings part 2](./images/10_15_frontend_settings_part_2.png ':size=80%')
 
-Klik vervolgens op "Deploy Static Site" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende front-end moeten hebben. De URL van jouw front-end vind je linksboven.
+Klik vervolgens op "Deploy" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende front-end moeten hebben. De URL van jouw front-end vind je linksboven.
 
 ![Front-end is online](./images/10_16_frontend_online.png ':size=80%')
+
+### Seeding
+
+Voor de seeding van de VIC-database zullen we dit manueel moeten oplossen.
+Hiervoor kan je tijdelijk je `.env` aanpassen, zodat de `DATABASE_URL` verwijst naar je online database.
+Hierna kan je het `pnpm db:seed` commando uitvoeren om de seeding uit te voeren.
 
 ### CORS probleem
 
@@ -284,35 +704,19 @@ Je kan nu alvast naar jouw front-end gaan maar je zal merken dat er nog een prob
 
 ![CORS error](./images/10_17_frontend_cors.png ':size=80%')
 
-CORS kan je enkel oplossen door in de back-end de juiste headers te zetten. We hadden reeds ons CORS package geconfigureerd en moeten enkel de URL aanpassen in het bestand `config/production.ts`. Voeg jouw eigen front-end URL toe aan de `cors.origins` array.
+CORS kan je enkel oplossen door in de back-end de juiste headers te zetten. Gezien we dit in onze environment geconfigureerd hebben, moeten we alleen de URL van onze front-end toevoegen aan de CORS origins op Render.
 
 > Merk dus op dat je een CORS-probleem niet kan oplossen in de front-end of als je geen toegang hebt tot de back-end!
 
-```js
-// config/production.ts
-export default {
-  cors: {
-    origins: ['https://frontendweb-budget-dna5.onrender.com'], // 👈
-  },
-  // ...
-};
-```
-
-**Commit en push deze wijziging.** Wacht tot de back-end opnieuw online is en herlaad de front-end. De CORS error zou nu weg moeten zijn.
-
-### 404 probleem
-
-Probeer nu op jouw front-end rechtstreeks naar een URL verschillend van `/` te gaan. In ons voorbeeld gaan we naar `/transactions`. Je zal merken dat je een 404 krijgt. Dit moeten we oplossen in de front-end!
-
-Ga naar het Render dashboard van jouw front-end en klik op "Redirects/Rewrites". Voeg een nieuwe Rewrite-regel toe zoals op onderstaande afbeelding. Klik vervolgens op "Save Changes". Je kan meteen testen of het werkt! Deze regel zorgt ervoor dat alle requests naar de front-end die niet naar `/` gaan, als antwoord de `index.html` van de front-end krijgen. [Lees meer over het verschil tussen redirects en rewrites](https://render.com/docs/redirects-rewrites).
-
-![Front-end rewrite](./images/10_18_frontend_rewrite.png ':size=80%')
+![CORS fix](./images/10_17.2_frontend_cors.png ':size=80%')
 
 ## Hosting remarks
 
 Dit was maar een (eenvoudig) voorbeeld om je applicatie online te zetten. Onze hoofdbekommernis was bovendien om alles 100% gratis te kunnen regelen, wat niet altijd het eenvoudigst of handigst is.
 
 Hier linten of testen we onze applicatie ook niet voor we deze online zetten. We merken het dus niet op als onze applicatie een bug heeft die door de testen opgevangen zou worden.
+
+> Tip: GitHub heeft een vrij grote free tier (2000 minuten aan computation time) op vlak van CI/CD. Dit heet GitHub Actions, waarbij je bij het pushen van code automatisch je testen kan laten uitvoeren en zoveel meer.
 
 Als je ooit echte applicaties online wil zetten, kijk dan eerst eens rond. Er zijn veel opties, en vaak helemaal niet duur meer maar zelden helemaal gratis. Vaak zal de CI/CD pipeline veel meer omvatten dan louter builden en online plaatsen.
 
@@ -323,20 +727,6 @@ Denk bij het online zetten van een applicatie ook altijd na over reproduceerbaar
 ## Oefening 1 - README
 
 Pas vervolgens jouw README aan met de nodige commando's... om de applicatie in productie op te starten. Je kan inspiratie opdoen in de README's van de voorbeeldapplicaties.
-
-## Oefening 2 - Optimalisatie TypeScript build back-end
-
-Je zal zien dat onze build van de back-end onze testbestanden en de Jest configuratie bevat. Dit is niet nodig in productie. Pas de `tsconfig.json` aan zodat deze bestanden niet in de build terechtkomen.
-
-- Oplossing +
-
-  Voeg een `exclude` property toe in `tsconfig.json` (of pas deze aan):
-
-  ```json
-  {
-    "exclude": ["jest.config.ts", "__tests__"]
-  }
-  ```
 
 > **Eindpunt voorbeeldapplicatie**
 >
