@@ -424,7 +424,6 @@ CMD ["node", "dist/src/main"]
 ```
 
 1. Deze lijnen zijn identiek aan de `Dockerfile` van de front-end, we willen hier wederom gebruik kunnen maken van pnpm.
-2. Deze lijnen zijn er om alle environment variables door te geven aan de container.
 
 ##### Docker Compose bestand
 
@@ -451,7 +450,7 @@ services:
       - '3000:3000'
 ```
 
-1. Bijna alles uit dit bestand is identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden als environment variables en niet als build arguments.
+1. Bijna alles uit dit bestand is identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden als environment variables en niet als build arguments. Environment variables worden opgeslaan in de image en zijn at runtime beschikbaar voor de applicatie. Build arguments zijn enkel beschikbaar tijdens het bouwen van de image.
 2. Opgelet bij de `CORS_ORIGINS` variabele, hier is een vreemde syntax nodig, omdat dit een array is, maar tegelijkertijd ook correcte json in een configuratie bestand moet zijn. Hierbij zijn twee hosts toegevoegd, zodat we zowel op de normale manier de frontend kunnen starten, als wanneer we deze in docker draaien.
 3. Opgelet bij de `DATABASE_URL` variabele, hier wordt de host van de database gezet op `host.docker.internal`, wat betekent dat we de database zoeken op de host machine. Dit is nodig omdat de database niet in dezelfde docker compose staat, waardoor we geen gebruik kunnen maken van de DNS voorzien door Docker Compose. Wanneer we de database van VIC gebruiken zal dit eenvoudiger zijn.
 
@@ -563,7 +562,7 @@ import {
   drizzleProvider,
   InjectDrizzle,
 } from './drizzle.provider';
-import path from 'path';
+import path from 'node:path';
 import { migrate } from 'drizzle-orm/mysql2/migrator';
 
 @Module({
