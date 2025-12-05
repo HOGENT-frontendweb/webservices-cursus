@@ -441,8 +441,8 @@ services:
       # 👇 1
     environment:
       NODE_ENV: production
-      PORT: "3000"
-      CORS_ORIGINS: "[\"http://localhost:5173\", \"http://localhost\"]" # 👈 2
+      PORT: '3000'
+      CORS_ORIGINS: '["http://localhost:5173", "http://localhost"]' # 👈 2
       CORS_MAX_AGE: 10800
       DATABASE_URL: mysql://devusr:devpwd@host.docker.internal:3306/budget # 👈 3
       AUTH_JWT_SECRET: eensuperveiligsecretvoorindevelopment
@@ -499,7 +499,7 @@ FROM base AS dev-deps
 WORKDIR /app
 
 # 👇 2
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm*.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 # 👇 1
@@ -508,7 +508,7 @@ FROM base AS prod-deps
 WORKDIR /app
 
 # 👇 3
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm*.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
 # 👇 1
