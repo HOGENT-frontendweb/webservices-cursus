@@ -209,18 +209,7 @@ services:
 
 Wanneer we nu `docker compose up` uitvoeren, zullen we een Nginx-server draaien met onze front-end.
 We kunnen nu naar `http://localhost` surfen om te controleren of alles goed werkt.
-Hierbij valt op dat onze api-calls niet correct werken, hierbij zien we dat de baseUrl van onze api-client niet juist is.
-Deze hebben we tot nu toe ingesteld in de `.env` file, maar een productie build gebruikt dit niet.
-De productie build gaat kijken naar de environment-variabelen van ons systeem.
-
-##### Oplossing bug
-
-Om dit op te lossen moeten we de environment-variabelen van ons systeem instellen.
-Dit doen we op Linux/macOS met het commando `VITE_API_URL="http://localhost:3000/api"` of op Windows met `set VITE_API_URL="http://localhost:3000/api"`.
-Dit is ook hoe je bij een professionele applicatie deze environment variabelen zou instellen op het systeem waarop de applicatie wordt uitgevoerd.
-
-Vervolgens moeten we wel de bestaande container en image opkuisen, de stappen `pnpm build` en `docker compose up` opnieuw uitvoeren.
-Nu kunnen we naar `http://localhost` surfen en zien dat onze front-end correct werkt.
+Hierbij valt op dat onze api-calls niet correct werken. We krijgen een CORS probleem. Dit pakken we verder in de cursus aan.
 
 Wanneer we nu onze container nog kort even analyseren, dan valt op dat de docker image een grootte heeft van ongeveer 50 MB.
 Dit is belangrijk om zo meteen te onthouden bij poging 2.
@@ -235,7 +224,7 @@ Ons doel is om deze stappen te automatiseren.
 ##### Aanpassingen
 
 In plaats van nu zelf de code te builden, zullen we docker dit laten doen voor ons in de `Dockerfile`.
-Belangrijk hierbij is te onthouden dat we nog steeds de environment variables moeten instellen, maar dat dit niet meer op onze hostmachine gebeurt.
+Belangrijk hierbij is te onthouden dat we nog steeds de environment variables moeten instellen, maar dat dit niet meer op onze hostmachine gebeurt. We dienen deze nu door te geven aan de container.
 Hiervoor zullen we deze als volgt aanpassen:
 
 ```Dockerfile
@@ -276,7 +265,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 1. Net zoals voorheen willen we nog steeds dezelfde Nginx configuratie gebruiken en de default static files van Nginx verwijderen.
 2. Ditmaal verplaatsen we ons eerst naar een working directory, zodat we onze build kunnen zetten op een plaats die niet gebruikt wordt door de container.
-3. We willen de environment variables kunnen doorgeven aan de container. Deze moeten we vervolgens ook instellen in de environment van de container.
+3. We willen de environment variables kunnen doorgeven als argument aan de container. Deze moeten we vervolgens ook instellen in de environment van de container.  De .env file is immers niet aanwezig is in de container. Bij een professionele applicatie zullen deze environment variabelen ingesteld worden op het systeem waarop de applicatie wordt uitgevoerd.
 4. Omdat we pnpm willen gebruiken, gaan we al instellen in de container waar pnpm komt te staan.
 5. Voordat we onze productie build kunnen uitvoeren, moeten we eerst de afhankelijkheden installeren. Hiervoor hebben we nodejs, pnpm en vite nodig. Om pnpm te installeren hebben we echter ook npm nodig.
 6. Nu kunnen we eindelijk onze productie build uitvoeren. Hierbij hebben we eerst ook een install waarbij wat instellingen gebeuren om alles performant te laten werken (gebruikmakend van caching), en waarbij we instellen dat pnpm de versies uit onze lockfile moet gebruiken.
