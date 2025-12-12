@@ -643,6 +643,12 @@ Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan ka
 
 ![Read the logs](https://imgs.xkcd.com/comics/rtfm.png ':size=30%')
 
+### Seeding
+
+Voor de seeding van de VIC-database zullen we dit manueel moeten oplossen.
+Hiervoor kan je tijdelijk je `.env` aanpassen, zodat de `DATABASE_URL` verwijst naar je online database.
+Hierna kan je het `pnpm db:seed` commando uitvoeren om de seeding uit te voeren.
+
 ## Front-end online zetten
 
 ?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Web Services.
@@ -679,12 +685,6 @@ We moeten onze front-end nog vertellen waar onze back-end draait. Dit doen we do
 Klik vervolgens op "Deploy" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende front-end moeten hebben. De URL van jouw front-end vind je linksboven.
 
 ![Front-end is online](./images/10_16_frontend_online.png ':size=80%')
-
-### Seeding
-
-Voor de seeding van de VIC-database zullen we dit manueel moeten oplossen.
-Hiervoor kan je tijdelijk je `.env` aanpassen, zodat de `DATABASE_URL` verwijst naar je online database.
-Hierna kan je het `pnpm db:seed` commando uitvoeren om de seeding uit te voeren.
 
 ### CORS probleem
 
