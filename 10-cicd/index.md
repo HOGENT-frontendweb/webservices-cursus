@@ -518,7 +518,7 @@ WORKDIR /app
 # 👇 5
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/migrations ./dist/migrations
+COPY --from=builder /app/migrations ./migrations
 
 EXPOSE 3000
 
