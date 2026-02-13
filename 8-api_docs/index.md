@@ -243,16 +243,15 @@ export class PlaceController {
 
 ### GET /api/places
 
-Documenteer de route om alle places op te halen a.d.h.v. `@ApiResponse`:
+Documenteer de route om alle places op te halen a.d.h.v. `@ApiOkResponse`, `@ApiCreatedResponse`, `@ApiBadRequestResponse`, etc. Deze decorators zijn eigenlijk allemaal varianten van `@ApiResponse` met een specifieke status code. Je kan ook gewoon `@ApiResponse` gebruiken en de status code zelf specificeren:
 
 ```ts
 // src/place/place.controller.ts
-import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger'; // 👈 1
+import { ApiBearerAuth, ApiTags, ApiOkResponse } from '@nestjs/swagger'; // 👈 1
 
 // ...
 
-@ApiResponse({
-  status: 200, // 👈 2
+@ApiOkResponse({
   description: 'Get all places', // 👈 3
   type: PlaceListResponseDto, // 👈 4
 })
@@ -262,10 +261,28 @@ async getAllPlaces(): Promise<PlaceListResponseDto> {
 }
 ```
 
-1. Importeer `ApiResponse` van `@nestjs/swagger`.
-2. We specificeren de HTTP status code voor een succesvolle response.
-3. We geven een beschrijving van wat deze route doet.
-4. We specificeren het type van de response (het DTO).
+1. Importeer `ApiOkResponse` van `@nestjs/swagger`.
+2. We geven een beschrijving van wat deze route doet.
+3. We specificeren het type van de response (het DTO).
+
+Of
+
+```ts
+// src/place/place.controller.ts
+import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger';
+
+// ...
+
+@ApiResponse({
+  status: 200,
+  description: 'Get all places',
+  type: PlaceListResponseDto,
+})
+@Get()
+async getAllPlaces(): Promise<PlaceListResponseDto> {
+  return await this.placeService.getAll();
+}
+```
 
 ### POST /api/places
 
@@ -273,8 +290,7 @@ Documenteer de route om een nieuwe place aan te maken:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 201,
+@ApiCreatedResponse({
   description: 'Create place',
   type: PlaceDetailResponseDto,
 })
@@ -371,8 +387,7 @@ Documenteer de route om een specifieke place op te halen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Get place by ID',
   type: PlaceDetailResponseDto,
 })
@@ -392,8 +407,7 @@ Documenteer de route om een place te updaten:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Update place',
   type: PlaceDetailResponseDto,
 })
@@ -413,8 +427,7 @@ Documenteer de route om een place te verwijderen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 204,
+@ApiNoContentResponse({
   description: 'Delete place',
 })
 @Delete(':id')
@@ -431,17 +444,14 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Get place by ID',
   type: PlaceDetailResponseDto,
 })
-@ApiResponse({
-  status: 404,
+@ApiNotFoundResponse({
   description: 'Place not found',
 })
-@ApiResponse({
-  status: 401,
+@ApiUnauthorizedResponse({
   description: 'Unauthorized - you need to be signed in',
 })
 @Get(':id')
@@ -459,8 +469,7 @@ Omdat je moet aangemeld zijn voor alle routes in places, is het handig om ook de
 ```ts
 // src/place/place.controller.ts
 @ApiBearerAuth()
-@ApiResponse({
-  status: 401,
+@ApiUnauthorizedResponse({
   description: 'Unauthorized - you need to be signed in',
 })
 @Controller('places')
@@ -475,8 +484,7 @@ export class PlaceController {...}
 
   ```ts
     // src/place/place.controller.ts
-    @ApiResponse({
-      status: 400,
+    @ApiBadRequestResponse({
       description: 'Invalid input data',
   })
 
@@ -500,24 +508,26 @@ import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Sessions')
 @Controller('sessions')
 export class SessionController {
   constructor(private authService: AuthService) {}
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Login',
     type: LoginResponseDto,
   })
-  @ApiResponse({
-    status: 401,
+  @ApiUnauthorizedResponse({
     description: 'Invalid credentials',
   })
-  @ApiResponse({
-    status: 400,
+  @ApiBadRequestResponse({
     description: 'Invalid input data',
   })
   @Post()
