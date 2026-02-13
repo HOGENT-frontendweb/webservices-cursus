@@ -31,7 +31,6 @@ Je mag geen aannames maken over de invoer die je ontvangt. **Je moet er vanuit g
 Welke soorten invoer kan een HTTP request bevatten?
 
 - Antwoord +
-
   - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/places/1`.
   - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/places?name=loon`.
   - **Body:** als je een nieuwe plaats maakt, dan geef je de nodige gegevens mee in de body van het request.
@@ -253,10 +252,13 @@ app.useGlobalPipes(
 
     // 👇
     exceptionFactory: (errors: ValidationError[] = []) => {
-      const formattedErrors = errors.reduce((acc, err) => {
-        acc[err.property] = Object.values(err.constraints || {});
-        return acc;
-      }, {} as Record<string, string[]>);
+      const formattedErrors = errors.reduce(
+        (acc, err) => {
+          acc[err.property] = Object.values(err.constraints || {});
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
 
       return new BadRequestException({
         details: { body: formattedErrors },
@@ -441,6 +443,8 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
 
   ```ts
   // src/`config/configuration.ts
+  import { LogLevel } from '@nestjs/common';
+
   export default () => ({
     env: process.env.NODE_ENV,
     port: parseInt(process.env.PORT || '9000'),
@@ -471,8 +475,6 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
   export interface LogConfig {
     levels: LogLevel[];
   }
-
-  type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose' | 'fatal';
   ```
 
   ```ts
@@ -780,7 +782,6 @@ export class DrizzleQueryErrorFilter implements ExceptionFilter {
 1. Controleer of de `error.cause` (de onderliggende oorzaak van de fout) bestaat en of deze dan een `code` property heeft (d.i. MySQL error code zoals `ER_DUP_ENTRY`). Indien dit niet het geval gooi een generieke error.
 2. Destructuring : `code` is de MySQL error code, `message` is de gedetailleerde foutmelding van MySQL (bijv. "Duplicate entry 'HoGent' for key 'idx_place_name_unique'")
 3. Afhankelijk van de MySQL error code wordt een specifieke HTTP exception gegooid met een gebruiksvriendelijke boodschap.
-
    - `ER_DUP_ENTRY` (Duplicate entry error): wanneer je een duplicaat probeert aan te maken in de database, geef een HTTP 409 Conflict terug met een gebruiksvriendelijke boodschap.
    - `ER_NO_REFERENCED_ROW_2` (Foreign key constraint violation): wanneer je een record probeert aan te maken dat verwijst naar een niet-bestaand record, geef een HTTP 404 Not Found terug met een gebruiksvriendelijke boodschap.
 
@@ -853,7 +854,6 @@ export class LoggerMiddleware implements NestMiddleware {
 1. Een middleware is gewoon een klasse die de interface `NestMiddleware` implementeert. Deze klasse in injecteerbaar.
 2. Maak een instantie van de `Logger` aan. Geef de naam van de klasse door. Zo weet je in de logs altijd welk onderdeel van je applicatie het bericht heeft gelogd.
 3. `use` is de te implementeren methode. `Request`, `Response`, `NextFunction` zijn types uit Express omdat NestJS onder de motorkap Express gebruikt.
-
    - Request: alle info over de inkomende request (bv. URL, headers, body, method).
    - Response: het antwoord dat je terugstuurt naar de client.
    - NextFunction: een functie die je moet oproepen om verder te gaan naar de volgende middleware of controller.
