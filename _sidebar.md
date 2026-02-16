@@ -13,4 +13,5 @@
 - [8. Testing](/8-testing/index.md)
 - [9. CI/CD](/9-cicd/index.md)
 - [Appendices](/appendices/index.md)
-  - [TypeScript](/appendices/a1-typescript/index.md)
+  - [TypeScript](/appendices/1-typescript/index.md)
+  - [Git & GitHub](/appendices/2-github/index.md)
