@@ -35,7 +35,6 @@ We raden sterk aan om gebruik te maken van commando's in de terminal. GUI's of p
 ### Games
 
 - <https://learngitbranching.js.org/>
-- <https://profy.dev/project/github-minesweeper>
 - <https://gitimmersion.com/>
 - <https://ohmygit.org/>
 
