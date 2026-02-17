@@ -25,7 +25,7 @@ In een vorig hoofdstuk hebben we de basis gelegd voor het werken met Drizzle ORM
 
 Hier zie je nogmaals het ERD waar we in dit hoofdstuk naartoe werken:
 
-![ERD](../3-REST_api_bouwen/images/budget_erd.svg)
+![ERD](../2-REST_api_bouwen/images/budget_erd.svg)
 
 In het vorige hoofdstuk hebben we de places tabel reeds aangemaakt. We gaan nu de users, transactions en user_favorite_places tabellen toevoegen, inclusief de nodige relaties.
 
