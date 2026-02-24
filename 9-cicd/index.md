@@ -64,6 +64,8 @@ Er bestaan heel wat software- en cloudoplossingen om CI/CD toe te passen. Vaak z
 
 Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](https://render.com/). De Render omgeving is gratis (tot een bepaalde limiet uiteraard) en biedt meteen een oplossing voor zowel back-end als front-end. Het is ontzettend eenvoudig - een beetje klikken, invullen en klaar.
 
+> **Let op:** de opslag op Render is niet persistent. Als je een uploadfunctionaliteit hebt in jouw applicatie, dan zullen alle uploads verloren gaan wanneer jouw service op Render afgesloten wordt. Dit is het geval bij het gratis plan, omdat deze services afsluiten wanneer er geen activiteit is. Voor een professionele applicatie zou je dit moeten oplossen door gebruik te maken van een externe opslagservice, zoals AWS S3.
+
 ### MySQL databank in het VIC
 
 Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruiken MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
