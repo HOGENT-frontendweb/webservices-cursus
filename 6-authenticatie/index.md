@@ -254,7 +254,10 @@ We passen onze `PublicUserResponseDto` aan zodat die enkel de publieke velden va
 // src/user/user.dto.ts
 import { Expose } from 'class-transformer'; // 👈 1
 
-export class PublicUserResponseDto {
+export class PublicUserResponseDto implements Omit<
+  User,
+  'passwordHash' | 'roles'
+> {
   @Expose() // 👈 2
   id: number;
 
@@ -825,8 +828,12 @@ Registreren van een nieuwe gebruiker zal gebeuren via een `POST /api/users` endp
 ```ts
 // src/user/user.dto.ts
 import { IsString, IsEmail, MinLength, MaxLength } from 'class-validator';
+import { CreateUser } from '../types/user';
 
-export class RegisterUserRequestDto {
+export class RegisterUserRequestDto implements Pick<
+  CreateUser,
+  'name' | 'email'
+> {
   @IsString()
   @MinLength(2)
   @MaxLength(255)
@@ -848,7 +855,10 @@ Verwijder de bestaande `CreateUserRequestDto` uit de `user.dto.ts`, deze wordt n
 ```ts
 // src/user/user.dto.ts
 
-export class UpdateUserRequestDto {
+export class UpdateUserRequestDto implements Pick<
+  CreateUser,
+  'name' | 'email'
+>{
   @IsString()
   @MinLength(2)
   @MaxLength(255)

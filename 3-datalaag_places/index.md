@@ -379,7 +379,7 @@ export const places = mysqlTable(
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     name: varchar('name', { length: 255 }).notNull(),
-    rating: tinyint('rating', { unsigned: true }).notNull(),
+    rating: tinyint('rating', { unsigned: true }),
   },
   (table) => [uniqueIndex('idx_place_name_unique').on(table.name)],
 );

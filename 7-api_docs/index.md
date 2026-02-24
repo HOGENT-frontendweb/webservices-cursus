@@ -144,11 +144,11 @@ export class PlaceResponseDto {
   @ApiProperty({
     example: 4,
     description: 'Rating of the place (1 to 5)',
-    nullable: true, // 👈 5
+    optional: true, // 👈 5
     format: 'int32',
     type: 'integer',
   })
-  rating: number | null;
+  rating?: number;
 }
 ```
 
@@ -156,7 +156,7 @@ export class PlaceResponseDto {
 2. We voegen een `@ApiProperty` decorator toe aan elk veld. We geven een voorbeeld en beschrijving mee.
 3. We verwijderen de overerving van `CreatePlaceRequestDto` om duplicatie te vermijden en documenteren elk veld apart.
 4. We doen hetzelfde als het `id` voor de `name` property.
-5. Voor `rating` specificeren we dat het `nullable` is (kan `null` zijn), en dat het een integer is met format `int32` (32-bit). Swagger kan het type hier niet automatisch afleiden omdat dit een union type is (`number | null`).
+5. Voor `rating` specificeren we dat het `optional` is (kan `undefined` zijn), en dat het een integer is met format `int32` (32-bit).
 
 We passen ook de `PlaceListResponseDto` aan:
 
