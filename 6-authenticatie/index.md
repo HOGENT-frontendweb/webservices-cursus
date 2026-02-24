@@ -1449,12 +1449,19 @@ export class AuthDelayInterceptor implements NestInterceptor {
   constructor(private configService: ConfigService) {}
 
   intercept(_: ExecutionContext, next: CallHandler) {
-    const maxDelay = this.configService.get<number>('auth.maxDelay')!;
+    const maxDelay = this.configService.get<number>('auth.maxDelay', 5000);
     const randomDelay = Math.round(Math.random() * maxDelay);
-    return next.handle().pipe(delay(randomDelay));
+    return next.handle().pipe(
+      delay(randomDelay),
+      catchError((err) =>
+        timer(randomDelay).pipe(switchMap(() => throwError(() => err))),
+      ),
+    );
   }
 }
 ```
+
+In de interceptor genereren we een willekeurige vertraging tussen 0 en `auth.maxDelay` milliseconden. We gebruiken de `delay` operator van RxJS om deze vertraging toe te passen op het response. We zorgen er ook voor dat eventuele fouten dezelfde vertraging ondergaan, zodat een aanvaller niet kan achterhalen of een fout sneller optreedt dan een succesvolle authenticatie.
 
 Je kan deze interceptor toevoegen aan de login en register routes, bijvoorbeeld:
 
