@@ -145,6 +145,7 @@ Naast het dossier dien je ook een demo van jouw applicatie op te nemen en te del
 Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox](https://nodejstoolbox.com/). Een aantal veelgebruikte extra's zijn:
 
 - Upload functionaliteit
+  - Let op: zorg ervoor dat je de uploads niet lokaal opslaat, maar gebruik een externe opslagservice zoals AWS S3.
 - Passport.js voor authenticatie
 - Package voor invoervalidatie
 - Real time toepassing (sockets...)
