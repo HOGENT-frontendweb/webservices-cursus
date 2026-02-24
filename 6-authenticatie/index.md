@@ -1577,6 +1577,7 @@ Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 
 - Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
   - NestJS heeft uitstekende ondersteuning voor Passport.js, zie de [NestJS documentatie](https://docs.nestjs.com/security/authentication#implementing-passport-strategies).
+  - Let op: als je Passport gebruikt, dan laat je alle authenticatielogica over aan Passport en de beschikbare strategieën. Je zal dus minimaal een strategie moeten gebruiken voor username/password authenticatie en een strategie voor JWT authenticatie.
 - Gebruik van een externe authenticatieprovider (bv. [better-auth](https://www.better-auth.com/), [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Schrijf een custom validator om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
   - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.
