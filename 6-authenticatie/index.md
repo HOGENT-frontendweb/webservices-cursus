@@ -559,6 +559,10 @@ import { ServerConfig, AuthConfig } from '../config/configuration';
             audience: authConfig.jwt.audience,
             issuer: authConfig.jwt.issuer,
           },
+          verifyOptions: {
+            audience: authConfig.jwt.audience,
+            issuer: authConfig.jwt.issuer,
+          },
         };
       },
     }),
@@ -577,6 +581,7 @@ export class AuthModule {}
 5. We geven de nodige opties mee aan de `JwtModule`, opgehaald uit onze configuratie:
    - `secret`: het geheim waarmee de JWT ondertekend wordt
    - `signOptions`: opties voor het ondertekenen van de JWT, zoals vervaldatum, audience en issuer
+   - `verifyOptions`: opties voor het verifiëren van de JWT, zoals audience en issuer
 
 ### Wachtwoord hashen
 
