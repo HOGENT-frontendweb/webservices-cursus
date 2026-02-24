@@ -701,7 +701,7 @@ export class AuthService {
 }
 ```
 
-Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
+Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties (= audience en issuer) zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule`. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
 
 Als de JWT ongeldig is, wordt een `UnauthorizedException` gegooid.
 
