@@ -650,8 +650,8 @@ import { User } from '../types/user';
 export class AuthService {
   // ... andere functies
 
-  private signJwt(user: User): string {
-    return this.jwtService.sign({
+  private async signJwt(user: User): Promise<string> {
+    return this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
       roles: user.roles,
