@@ -144,8 +144,8 @@ Naast het dossier dien je ook een demo van jouw applicatie op te nemen en te del
 
 Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox](https://nodejstoolbox.com/). Een aantal veelgebruikte extra's zijn:
 
-- Upload functionaliteit
-  - Let op: zorg ervoor dat je de uploads niet lokaal opslaat, maar gebruik een externe opslagservice zoals AWS S3.
+- Upload functionaliteit, maar let op:
+  - In [hoofdstuk 9](../9-cicd/index.md) gebruiken we Render als hosting provider. In de gratis versie heb je geen lokale opslag. Zorg er daarom voor dat je de uploads niet lokaal opslaat, maar gebruik een externe opslagservice zoals [AWS S3](https://aws.amazon.com/s3/) of [Cloudinary](https://cloudinary.com/).
 - Passport.js voor authenticatie
 - Package voor invoervalidatie
 - Real time toepassing (sockets...)
