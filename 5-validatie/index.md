@@ -94,6 +94,24 @@ pnpm i class-validator class-transformer
 ```
 
 Je kan decorators van `class-validator` gebruiken om validatieregels toe te voegen aan een DTO.
+
+### Drizzle types
+
+Om te garanderen dat je DTO's altijd synchroon blijven met je databaseschema, laten we de DTO-klassen de Drizzle types implementeren. Maak een bestand `src/types/place.ts` aan:
+
+```ts
+// src/types/place.ts
+import { places } from '../drizzle/schema';
+
+export type Place = typeof places.$inferSelect; // 👈 1
+export type CreatePlace = typeof places.$inferInsert; // 👈 2
+```
+
+1. `$inferSelect` leidt het type af voor een geselecteerde rij uit de `places` tabel. Dit type bevat alle velden die Drizzle teruggeeft bij een `SELECT`-query, bv. `{ id: number; name: string; rating: number | null }`.
+2. `$inferInsert` leidt het type af voor het invoegen van een nieuwe rij. Kolommen met een default waarde (zoals `id` bij auto-increment) of nullable kolommen zijn optioneel, bv. `{ id?: number; name: string; rating?: number | null }`.
+
+Door je DTO te laten overerven van dit type, krijg je een **compilatiefout** zodra je schema en DTO niet meer overeenstemmen. TypeScript zal je waarschuwen als een veld ontbreekt of een verkeerd type heeft. Uiteraard krijg je geen fouten op de validatieregels, maar je weet wel zeker dat de basisstructuur van je DTO altijd synchroon blijft met je database.
+
 Pas de `CreatePlaceRequestDto` klasse aan:
 
 ```ts
@@ -105,18 +123,21 @@ import {
   Min,
   Max,
   IsInt,
+  IsOptional,
 } from 'class-validator';
+import { CreatePlace } from '../types/place'; // 👈
 
-export class CreatePlaceRequestDto {
+export class CreatePlaceRequestDto implements CreatePlace { // 👈
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   name: string;
 
+  @IsOptional() // 👈
   @IsInt()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating?: number; // 👈 optioneel, want nullable in het schema
 }
 ```
 
@@ -288,12 +309,23 @@ Voeg invoervalidatie toe
 
 - Oplossing +
 
+  Maak eerst een bestand `src/types/transaction.ts` aan:
+
+  ```ts
+  // src/types/transaction.ts
+  import { transactions } from '../drizzle/schema';
+
+  export type Transaction = typeof transactions.$inferSelect;
+  export type CreateTransaction = typeof transactions.$inferInsert;
+  ```
+
   ```ts
   //  src/transactions/transaction.dto.ts
   import { Min, IsDate, MaxDate, IsInt } from 'class-validator';
   import { Type } from 'class-transformer';
+  import { CreateTransaction } from '../types/transaction'; // 👈
   // ...
-  export class CreateTransactionRequestDto {
+  export class CreateTransactionRequestDto implements Omit<CreateTransaction, 'id'> { // 👈
     @IsInt()
     @Min(1)
     placeId: number;
@@ -312,10 +344,21 @@ Voeg invoervalidatie toe
   }
   ```
 
+  Maak ook een bestand `src/types/user.ts` aan:
+
+  ```ts
+  // src/types/user.ts
+  import { users } from '../drizzle/schema';
+
+  export type User = typeof users.$inferSelect;
+  export type CreateUser = typeof users.$inferInsert;
+  ```
+
   ```ts
   // src/users/user.dto.ts
   import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
-  export class CreateUserRequestDto {
+  import { CreateUser } from '../types/user'; // 👈
+  export class CreateUserRequestDto implements Pick<CreateUser, 'name'> { // 👈
     @IsString()
     @IsNotEmpty()
     @MaxLength(255)

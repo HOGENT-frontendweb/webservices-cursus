@@ -354,7 +354,7 @@ Maak in de `places` map een bestand `place.dto.ts`. Hierin plaatsen we alle DTO'
 // src/place/place.dto.ts
 export class CreatePlaceRequestDto {
   name: string;
-  rating: number;
+  rating?: number;
 }
 ```
 
