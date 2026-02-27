@@ -949,3 +949,8 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > pnpm db:seed
 > pnpm start:dev
 > ```
+
+## Extra's voor de examenopdracht
+
+- Rate limiting: <https://docs.nestjs.com/security/rate-limiting>
+  - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.
