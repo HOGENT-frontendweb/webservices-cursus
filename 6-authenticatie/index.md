@@ -109,11 +109,10 @@ export const users = mysqlTable(
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     name: varchar('name', { length: 255 }).notNull(),
-    email: varchar('email', { length: 255 }).notNull(), // 👈
+    email: varchar('email', { length: 255 }).notNull().unique('idx_user_email_unique'), // 👈
     passwordHash: varchar('password_hash', { length: 255 }).notNull(), // 👈
     roles: json('roles').notNull(), // 👈
   },
-  (table) => [uniqueIndex('idx_user_email_unique').on(table.email)], // 👈
 );
 ```
 

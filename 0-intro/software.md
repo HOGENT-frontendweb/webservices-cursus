@@ -3,6 +3,7 @@
 Voor dit OLOD gaan we ervan uit dat je onderstaande **software installeert en configureert vóór de eerste les**. Tijdens de les wordt geen tijd voorzien om dit te doen, dus zorg ervoor dat je dit op voorhand in orde brengt. Indien je problemen ondervindt, kan je deze melden via een issue op je eigen repository.
 
 - [Git](#git)
+- [GitHub Student Developer Pack](#github-student-developer-pack)
 - [Node.js](#nodejs)
 - [pnpm](#pnpm)
 - [MySQL](#mysql)
@@ -40,13 +41,21 @@ git config --global pull.rebase true
 
 git config --global push.default simple
 
+git config --global rebase.autoStash true
+
 git config --global user.name "Voornaam Achternaam"
-git config --global user.email "Jouw e-mailadres"
+git config --global user.email "Jouw HOGENT e-mailadres"
 ```
+
+Zorg ervoor dat jouw HOGENT e-mailadres ook toegevoegd is aan je GitHub-account, anders zal je problemen ondervinden bij het pushen naar GitHub. Je kan dit controleren via de volgende commando's:
 
 <!-- cspell: enable -->
 
 Volg vervolgens de [GitHub Guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) om een SSH-key toe te voegen aan je GitHub-account. Dit is onder andere nodig om te kunnen pushen naar je repository.
+
+## GitHub Student Developer Pack
+
+Indien je nog geen GitHub Student Pack hebt, kan je deze aanvragen via <https://education.github.com/pack>. Het is een gratis pakket met allerlei tools en services voor studenten. Doorheen de cursus gebruiken we af en toe Copilot, we gaan er vanuit dat je het GitHub Student Pack hebt aangevraagd en geactiveerd zodat je Copilot kan gebruiken.
 
 ## Node.js
 
