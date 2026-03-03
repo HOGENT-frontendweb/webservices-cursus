@@ -37,6 +37,41 @@ Vul het schema aan met de tabellen voor transactions, users en favoriete places:
 - Definieer voor de user tabel enkel de kolommen `id` en `name`.
 - Voor de tabel user_favorite_places definieer je een samengestelde primary key met behulp van de `primaryKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#composite-primary-key>
 
+Je zou hier opnieuw Copilot voor kunnen gebruiken. Controleer nadien of het resultaat voldoet aan de vereisten en corrigeer indien nodig. Let er ook op dat je de juiste types gebruikt voor de kolommen, en dat je de juiste opties meegeeft (zoals `notNull` of `unsigned`).
+
+- ERD-code (voor Copilot) +
+
+  ```text
+  [users]
+  *id
+  name
+  email
+  password_hash
+  roles
+
+  [transactions]
+  *id
+  amount
+  date
+  +user_id
+  +place_id
+
+  [places]
+  *id
+  name
+  rating
+
+  [user_favorite_places]
+  *+user_id
+  *+place_id
+
+  transactions*--1 places
+  transactions*--1 users
+  users 1--* user_favorite_places
+  places 1--* user_favorite_places
+
+  ```
+
 <br />
 
 - Oplossing +

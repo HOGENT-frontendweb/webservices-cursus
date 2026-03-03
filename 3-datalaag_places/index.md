@@ -590,27 +590,33 @@ Write to: `src/drizzle/schema.ts`
 
 ERD (BurntSushi syntax — https://github.com/BurntSushi/erd):
 
-[User]
+[users]
 *id
 name
 email
 password_hash
 roles
 
-[Place]
+[transactions]
+*id
+amount
+date
++user_id
++place_id
+
+[places]
 *id
 name
 rating
 
-[Transaction]
-*id
-amount
-date
-user_id
-place_id
+[user_favorite_places]
+*+user_id
+*+place_id
 
-Transaction *--1 Place
-Transaction *--1 User
+transactions*--1 places
+transactions*--1 users
+users 1--* user_favorite_places
+places 1--* user_favorite_places
 ```
 
 Vergelijk het resultaat van Copilot met onderstaand schema.
