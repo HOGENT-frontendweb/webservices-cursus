@@ -159,6 +159,217 @@ docker compose up -d
 
 ?> Voor de veiligheid kan je de eerste keer zonder de `-d` optie uitvoeren zodat je in de logs kan checken of de container goed opgestart wordt.
 
+## Configuratie
+
+Alvorens we aan de slag gaan met de integratie van MySQL en Drizzle in ons project, moeten we eerst een aantal zaken configureren. In een project wil je geen veranderlijke of gevoelige data hardcoderen. Typisch wil je verschillende instellingen (bv. op welke poort de server luister, databank connectiegegevens (locatie, poort...), logging niveau...) al naargelang je in een development, productie of test omgeving bent. Ook gevoelige data, zoals databasewachtwoorden en API keys, wil je niet op GitHub pushen. De configuratie doen we liefst op één plaats.
+
+In `src/main.ts` verwijzen we bijvoorbeeld naar poort 3000, dit zetten we best niet in code!
+
+Het `@nestjs/config` package in NestJS maakt het mogelijk om met configuratiebestanden te werken:
+
+- Het leest waarden uit `.env` bestanden (= [environment variables](https://en.wikipedia.org/wiki/Environment_variable)).
+- Die variabelen worden beschikbaar gemaakt in je hele applicatie.
+
+Lees de documentatie over [configuratie](https://docs.nestjs.com/techniques/configuration) t.e.m. "Use module globally".
+
+```bash
+pnpm add @nestjs/config
+```
+
+### .env
+
+Maak een `.env` bestand aan in de root met onderstaande code. Dit bestand bevat key-value paren voor elke environment variable
+
+```ini
+NODE_ENV=development
+PORT=3000
+```
+
+Dit `.env` bestand zal niet in GitHub komen door onze `.gitignore` (en dat is de bedoeling!). Dus het is ook de ideale plaats om 'geheimen' (API keys, JWT secrets...) in op te nemen, later meer hierover. Later maken we ook een `.env.test` aan voor de testomgeving.
+
+### ConfigModule
+
+De `ConfigModule` maakt de configuratie beschikbaar in onze applicatie. We importeren deze module in de `AppModule` en controleren het gedrag gebruik makend van de statische methode `forRoot()`. De `isGlobal` property maakt de configuratie globaal beschikbaar. Je hoeft deze module dus niet meer te importeren in elke andere module.
+
+Voeg onderstaand fragment toe aan de `imports` array in `AppModule`:
+
+```ts
+// src/app.module.ts
+ConfigModule.forRoot({
+  isGlobal: true,
+});
+```
+
+Importeer de `ConfigModule` vanuit `@nestjs/config`.
+
+### Custom configuration files
+
+Lees de documentatie over [custom configuration files](https://docs.nestjs.com/techniques/configuration#custom-configuration-files).
+
+Aan de hand van custom config files kunnen we de instellingen per domein groeperen. Maak een `src/config` map aan en een bestand `configuration.ts` met volgende inhoud:
+
+```ts
+// src/config/configuration.ts
+
+// 👇 1
+export default () => ({
+  env: process.env.NODE_ENV, // 👈 2
+  port: parseInt(process.env.PORT || '3000'), // 👈 3
+});
+
+// 👇 4
+export interface ServerConfig {
+  env: string;
+  port: number;
+}
+```
+
+1. Het `config` package verplicht om de configuratiebestanden te exporteren als een object in de default export.
+   - Het `default` keyword zorgt ervoor dat je het object kan importeren zonder accolades, bv. `import configuration from './config/configuration`.
+2. Je kan de environment variabelen expliciet opvragen, via het object `env` uit `node:process`. `node:process` is een ingebouwde module om informatie op te vragen over het proces, zoals de omgevingsvariabelen via `env`. Deze zijn ook beschikbaar via `process.env`.
+3. We zetten de poort om naar een getal (een environment variable is altijd een string). Als de `PORT` variabele niet gedefinieerd is, dan gebruiken we 3000 als default waarde.
+4. We definiëren ook een interface zodat we de correcte types krijgen als we de configuratie gebruiken.
+
+We laden deze configuratie via de `load` property van het `options` object die we doorgeven aan de methode `forRoot`:
+
+```ts
+// src/app.module.ts
+
+import configuration from './config/configuration';
+
+// In de imports:
+ConfigModule.forRoot({
+  load: [configuration], // 👈
+  isGlobal: true,
+});
+```
+
+Meer hoeven we niet te doen, we kunnen de config beginnen gebruiken. De `ConfigService` is een injectable service die NestJS voorziet zodra je de `ConfigModule` installeert. Dit laat je toe om environment variabelen op te vragen binnen je services, controllers of guards.
+
+Zie hieronder een voorbeeld van constructor injectie in een controller:
+
+```ts
+@Controller()
+export class SomeController {
+  constructor(private configService: ConfigService) {}
+}
+```
+
+We dienen de poort op te halen in `bootstrap` functie in `main.ts`. Dit is geen klasse dus constructor injectie is hier niet mogelijk.
+
+```ts
+// src/main.ts
+import { ConfigService } from '@nestjs/config'; // 👈 1
+import { ServerConfig } from './config/configuration'; // 👈 1
+// ...
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  const config = app.get(ConfigService<ServerConfig>); // 👈 2
+  const port = config.get<number>('port')!; // 👈 3
+
+  // ...
+
+  await app.listen(port); // 👈 4
+}
+```
+
+1. Importeer de `ConfigService` en de `ServerConfig` interface.
+2. Gebruik een service locator om een instantie van de `ConfigService` op te halen uit de DI Container. We geven het generieke type `ServerConfig` mee zodat we de correcte types krijgen bij het opvragen van de variabelen.
+3. Alle gedefinieerde configuratievariabelen kunnen opgevraagd worden met de `get` methode.
+   - Let op dat je het correcte type meegeeft tussen de `<>` haakjes. Dit zijn generieke types, je kan ze zien als een soort van argumenten die je meegeeft aan een functie. In dit geval geef je het type van de waarde die je verwacht terug te krijgen mee. TypeScript zorgt er vervolgens voor dat de returnwaarde van `config.get` van dat type is.
+
+In de Nest CLI kan je gebruik maken van `--env-file` optie om een .env bestand mee te geven. In de `package.json` zou je bij wijze van voorbeeld het volgende kunnen meegeven:
+
+```json
+{
+  "scripts": {
+    "start:dev": "nest start --watch --env-file .env.production"
+  }
+}
+```
+
+Standaard leest de `ConfigModule` het `.env` bestand in de root van je project. Wij hoeven de `--env-file` optie niet mee te geven.
+
+### API keys
+
+Sommige API's zijn door iedereen vrij te gebruiken, zoals de FBI most wanted (uit hoofdstuk 2), maar heel vaak is dat niet zo. Er zijn in essentie twee redenen om een API call af te schermen:
+
+- er zit gevoelige data achter die slechts één iemand of een beperkt aantal personen mag zien (neem bijvoorbeeld een Facebook feed)
+- de API aanbieden / beschikbaar stellen kost geld en de toegang moet dus gecontroleerd / gemeten worden
+
+Als data persoonlijk is wordt er meestal met een **login** systeem gewerkt (en tokens of cookies). Daarover in een later hoofdstuk (veel) meer. Maar als het gaat om te traceren hoe vaak een API gebruikt wordt is een login systeem niet echt een optie.
+
+Stel bijvoorbeeld dat jouw applicatie onderliggend Google Maps gebruikt. Dan is het niet echt realistisch dat iedereen die jouw applicatie gebruikt eerst met jouw credentials zou moeten inloggen of iets dergelijks. Voor zo'n use cases maakt men vaak gebruik van **API keys**.
+
+Er valt veel te zeggen over hoe API keys opgebouwd worden en werken, maar dat valt een beetje buiten de scope van deze cursus. Maar we willen toch een aantal best practices meegeven voor diegenen die een 3rd party API verwerken in hun opdracht.
+
+Simpel gezegd is een API key een soort random string die je identificeert en die niet kan geraden worden. Dus als iemand jouw API key heeft, kan hij zich als jou voordoen (en dus op jouw kosten een API gebruiken).
+
+Steek dus nooit een API key in de client. Maak daarentegen requests naar je eigen API, en doe de third party access vanaf je eigen server. Hardcode nooit een API key in je code. Sla deze op in een apart bestand dat niet in git opgenomen is, bv. het `.env` bestand. Gebruik access control als je API key dat toelaat (bij Google kan je bijvoorbeeld een key enkel laten werken vanaf bepaalde domeinen vanuit of vanuit bepaalde apps).
+
+[Hier kan je meer info vinden over de best practices voor het gebruik van Google API keys](https://cloud.google.com/docs/authentication/api-keys), maar hetzelfde geldt voor de keys van andere services.
+
+### Oefening - CORS via env
+
+Voeg nu ook een environment variabelen toe voor CORS (zie [hoofdstuk 2](../2-REST_api_bouwen/index.md#cors)):
+
+- Pas het .env bestand aan
+- Pas `configuration.ts` aan
+- Pas `main.ts` aan
+
+<br />
+
+- Oplossing +
+
+  Het `.env` bestand:
+
+  ```ini
+  NODE_ENV=development
+  PORT=3000
+  CORS_ORIGINS=["http://localhost:5173"]
+  CORS_MAX_AGE=10800
+  ```
+
+  Het `configuration.ts` bestand:
+
+  ```ts
+  export default () => ({
+    env: process.env.NODE_ENV,
+    port: parseInt(process.env.PORT || '3000'),
+    cors: {
+      origins: process.env.CORS_ORIGINS
+        ? (JSON.parse(process.env.CORS_ORIGINS) as string[])
+        : [],
+      maxAge: parseInt(process.env.CORS_MAX_AGE || String(3 * 60 * 60)),
+    },
+  });
+
+  export interface ServerConfig {
+    env: string;
+    port: number;
+    cors: CorsConfig;
+  }
+
+  export interface CorsConfig {
+    origins: string[];
+    maxAge: number;
+  }
+  ```
+
+  De code in `main.ts`:
+
+  ```typescript
+  import { ServerConfig, CorsConfig } from './config/configuration';
+  // ...
+  const cors = config.get<CorsConfig>('cors')!;
+  // ...
+  app.enableCors({
+    origin: cors.origins,
+    maxAge: cors.maxAge,
+  });
+  ```
+
 ## Installatie Drizzle
 
 Onze configuratie is gebaseerd op een aantal verschillende tutorials:
@@ -300,28 +511,27 @@ import { ConfigService } from '@nestjs/config';
 import { drizzle } from 'drizzle-orm/mysql2';
 import * as mysql from 'mysql2/promise';
 import { DatabaseConfig, ServerConfig } from '../config/configuration';
+import { Provider } from '@nestjs/common';
 
 // sleutel constante
 
-export const drizzleProvider = [
-  {
-    provide: DrizzleAsyncProvider, // 👈 1
-    inject: [ConfigService], // 👈 2
-    // 👇 3
-    useFactory: (configService: ConfigService<ServerConfig>) => {
-      // 👇 4
-      const databaseConfig = configService.get<DatabaseConfig>('database')!;
-      // 👇 5
-      return drizzle({
-        client: mysql.createPool({
-          uri: databaseConfig.url,
-          connectionLimit: 5,
-        }),
-        mode: 'default',
-      });
-    },
+export const drizzleProvider: Provider = {
+  provide: DrizzleAsyncProvider, // 👈 1
+  inject: [ConfigService], // 👈 2
+  // 👇 3
+  useFactory: (configService: ConfigService<ServerConfig>) => {
+    // 👇 4
+    const databaseConfig = configService.get<DatabaseConfig>('database')!;
+    // 👇 5
+    return drizzle({
+      client: mysql.createPool({
+        uri: databaseConfig.url,
+        connectionLimit: 5,
+      }),
+      mode: 'default',
+    });
   },
-];
+};
 ```
 
 1. We bieden de Drizzle connectie aan met de sleutel `DrizzleAsyncProvider`.
@@ -350,7 +560,7 @@ import { Module } from '@nestjs/common';
 import { DrizzleAsyncProvider, drizzleProvider } from './drizzle.provider';
 
 @Module({
-  providers: [...drizzleProvider], // 👈
+  providers: [drizzleProvider], // 👈
   exports: [DrizzleAsyncProvider], // 👈
 })
 export class DrizzleModule {}
@@ -678,9 +888,10 @@ Wij kozen voor de tweede optie. Bijgevolg zal je er steeds moeten aan denken om 
 
 ## Oefening - Je eigen project
 
-1. Voeg één tabel (zonder relaties) toe aan je eigen project.
-2. Maak een migratie aan en voer deze uit.
-3. Maak seeds aan voor de tabel die je in stap 1 hebt gedefinieerd.
+1. Voeg configuratie toe in je eigen project.
+2. Voeg één tabel (zonder relaties) toe aan je eigen project.
+3. Maak een migratie aan en voer deze uit.
+4. Maak seeds aan voor de tabel die je in stap 1 hebt gedefinieerd.
 
 ## Repository
 
