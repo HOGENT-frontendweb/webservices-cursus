@@ -41,9 +41,13 @@ git config --global pull.rebase true
 
 git config --global push.default simple
 
+git config --global rebase.autoStash true
+
 git config --global user.name "Voornaam Achternaam"
-git config --global user.email "Jouw e-mailadres"
+git config --global user.email "Jouw HOGENT e-mailadres"
 ```
+
+Zorg ervoor dat jouw HOGENT e-mailadres ook toegevoegd is aan je GitHub-account, anders zal je problemen ondervinden bij het pushen naar GitHub. Je kan dit controleren via de volgende commando's:
 
 <!-- cspell: enable -->
 
