@@ -191,19 +191,45 @@ Merk op dat we in de `userFavoritePlacesRelations` enkel de relatie naar `places
 
 Merk ook op dat de `relations` functie geïmporteerd wordt vanuit `drizzle-orm` en niet vanuit `drizzle-orm/mysql-core`. Hieraan zie je ook dat dit puur een Drizzle concept is en geen databank-concept.
 
-### Oefening - Migratie maken en uitvoeren
+### Migraties automatisch uitvoeren
 
-1. Maak een nieuwe migratie aan.
-2. Voer de migratie uit.
+Het is niet zo handig als we telkens voor de start van onze server manueel de migraties moeten uitvoeren. We kunnen dit automatiseren door de migraties automatisch te laten uitvoeren bij het starten van de server. Hiervoor passen we de `DrizzleModule` aan:
 
-- Oplossing +
+```ts
+// src/drizzle/drizzle.module.ts
+// ...
+import { Logger, OnModuleInit } from '@nestjs/common';
 
-  Voer volgende commando's uit:
+export class DrizzleModule implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(DrizzleModule.name); // 👈 2
 
-  ```bash
-  pnpm db:generate
-  pnpm db:migrate
-  ```
+  // constructor en onModuleDestroy blijven ongewijzigd
+
+  // 👇 1
+  async onModuleInit() {
+    this.logger.log('⏳ Running migrations...');
+    // 👇 3
+    await migrate(this.db, {
+      migrationsFolder: path.resolve('migrations'),
+    });
+    this.logger.log('✅ Migrations completed!');
+  }
+}
+```
+
+1. We zorgen dat de DrizzleModule de `OnModuleInit` interface implementeert. Zo kunnen we een `onModuleInit` methode implementeren, waarin we de migraties laten uitvoeren bij het initialiseren van de module die de database connectie verzorgd.
+2. We gebruiken de NestJS logger, zodat we bij de opstart wat logging kunnen uitvoeren. Zo kunnen we zien of de migratie succesvol is uitgevoerd.
+3. We gebruiken de `migrate` functie van de `drizzle-orm` library. Hieraan moeten we meegeven waar deze de migraties zal kunnen terugvinden.
+
+### Migratie maken en uitvoeren
+
+Maak vervolgens een nieuwe migratie aan om de nieuwe tabellen en relaties toe te voegen aan de databank:
+
+```bash
+pnpm db:generate
+```
+
+Herstart vervolgens de server. Je zou in de logs moeten zien dat de migraties automatisch uitgevoerd worden bij het starten van de server.
 
 ## Seeds aanvullen
 
