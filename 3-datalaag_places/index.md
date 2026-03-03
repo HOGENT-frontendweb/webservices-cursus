@@ -627,7 +627,6 @@ import {
   int,
   mysqlTable,
   varchar,
-  uniqueIndex,
   tinyint,
 } from 'drizzle-orm/mysql-core';
 
