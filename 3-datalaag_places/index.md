@@ -566,13 +566,54 @@ import { DrizzleAsyncProvider, drizzleProvider } from './drizzle.provider';
 export class DrizzleModule {}
 ```
 
-## Databankschema definiëren
+## Databankschema genereren
 
 Het ERD waar we uiteindelijk naartoe willen, ziet er zo uit (zie vorig hoofdstuk):
 
 ![ERD](../2-REST_api_bouwen/images/budget_erd.svg)
 
-In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
+In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`.
+
+Via het [GitHub Student Pack](https://education.github.com/pack) krijg je gratis toegang tot GitHub Copilot. Laten we Copilot eens aan het werk zetten om ons schema te schrijven. Gebruik de volgende prompt:
+
+```text
+Write a Drizzle ORM schema in TypeScript for the `places` table only.
+
+Rules:
+- MySQL database (`drizzle-orm/mysql-core`)
+- No relations
+- `name` must be unique, name the index `idx_place_name_unique`
+- `rating` is an unsigned tinyint
+- Output only the schema, nothing else
+
+Write to: `src/drizzle/schema.ts`
+
+ERD (BurntSushi syntax — https://github.com/BurntSushi/erd):
+
+[User]
+*id
+name
+email
+password_hash
+roles
+
+[Place]
+*id
+name
+rating
+
+[Transaction]
+*id
+amount
+date
+user_id
+place_id
+
+Transaction *--1 Place
+Transaction *--1 User
+```
+
+Vergelijk het resultaat van Copilot met onderstaand schema.
 
 ```ts
 // src/drizzle/schema.ts
@@ -588,14 +629,17 @@ export const places = mysqlTable(
   'places',
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
-    name: varchar('name', { length: 255 }).notNull(),
+    name: varchar('name', { length: 255 }).notNull().unique('idx_place_name_unique'),
     rating: tinyint('rating', { unsigned: true }),
   },
-  (table) => [uniqueIndex('idx_place_name_unique').on(table.name)],
 );
 ```
 
-Je merkt dat de syntax van Drizzle heel leesbaar is. Probeer zelf eens te achterhalen wat deze code precies doet.
+De kans is groot dat Copilot een verouderde syntax gebruikt voor het definiëren van indices, dit is een veel voorkomende fout. De syntax voor indices is namelijk recent aangepast in Drizzle, dus het kan zijn dat Copilot nog de oude syntax gebruikt. In dit geval krijg je een deprecated warning als je hovert over de `mysqlTable` functie.
+
+> 💡 Verwijder de zin "name the index `idx_place_name_unique`" uit de prompt, dan is de kans groter dat Copilot de nieuwe syntax gebruikt. Natuurlijk moet je dan zelf nog de naam van de index aanpassen. Het is dus sterk aan te raden om altijd de **uitvoer van LLM's te controleren**.
+
+Daarnaast merk je dat de syntax van Drizzle heel leesbaar is. Probeer zelf eens te achterhalen wat deze code precies doet.
 
 - Uitleg schema +
 
