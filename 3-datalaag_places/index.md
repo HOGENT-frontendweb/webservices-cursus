@@ -360,7 +360,7 @@ export class DrizzleModule {}
 
 Het ERD waar we uiteindelijk naartoe willen, ziet er zo uit (zie vorig hoofdstuk):
 
-![ERD](../3-REST_api_bouwen/images/budget_erd.svg)
+![ERD](../2-REST_api_bouwen/images/budget_erd.svg)
 
 In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`:
 
@@ -379,7 +379,7 @@ export const places = mysqlTable(
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     name: varchar('name', { length: 255 }).notNull(),
-    rating: tinyint('rating', { unsigned: true }).notNull(),
+    rating: tinyint('rating', { unsigned: true }),
   },
   (table) => [uniqueIndex('idx_place_name_unique').on(table.name)],
 );
@@ -388,7 +388,6 @@ export const places = mysqlTable(
 Je merkt dat de syntax van Drizzle heel leesbaar is. Probeer zelf eens te achterhalen wat deze code precies doet.
 
 - Uitleg schema +
-
   - De `mysqlTable` functie maakt een nieuwe tabel aan. De eerste parameter is de naam van de tabel, de tweede parameter is een object met alle kolommen en hun eigenschappen, en de derde parameter is een functie die indices kan definiëren.
   - Elke kolom wordt gedefinieerd met een functie die het type van de kolom bepaalt, in dit geval `int`, `varchar` en `tinyint`. De opties die je kan meegeven variëren per data type: <https://orm.drizzle.team/docs/column-types/mysql>.
   - Je kan ook indices definiëren, in dit geval een unieke index op de naam van de plaats. Deze index heeft de naam `idx_place_name_unique`. Deze index zorgt ervoor dat er geen twee plaatsen met dezelfde naam kunnen bestaan.
@@ -785,7 +784,7 @@ import { places } from '../drizzle/schema';
 
 export class PlaceService {
   // ...
-  async getById(id: number): Promise<PlaceDetailResponseDto> {
+  async getById(id: number): Promise<PlaceResponseDto> {
     // 👇 1
     const place = await this.db.query.places.findFirst({
       where: eq(places.id, id), // 👈 2

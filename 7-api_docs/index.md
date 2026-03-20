@@ -144,11 +144,11 @@ export class PlaceResponseDto {
   @ApiProperty({
     example: 4,
     description: 'Rating of the place (1 to 5)',
-    nullable: true, // 👈 5
+    optional: true, // 👈 5
     format: 'int32',
     type: 'integer',
   })
-  rating: number | null;
+  rating?: number;
 }
 ```
 
@@ -156,7 +156,7 @@ export class PlaceResponseDto {
 2. We voegen een `@ApiProperty` decorator toe aan elk veld. We geven een voorbeeld en beschrijving mee.
 3. We verwijderen de overerving van `CreatePlaceRequestDto` om duplicatie te vermijden en documenteren elk veld apart.
 4. We doen hetzelfde als het `id` voor de `name` property.
-5. Voor `rating` specificeren we dat het `nullable` is (kan `null` zijn), en dat het een integer is met format `int32` (32-bit). Swagger kan het type hier niet automatisch afleiden omdat dit een union type is (`number | null`).
+5. Voor `rating` specificeren we dat het `optional` is (kan `undefined` zijn), en dat het een integer is met format `int32` (32-bit).
 
 We passen ook de `PlaceListResponseDto` aan:
 
@@ -243,16 +243,15 @@ export class PlaceController {
 
 ### GET /api/places
 
-Documenteer de route om alle places op te halen a.d.h.v. `@ApiResponse`:
+Documenteer de route om alle places op te halen a.d.h.v. `@ApiOkResponse`, `@ApiCreatedResponse`, `@ApiBadRequestResponse`, etc. Deze decorators zijn eigenlijk allemaal varianten van `@ApiResponse` met een specifieke status code. Je kan ook gewoon `@ApiResponse` gebruiken en de status code zelf specificeren:
 
 ```ts
 // src/place/place.controller.ts
-import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger'; // 👈 1
+import { ApiBearerAuth, ApiTags, ApiOkResponse } from '@nestjs/swagger'; // 👈 1
 
 // ...
 
-@ApiResponse({
-  status: 200, // 👈 2
+@ApiOkResponse({
   description: 'Get all places', // 👈 3
   type: PlaceListResponseDto, // 👈 4
 })
@@ -262,10 +261,28 @@ async getAllPlaces(): Promise<PlaceListResponseDto> {
 }
 ```
 
-1. Importeer `ApiResponse` van `@nestjs/swagger`.
-2. We specificeren de HTTP status code voor een succesvolle response.
-3. We geven een beschrijving van wat deze route doet.
-4. We specificeren het type van de response (het DTO).
+1. Importeer `ApiOkResponse` van `@nestjs/swagger`.
+2. We geven een beschrijving van wat deze route doet.
+3. We specificeren het type van de response (het DTO).
+
+Of
+
+```ts
+// src/place/place.controller.ts
+import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger';
+
+// ...
+
+@ApiResponse({
+  status: 200,
+  description: 'Get all places',
+  type: PlaceListResponseDto,
+})
+@Get()
+async getAllPlaces(): Promise<PlaceListResponseDto> {
+  return await this.placeService.getAll();
+}
+```
 
 ### POST /api/places
 
@@ -273,97 +290,21 @@ Documenteer de route om een nieuwe place aan te maken:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 201,
+@ApiCreatedResponse({
   description: 'Create place',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Post()
 @Roles(Role.ADMIN)
 @HttpCode(HttpStatus.CREATED)
 async createPlace(
   @Body() createPlaceDto: CreatePlaceRequestDto,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.create(createPlaceDto);
 }
 ```
 
 NestJS herkent automatisch dat `createPlaceDto` een request body is en documenteert dit in Swagger, inclusief het schema dat we met `nestjs-swagger-dto` hebben gedefinieerd. Handig toch?
-
-### Oefening: Documenteer PlaceDetailResponseDto
-
-Momenteel worden enkel de properties van `PlaceResponseDto` gedocumenteerd in `PlaceDetailResponseDto`.Documenteer de andere properties in `PlaceDetailResponseDto` zodat de volledige response correct wordt weergegeven in Swagger UI.
-
-- Oplossing +
-
-  ```ts
-  // src/place/place.dto.ts
-  export class PlaceDetailResponseDto extends PlaceResponseDto {
-    @ApiProperty({ type: () => [TransactionResponseDto] })
-    transactions: TransactionResponseDto[];
-  }
-
-  // src/transaction/transaction.dto.ts
-  export class TransactionResponseDto {
-    @ApiProperty({ example: 1, description: 'ID of the transaction' })
-    id: number;
-
-    @ApiProperty({
-      description: 'Transaction amount',
-      minimum: 1,
-      type: 'number',
-    })
-    amount: number;
-
-    @ApiProperty({
-      description: 'Transaction date',
-      type: 'string',
-      format: 'date-time',
-    })
-    date: Date;
-
-    @ApiProperty({
-      description: 'User who made the transaction',
-      type: () => PublicUserResponseDto,
-    })
-    user: PublicUserResponseDto;
-
-    @ApiProperty({
-      description: 'Place where the transaction occurred',
-      type: () => PlaceResponseDto,
-    })
-    place: PlaceResponseDto;
-  }
-
-  // src/user/user.dto.ts
-  export class PublicUserResponseDto {
-    @ApiProperty({
-      description: 'User ID',
-      minimum: 1,
-      example: 1,
-    })
-    @Expose()
-    id: number;
-
-    @ApiProperty({
-      description: 'User name',
-      minLength: 2,
-      maxLength: 255,
-      example: 'John Doe',
-    })
-    @Expose()
-    name: string;
-
-    @ApiProperty({
-      description: 'User email address',
-      example: 'user@email.com',
-      type: 'string',
-      format: 'email',
-    })
-    @Expose()
-    email: string;
-  }
-  ```
 
 ### GET /api/places/:id
 
@@ -371,15 +312,14 @@ Documenteer de route om een specifieke place op te halen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Get place by ID',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.getById(id);
 }
 ```
@@ -392,17 +332,16 @@ Documenteer de route om een place te updaten:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Update place',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Put(':id')
 @Roles(Role.ADMIN)
 async updatePlace(
   @Param('id', ParseIntPipe) id: number,
   @Body() updatePlaceDto: UpdatePlaceRequestDto,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.updateById(id, updatePlaceDto);
 }
 ```
@@ -413,8 +352,7 @@ Documenteer de route om een place te verwijderen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 204,
+@ApiNoContentResponse({
   description: 'Delete place',
 })
 @Delete(':id')
@@ -431,23 +369,20 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Get place by ID',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
-@ApiResponse({
-  status: 404,
+@ApiNotFoundResponse({
   description: 'Place not found',
 })
-@ApiResponse({
-  status: 401,
+@ApiUnauthorizedResponse({
   description: 'Unauthorized - you need to be signed in',
 })
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return await this.placeService.getById(id);
 }
 ```
@@ -459,8 +394,7 @@ Omdat je moet aangemeld zijn voor alle routes in places, is het handig om ook de
 ```ts
 // src/place/place.controller.ts
 @ApiBearerAuth()
-@ApiResponse({
-  status: 401,
+@ApiUnauthorizedResponse({
   description: 'Unauthorized - you need to be signed in',
 })
 @Controller('places')
@@ -475,8 +409,7 @@ export class PlaceController {...}
 
   ```ts
     // src/place/place.controller.ts
-    @ApiResponse({
-      status: 400,
+    @ApiBadRequestResponse({
       description: 'Invalid input data',
   })
 
@@ -500,24 +433,26 @@ import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Sessions')
 @Controller('sessions')
 export class SessionController {
   constructor(private authService: AuthService) {}
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Login',
     type: LoginResponseDto,
   })
-  @ApiResponse({
-    status: 401,
+  @ApiUnauthorizedResponse({
     description: 'Invalid credentials',
   })
-  @ApiResponse({
-    status: 400,
+  @ApiBadRequestResponse({
     description: 'Invalid input data',
   })
   @Post()

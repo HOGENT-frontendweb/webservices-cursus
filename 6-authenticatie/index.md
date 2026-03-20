@@ -254,7 +254,10 @@ We passen onze `PublicUserResponseDto` aan zodat die enkel de publieke velden va
 // src/user/user.dto.ts
 import { Expose } from 'class-transformer'; // 👈 1
 
-export class PublicUserResponseDto {
+export class PublicUserResponseDto implements Omit<
+  User,
+  'passwordHash' | 'roles'
+> {
   @Expose() // 👈 2
   id: number;
 
@@ -559,6 +562,10 @@ import { ServerConfig, AuthConfig } from '../config/configuration';
             audience: authConfig.jwt.audience,
             issuer: authConfig.jwt.issuer,
           },
+          verifyOptions: {
+            audience: authConfig.jwt.audience,
+            issuer: authConfig.jwt.issuer,
+          },
         };
       },
     }),
@@ -577,6 +584,7 @@ export class AuthModule {}
 5. We geven de nodige opties mee aan de `JwtModule`, opgehaald uit onze configuratie:
    - `secret`: het geheim waarmee de JWT ondertekend wordt
    - `signOptions`: opties voor het ondertekenen van de JWT, zoals vervaldatum, audience en issuer
+   - `verifyOptions`: opties voor het verifiëren van de JWT, zoals audience en issuer
 
 ### Wachtwoord hashen
 
@@ -645,8 +653,8 @@ import { User } from '../types/user';
 export class AuthService {
   // ... andere functies
 
-  private signJwt(user: User): string {
-    return this.jwtService.sign({
+  private async signJwt(user: User): Promise<string> {
+    return this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
       roles: user.roles,
@@ -696,7 +704,7 @@ export class AuthService {
 }
 ```
 
-Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
+Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties (= audience en issuer) zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule`. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
 
 Als de JWT ongeldig is, wordt een `UnauthorizedException` gegooid.
 
@@ -820,8 +828,12 @@ Registreren van een nieuwe gebruiker zal gebeuren via een `POST /api/users` endp
 ```ts
 // src/user/user.dto.ts
 import { IsString, IsEmail, MinLength, MaxLength } from 'class-validator';
+import { CreateUser } from '../types/user';
 
-export class RegisterUserRequestDto {
+export class RegisterUserRequestDto implements Pick<
+  CreateUser,
+  'name' | 'email'
+> {
   @IsString()
   @MinLength(2)
   @MaxLength(255)
@@ -843,7 +855,10 @@ Verwijder de bestaande `CreateUserRequestDto` uit de `user.dto.ts`, deze wordt n
 ```ts
 // src/user/user.dto.ts
 
-export class UpdateUserRequestDto {
+export class UpdateUserRequestDto implements Pick<
+  CreateUser,
+  'name' | 'email'
+>{
   @IsString()
   @MinLength(2)
   @MaxLength(255)
@@ -1449,12 +1464,19 @@ export class AuthDelayInterceptor implements NestInterceptor {
   constructor(private configService: ConfigService) {}
 
   intercept(_: ExecutionContext, next: CallHandler) {
-    const maxDelay = this.configService.get<number>('auth.maxDelay')!;
+    const maxDelay = this.configService.get<number>('auth.maxDelay', 5000);
     const randomDelay = Math.round(Math.random() * maxDelay);
-    return next.handle().pipe(delay(randomDelay));
+    return next.handle().pipe(
+      delay(randomDelay),
+      catchError((err) =>
+        timer(randomDelay).pipe(switchMap(() => throwError(() => err))),
+      ),
+    );
   }
 }
 ```
+
+In de interceptor genereren we een willekeurige vertraging tussen 0 en `auth.maxDelay` milliseconden. We gebruiken de `delay` operator van RxJS om deze vertraging toe te passen op het response. We zorgen er ook voor dat eventuele fouten dezelfde vertraging ondergaan, zodat een aanvaller niet kan achterhalen of een fout sneller optreedt dan een succesvolle authenticatie.
 
 Je kan deze interceptor toevoegen aan de login en register routes, bijvoorbeeld:
 
@@ -1577,6 +1599,7 @@ Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 
 - Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
   - NestJS heeft uitstekende ondersteuning voor Passport.js, zie de [NestJS documentatie](https://docs.nestjs.com/security/authentication#implementing-passport-strategies).
+  - Let op: als je Passport gebruikt, dan laat je alle authenticatielogica over aan Passport en de beschikbare strategieën. Je zal dus minimaal een strategie moeten gebruiken voor username/password authenticatie en een strategie voor JWT authenticatie.
 - Gebruik van een externe authenticatieprovider (bv. [better-auth](https://www.better-auth.com/), [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Schrijf een custom validator om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
   - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.

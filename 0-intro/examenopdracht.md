@@ -10,7 +10,7 @@ Je bent volledig vrij om te kiezen welke API je ontwikkelt. Indien je twijfelt o
 
 Voor de examenopdracht mag je optioneel per 2 samenwerken. Zie [sectie 7](#7-groepswerk-optioneel) voor meer informatie.
 
-Alle code moet in een GitHub classroom repository terechtkomen (zie Chamilo voor een link naar de classroom). Enkel de `main` branch van deze repository zal geëvalueerd worden. Er wordt automatisch een template van de `README.md` aangemaakt als je de opdracht accepteert, vul deze correct in. Je gebruikt dezelfde repository voor zowel Web Services als Front-end Web Development.
+Alle code moet in een GitHub classroom repository terechtkomen (zie Chamilo voor een link naar de classroom). Enkel de `main` branch van deze repository zal geëvalueerd worden. Er wordt automatisch een template van de `README.md` aangemaakt als je de opdracht accepteert, vul deze correct in. Je gebruikt dezelfde repository voor zowel Web Services als Front-end Web Development. Check zeker onze [appendix over Git & GitHub](../appendices/2-github/index.md) als je hiermee nog niet vertrouwd bent.
 
 Het is belangrijk dat de applicatie significant verschilt van de voorbeeldapplicatie die tijdens de les gemaakt wordt.
 
@@ -144,13 +144,15 @@ Naast het dossier dien je ook een demo van jouw applicatie op te nemen en te del
 
 Je vindt misschien wel een interessante extra technologie in de [Node.js Toolbox](https://nodejstoolbox.com/). Een aantal veelgebruikte extra's zijn:
 
-- Upload functionaliteit
+- Upload functionaliteit, maar let op:
+  - In [hoofdstuk 9](../9-cicd/index.md) gebruiken we Render als hosting provider. In de gratis versie heb je geen lokale opslag. Zorg er daarom voor dat je de uploads niet lokaal opslaat, maar gebruik een externe opslagservice zoals [AWS S3](https://aws.amazon.com/s3/) of [Cloudinary](https://cloudinary.com/).
 - Passport.js voor authenticatie
 - Package voor invoervalidatie
 - Real time toepassing (sockets...)
 - Ander ORM voor de databank
-- Ander type databank (document based, column oriented...)
-  - Let op: niet elk project is hiervoor geschikt!
+- Ander type databank (document based, column oriented...), maar let op:
+  - wisselen van MySQL naar bv. PostgreSQL is geen extra. Dit blijft nog steeds hetzelfde type databank.
+  - niet elk project is hiervoor geschikt!
 - ... (eigen inbreng, verras ons)
 
 Bij het toevoegen van een extra technologie is het belangrijk dat deze ook echt gebruikt wordt in de applicatie. Een package toevoegen die je niet gebruikt, is ook niet-ontvankelijk. Houd ook rekening met de best practices die we in de les gezien hebben bij het implementeren van de extra technologie.

@@ -31,7 +31,6 @@ Je mag geen aannames maken over de invoer die je ontvangt. **Je moet er vanuit g
 Welke soorten invoer kan een HTTP request bevatten?
 
 - Antwoord +
-
   - **URL parameters:** je kan bijvoorbeeld het id van een plaats meegeven in de URL, bv. `/api/places/1`.
   - **Query parameters:** je kan bijvoorbeeld een zoekopdracht meegeven in de URL, bv. `/api/places?name=loon`.
   - **Body:** als je een nieuwe plaats maakt, dan geef je de nodige gegevens mee in de body van het request.
@@ -95,6 +94,24 @@ pnpm i class-validator class-transformer
 ```
 
 Je kan decorators van `class-validator` gebruiken om validatieregels toe te voegen aan een DTO.
+
+### Drizzle types
+
+Om te garanderen dat je DTO's altijd synchroon blijven met je databaseschema, laten we de DTO-klassen de Drizzle types implementeren. Maak een bestand `src/types/place.ts` aan:
+
+```ts
+// src/types/place.ts
+import { places } from '../drizzle/schema';
+
+export type Place = typeof places.$inferSelect; // 👈 1
+export type CreatePlace = typeof places.$inferInsert; // 👈 2
+```
+
+1. `$inferSelect` leidt het type af voor een geselecteerde rij uit de `places` tabel. Dit type bevat alle velden die Drizzle teruggeeft bij een `SELECT`-query, bv. `{ id: number; name: string; rating: number | null }`.
+2. `$inferInsert` leidt het type af voor het invoegen van een nieuwe rij. Kolommen met een default waarde (zoals `id` bij auto-increment) of nullable kolommen zijn optioneel, bv. `{ id?: number; name: string; rating?: number | null }`.
+
+Door je DTO te laten overerven van dit type, krijg je een **compilatiefout** zodra je schema en DTO niet meer overeenstemmen. TypeScript zal je waarschuwen als een veld ontbreekt of een verkeerd type heeft. Uiteraard krijg je geen fouten op de validatieregels, maar je weet wel zeker dat de basisstructuur van je DTO altijd synchroon blijft met je database.
+
 Pas de `CreatePlaceRequestDto` klasse aan:
 
 ```ts
@@ -106,18 +123,22 @@ import {
   Min,
   Max,
   IsInt,
+  IsOptional,
 } from 'class-validator';
+import { CreatePlace } from '../types/place'; // 👈
 
-export class CreatePlaceRequestDto {
+export class CreatePlaceRequestDto implements CreatePlace {
+  // 👈
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
   name: string;
 
+  @IsOptional() // 👈
   @IsInt()
   @Min(1)
   @Max(5)
-  rating: number;
+  rating?: number; // 👈 optioneel, want nullable in het schema
 }
 ```
 
@@ -253,10 +274,13 @@ app.useGlobalPipes(
 
     // 👇
     exceptionFactory: (errors: ValidationError[] = []) => {
-      const formattedErrors = errors.reduce((acc, err) => {
-        acc[err.property] = Object.values(err.constraints || {});
-        return acc;
-      }, {} as Record<string, string[]>);
+      const formattedErrors = errors.reduce(
+        (acc, err) => {
+          acc[err.property] = Object.values(err.constraints || {});
+          return acc;
+        },
+        {} as Record<string, string[]>,
+      );
 
       return new BadRequestException({
         details: { body: formattedErrors },
@@ -280,18 +304,33 @@ Samenvattend gebeuren volgende validatiestappen alvorens de invoer bij de juiste
 Voeg invoervalidatie toe
 
 - voor de endpoints `/api/transactions` en `/api/users`
-- voor de pagination, zie `PaginationQuery`. De parameters `page` en `limit` zijn optioneel.
+- voor de paginatie, maak een dto `PaginationQuery` aan in `src/common/common.dto`. De parameters `page` en `pageSize` zijn optioneel en zijn van type number. Vergeet niet om de nodige validatie decorators toe te voegen aan de `PaginationQuery` klasse. Pas dan ook de `getAllTransactions` methode aan zodat deze de `PaginationQuery` accepteert. Pas ook de service aan zodat ook hier gebruik gemaakt wordt van de `PaginationQuery` in plaats van losse parameters. Pas ook het endpoint 'GET /api/places/:id/transactions' aan zodat deze ook met de `PaginationQuery` werkt
 
 <br />
 
 - Oplossing +
 
+  Maak eerst een bestand `src/types/transaction.ts` aan:
+
+  ```ts
+  // src/types/transaction.ts
+  import { transactions } from '../drizzle/schema';
+
+  export type Transaction = typeof transactions.$inferSelect;
+  export type CreateTransaction = typeof transactions.$inferInsert;
+  ```
+
   ```ts
   //  src/transactions/transaction.dto.ts
   import { Min, IsDate, MaxDate, IsInt } from 'class-validator';
   import { Type } from 'class-transformer';
+  import { CreateTransaction } from '../types/transaction'; // 👈
   // ...
-  export class CreateTransactionRequestDto {
+  export class CreateTransactionRequestDto implements Omit<
+    CreateTransaction,
+    'id'
+  > {
+    // 👈
     @IsInt()
     @Min(1)
     placeId: number;
@@ -310,10 +349,22 @@ Voeg invoervalidatie toe
   }
   ```
 
+  Maak ook een bestand `src/types/user.ts` aan:
+
+  ```ts
+  // src/types/user.ts
+  import { users } from '../drizzle/schema';
+
+  export type User = typeof users.$inferSelect;
+  export type CreateUser = typeof users.$inferInsert;
+  ```
+
   ```ts
   // src/users/user.dto.ts
   import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
-  export class CreateUserRequestDto {
+  import { CreateUser } from '../types/user'; // 👈
+  export class CreateUserRequestDto implements Pick<CreateUser, 'name'> {
+    // 👈
     @IsString()
     @IsNotEmpty()
     @MaxLength(255)
@@ -337,7 +388,7 @@ Voeg invoervalidatie toe
     @Type(() => Number)
     @IsInt()
     @Min(1)
-    limit?: number = 10;
+    pageSize?: number = 10;
   }
   ```
 
@@ -441,6 +492,8 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
 
   ```ts
   // src/`config/configuration.ts
+  import { LogLevel } from '@nestjs/common';
+
   export default () => ({
     env: process.env.NODE_ENV,
     port: parseInt(process.env.PORT || '9000'),
@@ -471,8 +524,6 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
   export interface LogConfig {
     levels: LogLevel[];
   }
-
-  type LogLevel = 'log' | 'error' | 'warn' | 'debug' | 'verbose' | 'fatal';
   ```
 
   ```ts
@@ -513,14 +564,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
  async getById(id: number): Promise<PlaceResponseDto> {
     const place = await this.db.query.places.findFirst({
       where: eq(places.id, id),
-      with: {
-        transactions: {
-          with: {
-            user: true,
-            place: true,
-          },
-        },
-      },
     });
 
     if (!place) {
@@ -780,7 +823,6 @@ export class DrizzleQueryErrorFilter implements ExceptionFilter {
 1. Controleer of de `error.cause` (de onderliggende oorzaak van de fout) bestaat en of deze dan een `code` property heeft (d.i. MySQL error code zoals `ER_DUP_ENTRY`). Indien dit niet het geval gooi een generieke error.
 2. Destructuring : `code` is de MySQL error code, `message` is de gedetailleerde foutmelding van MySQL (bijv. "Duplicate entry 'HoGent' for key 'idx_place_name_unique'")
 3. Afhankelijk van de MySQL error code wordt een specifieke HTTP exception gegooid met een gebruiksvriendelijke boodschap.
-
    - `ER_DUP_ENTRY` (Duplicate entry error): wanneer je een duplicaat probeert aan te maken in de database, geef een HTTP 409 Conflict terug met een gebruiksvriendelijke boodschap.
    - `ER_NO_REFERENCED_ROW_2` (Foreign key constraint violation): wanneer je een record probeert aan te maken dat verwijst naar een niet-bestaand record, geef een HTTP 404 Not Found terug met een gebruiksvriendelijke boodschap.
 
@@ -853,7 +895,6 @@ export class LoggerMiddleware implements NestMiddleware {
 1. Een middleware is gewoon een klasse die de interface `NestMiddleware` implementeert. Deze klasse in injecteerbaar.
 2. Maak een instantie van de `Logger` aan. Geef de naam van de klasse door. Zo weet je in de logs altijd welk onderdeel van je applicatie het bericht heeft gelogd.
 3. `use` is de te implementeren methode. `Request`, `Response`, `NextFunction` zijn types uit Express omdat NestJS onder de motorkap Express gebruikt.
-
    - Request: alle info over de inkomende request (bv. URL, headers, body, method).
    - Response: het antwoord dat je terugstuurt naar de client.
    - NextFunction: een functie die je moet oproepen om verder te gaan naar de volgende middleware of controller.
@@ -906,3 +947,8 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > pnpm db:seed
 > pnpm start:dev
 > ```
+
+## Extra's voor de examenopdracht
+
+- Rate limiting: <https://docs.nestjs.com/security/rate-limiting>
+  - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.
