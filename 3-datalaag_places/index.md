@@ -388,7 +388,6 @@ export const places = mysqlTable(
 Je merkt dat de syntax van Drizzle heel leesbaar is. Probeer zelf eens te achterhalen wat deze code precies doet.
 
 - Uitleg schema +
-
   - De `mysqlTable` functie maakt een nieuwe tabel aan. De eerste parameter is de naam van de tabel, de tweede parameter is een object met alle kolommen en hun eigenschappen, en de derde parameter is een functie die indices kan definiëren.
   - Elke kolom wordt gedefinieerd met een functie die het type van de kolom bepaalt, in dit geval `int`, `varchar` en `tinyint`. De opties die je kan meegeven variëren per data type: <https://orm.drizzle.team/docs/column-types/mysql>.
   - Je kan ook indices definiëren, in dit geval een unieke index op de naam van de plaats. Deze index heeft de naam `idx_place_name_unique`. Deze index zorgt ervoor dat er geen twee plaatsen met dezelfde naam kunnen bestaan.
@@ -785,7 +784,7 @@ import { places } from '../drizzle/schema';
 
 export class PlaceService {
   // ...
-  async getById(id: number): Promise<PlaceDetailResponseDto> {
+  async getById(id: number): Promise<PlaceResponseDto> {
     // 👇 1
     const place = await this.db.query.places.findFirst({
       where: eq(places.id, id), // 👈 2

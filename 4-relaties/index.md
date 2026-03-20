@@ -376,82 +376,6 @@ Voer de seeding uit:
 pnpm db:seed
 ```
 
-## PlaceService - getById
-
-We gaan nu de services aanpassen om de relaties te gebruiken. We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
-
-Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/rqb#include-relations>.
-
-```ts
-export class PlaceService {
-  // ...
-  async getById(id: number): Promise<PlaceDetailResponseDto> {
-    const place = await this.db.query.places.findFirst({
-      where: eq(places.id, id),
-      // 👇
-      with: {
-        transactions: {
-          with: {
-            user: true,
-            place: true,
-          },
-        },
-      },
-    });
-
-    // ...
-  }
-  // ...
-}
-```
-
-Met de `with` optie halen we gerelateerde gegevens op in de ORM-like manier. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
-
-Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover de documentatie t.e.m. "Full Join": <https://orm.drizzle.team/docs/joins>.
-
-### Oefening implementeer PlaceDetailResponseDto
-
-- Oplossing +
-
-  Definieer eerst een `PublicUserResponseDto` in `src/user/user.dto.ts`:
-
-  ```ts
-  // src/user/user.dto.ts
-  export class PublicUserResponseDto {
-    id: number;
-    name: string;
-  }
-  ```
-
-  Definieer ook een `TransactionResponseDto` in `src/transaction/transaction.dto.ts`:
-
-  ```ts
-  // src/transactions/transaction.dto.ts
-  import { PlaceResponseDto } from '../place/place.dto';
-  import { PublicUserResponseDto } from '../user/user.dto';
-
-  export class TransactionResponseDto {
-    id: number;
-    amount: number;
-    date: Date;
-    user: PublicUserResponseDto;
-    place: PlaceResponseDto;
-  }
-  ```
-
-  Definieer tot slot een `PlaceDetailResponseDto` in `src/place/place.dto.ts`:
-
-  ```ts
-  // src/place/place.dto.ts
-  import { TransactionResponseDto } from '../transactions/transaction.dto';
-
-  export class PlaceDetailResponseDto extends PlaceResponseDto {
-    transactions: TransactionResponseDto[];
-  }
-  ```
-
-  Pas het returnType aan in de service en controller voor het ophalen van 1 plaats, de creatie en update van een plaats
-
 ## Creatie TransactionService
 
 De volgende service die we gaan maken is de `TransactionService`. Deze service bevat de basis CRUD-methoden voor transacties. Alvorens we deze implementeren, maken we als oefening eerst de controller en de bijhorende DTO's aan.
@@ -486,7 +410,17 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
   Controleer of deze controller in de `TransactionModule` gedefinieerd werd (in de `controllers` array).
 
-  Maak vervolgens het DTO bestand aan:
+  Maak vervolgens het DTO bestand aan. Als we een transactie ophalen, halen we ook de bijhorende place en user op. Definieer eerst een `PublicUserResponseDto` in `src/user/user.dto.ts`:
+
+  ```ts
+  // src/user/user.dto.ts
+  export class PublicUserResponseDto {
+    id: number;
+    name: string;
+  }
+  ```
+
+  Definieer dan de nodige transaction dto's in `src/transaction/transaction.dto.ts`:
 
   ```ts
   // src/transactions/transaction.dto.ts
@@ -514,8 +448,6 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
   export class UpdateTransactionRequestDto extends CreateTransactionRequestDto {}
   ```
-
-  Importeer de `PublicUserResponseDto` in `src/transactions/transaction.dto.ts`.
 
   Definieer tot slot de routes in de controller:
 
@@ -635,6 +567,12 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
 
 In de vorige oefening hebben we de `TransactionService` aangemaakt met de nodige methoden. We gaan nu een aantal van deze methoden implementeren om te tonen hoe we de relaties in Drizzle kunnen gebruiken.
 
+Als we een transactie ophalen willen we ook de bijhorende user en place ophalen.
+
+Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/rqb#include-relations>.
+
+Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover de documentatie t.e.m. "Full Join": <https://orm.drizzle.team/docs/joins>.
+
 ### getAll
 
 Als eerst voorbeeld vullen we de methode `getAll` in de `TransactionService` aan:
@@ -646,6 +584,7 @@ import {
   type DatabaseProvider,
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
+import { desc } from 'drizzle-orm';
 
 export class TransactionService {
   // 👇 1
@@ -667,6 +606,8 @@ export class TransactionService {
         place: true,
         user: true,
       },
+      // 👇 4
+      orderBy: desc(transactions.date),
     });
 
     return { items };
@@ -678,9 +619,26 @@ export class TransactionService {
 
 1. We injecteren onze Drizzle provider in de constructor.
 2. We selecteren enkel de kolommen `id`, `amount` en `date`.
-   - De kolommen `placeId` en `userId` wensen we niet in ons response. De eindgebruiker hoeft niet te weten hoe de transactions gekoppeld zijn aan de place en user.
-3. We selecteren de place en de user.
+   - De kolommen `placeId` en `userId` wensen we niet in ons response. De eindgebruiker hoeft niet te weten hoe de transactions gekoppeld zijn aan de place en user. Dit is een voorbeeld van informatie verbergen, een belangrijke best practice in API design.
+3. We selecteren de place en de user. Met de `with` optie halen we gerelateerde gegevens op in de ORM-like manier. In dit geval laden we bijbehorende user- en place-informatie.
    - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
+4. Vaak is het retourneren van gesorteerde data belangrijk in een API! In dit geval willen we de transacties gesorteerd op datum teruggeven, zodat de frontend ze in de juiste volgorde kan tonen, de meest recentste eerst.
+
+Merk op dat we `with` kunnen nesten om ook relaties van relaties op te halen. Stel dat we bij wijze van voorbeeld bij het ophalen van een place ook alle transacties en van de transacties de user willen ophalen. Bovendien worden de transacties gesorteerd op datum. Dit zou er als volgt uitzien:
+
+```ts
+const place = await this.db.query.places.findFirst({
+  where: eq(places.id, id),
+  with: {
+    transactions: {
+      with: {
+        user: true,
+      },
+      orderBy: desc(transactions.date),
+    },
+  },
+});
+```
 
 Importeer de `DrizzleModule` in de `TransactionModule` om de Drizzle provider te kunnen gebruiken:
 
@@ -754,17 +712,23 @@ Roep deze methode in de `TransactionController` aan.
   }
   ```
 
-  Roep deze methode in de `TransactionController` aan:
+Merk op dat we vaak meer data nodig hebben in de `getById` methode dan in de `getAll` methode. De `getAll` methode geeft enkel een overzicht met algemene informatie om de response licht te houden, terwijl `getById` ook details en meer gerelateerde data ophaalt.
 
-  ```ts
-  // src/transactions/transaction.controller.ts
-  @Get(':id')
-  async getTransactionById(
-    @Param('id') id: string,
-  ): Promise<TransactionResponseDto> {
-    return this.transactionService.getById(Number(id)); // 👈
-  }
-  ```
+In het geval van de transacties is dit anders: we willen ook in de lijst al de naam van de place en de gebruiker tonen, waardoor we in beide methodes vergelijkbare data ophalen. Dit is een uitzondering op de algemene regel.
+
+Ga na in jouw eigen project of je de gegevens die je ophaalt bij `getAll` kan beperken en meer details ophaalt bij de `getById` methode.
+
+Roep deze methode in de `TransactionController` aan:
+
+```ts
+// src/transactions/transaction.controller.ts
+@Get(':id')
+async getTransactionById(
+  @Param('id') id: string,
+): Promise<TransactionResponseDto> {
+  return this.transactionService.getById(Number(id)); // 👈
+}
+```
 
 ### create
 
@@ -948,6 +912,99 @@ export class UserController {
 
 Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken
 
+## Paginatie
+
+Paginatie is een essentiële best practice voor API's om verschillende redenen:
+
+- Database load: Zonder paginatie haalt SELECT \* alle records op, wat zwaar wordt bij duizenden records
+- Netwerkbandbreedte: Grote JSON responses vertragen de data transfer
+- Memory gebruik: Server moet alle data in geheugen laden en serialiseren
+- Response tijd: Gebruiker wacht (te) lang op complete response
+
+We voegen de route `GET /api/transactions?page=1&pageSize=10` toe. Deze query parameters geven aan welke pagina (`page`) we willen ophalen en hoeveel items er per pagina (`pageSize`) moeten worden weergegeven. We passen de `getAllTransactions` route aan om deze query parameters te accepteren. Query parameters komen in de controller binnen als strings. We zetten deze om naar nummers en geven ze door aan de service. We voorzien ook default waarden voor deze parameters, zodat als ze niet meegegeven worden, we toch een geldige paginatie hebben.
+
+```ts
+import { Query} from '@nestjs/common';
+//...
+  @Get()
+  async getAllTransactions(
+    @Query('pageSize') pageSize: string = '10',
+    @Query('page') page: string = '1',
+  ): Promise<TransactionListResponseDto> {
+    return await this.transactionService.getAll(Number(page), Number(pageSize));
+  }
+  //...
+```
+
+Ook het `TransactionListResponseDto` passen we aan om de nodige paginatie informatie terug te geven:
+
+```ts
+//src/transaction/transaction.dto.ts
+export class TransactionListResponseDto {
+  items: TransactionResponseDto[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+```
+
+`total` geeft het totaal aantal transacties weer, ongeacht de paginatie. Deze informatie is belangrijk voor de frontend om te kunnen bepalen hoeveel pagina's er zijn.
+
+Nu dienen we de `getAll` methode in de `TransactionService` aan te passen om deze paginatie parameters te gebruiken en het gevraagde resultaat terug te geven:
+
+```ts
+import { PaginationQuery } from '../common/common.dto';
+//...
+ // 👇 1
+ async getAll(
+    page: number = 1,
+    pageSize: number = 10,
+  ): Promise<TransactionListResponseDto> {
+    // 👇 2
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(transactions);
+
+    const [countResult] = await this.db
+      .select({ count: count() })
+      .from(transactions);
+
+    const items = await this.db.query.transactions.findMany({
+      columns: {
+        id: true,
+        amount: true,
+        date: true,
+      },
+      with: {
+        place: true,
+        user: true,
+      },
+      orderBy: [desc(transactions.date), asc(transactions.id)],
+      limit: pageSize,
+      offset: (page - 1) * pageSize,
+    });// 👈 3
+
+    return { items, page, pageSize, total: countResult.count };
+  }
+```
+
+1. We accepteren de `pageSize` en `page` parameters in de `getAll` methode.
+2. We voeren eerst een aparte query uit om het totaal aantal transacties te tellen.
+3. We passen de `limit` en `offset` toe in de `findMany` query om enkel de transacties voor de gevraagde pagina op te halen. Bovendien sorteren we eerst op datum en dan op id. We moeten op een unieke kolom sorteren om consistente resultaten te garanderen bij paginatie: geen duplicaten of missende items bij paginatie naar een volgende/vorige pagina.
+
+Merk op: Query parameters worden ook gebruikt om te sorteren of te filteren. Bijvoorbeeld, om transacties te sorteren op datum of bedrag, kunnen we volgende query parameters toevoegen: `sortBy` en `sortOrder`. Een GET request zou er dan als volgt uitzien: `GET /transactions?page=1&pageSize=10&sortBy=date&sortOrder=desc`.
+
+Meer info over paginatie in drizzle vind je hier: <https://orm.drizzle.team/docs/guides/limit-offset-pagination>.
+
+## Oefening - PlaceController uitbreiden
+
+Voorzie nu ook een route in de `PlaceController` om de transacties van een place op te halen. Het endpoint moet er als volgt uitzien: `GET /places/:id/transactions`.
+Implementeer deze route en de bijhorende service methode. Voorzie ook paginatie voor deze route.
+
+- Oplossing +
+
+  De oplossing vind je in onze voorbeeldapplicatie in commit `b1ed447`.
+
 ## Oefening - UserService
 
 Definieer de overige endpoints in de `UserController`:
@@ -964,7 +1021,7 @@ Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer 
 
 - Oplossing +
 
-  De oplossing vind je in onze voorbeeldapplicatie in commit `d486627`.
+  De oplossing vind je in onze voorbeeldapplicatie in commit `b1ed447`.
 
 > **Oplossing voorbeeldapplicatie**
 >

@@ -292,94 +292,19 @@ Documenteer de route om een nieuwe place aan te maken:
 // src/place/place.controller.ts
 @ApiCreatedResponse({
   description: 'Create place',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Post()
 @Roles(Role.ADMIN)
 @HttpCode(HttpStatus.CREATED)
 async createPlace(
   @Body() createPlaceDto: CreatePlaceRequestDto,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.create(createPlaceDto);
 }
 ```
 
 NestJS herkent automatisch dat `createPlaceDto` een request body is en documenteert dit in Swagger, inclusief het schema dat we met `nestjs-swagger-dto` hebben gedefinieerd. Handig toch?
-
-### Oefening: Documenteer PlaceDetailResponseDto
-
-Momenteel worden enkel de properties van `PlaceResponseDto` gedocumenteerd in `PlaceDetailResponseDto`.Documenteer de andere properties in `PlaceDetailResponseDto` zodat de volledige response correct wordt weergegeven in Swagger UI.
-
-- Oplossing +
-
-  ```ts
-  // src/place/place.dto.ts
-  export class PlaceDetailResponseDto extends PlaceResponseDto {
-    @ApiProperty({ type: () => [TransactionResponseDto] })
-    transactions: TransactionResponseDto[];
-  }
-
-  // src/transaction/transaction.dto.ts
-  export class TransactionResponseDto {
-    @ApiProperty({ example: 1, description: 'ID of the transaction' })
-    id: number;
-
-    @ApiProperty({
-      description: 'Transaction amount',
-      minimum: 1,
-      type: 'number',
-    })
-    amount: number;
-
-    @ApiProperty({
-      description: 'Transaction date',
-      type: 'string',
-      format: 'date-time',
-    })
-    date: Date;
-
-    @ApiProperty({
-      description: 'User who made the transaction',
-      type: () => PublicUserResponseDto,
-    })
-    user: PublicUserResponseDto;
-
-    @ApiProperty({
-      description: 'Place where the transaction occurred',
-      type: () => PlaceResponseDto,
-    })
-    place: PlaceResponseDto;
-  }
-
-  // src/user/user.dto.ts
-  export class PublicUserResponseDto {
-    @ApiProperty({
-      description: 'User ID',
-      minimum: 1,
-      example: 1,
-    })
-    @Expose()
-    id: number;
-
-    @ApiProperty({
-      description: 'User name',
-      minLength: 2,
-      maxLength: 255,
-      example: 'John Doe',
-    })
-    @Expose()
-    name: string;
-
-    @ApiProperty({
-      description: 'User email address',
-      example: 'user@email.com',
-      type: 'string',
-      format: 'email',
-    })
-    @Expose()
-    email: string;
-  }
-  ```
 
 ### GET /api/places/:id
 
@@ -389,12 +314,12 @@ Documenteer de route om een specifieke place op te halen:
 // src/place/place.controller.ts
 @ApiOkResponse({
   description: 'Get place by ID',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.getById(id);
 }
 ```
@@ -409,14 +334,14 @@ Documenteer de route om een place te updaten:
 // src/place/place.controller.ts
 @ApiOkResponse({
   description: 'Update place',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Put(':id')
 @Roles(Role.ADMIN)
 async updatePlace(
   @Param('id', ParseIntPipe) id: number,
   @Body() updatePlaceDto: UpdatePlaceRequestDto,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.updateById(id, updatePlaceDto);
 }
 ```
@@ -446,7 +371,7 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 // src/place/place.controller.ts
 @ApiOkResponse({
   description: 'Get place by ID',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @ApiNotFoundResponse({
   description: 'Place not found',
@@ -457,7 +382,7 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return await this.placeService.getById(id);
 }
 ```
