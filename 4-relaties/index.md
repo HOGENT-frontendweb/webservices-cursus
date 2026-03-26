@@ -918,12 +918,13 @@ Paginatie is een essentiële best practice voor API's om verschillende redenen:
 
 - Database load: Zonder paginatie haalt SELECT \* alle records op, wat zwaar wordt bij duizenden records
 - Netwerkbandbreedte: Grote JSON responses vertragen de data transfer
-- Memory gebruik: Server moet alle data in geheugen laden en serialiseren
+- Memory gebruik: Server/client moet alle data in geheugen laden en serialiseren
 - Response tijd: Gebruiker wacht (te) lang op complete response
 
 We voegen de route `GET /api/transactions?page=1&pageSize=10` toe. Deze query parameters geven aan welke pagina (`page`) we willen ophalen en hoeveel items er per pagina (`pageSize`) moeten worden weergegeven. We passen de `getAllTransactions` route aan om deze query parameters te accepteren. Query parameters komen in de controller binnen als strings. We zetten deze om naar nummers en geven ze door aan de service. We voorzien ook default waarden voor deze parameters, zodat als ze niet meegegeven worden, we toch een geldige paginatie hebben.
 
 ```ts
+// src/transaction/transaction.controller.ts
 import { Query} from '@nestjs/common';
 //...
   @Get()
@@ -953,6 +954,7 @@ export class TransactionListResponseDto {
 Nu dienen we de `getAll` methode in de `TransactionService` aan te passen om deze paginatie parameters te gebruiken en het gevraagde resultaat terug te geven:
 
 ```ts
+// src/transaction/transaction.service.ts
 import { PaginationQuery } from '../common/common.dto';
 //...
  // 👇 1
@@ -960,37 +962,41 @@ import { PaginationQuery } from '../common/common.dto';
     page: number = 1,
     pageSize: number = 10,
   ): Promise<TransactionListResponseDto> {
-    // 👇 2
-    const [countResult] = await this.db
-      .select({ count: count() })
-      .from(transactions);
+    // 👇 4
+  const [countResults, items] = await Promise.all([
+      this.db
+        .select({ count: count() })
+        .from(transactions),// 👈2
+      this.db.query.transactions.findMany({
+        columns: {
+          id: true,
+          amount: true,
+          date: true,
+        },
+        with: {
+          place: true,
+          user: {
+            columns: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: [desc(transactions.date), asc(transactions.id)],
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      }),// 👈3
+    ]);
 
-    const [countResult] = await this.db
-      .select({ count: count() })
-      .from(transactions);
-
-    const items = await this.db.query.transactions.findMany({
-      columns: {
-        id: true,
-        amount: true,
-        date: true,
-      },
-      with: {
-        place: true,
-        user: true,
-      },
-      orderBy: [desc(transactions.date), asc(transactions.id)],
-      limit: pageSize,
-      offset: (page - 1) * pageSize,
-    });// 👈 3
-
-    return { items, page, pageSize, total: countResult.count };
+    return { items, page, pageSize, total: countResults[0].count };
   }
 ```
 
 1. We accepteren de `pageSize` en `page` parameters in de `getAll` methode.
 2. We voeren eerst een aparte query uit om het totaal aantal transacties te tellen.
 3. We passen de `limit` en `offset` toe in de `findMany` query om enkel de transacties voor de gevraagde pagina op te halen. Bovendien sorteren we eerst op datum en dan op id. We moeten op een unieke kolom sorteren om consistente resultaten te garanderen bij paginatie: geen duplicaten of missende items bij paginatie naar een volgende/vorige pagina.
+4. We gebruiken `Promise.all` om beide queries gelijktijdig uit te voeren, wat efficiënter is dan ze na elkaar uit te voeren.
 
 Merk op: Query parameters worden ook gebruikt om te sorteren of te filteren. Bijvoorbeeld, om transacties te sorteren op datum of bedrag, kunnen we volgende query parameters toevoegen: `sortBy` en `sortOrder`. Een GET request zou er dan als volgt uitzien: `GET /transactions?page=1&pageSize=10&sortBy=date&sortOrder=desc`.
 
@@ -1000,6 +1006,14 @@ Meer info over paginatie in drizzle vind je hier: <https://orm.drizzle.team/docs
 
 Voorzie nu ook een route in de `PlaceController` om de transacties van een place op te halen. Het endpoint moet er als volgt uitzien: `GET /places/:id/transactions`.
 Implementeer deze route en de bijhorende service methode. Voorzie ook paginatie voor deze route.
+In de service pas je de `getAll` methode aan om een optionele `placeId` parameter te accepteren. Als deze parameter meegegeven wordt, worden enkel de transacties van die place opgehaald. Zo niet, worden alle transacties opgehaald. Voorzie een interface `TransactionFilter` met een optionele `placeId` property om deze filteroptie door te geven aan de `getAll` methode. Zo kan later makkelijk extra filteropties toegevoegd worden zonder de methodesignature van `getAll` te moeten aanpassen.
+
+```ts
+// src/transaction/transaction.service.ts
+interface GetAllTransactionFilters {
+  placeId?: number;
+}
+```
 
 - Oplossing +
 

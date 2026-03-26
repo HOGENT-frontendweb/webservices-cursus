@@ -310,8 +310,6 @@ Voeg invoervalidatie toe
 
 - Oplossing +
 
-  Maak eerst een bestand `src/types/transaction.ts` aan:
-
   ```ts
   // src/types/transaction.ts
   import { transactions } from '../drizzle/schema';
@@ -348,8 +346,6 @@ Voeg invoervalidatie toe
     date: Date;
   }
   ```
-
-  Maak ook een bestand `src/types/user.ts` aan:
 
   ```ts
   // src/types/user.ts
@@ -393,6 +389,38 @@ Voeg invoervalidatie toe
   ```
 
   - `@Type`: Type transformatie, converteert de waarde automatisch naar het opgegeven type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals `@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen. Dit geldt ook voor Date types die via JSON worden aangeleverd.
+
+  ```ts
+  // src/transaction/transaction.controller.ts
+    async getAllTransactions(
+      @Query() paginationQuery: PaginationQuery): Promise<TransactionListResponseDto> {
+      return await this.transactionService.getAll( paginationQuery);
+  }
+  ```
+
+  ```ts
+  // src/transaction/transaction.service.ts
+    async getAll(
+      { page = 1, pageSize = 10 }: PaginationQuery,
+      filters?: GetAllTransactionFilters,
+    ): Promise<TransactionListResponseDto> {
+      //...
+    }
+  ```
+
+  ```ts
+    //src/place/place.controller.ts
+    @Get('/:id/transactions')
+      async getTransactionsByPlaceId(
+        @Param('id', ParseIntPipe) id: number,
+        @Query() paginationQuery: PaginationQuery,
+      ): Promise<TransactionListResponseDto> {
+        return await this.transactionService.getAll(
+          paginationQuery,
+          { placeId: id },
+        );
+      }
+  ```
 
 ## Logging
 

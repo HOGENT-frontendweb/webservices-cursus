@@ -858,7 +858,7 @@ Verwijder de bestaande `CreateUserRequestDto` uit de `user.dto.ts`, deze wordt n
 export class UpdateUserRequestDto implements Pick<
   CreateUser,
   'name' | 'email'
->{
+> {
   @IsString()
   @MinLength(2)
   @MaxLength(255)
@@ -1524,7 +1524,7 @@ Pas de routes en service van transactions aan:
 
 1. `GET /api/transactions` retourneert enkel de transacties van de aangemelde gebruiker.
    - Een admin mag wel alle transacties ophalen.
-   - **Tip**: Pas de service aan zodat je het `userId` en de `roles` kan meegeven als parameter.
+   - **Tip**: Pas de service aan zodat je het `userId` en de `roles` kan meegeven als parameter. Daar je nu meerdere whereConditions hebt in de `getAll` methode (namelijk `userId` en `roles` en `placeId`), is het handig om de condities in de service op te bouwen via een array van `where` clausules. Je kan deze clausules dan combineren met `and` en `or` zoals nodig.
    - Controleer of de user niet meer informatie bevat dan het id, de naam en het e-mailadres.
 2. `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
    - Een admin mag wel alle transacties ophalen.
