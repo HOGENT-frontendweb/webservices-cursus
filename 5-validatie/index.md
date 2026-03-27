@@ -127,7 +127,8 @@ import {
 } from 'class-validator';
 import { CreatePlace } from '../types/place'; // 👈
 
-export class CreatePlaceRequestDto implements CreatePlace { // 👈
+export class CreatePlaceRequestDto implements CreatePlace {
+  // 👈
   @IsString()
   @IsNotEmpty()
   @MaxLength(255)
@@ -303,13 +304,11 @@ Samenvattend gebeuren volgende validatiestappen alvorens de invoer bij de juiste
 Voeg invoervalidatie toe
 
 - voor de endpoints `/api/transactions` en `/api/users`
-- voor de pagination, zie `PaginationQuery`. De parameters `page` en `limit` zijn optioneel.
+- voor de paginatie, maak een dto `PaginationQuery` aan in `src/common/common.dto`. De parameters `page` en `pageSize` zijn optioneel en zijn van type number. Vergeet niet om de nodige validatie decorators toe te voegen aan de `PaginationQuery` klasse. Pas dan ook de `getAllTransactions` methode aan zodat deze de `PaginationQuery` accepteert. Pas ook de service aan zodat ook hier gebruik gemaakt wordt van de `PaginationQuery` in plaats van losse parameters. Pas ook het endpoint 'GET /api/places/:id/transactions' aan zodat deze ook met de `PaginationQuery` werkt
 
 <br />
 
 - Oplossing +
-
-  Maak eerst een bestand `src/types/transaction.ts` aan:
 
   ```ts
   // src/types/transaction.ts
@@ -325,7 +324,11 @@ Voeg invoervalidatie toe
   import { Type } from 'class-transformer';
   import { CreateTransaction } from '../types/transaction'; // 👈
   // ...
-  export class CreateTransactionRequestDto implements Omit<CreateTransaction, 'id'> { // 👈
+  export class CreateTransactionRequestDto implements Omit<
+    CreateTransaction,
+    'id'
+  > {
+    // 👈
     @IsInt()
     @Min(1)
     placeId: number;
@@ -344,8 +347,6 @@ Voeg invoervalidatie toe
   }
   ```
 
-  Maak ook een bestand `src/types/user.ts` aan:
-
   ```ts
   // src/types/user.ts
   import { users } from '../drizzle/schema';
@@ -358,7 +359,8 @@ Voeg invoervalidatie toe
   // src/users/user.dto.ts
   import { IsString, IsNotEmpty, MaxLength } from 'class-validator';
   import { CreateUser } from '../types/user'; // 👈
-  export class CreateUserRequestDto implements Pick<CreateUser, 'name'> { // 👈
+  export class CreateUserRequestDto implements Pick<CreateUser, 'name'> {
+    // 👈
     @IsString()
     @IsNotEmpty()
     @MaxLength(255)
@@ -382,11 +384,43 @@ Voeg invoervalidatie toe
     @Type(() => Number)
     @IsInt()
     @Min(1)
-    limit?: number = 10;
+    pageSize?: number = 10;
   }
   ```
 
   - `@Type`: Type transformatie, converteert de waarde automatisch naar het opgegeven type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals `@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen. Dit geldt ook voor Date types die via JSON worden aangeleverd.
+
+  ```ts
+  // src/transaction/transaction.controller.ts
+    async getAllTransactions(
+      @Query() paginationQuery: PaginationQuery): Promise<TransactionListResponseDto> {
+      return await this.transactionService.getAll( paginationQuery);
+  }
+  ```
+
+  ```ts
+  // src/transaction/transaction.service.ts
+    async getAll(
+      { page = 1, pageSize = 10 }: PaginationQuery,
+      filters?: GetAllTransactionFilters,
+    ): Promise<TransactionListResponseDto> {
+      //...
+    }
+  ```
+
+  ```ts
+    //src/place/place.controller.ts
+    @Get('/:id/transactions')
+      async getTransactionsByPlaceId(
+        @Param('id', ParseIntPipe) id: number,
+        @Query() paginationQuery: PaginationQuery,
+      ): Promise<TransactionListResponseDto> {
+        return await this.transactionService.getAll(
+          paginationQuery,
+          { placeId: id },
+        );
+      }
+  ```
 
 ## Logging
 
@@ -558,14 +592,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
  async getById(id: number): Promise<PlaceResponseDto> {
     const place = await this.db.query.places.findFirst({
       where: eq(places.id, id),
-      with: {
-        transactions: {
-          with: {
-            user: true,
-            place: true,
-          },
-        },
-      },
     });
 
     if (!place) {
