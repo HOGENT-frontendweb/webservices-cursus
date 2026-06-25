@@ -1063,6 +1063,112 @@ Merk op: Query parameters worden ook gebruikt om te sorteren of te filteren. Bij
 
 Meer info over paginatie in drizzle vind je hier: <https://orm.drizzle.team/docs/guides/limit-offset-pagination>.
 
+## Search
+
+We willen ook het zoeken op plaatsnaam ondersteunen.
+Een request ziet er dan zo uit: `GET /transactions?page=1&pageSize=10&search=HoGent`.
+We dienen hiervoor de 3 lagen aan te passen.
+
+**DTO**: We breiden `PaginationQuery` uit met een optioneel `search`-veld. Dankzij `@IsOptional()` en `@IsString()` is het veld niet verplicht, maar als het meegegeven wordt, moet het een string zijn.
+
+```tsx
+// src/transaction/transaction.dto.ts
+export class TransactionQueryDto extends PaginationQuery {
+  @IsOptional()
+  @IsString()
+  search?: string;
+}
+```
+
+**Controller**: De controller geeft nu het volledige `query`-object door aan de service in plaats van losse parameters. Dat is eenvoudiger en schaalt mee als we later extra query-parameters toevoegen.
+
+```tsx
+// src/transaction/transaction.controller.ts
+import {
+  CreateTransactionRequestDto,
+  UpdateTransactionRequestDto,
+  TransactionResponseDto,
+  TransactionListResponseDto,
+  TransactionQueryDto,
+} from './transaction.dto';
+//...
+ @Get()
+  async getAllTransactions(
+    @Query() query: TransactionQueryDto,
+  ): Promise<TransactionListResponseDto> {
+    return await this.transactionService.getAll(query));
+  }
+```
+
+**Service**
+
+```tsx
+// src/transaction/transaction.servcice.ts
+import {
+  CreateTransactionRequestDto,
+  TransactionListResponseDto,
+  TransactionQueryDto,
+  TransactionResponseDto,
+  UpdateTransactionRequestDto,
+} from './transaction.dto';
+
+ async getAll(
+    { page = 1, pageSize = 10, search = '' }: TransactionQueryDto,
+  ): Promise<TransactionListResponseDto> {
+    const whereConditions = [];
+    // Search op place.name (via JOIN)
+    if (search) {
+      whereConditions.push(like(places.name, `%${search}%`));
+    }
+
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+    // COUNT query (met JOIN!)
+    const countQuery = this.db
+      .select({ count: count() })
+      .from(transactions)
+      .innerJoin(places, eq(transactions.placeId, places.id))
+      .where(whereClause);
+
+    // DATA query (JOIN + selectie)
+    const dataQuery = this.db
+      .select({
+        id: transactions.id,
+        amount: transactions.amount,
+        date: transactions.date,
+        place: places,
+        user: {
+          id: users.id,
+          name: users.name,
+          email: users.email,
+        },
+      })
+      .from(transactions)
+      .innerJoin(places, eq(transactions.placeId, places.id))
+      .innerJoin(users, eq(transactions.userId, users.id))
+      .where(whereClause)
+      .orderBy(desc(transactions.date), asc(transactions.id))
+      .limit(pageSize)
+      .offset((page - 1) * pageSize);
+
+    const [countResult, items] = await Promise.all([countQuery, dataQuery]);
+
+    return {
+      items,
+      page,
+      pageSize,
+      total: countResult[0]?.count ?? 0,
+    };
+  }
+```
+
+De service bevat de grootste wijziging. We zijn overgestapt van de relationele API (`findMany`) naar de query builder API (`.select().from()`). Die overstap is nodig omdat we nu moeten filteren op een gejoinde tabel (`places.name`), en de relationele API ondersteunt geen `WHERE`-condities op gejoinde tabellen.
+
+De aanpak met een `whereConditions`-array maakt het eenvoudig om later extra filtercondities toe te voegen zonder de rest van de query te herschrijven. De functie `like(places.name, '%search%')` voert een gedeeltelijke tekstzoekopdracht uit op de plaatsnaam. De `%`-tekens zijn SQL-wildcards: `%HoGent%` matcht elke plaatsnaam die "HoGent" bevat.
+
+Omdat de `WHERE`-clausule verwijst naar de `places`-tabel, moet ook de COUNT-query de JOIN bevatten — anders weet de database niet welke tabel `places.name` is.
+
 ## Oefening - PlaceController uitbreiden
 
 Voorzie nu ook een route in de `PlaceController` om de transacties van een place op te halen. Het endpoint moet er als volgt uitzien: `GET /places/:id/transactions`.
