@@ -1069,7 +1069,9 @@ We willen ook het zoeken op plaatsnaam ondersteunen.
 Een request ziet er dan zo uit: `GET /transactions?page=1&pageSize=10&search=HoGent`.
 We dienen hiervoor de 3 lagen aan te passen.
 
-**DTO**: We breiden `PaginationQuery` uit met een optioneel `search`-veld. Dankzij `@IsOptional()` en `@IsString()` is het veld niet verplicht, maar als het meegegeven wordt, moet het een string zijn.
+### DTO
+
+We breiden `PaginationQuery` uit met een optioneel `search`-veld. Dankzij `@IsOptional()` en `@IsString()` is het veld niet verplicht, maar als het meegegeven wordt, moet het een string zijn.
 
 ```tsx
 // src/transaction/transaction.dto.ts
@@ -1080,7 +1082,9 @@ export class TransactionQueryDto extends PaginationQuery {
 }
 ```
 
-**Controller**: De controller geeft nu het volledige `query`-object door aan de service in plaats van losse parameters. Dat is eenvoudiger en schaalt mee als we later extra query-parameters toevoegen.
+### Controller
+
+De controller geeft nu het volledige `query`-object door aan de service in plaats van losse parameters. Dat is eenvoudiger en schaalt mee als we later extra query-parameters toevoegen.
 
 ```tsx
 // src/transaction/transaction.controller.ts
@@ -1100,7 +1104,7 @@ import {
   }
 ```
 
-**Service**
+### Service
 
 ```tsx
 // src/transaction/transaction.servcice.ts
