@@ -6,7 +6,7 @@
     "start": "docsify serve ."
   },
   "dependencies": {
-    "docsify-cli": "^4.4.4"
+    "docsify-cli": "^5.0.0"
   },
   "engines": {
     "npm": ">=9.8.0",
