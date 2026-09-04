@@ -3,12 +3,11 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les6 b1ed447
+> git checkout -b les5 a8930106
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -138,7 +137,7 @@ export class CreatePlaceRequestDto implements CreatePlace {
   @IsInt()
   @Min(1)
   @Max(5)
-  rating?: number; // 👈 optioneel, want nullable in het schema
+  rating: number | null; // 👈 optioneel, want nullable in het schema
 }
 ```
 
@@ -189,7 +188,6 @@ Pas de `create` methode aan en doe een POST request. Bekijk de console.
 ```ts
 // src/place/place.controller.ts
 @Post()
-@HttpCode(HttpStatus.CREATED)
 async createPlace(
   @Body() createPlaceDto: CreatePlaceRequestDto,
 ): Promise<PlaceResponseDto> {
@@ -304,7 +302,7 @@ Samenvattend gebeuren volgende validatiestappen alvorens de invoer bij de juiste
 Voeg invoervalidatie toe
 
 - voor de endpoints `/api/transactions` en `/api/users`
-- voor de paginatie, maak een dto `PaginationQuery` aan in `src/common/common.dto`. De parameters `page` en `pageSize` zijn optioneel en zijn van type number. Vergeet niet om de nodige validatie decorators toe te voegen aan de `PaginationQuery` klasse. Pas dan ook de `getAllTransactions` methode aan zodat deze de `PaginationQuery` accepteert. Pas ook de service aan zodat ook hier gebruik gemaakt wordt van de `PaginationQuery` in plaats van losse parameters. Pas ook het endpoint 'GET /api/places/:id/transactions' aan zodat deze ook met de `PaginationQuery` werkt
+- voor de paginatie, hebben we al een dto `PaginationQuery` in `src/common/common.dto`. De parameters `page` en `pageSize` zijn optioneel en zijn van type number. Vergeet niet om de nodige validatie decorators toe te voegen aan de `PaginationQuery` klasse. Let hierbij ook op de `TransactionQueryDto` die hiervan overerft, ook deze zal de nodig decorators moeten krijgen. De methode `getAllTransactions` gebruikt al de juiste `TransactionQueryDto`, aan deze methode zullen we dus niets meer hoeven aan te passen. Hetzelfde geldt ook voor het endpoint 'GET /api/places/:id/transactions'.
 
 <br />
 
@@ -386,41 +384,17 @@ Voeg invoervalidatie toe
     @Min(1)
     pageSize?: number = 10;
   }
-  ```
-
-  - `@Type`: Type transformatie, converteert de waarde automatisch naar het opgegeven type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals `@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen. Dit geldt ook voor Date types die via JSON worden aangeleverd.
-
-  ```ts
-  // src/transaction/transaction.controller.ts
-    async getAllTransactions(
-      @Query() paginationQuery: PaginationQuery): Promise<TransactionListResponseDto> {
-      return await this.transactionService.getAll( paginationQuery);
+  
+  // src/transaction/transaction.dto.ts
+  export class TransactionQueryDto extends PaginationQuery {
+    @IsOptional()
+    @IsString()
+    @MaxLength(255)
+    search?: string;
   }
   ```
 
-  ```ts
-  // src/transaction/transaction.service.ts
-    async getAll(
-      { page = 1, pageSize = 10 }: PaginationQuery,
-      filters?: GetAllTransactionFilters,
-    ): Promise<TransactionListResponseDto> {
-      //...
-    }
-  ```
-
-  ```ts
-    //src/place/place.controller.ts
-    @Get('/:id/transactions')
-      async getTransactionsByPlaceId(
-        @Param('id', ParseIntPipe) id: number,
-        @Query() paginationQuery: PaginationQuery,
-      ): Promise<TransactionListResponseDto> {
-        return await this.transactionService.getAll(
-          paginationQuery,
-          { placeId: id },
-        );
-      }
-  ```
+  - `@Type`: Type transformatie, converteert de waarde automatisch naar het opgegeven type wanneer de data wordt gedeserialiseerd (bijvoorbeeld van JSON naar een class instance). Query parameters komen altijd als strings binnen in HTTP requests. De validation decorators zoals `@IsInt()` en `@Min(1)` verwachten numbers. Zonder deze transformatie zouden de validaties falen. Dit geldt ook voor Date types die via JSON worden aangeleverd.
 
 ## Logging
 
@@ -522,7 +496,7 @@ Maak gebruik van `loglevels` om in productie en test-omgeving minder te loggen.
   // src/`config/configuration.ts
   import { LogLevel } from '@nestjs/common';
 
-  export default () => ({
+  export default (): ServerConfig => ({
     env: process.env.NODE_ENV,
     port: parseInt(process.env.PORT || '9000'),
     cors: {
@@ -966,12 +940,11 @@ Voeg volgende functionaliteiten toe aan je eigen project:
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les6-opl 68970b1
+> git checkout -b les5-opl 03ffd290
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```

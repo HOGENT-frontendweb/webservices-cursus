@@ -769,9 +769,9 @@ Voeg de `HealthController` toe aan je project zoals eerder beschreven. Test of a
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les2-opl a2cbdcd
+> git checkout -b les1-opl 89add613
 > pnpm install
 > pnpm start:dev
 > ```

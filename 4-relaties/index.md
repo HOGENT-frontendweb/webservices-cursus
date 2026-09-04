@@ -3,12 +3,11 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5 e27a0a6
+> git checkout -b les4 f0d2b3ef
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -234,6 +233,8 @@ Het is niet zo handig als we telkens voor de start van onze server manueel de mi
 // src/drizzle/drizzle.module.ts
 // ...
 import { Logger, OnModuleInit } from '@nestjs/common';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+import path from 'node:path';
 
 export class DrizzleModule implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(DrizzleModule.name); // 👈 2
@@ -265,6 +266,7 @@ pnpm db:generate
 ```
 
 Herstart vervolgens de server. Je zou in de logs moeten zien dat de migraties automatisch uitgevoerd worden bij het starten van de server.
+Je kan dus ook de instructies uit je README aanpassen, zodat dit niet meer manueel gedaan moet worden.
 
 ## Seeds aanvullen
 
@@ -694,6 +696,7 @@ const place = await this.db.query.places.findFirst({
     transactions: {
       with: {
         user: true,
+        place: true,
       },
       orderBy: desc(transactions.date),
     },
@@ -713,7 +716,6 @@ import { DrizzleModule } from '../drizzle/drizzle.module'; // 👈
   imports: [DrizzleModule], // 👈
   controllers: [TransactionController],
   providers: [TransactionService],
-  exports: [TransactionService],
 })
 export class TransactionModule {}
 ```
@@ -962,7 +964,7 @@ export class UserController {
   async getFavoritePlaces(
     @Param('id') id: string,
   ): Promise<PlaceResponseDto[]> {
-    return await this.placeService.getFavoritePlacesByUserId(Number(id));
+    return this.placeService.getFavoritePlacesByUserId(Number(id));
   }
 }
 ```
@@ -972,6 +974,10 @@ export class UserController {
 3. We roepen de `getFavoritePlacesByUserId` methode van de `PlaceService` aan om de favoriete places op te halen.
 
 Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken
+
+Wanneer we dit proberen krijgen we een error te zien. We moeten nog twee stappen ondernemen om de `PlaceService` te kunnen injecteren in de `UserController`:
+1. Exporteer de `PlaceService` in de `PlaceModule`.
+2. Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken.
 
 ## Paginatie
 
@@ -1040,7 +1046,6 @@ import { PaginationQuery } from '../common/common.dto';
             columns: {
               id: true,
               name: true,
-              email: true,
             },
           },
         },
@@ -1074,8 +1079,6 @@ We breiden `PaginationQuery` uit met een optioneel `search`-veld. Dankzij `@IsOp
 ```ts
 // src/transaction/transaction.dto.ts
 export class TransactionQueryDto extends PaginationQuery {
-  @IsOptional()
-  @IsString()
   search?: string;
 }
 ```
@@ -1147,7 +1150,6 @@ async getAll(
       user: {
         id: users.id,
         name: users.name,
-        email: users.email,
       },
     })
     .from(transactions)
@@ -1190,7 +1192,7 @@ interface GetAllTransactionFilters {
 
 - Oplossing +
 
-  De oplossing vind je in onze voorbeeldapplicatie in commit `b1ed447`.
+  De oplossing vind je in onze voorbeeldapplicatie in commit `c0f36e65`.
 
 ## Oefening - UserService
 
@@ -1208,17 +1210,16 @@ Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer 
 
 - Oplossing +
 
-  De oplossing vind je in onze voorbeeldapplicatie in commit `b1ed447`.
+  De oplossing vind je in onze voorbeeldapplicatie in commit `c0f36e65`.
 
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5-opl b1ed447
+> git checkout -b les4-opl a8930106
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm start:dev
 > ```
 >

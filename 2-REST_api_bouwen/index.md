@@ -3,9 +3,9 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les3 a2cbdcd
+> git checkout -b les2 89add613
 > pnpm install
 > pnpm start:dev
 > ```
@@ -338,6 +338,9 @@ createPlace(@Body() body: any,  @Res() res: Response): string {
 
 Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `Response` importeer je uit de `express` namespace. Probeer wel om zoveel mogelijk de voorziene decorators te gebruiken.
 
+Bij een geslaagde POST call is `HttpStatus.CREATED` echter default gedrag, dus dit hoef je er hier niet bij te plaatsen. 
+Bij een delete zal je echter wel manueel de correcte status `NO_CONTENT` moeten instellen.
+
 ### Best practice: gebruik DTO's
 
 Een DTO (Data Transfer Object) is een object of klasse die gebruikt wordt om data over te dragen tussen lagen van een applicatie, bijvoorbeeld van de client naar de server, of van de controller naar de service in NestJS.
@@ -354,7 +357,7 @@ Maak in de `places` map een bestand `place.dto.ts`. Hierin plaatsen we alle DTO'
 // src/place/place.dto.ts
 export class CreatePlaceRequestDto {
   name: string;
-  rating?: number;
+  rating: number | null;
 }
 ```
 
@@ -880,15 +883,13 @@ Deze code zorgt ervoor dat je NestJS-backend CORS toestaat:
 ## Oefening - Je eigen project
 
 - Voeg CORS toe aan je eigen project.
-- Werk de `README.md` in de root van je repository bij met instructies om de `.env` file aan te maken.
-  - Geef ook aan welke variabelen er minimaal in moeten staan.
 
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les3-opl 1e3ffd2
+> git checkout -b les2-opl 53dfcefc
 > pnpm install
 > pnpm start:dev
 > ```

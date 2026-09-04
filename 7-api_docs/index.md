@@ -5,12 +5,11 @@ Voor het schrijven van API documentatie bestaan verschillende tools. Swagger is 
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 7bf0724
+> git checkout -b les7 3427d585
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -123,14 +122,16 @@ In NestJS documenteren we onze API door decorators toe te voegen aan onze DTO's 
 
 ### Response DTO's
 
-Laten we de `PlaceResponseDto` documenteren. We gebruiken de `@ApiProperty` decorator om elk veld te documenteren:
+Laten we de `PlaceResponseDto` documenteren. We gebruiken de `@ApiProperty` decorator om elk veld te documenteren.
+Omdat de bestaande validatie (zie vorige hoogdstukken) niet correct is voor een reponse dto, zullen we ook de overerving corrigeren.
 
 ```ts
 // src/place/place.dto.ts
 import { ApiProperty } from '@nestjs/swagger'; // 👈 1
+import { Place } from '../types/place';
 
 // 👇 3
-export class PlaceResponseDto {
+export class PlaceResponseDto implements Place {
   @ApiProperty({ example: 1, description: 'ID of the place' }) // 👈 2
   id: number;
 
@@ -177,8 +178,9 @@ Voor request DTO's gebruiken we `nestjs-swagger-dto`. Deze package combineert `c
 ```ts
 // src/place/place.dto.ts
 import { IsNumber, IsString } from 'nestjs-swagger-dto'; // 👈 1
+import { Place, CreatePlace } from '../types/place';
 
-export class CreatePlaceRequestDto {
+export class CreatePlaceRequestDto implements CreatePlace {
   @IsString({ name: 'name', maxLength: 255 }) // 👈 2
   name: string;
 
@@ -296,7 +298,6 @@ Documenteer de route om een nieuwe place aan te maken:
 })
 @Post()
 @Roles(Role.ADMIN)
-@HttpCode(HttpStatus.CREATED)
 async createPlace(
   @Body() createPlaceDto: CreatePlaceRequestDto,
 ): Promise<PlaceResponseDto> {
@@ -375,9 +376,6 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 })
 @ApiNotFoundResponse({
   description: 'Place not found',
-})
-@ApiUnauthorizedResponse({
-  description: 'Unauthorized - you need to be signed in',
 })
 @Get(':id')
 async getPlaceById(
@@ -561,12 +559,11 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8-opl 4402433
+> git checkout -b les7-opl 35657cb3
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```

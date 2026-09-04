@@ -3,12 +3,11 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7 bd9ccc9
+> git checkout -b les6 03ffd290
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -247,7 +246,7 @@ We willen niet dat gevoelige informatie zoals `passwordHash` en `roles` naar de 
 
 ### PublicUserResponseDto
 
-We passen onze `PublicUserResponseDto` aan zodat die enkel de publieke velden van een gebruiker bevat:
+We hernoemen onze `UserResponseDto` naar `PublicUserResponseDto` en passen die aan zodat die enkel de publieke velden van een gebruiker bevat:
 
 ```ts
 // src/user/user.dto.ts
@@ -363,7 +362,7 @@ We voegen de instellingen voor authenticatie, nl. het hashen van het password en
 
 ```ts
 // src/config/configuration.ts
-export default () => ({
+export default (): ServerConfig => ({
   // ... andere configuratie
   auth: {
     hashLength: parseInt(process.env.AUTH_HASH_LENGTH || '32'), // 👈 1
@@ -430,7 +429,7 @@ Vul de README van je eigen project aan met de nodige documentatie over de enviro
 We definiëren alle rollen in onze applicatie in een enum. Zo is het eenvoudig om ze te wijzigen indien nodig:
 
 ```ts
-// src/auth/roles.ts
+// src/types/auth.ts
 export enum Role {
   USER = 'user',
   ADMIN = 'admin',
@@ -540,7 +539,7 @@ Importeer de `DrizzleModule` en de `JwtModule`, en exporteer de `AuthService` in
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { DrizzleModule } from '../drizzle/drizzle.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ServerConfig, AuthConfig } from '../config/configuration';
 
@@ -1257,7 +1256,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Role } from '../roles';
+import { Role } from '../../types/auth';
 
 @Injectable()
 export class CheckUserAccessGuard implements CanActivate {
@@ -1354,7 +1353,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CheckUserAccessGuard } from '../auth/guards/userAccess.guard';
-import { type Session } from '../types/auth';
+import { Role, type Session } from '../types/auth';
 
 @Controller('users')
 export class UserController {
@@ -1456,7 +1455,8 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { delay } from 'rxjs/operators';
+import { catchError, delay, switchMap } from 'rxjs/operators';
+import { throwError, timer } from 'rxjs';
 
 @Injectable()
 export class AuthDelayInterceptor implements NestInterceptor {
@@ -1582,12 +1582,11 @@ Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 ## Oplossing voorbeeldapplicatie
 
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 7bf0724
+> git checkout -b les6-opl 3427d585
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```

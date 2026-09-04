@@ -326,7 +326,7 @@ Het einde van een stage herken je eenvoudig door het `FROM` keyword dat opnieuw 
 
 ```Dockerfile
 # 👇 1
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -395,11 +395,13 @@ Indien je het olod Front-end Web Development niet volgt, lees dan zeker toch de 
 Voor het maken van onze Dockerfile voor de back-end, zullen we vertrekken van de aanzet die de [NestJS documentatie](https://docs.nestjs.com/deployment#dockerizing-your-application) ons aanbiedt:
 
 ```Dockerfile
-FROM node:22
+FROM node:24
 
 # 👇 1
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+# 👇 2
+ENV PNPM_CONFIG_MINIMUM_RELEASE_AGE=0
 RUN corepack enable
 
 WORKDIR /usr/src/app
@@ -415,6 +417,9 @@ CMD ["node", "dist/src/main"]
 ```
 
 1. Deze lijnen zijn identiek aan de `Dockerfile` van de front-end, we willen hier wederom gebruik kunnen maken van pnpm.
+2. Deze lijn zorgt ervoor dat pnpm geen release age nodig heeft voor het installeren van dependencies. Indien deze lijn er niet staat kan het zijn dat we een dag moeten wachten voor te builden. Dit is over het algemeen wel een slim idee voor security redenen, maar in onze development omgeving is dit niet nodig en enkel omslachtig.
+
+Indien dit niet lukt, controleer zeker de logs van de docker build. Hoogst waarschijnlijk is dit een probleem met de lockfile of met de approve-builds. Hiervoor kan je dan best de lockfile en node_modules eens verwijderen en opnieuw `pnpm install` doen, zodat je daarna `pnpm approve-builds` kan uitvoeren. 
 
 ##### Docker Compose bestand
 
@@ -476,10 +481,11 @@ De aanpassingen die nodig zijn zullen zich enkel in de `Dockerfile` bevinden:
 
 ```Dockerfile
 # 👇 1
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV PNPM_CONFIG_MINIMUM_RELEASE_AGE=0
 RUN corepack enable
 # 👇 1.1
 RUN apk add --no-cache libc6-compat
@@ -527,7 +533,7 @@ EXPOSE 3000
 CMD ["node", "dist/src/main"]
 ```
 
-1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:22-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
+1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:24-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
    1. Opgelet, hier wordt de base-layer nu opgebouwd vanuit een alpine image, hierdoor moeten we ook de libc6-compat library installeren. Dit is een library die packages die native C code nodig hebben zal helpen (voorbeelden hiervan zijn argon2 en swc).
 2. Deze lijnen doen, net zoals bij de front-end, geoptimaliseerde installaties van de dependencies. Let hierbij op een speciaal geval, we hebben een stage dev-deps en een stage prod-deps. Dit is omdat het build-commando een aantal devDependencies nodig heeft, maar onze effectief productie code heeft enkel de echte dependencies nodig. We willen uiteraard de devDependencies dus niet mee in onze uiteindelijke image.
 3. Let hier op de `--prod`, dit zorgt ervoor dat alle devDependencies verwijderd worden.
@@ -538,53 +544,6 @@ CMD ["node", "dist/src/main"]
 
 Bij de finale poging zien we nu dat de image van onze back-end drastisch kleiner geworden is, deze is nu ongeveer 220 MB.
 We hebben bovendien een mooie scheiding van verantwoordelijkheden.
-
-#### Migraties
-
-Het enige wat we nog kunnen verbeteren is het automatisch uitvoeren van migraties bij het starten van de back-end.
-Om dit op te lossen moeten we wat code toevoegen aan onze DrizzleModule
-(Opmerking: Dit kan ook de AppModule zijn, maar gezien het over de database migraties gaat, voelt DrizzleModule correct aan):
-
-```ts
-import { Logger, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import {
-  type DatabaseProvider,
-  DrizzleAsyncProvider,
-  drizzleProvider,
-  InjectDrizzle,
-} from './drizzle.provider';
-import path from 'node:path';
-import { migrate } from 'drizzle-orm/mysql2/migrator';
-
-@Module({
-  providers: [...drizzleProvider],
-  exports: [DrizzleAsyncProvider],
-})
-// 👇 1
-export class DrizzleModule implements OnModuleDestroy, OnModuleInit {
-  private readonly logger = new Logger(DrizzleModule.name); // 👈 2
-
-  constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
-
-  // 👇 1
-  async onModuleInit() {
-    this.logger.log('⏳ Running migrations...');
-    // 👇 3
-    await migrate(this.db, {
-      migrationsFolder: path.resolve('migrations'),
-    });
-    this.logger.log('✅ Migrations completed!');
-  }
-
-  async onModuleDestroy() {
-    await this.db.$client.end();
-  }
-}
-```
-
-1. We zorgen dat de DrizzleModule de `OnModuleInit` interface implementeert. Zo kunnen we een `onModuleInit` methode implementeren, waarin we de migraties laten uitvoeren bij het initialiseren van de module die de database connectie verzorgd.
-2. We gebruiken onze geconfigureerde logger, zodat we bij de opstart wat logging kunnen uitvoeren. Zo kunnen we zien of de migratie succesvol is uitgevoerd.
-3. We gebruiken de `migrate` functie van de `drizzle-orm` library. Hieraan moeten we meegeven waar deze de migraties zal kunnen terugvinden.
 
 ## Render account aanmaken
 

@@ -3,9 +3,9 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4 1e3ffd2
+> git checkout -b les3 53dfcefc
 > pnpm install
 > pnpm start:dev
 > ```
@@ -212,8 +212,8 @@ Aan de hand van custom config files kunnen we de instellingen per domein groeper
 // src/config/configuration.ts
 
 // 👇 1
-export default () => ({
-  env: process.env.NODE_ENV, // 👈 2
+export default (): ServerConfig => ({
+  env: process.env.NODE_ENV || '', // 👈 2
   port: parseInt(process.env.PORT || '3000'), // 👈 3
 });
 
@@ -334,8 +334,8 @@ Voeg nu ook een environment variabelen toe voor CORS (zie [hoofdstuk 2](../2-RES
   Het `configuration.ts` bestand:
 
   ```ts
-  export default () => ({
-    env: process.env.NODE_ENV,
+  export default (): ServerConfig => ({
+    env: process.env.NODE_ENV || '',
     port: parseInt(process.env.PORT || '3000'),
     cors: {
       origins: process.env.CORS_ORIGINS
@@ -468,10 +468,10 @@ export interface DatabaseConfig {
 Vul vervolgens de default export in `src/config/configuration.ts` aan met de database configuratie:
 
 ```ts
-export default () => ({
+export default (): ServerConfig => ({
   // ...
   database: {
-    url: process.env.DATABASE_URL,
+    url: process.env.DATABASE_URL || '',
   },
 });
 ```
@@ -971,7 +971,6 @@ import { DrizzleModule } from '../drizzle/drizzle.module'; // 👈
   imports: [DrizzleModule], // 👈
   providers: [PlaceService],
   controllers: [PlaceController],
-  exports: [PlaceService],
 })
 export class PlaceModule {}
 ```
@@ -1143,13 +1142,15 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
 1. Vervolledig de service en controller van de entiteit die je in de vorige oefeningen hebt aangemaakt zodat deze de databank gebruikt i.p.v. mock data.
 2. Maak de nodige methoden in de controllers async.
 3. Vervolledig je `README.md` met de nodige informatie om de applicatie correct op te starten.
+   - Geef instructies om de `.env` file aan te maken
+   - Vermeld hierbij welke variabelen er minimaal in moeten staan.
 
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les4-opl e27a0a6
+> git checkout -b les3-opl f0d2b3ef
 > pnpm install
 > docker compose up -d
 > pnpm db:migrate
