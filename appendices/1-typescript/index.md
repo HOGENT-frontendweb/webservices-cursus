@@ -114,6 +114,14 @@ Vervolgens loont het de moeite om een aantal JavaScript drill-oefeningen te make
 
 Clone de repository <https://github.com/HOGENT-frontendweb/webservices-ch1-exercise> en lees de instructies in de README. De oplossingen zijn te vinden op de branch [`solution`](https://github.com/HOGENT-frontendweb/webservices-ch1-exercise/tree/solution).
 
+### Oefening 4 - AI drills
+
+Indien je moeite hebt met een specifiek deel van Typescript, dan kan je zeer gerichte drills maken met behulp van AI-tools. 
+Hierbij kan je aan je AI-tool uitleggen met welke concepten je moeite hebt en uitleg vragen. 
+Vervolgens laat je oefeningen genereren specifiek op de concepten waar je moeite mee hebt. 
+
+Let erop dat je geen oplossingen laat genereren, maar dat je beter jouw oplossing kan laten verbeteren.
+
 ## Must read/watch
 
 - [Statements vs. expressions](https://www.joshwcomeau.com/javascript/statements-vs-expressions/)
