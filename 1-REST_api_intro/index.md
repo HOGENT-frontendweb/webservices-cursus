@@ -436,7 +436,14 @@ Daarom gebruiken we [pnpm](https://pnpm.io/), een alternatieve package manager d
 
 ## NestJS
 
-Als IT'er is het belangrijk om te leren documentatie te lezen. De documentatie van NestJS is zeer uitgebreid en goed geschreven. We raden je aan om de documentatie grondig door te nemen, zeker als je vastloopt of iets niet begrijpt. De documentatie is beschikbaar op <https://docs.nestjs.com/>.
+Als IT'er is het belangrijk om te leren documentatie te lezen. 
+De documentatie van NestJS is zeer uitgebreid en goed geschreven. 
+We raden je aan om de documentatie grondig door te nemen, zeker als je vastloopt of iets niet begrijpt. 
+De documentatie is beschikbaar op <https://docs.nestjs.com/>.
+
+?> Wanneer je het minimum van NestJS kent, kan het echter efficiënter zijn om gerichte vragen te stellen aan je AI-tool over hoe je het framework gebruikt. 
+Dit zal je een hoop zoekwerk in de documentatie kunnen besparen.
+Hierbij kan je best wel vragen naar referenties, zodat je kan controleren of je wel de nieuwste/correcte uitleg krijgt.
 
 Om deze trend goed in te zetten, beginnen we met het lezen van de ["Introduction" sectie](https://docs.nestjs.com/) van de NestJS documentatie. Deze sectie geeft een beknopt overzicht van wat NestJS is, wat het doet, waarom je het zou gebruiken en hoe je een project opzet.
 
