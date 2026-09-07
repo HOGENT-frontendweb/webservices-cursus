@@ -574,7 +574,7 @@ Het ERD waar we uiteindelijk naartoe willen, ziet er zo uit (zie vorig hoofdstuk
 
 In dit hoofdstuk beginnen we met het definiëren van enkel de places tabel. Het schema voor onze databank schrijven we in het bestand `src/drizzle/schema.ts`.
 
-Via het [GitHub Student Pack](https://education.github.com/pack) krijg je gratis toegang tot GitHub Copilot. Laten we Copilot eens aan het werk zetten om ons schema te schrijven. Gebruik de volgende prompt:
+Laten we de AI-tool eens aan het werk zetten om ons schema te schrijven. Gebruik de volgende prompt:
 
 ```text
 Write a Drizzle ORM schema in TypeScript for the `places` table only.
@@ -619,7 +619,7 @@ users 1--* user_favorite_places
 places 1--* user_favorite_places
 ```
 
-Vergelijk het resultaat van Copilot met onderstaand schema.
+Vergelijk het resultaat van AI met onderstaand schema.
 
 ```ts
 // src/drizzle/schema.ts
@@ -640,9 +640,9 @@ export const places = mysqlTable(
 );
 ```
 
-De kans is groot dat Copilot een verouderde syntax gebruikt voor het definiëren van indices, dit is een veel voorkomende fout. De syntax voor indices is namelijk recent aangepast in Drizzle, dus het kan zijn dat Copilot nog de oude syntax gebruikt. In dit geval krijg je een deprecated warning als je hovert over de `mysqlTable` functie.
+De kans is groot dat de AI een verouderde syntax gebruikt voor het definiëren van indices, dit is een veel voorkomende fout. De syntax voor indices is namelijk recent aangepast in Drizzle, dus het kan zijn dat de AI nog de oude syntax gebruikt. In dit geval krijg je een deprecated warning als je hovert over de `mysqlTable` functie.
 
-> 💡 Verwijder de zin "name the index `idx_place_name_unique`" uit de prompt, dan is de kans groter dat Copilot de nieuwe syntax gebruikt. Natuurlijk moet je dan zelf nog de naam van de index aanpassen. Het is dus sterk aan te raden om altijd de **uitvoer van LLM's te controleren**.
+> 💡 Verwijder de zin "name the index `idx_place_name_unique`" uit de prompt, dan is de kans groter dat de AI de nieuwe syntax gebruikt. Natuurlijk moet je dan zelf nog de naam van de index aanpassen. Het is dus sterk aan te raden om altijd de **uitvoer van LLM's te controleren**.
 
 Daarnaast merk je dat de syntax van Drizzle heel leesbaar is. Probeer zelf eens te achterhalen wat deze code precies doet.
 
@@ -834,6 +834,10 @@ async function resetDatabase() {
 ```
 
 Vervolgens definiëren we een functie om places toe te voegen. We gebruiken hiervoor de [`insert` functie van Drizzle](https://orm.drizzle.team/docs/insert#sql-insert).
+
+?> Voor het invullen van de seeds is het wederom interessant om AI te gebruiken. 
+In het geval van de cursus hebben we echter al "moeite" gestoken in het bouwen van mock_data, dus kan het interessant zijn om voor jezelf eens te proberen de eerder aangemaakte data te gebruiken voor seeding.
+Voor consistentie doorheen de cursus gaan we echter wel verder met de onderstaande code.
 
 ```ts
 async function seedPlaces() {
