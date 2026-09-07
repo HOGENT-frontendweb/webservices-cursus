@@ -536,6 +536,8 @@ Probeer de verschillende routes uit:
 3. Kopieer het antwoord van `/docs-json` naar de [Swagger Editor](https://editor.swagger.io/) en controleer of alles correct is. Rechts bovenaan zal je eventuele fouten of waarschuwingen zien.
 4. Test alle routes via de Swagger UI op `/docs`.
 
+?> Indien je voldoende begrip hebt over hoe het documenteren via swagger werkt, probeer dit dan samen met AI iteratief op te lossen.
+
 ## Oefening 2 - Eigen project
 
 Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
