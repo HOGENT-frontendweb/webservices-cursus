@@ -93,29 +93,3 @@ Als dat niets oplevert, kan je op twee manieren hulp krijgen:
 - Om elke student evenveel te kunnen helpen, mag je maximaal 3 issues openen
 
 **Belangrijk:** Technische vragen via e-mail worden niet beantwoord. Gebruik altijd de bovenstaande kanalen voor de beste en snelste hulp.
-
-## Mag ik AI gebruiken?
-
-?> Voor dit olod hanteren we level 3 van de [AI Assessment Scale](https://arxiv.org/pdf/2412.09029). Probeer wel eerst zelf een oplossing te vinden m.b.v. traditionele bronnen alvorens AI tools te gebruiken, zie bv. <https://www.vaia.be/nl/blog/hoe-vervuilend-is-ai>.
-
-**Wat mag je met AI tools:**
-
-- Code genereren en laten uitleggen
-- Documentatie schrijven (dossier, README)
-- Testdata genereren
-- Concepten laten uitleggen die je niet begrijpt
-- Brainstormen over ideeën voor je project
-- Debugging hulp en foutboodschappen laten uitleggen
-
-**Belangrijke voorwaarden:**
-
-- Je moet alle gegenereerde code grondig begrijpen
-- Je bent volledig verantwoordelijk voor de kwaliteit en correctheid
-- Je moet de code kunnen uitleggen tijdens de demo (bv. je extra technologie)
-- Je mag niet blindelings code kopiëren zonder te begrijpen wat het doet
-
-**Tijdens de evaluatie:**
-
-- Je moet kunnen uitleggen hoe je code werkt
-- Je moet kunnen aantonen dat je de gebruikte technologieën begrijpt
-- AI-hulp vermelden in je dossier wordt gewaardeerd maar is niet verplicht

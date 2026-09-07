@@ -1,4 +1,4 @@
-# Web Services Opdracht 2025 - 2026
+# Web Services Opdracht 2026 - 2027
 
 ## 1. De opdracht
 

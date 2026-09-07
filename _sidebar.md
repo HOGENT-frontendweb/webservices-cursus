@@ -3,6 +3,7 @@
 - [0. Algemene info](/0-intro/situering.md)
 - [0. Software](/0-intro/software.md)
 - [0. Examenopdracht](/0-intro/examenopdracht.md)
+- [0. AI Statement](/0-intro/ai_statement.md)
 - [1. REST API intro](/1-REST_api_intro/index.md)
 - [2. REST API bouwen](/2-REST_api_bouwen/index.md)
 - [3. Datalaag en places](/3-datalaag_places/index.md)
