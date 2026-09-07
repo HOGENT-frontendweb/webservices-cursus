@@ -101,6 +101,8 @@ Voor we aan de slag gaan, breiden we onze `users` tabel uit met een paar extra k
 - `password_hash`: de hash van het wachtwoord van de gebruiker
 - `roles`: JSON-kolom met een lijst van rollen die de gebruiker heeft, bv. `user`, `admin`, ...
 
+?> Wanneer je bovenstaande uitleg aan AI geeft, zou deze in staat moeten zijn de wijzigingen voor het schema te genereren. Vergelijk dit met onderstaande code.
+
 ```ts
 // src/drizzle/schema.ts
 export const users = mysqlTable(
@@ -145,6 +147,9 @@ pnpm install argon2
 Sta via `pnpm approve-builds` toe om `argon2` te builden.
 
 Breid vervolgens de `seed.ts` uit om `12345678` te hashen als wachtwoord voor elke gebruiker:
+
+?> Afhankelijk van hoeveel seed-data je hebt, kan het interessant zijn om de hash functie te maken, en vervolgens AI dit te toevoegen aan de userdata. 
+Een alternatief kan zijn om op te zoeken hoe je "multi-cursor" gebruikt in je IDE, zodat je dit voor alle gebruikers tegelijkertijd kan doen.
 
 ```ts
 // src/drizzle/seed.ts
