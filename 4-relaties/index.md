@@ -36,9 +36,9 @@ Vul het schema aan met de tabellen voor transactions, users en favoriete places:
 - Definieer voor de user tabel enkel de kolommen `id` en `name`.
 - Voor de tabel user_favorite_places definieer je een samengestelde primary key met behulp van de `primaryKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#composite-primary-key>
 
-Je zou hier opnieuw Copilot voor kunnen gebruiken. Controleer nadien of het resultaat voldoet aan de vereisten en corrigeer indien nodig. Let er ook op dat je de juiste types gebruikt voor de kolommen, en dat je de juiste opties meegeeft (zoals `notNull` of `unsigned`).
+Je zou hier opnieuw AI voor kunnen gebruiken. Controleer nadien of het resultaat voldoet aan de vereisten en corrigeer indien nodig. Let er ook op dat je de juiste types gebruikt voor de kolommen, en dat je de juiste opties meegeeft (zoals `notNull` of `unsigned`).
 
-- ERD-code (voor Copilot) +
+- ERD-code (voor AI) +
 
   ```text
   [users]
@@ -290,6 +290,10 @@ async function resetDatabase() {
 Denk eraan om de tabellen in de juiste volgorde te verwijderen om foreign key problemen te vermijden.
 
 Vervolgens definiëren we de functies om data toe te voegen aan de nieuwe tabellen:
+
+?> Deze kan je wederom laten aanmaken door AI. 
+Controleer altijd de correctheid van wat gegenereerd is. 
+Dankzij typescript krijgen we sowieso al een indicatie of het programma nog steeds zal runnen, maar in het geval van seeding moeten we zel zeker zijn dat de referentieële integriteit nog steeds in orde is. 
 
 ```ts
 // src/drizzle/seed.ts
@@ -866,6 +870,8 @@ Vul de methode `updateById` in de `TransactionService` aan. Hierbij willen we ee
 
 Roep deze methode in de `TransactionController` aan.
 
+?> Indien je ervan overtuigd bent dat je weet hoe dit moet, voel je dan zeker vrij om AI de eerste aanzet te laten geven, door deze code te genereren. Dan kan je nadien controleren over dit is wat je er zelf van wilde maken.
+
 - Oplossing +
 
   Vul de methode `updateById` in de `TransactionService` aan:
@@ -1207,6 +1213,11 @@ Definieer de overige endpoints in de `UserController`:
 Maak een `UserService` aan met de nodige methoden (getAll, getById, create, update, delete). Implementeer deze methoden. Voorzie ook de nodige DTO's.
 
 Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer enkel de service.
+
+?> Gezien REST resource based werkt, is het implementeren van de GET, POST, PUT en DELETE requests altijd heel gelijkaardig (de verschillen zijn grotendeels vanwege relaties op de resource). 
+We hebben nu reeds enkele implementaties gemaakt, waardoor AI voldoende voorbeelden zou moeten hebben om te weten welke stijl we in ons project hanteren. 
+Probeer eens om met AI iteratief dit probleem op te lossen.
+Zorg dat je bij de verschillende stappen vaak genoeg commit wanneer je een deel code hebt dat voldoet aan de eisen.
 
 - Oplossing +
 
