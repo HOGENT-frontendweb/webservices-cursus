@@ -8,13 +8,13 @@ Je bent volledig vrij om te kiezen welke API je ontwikkelt. Indien je twijfelt o
 
 ?> Er wordt enkel feedback gegeven op ideeën tijdens semester 1. Indien je een idee hebt dat je graag wil bespreken, doe dit dan tijdig.
 
-Voor de examenopdracht mag je optioneel per 2 samenwerken. Zie [sectie 7](#7-groepswerk-optioneel) voor meer informatie.
+De examenopdracht wordt uitgevoerd in teams van twee. Beide teamleden dragen bij aan alle onderdelen van de applicatie en zijn verantwoordelijk voor het volledige eindresultaat. Zie [sectie 7](#7-groepswerk) voor meer informatie.
 
-Alle code moet in een GitHub classroom repository terechtkomen (zie Chamilo voor een link naar de classroom). Enkel de `main` branch van deze repository zal geëvalueerd worden. Er wordt automatisch een template van de `README.md` aangemaakt als je de opdracht accepteert, vul deze correct in. Je gebruikt dezelfde repository voor zowel Web Services als Front-end Web Development. Check zeker onze [appendix over Git & GitHub](../appendices/2-github/index.md) als je hiermee nog niet vertrouwd bent.
+Alle code moet in een GitHub classroom repository terecht komen (zie Orion voor een link naar de classroom). Enkel de `main` branch van deze repository zal geëvalueerd worden. Er wordt automatisch een template van de `README.md` aangemaakt als je de opdracht accepteert, vul deze correct in. Je gebruikt dezelfde repository voor zowel Web Services als Front-end Web Development. Check zeker onze [appendix over Git & GitHub](../appendices/2-github/index.md) als je hiermee nog niet vertrouwd bent.
 
 Het is belangrijk dat de applicatie significant verschilt van de voorbeeldapplicatie die tijdens de les gemaakt wordt.
 
-Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Chamilo. Een template voor dit dossier (`dossier.md`) vind je ook in jouw repository en dien je te gebruiken. **Je dient het dossier in als pdf!**
+Daarnaast verwachten we dat je een dossier met uitleg over je app indient op Orion. Een template voor dit dossier (`dossier.md`) vind je ook in jouw repository en dien je te gebruiken. **Je dient het dossier in als pdf!**
 
 ## 2. Ontvankelijkheidscriteria
 
@@ -130,17 +130,32 @@ Bij het toevoegen van een extra technologie is het belangrijk dat deze ook echt 
 
 ## 7. Groepswerk
 
-In het geval je voor de examenopdracht per 2 wil samenwerken, kan dit. Je maakt in dat geval één repository aan in de GitHub classroom en werkt samen aan dezelfde codebase. Volg de instructies op Chamilo voor het aanmaken van een repository.
+oor de examenopdracht werk je in groepen van twee. Je maakt één repository aan in de GitHub classroom en werkt samen aan dezelfde codebase. Volg de instructies op Orion voor het aanmaken van een repository.
 
-Jullie worden samen geëvalueerd en krijgen (normaal) dezelfde score. Zorg ervoor dat jullie beiden voldoende commits maken zodat duidelijk is dat jullie beiden aan het project gewerkt hebben. Indien niet iedereen voldoende bijgedragen heeft, kan dit gevolgen hebben voor de score van de persoon die minder bijgedragen heeft.
+Jullie worden tegelijkertijd geëvalueerd. Zorg ervoor dat jullie beiden voldoende commits maken zodat duidelijk is dat jullie beiden aan het project gewerkt hebben. Indien niet iedereen voldoende bijgedragen heeft, kan dit gevolgen hebben voor de score van de persoon die minder bijgedragen heeft.
 
-Maak gebruik van branches en pull requests om samen te werken aan de codebase. Dit helpt om de bijdragen van elke teamgenoot duidelijk te maken en simuleert een professionele werkomgeving.
+Hoewel het project in groep wordt uitgevoerd, wordt van elke student verwacht dat hij een significante en aantoonbare bijdrage levert aan het eindresultaat.
 
-Werkt de samenwerking niet goed, dan kan je dit altijd via mail melden aan de lector. We kunnen in dat geval eventueel beslissen om jullie apart te evalueren. Het spreekt voor zich dat slechts één persoon verder kan gaan met het bestaande idee, de andere persoon moet dan een nieuw idee uitwerken.
+Elke student implementeert minstens één volledige feature van begin tot einde. Dit betekent dat de student verantwoordelijk is voor de volledige implementatie van deze functionaliteit, inclusief:
+
+- de gebruikersinterface;
+- de integratie met de back-end of REST API;
+- authenticatie en autorisatie indien van toepassing;
+- validatie en foutafhandeling;
+- de bijhorende end-to-end tests.
+
+Om de individuele bijdrage te kunnen beoordelen, wordt gewerkt volgens de **Feature Branch Workflow**. Elke feature wordt ontwikkeld in een afzonderlijke feature branch en via een duidelijke Pull Request (PR) geïntegreerd in de `main`-branch.
+
+De Pull Request moet voldoende informatie bevatten om de uitgevoerde werkzaamheden te kunnen beoordelen. Het moet duidelijk zijn:
+
+- welke functionaliteit werd ontwikkeld;
+- welke onderdelen door de student werden geïmplementeerd;
+- welke technische keuzes werden gemaakt;
+- hoe de functionaliteit getest werd.
+
+De individuele bijdrage van elke student moet aantoonbaar zijn aan de hand van de commits, feature branches en Pull Requests. Wanneer onvoldoende kan worden aangetoond welke bijdrage een student heeft geleverd, kan dit een negatieve invloed hebben op de evaluatie.
 
 Na de deadline bekijken we de activiteit in de repository en kunnen we zien wie wat en hoeveel heeft bijgedragen.
-
-Voor de demo neem je best samen een video op. Jullie verdelen zelf wie wat demonstreert, maar zorg ervoor dat beide personen evenveel aan bod komen in de video.
 
 ## 8. Evaluatie
 

@@ -20,11 +20,11 @@ Programmeren leer je enkel door het te doen, niet door onze cursus te lezen. Je 
 
 Voor dit olod is er een [examenopdracht](0-intro/examenopdracht.md). Kort gezegd moet je een Node.js back-end maken tegen week 13. De voorwaarden van deze back-end en de examenvorm staan duidelijk in de opdracht. De bijbehorende front-end maak je, indien van toepassing, in het olod Front-end Web Development.
 
-De Chamilo-cursus voor dit olod zal weinig bevatten. Hierin komen enkel de belangrijke aankondigingen, een link naar deze cursus en een uploadmodule voor de examenopdracht. Op de Chamilo-cursus zal je ook een link naar de GitHub-classroom zien. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.
+De Orion-cursus voor dit olod zal weinig bevatten. Hierin komen enkel de belangrijke aankondigingen, een link naar deze cursus en een uploadmodule voor de examenopdracht. Op de Orion-cursus zal je ook een link naar de GitHub-classroom zien. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.
 
 ### Deadline
 
-> Week 13: vrijdag 19 december 2025 om 23u59
+> Week 13: vrijdag 18 december 2025 om 23u59
 
 Je weet de deadline, plan je werk goed in! Wacht niet tot de laatste paar weken om te starten, dan zal je gegarandeerd in tijdsnood komen. Tijdens de lessen is ook voldoende tijd om aan de applicatie te werken, maak hier gebruik van!
 
@@ -48,22 +48,22 @@ Er is een voorbeeldapplicatie (stap per stap opgebouwd, zoals in de cursus): <ht
 
 De bijhorende front-end is te vinden op: <https://github.com/HOGENT-frontendweb/frontendweb-budget>.
 
-Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stelselmatig omgevormd naar NestJS. Een deel van de hoofdstukken is al omgezet, maar nog niet alles. We geven duidelijk aan wanneer een hoofdstuk nog niet omgezet is (`WIP` naast de titel). Wees dus niet verrast als een hoofdstuk nog Koa gebruikt of er plots helemaal anders uitziet.
+<!--Vanaf dit academiejaar worden de voorbeeldapplicatie en cursus van dit olod stelselmatig omgevormd naar NestJS. Een deel van de hoofdstukken is al omgezet, maar nog niet alles. We geven duidelijk aan wanneer een hoofdstuk nog niet omgezet is (`WIP` naast de titel). Wees dus niet verrast als een hoofdstuk nog Koa gebruikt of er plots helemaal anders uitziet.-->
 
 > Suggesties voor verbeteringen of aanpassingen van schrijffouten zijn altijd welkom! Maak hiervoor een issue of pull request op de GitHub-repository van de cursus: <https://github.com/HOGENT-frontendweb/webservices-cursus>.
 
 ## Planning
 
-Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen.
+Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen. In deze cursus zullen we geleidelijk aan TypeScript features introduceren, maar het is aan te raden om zelf ook wat tijd te investeren in het leren van TypeScript. Zie [TypeScript appendix](../appendices/1-typescript/index.md). De planning is als volgt:
 
 | Week    | Inhoud                                         |
 | ------- | ---------------------------------------------- |
-| week 1  | Inleiding, TypeScript                          |
-| week 2  | TypeScript, REST API intro                     |
-| week 3  | REST API intro + bouwen                        |
-| week 4  | REST API bouwen                                |
-| week 5  | Datalaag en places                             |
-| week 6  | Relaties                                       |
+| week 1  | Inleiding, REST API intro                      |
+| week 2  | REST API intro + bouwen                        |
+| week 3  | REST API bouwen                                |
+| week 4  | Datalaag en places                             |
+| week 5  | Relaties                                       |
+| week 6  | Relaties                 |
 | week 7  | Validatie en foutafhandeling                   |
 | week 8  | Authenticatie / autorisatie                    |
 | week 9  | Authenticatie / autorisatie + API documentatie |
