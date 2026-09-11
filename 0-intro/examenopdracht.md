@@ -25,16 +25,14 @@ Alvorens we jouw project evalueren, controleren we of het voldoet aan een aantal
 Deze criteria zijn:
 
 - Het dossier is volledig en tijdig ingediend (zie [sectie 4](#4-dossier-vereisten) voor de vereisten)
-- Er werden voldoende (kleine) commits gemaakt
-  - Als je per 2 werkt, moeten we een aantal pull requests met feedback zien
-- De demo duurt niet langer dan 15 minuten (incl. Front-end Web Development indien van toepassing)
+- Er werden voldoende (kleine) commits gemaakt. Je werkt in groep van 2, dus moeten we een aantal pull requests met feedback zien
 - De applicatie is gemaakt in NodeJS en TypeScript met NestJS als web framework
 - De applicatie draait online
 - De applicatie start zonder problemen op a.d.h.v. de instructies in de README en gebruikt hiervoor Docker
 - De applicatie wijkt voldoende af van de voorbeeldapplicatie
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
-- Er is een extra technologie gebruikt (zie [sectie 6](#6-voorbeelden-van-extras) voor voorbeelden)
-- Er werden een aantal niet-triviale en werkende integratietesten gemaakt (naast de testen voor user)
+- Er is een extra technologie gebruikt (zie [sectie 6](#6-voorbeelden-van-extras) voor voorbeelden) en beschreven in het dossier.
+- Er werden een aantal niet-triviale en werkende integratietesten gemaakt (naast de testen voor user), waarvan de code coverage toegevoegd is aan het dossier.
 - Het databankschema is voldoende complex en correct. Het bestaat uit minstens 3 tabellen (naast de user tabel) die verbonden zijn met elkaar en bevat minstens 1 veel-op-veel relatie. De tabellen bevatten meerdere kolommen (naast het id).
 - Er is degelijke autorisatie/authenticatie op alle routes.
 
@@ -85,7 +83,7 @@ Jouw project wordt beoordeeld op verschillende onderdelen en criteria, met elk h
 - duidelijke en volledige README.md
 - duidelijk en volledig dossier
 
-### Demo
+### Demo bij de mondelinge verdediging
 
 - de student toont een werkende REST API in NodeJS
 - de student overloopt de projectstructuur - indien van toepassing
@@ -104,41 +102,12 @@ Dien enkel een pdf in op Chamilo, er zijn genoeg plugins voor VS Code om Markdow
 
 !> Gebruik een degelijke opmaak in Markdown voor de README en het dossier! Zie [Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet) voor meer uitleg.
 
-## 5. Demo vereisten
+## 5. Verloop van de examenvorm
 
-Naast het dossier dien je ook een demo van jouw applicatie op te nemen en te delen via Panopto met jouw lector(en). Deze demo moet voldoen aan de volgende vereisten:
-
-- De demo mag maximaal 15 minuten duren (inclusief Front-end Web Development, indien van toepassing)
-- De webcam moet aanstaan tijdens de demo zodat je gezicht zichtbaar is
-- Je deelt de demo via Panopto met jouw lector(en) - zorg ervoor dat de toegangsrechten correct ingesteld zijn
-- Dit is geen commerciële presentatie, maar een technische demo gericht op de implementatie
-- De demo moet opgenomen zijn vóór de deadline
-- De demo moet minstens de volgende onderdelen bevatten/tonen:
-  - **Context van de applicatie**: leg uit wat de applicatie doet, wat het doel is en waarom je dit onderwerp gekozen hebt
-  - **Projectstructuur overlopen (optioneel)**:
-    - Leg eventuele speciale ontwerpkeuzes uit (waarom bepaalde mappen/bestanden georganiseerd zijn zoals ze zijn)
-    - Dit hoef je niet te doen als de projectstructuur identiek is aan de voorbeeldapplicatie
-  - **Demo van de applicatie**:
-    - Gebruik uitsluitend de online versie van je applicatie (geen localhost)
-    - Indien je zowel Web Services als Front-end Web Development volgt:
-      - Demonstreer de webservice door verschillende API endpoints uit te testen in Postman (GET, POST, PUT, DELETE operaties)
-      - Toon je front-end applicatie en demonstreer dat deze responsive is door het scherm te verkleinen/vergroten of verschillende apparaatgroottes te simuleren
-      - Demonstreer de werking van je front-end applicatie
-    - Indien je enkel Web Services volgt:
-      - Focus op het demonstreren van je API endpoints in Postman
-      - Toon verschillende CRUD operaties voor je entiteiten
-  - **Demo van de extra technologie**:
-    - Toon de werking van de extra technologie in actie
-    - Laat de code zien waar je de extra technologie geïmplementeerd hebt
-    - Leg uit waarom je voor deze technologie gekozen hebt
-    - Doe dit voor beide olods (Web Services en Front-end Web Development indien van toepassing)
-  - **Testen demonstreren**:
-    - Laat alle testen lopen via de command line
-    - Toon dat ze succesvol slagen
-  - **Code showcase**:
-    - Toon een stukje code waar je bijzonder fier op bent
-    - Leg uit waarom je dit goed vindt en wat het doet
-    - Dit geldt voor beide olods (Web Services en Front-end Web Development indien van toepassing)
+Bij dit vak dien je een project te maken en hierbij een dossier op te laden op Orion.
+Indien je project voldoet aan de ontvankelijkheidscriteria zal je worden uitgenodigd voor een mondelinge verdediging.
+Hierbij geef je een demonstratie van je project en je code.
+Hierover zullen dan verdere vragen volgen.
 
 ## 6. Voorbeelden van extra’s
 
@@ -159,7 +128,7 @@ Bij het toevoegen van een extra technologie is het belangrijk dat deze ook echt 
 
 ?> Jouw project moet gebruik maken van NestJS als web framework. Andere frameworks zijn niet toegelaten.
 
-## 7. Groepswerk (optioneel)
+## 7. Groepswerk
 
 In het geval je voor de examenopdracht per 2 wil samenwerken, kan dit. Je maakt in dat geval één repository aan in de GitHub classroom en werkt samen aan dezelfde codebase. Volg de instructies op Chamilo voor het aanmaken van een repository.
 
