@@ -138,11 +138,13 @@ Hoewel het project in groep wordt uitgevoerd, wordt van elke student verwacht da
 
 Elke student implementeert minstens één volledige feature van begin tot einde. Dit betekent dat de student verantwoordelijk is voor de volledige implementatie van deze functionaliteit, inclusief:
 
-- de gebruikersinterface;
-- de integratie met de back-end of REST API;
+- CRUD endpoints
+- de bijhorende datalaag
+- de bijhorende servicelaag
 - authenticatie en autorisatie indien van toepassing;
-- validatie en foutafhandeling;
-- de bijhorende end-to-end tests.
+- validatie en foutafhandeling
+- API documentatie
+- de bijhorende testen
 
 Om de individuele bijdrage te kunnen beoordelen, wordt gewerkt volgens de **Feature Branch Workflow**. Elke feature wordt ontwikkeld in een afzonderlijke feature branch en via een duidelijke Pull Request (PR) geïntegreerd in de `main`-branch.
 
@@ -162,7 +164,7 @@ Na de deadline bekijken we de activiteit in de repository en kunnen we zien wie 
 Je wordt beoordeeld op basis van een portfolio dat je samenstelt gedurende het semester. Dit portfolio bestaat uit:
 
 - De code van je applicatie
-  - Moet te vinden zijn in de GitHub classroom repository op de `main` branch
+- Moet te vinden zijn in de GitHub classroom repository op de `main` branch
 - Het ingevulde dossier, als pdf ingediend op Chamilo
 - Een demo van je applicatie via een Panopto-opname
 
