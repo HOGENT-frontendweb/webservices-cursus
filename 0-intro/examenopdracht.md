@@ -259,7 +259,7 @@ Veel succes!
 - Klik op `Create repository from template`. GitHub maakt nu een exacte kopie voor je aan zonder de commit-geschiedenis van de template.
 - Voeg je medestudent toe als Collaborator aan de repository. Ga hiervoor naar Settings > Collaborators > Add people. Je medestudent krijgt een uitnodiging via e-mail en moet deze accepteren.
 - Voeg ook de lectoren toe als Collaborators aan de repository met read rechten. Ga hiervoor naar Settings > Collaborators > Add people. De lectoren krijgen een uitnodiging via e-mail en moeten deze accepteren. Voeg de volgende lectoren toe:
-  - Andreas De Smet: @dreeki
+  - Andreas De Witte: @dreeki
   - Karine Samyn: @ksa607
   - Pieter Vander Vennet: @pietervdvn
 
