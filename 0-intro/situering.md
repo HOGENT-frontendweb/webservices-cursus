@@ -18,13 +18,13 @@ Wij hebben gekozen voor [NestJS](https://nestjs.com/). Waarom? NestJS is een mod
 
 Programmeren leer je enkel door het te doen, niet door onze cursus te lezen. Je zal bijgevolg merken dat in het cursusmateriaal enkel het absolute minimum staat.
 
-Voor dit olod is er een [examenopdracht](0-intro/examenopdracht.md). Kort gezegd moet je een Node.js back-end maken tegen week 13. De voorwaarden van deze back-end en de examenvorm staan duidelijk in de opdracht. De bijbehorende front-end maak je, indien van toepassing, in het olod Front-end Web Development.
+Voor dit olod is er een [examenopdracht](0-intro/examenopdracht.md). Kort gezegd moet je in teams van 2 studenten een Node.js back-end maken tegen week 13. De voorwaarden van deze back-end en de examenvorm staan duidelijk in de opdracht. De bijbehorende front-end maak je, indien van toepassing, in het olod Front-end Web Development.
 
-De Orion-cursus voor dit olod zal weinig bevatten. Hierin komen enkel de belangrijke aankondigingen, een link naar deze cursus en een uploadmodule voor de examenopdracht. Op de Orion-cursus zal je ook een link naar de GitHub-classroom zien. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.
+De Orion-cursus voor dit olod zal weinig bevatten. Hierin komen enkel de belangrijke aankondigingen, een link naar deze cursus, inschrijven in groepen van 2 en een uploadmodule voor de examenopdracht. <!--Op de Orion-cursus zal je ook een link naar de GitHub-classroom zien. Zonder repository in deze classroom kunnen wij niet aan je code en kan je hierop dus niet geëvalueerd worden.-->
 
 ### Deadline
 
-> Week 13: vrijdag 18 december 2025 om 23u59
+> Week 13: vrijdag 18 december 2026 om 23u59
 
 Je weet de deadline, plan je werk goed in! Wacht niet tot de laatste paar weken om te starten, dan zal je gegarandeerd in tijdsnood komen. Tijdens de lessen is ook voldoende tijd om aan de applicatie te werken, maak hier gebruik van!
 
