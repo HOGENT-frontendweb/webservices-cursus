@@ -12,7 +12,7 @@
 - [6. Authenticatie & autorisatie](/6-authenticatie/index.md)
 - [7. API documentatie](/7-api_docs/index.md)
 - [8. Testing](/8-testing/index.md)
-- [9. CI/CD](/9-cicd/index.md)
+- [9. CI/CD (WIP)](/9-cicd/index.md)
 - [Appendices](/appendices/index.md)
   - [TypeScript](/appendices/1-typescript/index.md)
   - [Git & GitHub](/appendices/2-github/index.md)
