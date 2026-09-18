@@ -547,6 +547,10 @@ We hebben bovendien een mooie scheiding van verantwoordelijkheden.
 
 ### Algemene info
 
+Afhankelijk van of je groep ingeschreven is in de cursus `Web Services` of `Front-end Web Development` zal je groepsnummer er respectievelijk als `WSXX` of `FWDXX` uitzien, waarbij `XX` het nummer zal zijn.
+Deze groepsnaam zal gevolgd worden voor de DNS naam die jouw VPS van het VIC zal krijgen.
+Om dit niet telkens te herhalen zullen we in de cursus als naamgeving de vorm `GXX` hanteren.
+
 In het begin van de semester werden de VPS's (Virtual Private Server) aangevraagd bij vichogent.be.
 Hiervoor werd de public key van je SSH keypair doorgestuurd. 
 Hiermee is er vanuit het VIC een virtuele server voorzien per groep, beide studenten kunnen connecteren met SSH.
