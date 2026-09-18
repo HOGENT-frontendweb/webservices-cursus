@@ -683,6 +683,6 @@ Wanneer je in je README of cursusnotities naar branches verwijst, gebruik dan de
 
 > **Eindpunt voorbeeldapplicatie**
 >
-> De `main` branch bevat de finale versie van de voorbeeldapplicatie voor beide olods.
+> Voor dit hoofdstuk kan je verder bouwen op een lokale branch zoals `chapter-9`. De `main` branch bevat de finale versie van de voorbeeldapplicatie voor beide olods.
 
 <iframe src="https://giphy.com/embed/3otPoS81loriI9sO8o" width="480" height="269" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
