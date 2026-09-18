@@ -679,6 +679,8 @@ Indien je iets interessant wil proberen en hiervoor meer rekenkracht nodig hebt,
 
 Pas vervolgens jouw README aan met de nodige commando's... om de applicatie in productie op te starten. Je kan inspiratie opdoen in de README's van de voorbeeldapplicaties.
 
+Wanneer je in je README of cursusnotities naar branches verwijst, gebruik dan dezelfde `chapter-X` naamgeving als elders in de cursus.
+
 > **Eindpunt voorbeeldapplicatie**
 >
 > De `main` branch bevat de finale versie van de voorbeeldapplicatie voor beide olods.
