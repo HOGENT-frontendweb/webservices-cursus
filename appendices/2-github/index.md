@@ -127,9 +127,10 @@ Zo kan je teamlid je werk bekijken en opvolgen.
 
 ### 4. Maak een Pull Request
 
-Wanneer de functionaliteit klaar is, maak je op GitHub een **Pull Request (PR)** van je feature branch naar `main`.
+Wanneer de functionaliteit klaar is, maak je op GitHub een **Pull Request (PR)** van je feature branch naar `main`. Een Pull Request is een verzoek om jouw wijzigingen toe te voegen aan de hoofdversie van het project. Je zegt eigenlijk tegen je team:
+"Ik ben klaar met mijn werk. Kunnen jullie mijn code nakijken en goedkeuren voordat ze in main terechtkomt?"
 
-Beschrijf hierbij:
+In de Pull Request beschrijf je:
 
 - welke functionaliteit werd toegevoegd;
 - welke bestanden aangepast werden;
@@ -290,7 +291,9 @@ Lees de gewijzigde bestanden aandachtig en stel jezelf de volgende vragen:
 - Is er onnodige duplicatie aanwezig?
 - Zijn componenten niet groter of complexer dan nodig?
 
-#### React Best Practices
+#### Best Practices
+
+Voor React-componenten kan je bijvoorbeeld letten op:
 
 - Zijn componenten logisch opgebouwd?
 - Wordt state correct gebruikt?
@@ -342,9 +345,9 @@ Voor je een Pull Request goedkeurt, controleer je of:
 
 Door elkaars code te reviewen:
 
-- verhoog je de kwaliteit van het project;
-- leer je van elkaar;
-- ontdek je fouten sneller;
-- zorg je ervoor dat beide teamleden de volledige applicatie begrijpen.
+- verhoog je de kwaliteit van het project
+- leer je van elkaar
+- ontdek je fouten sneller
+- zorg je ervoor dat beide teamleden de volledige applicatie begrijpen
 
 Code review is daarom een essentieel onderdeel van professionele softwareontwikkeling.
