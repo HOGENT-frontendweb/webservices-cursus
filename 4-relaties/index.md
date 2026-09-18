@@ -291,9 +291,9 @@ Denk eraan om de tabellen in de juiste volgorde te verwijderen om foreign key pr
 
 Vervolgens definiëren we de functies om data toe te voegen aan de nieuwe tabellen:
 
-?> Deze kan je wederom laten aanmaken door AI. 
-Controleer altijd de correctheid van wat gegenereerd is. 
-Dankzij typescript krijgen we sowieso al een indicatie of het programma nog steeds zal runnen, maar in het geval van seeding moeten we zel zeker zijn dat de referentieële integriteit nog steeds in orde is. 
+?> Deze kan je wederom laten aanmaken door AI.
+Controleer altijd de correctheid van wat gegenereerd is.
+Dankzij typescript krijgen we sowieso al een indicatie of het programma nog steeds zal runnen, maar in het geval van seeding moeten we zel zeker zijn dat de referentieële integriteit nog steeds in orde is.
 
 ```ts
 // src/drizzle/seed.ts
@@ -982,6 +982,7 @@ export class UserController {
 Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken
 
 Wanneer we dit proberen krijgen we een error te zien. We moeten nog twee stappen ondernemen om de `PlaceService` te kunnen injecteren in de `UserController`:
+
 1. Exporteer de `PlaceService` in de `PlaceModule`.
 2. Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken.
 
@@ -1214,8 +1215,8 @@ Maak een `UserService` aan met de nodige methoden (getAll, getById, create, upda
 
 Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer enkel de service.
 
-?> Gezien REST resource based werkt, is het implementeren van de GET, POST, PUT en DELETE requests altijd heel gelijkaardig (de verschillen zijn grotendeels vanwege relaties op de resource). 
-We hebben nu reeds enkele implementaties gemaakt, waardoor AI voldoende voorbeelden zou moeten hebben om te weten welke stijl we in ons project hanteren. 
+?> Gezien REST resource based werkt, is het implementeren van de GET, POST, PUT en DELETE requests altijd heel gelijkaardig (de verschillen zijn grotendeels vanwege relaties op de resource).
+We hebben nu reeds enkele implementaties gemaakt, waardoor AI voldoende voorbeelden zou moeten hebben om te weten welke stijl we in ons project hanteren.
 Probeer eens om met AI iteratief dit probleem op te lossen.
 Zorg dat je bij de verschillende stappen vaak genoeg commit wanneer je een deel code hebt dat voldoet aan de eisen.
 

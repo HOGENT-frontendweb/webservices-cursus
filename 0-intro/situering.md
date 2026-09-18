@@ -63,7 +63,7 @@ Deze planning is een richtlijn en kan nog wijzigen in functie van verlofdagen. I
 | week 3  | REST API bouwen                                |
 | week 4  | Datalaag en places                             |
 | week 5  | Relaties                                       |
-| week 6  | Relaties                 |
+| week 6  | Relaties                                       |
 | week 7  | Validatie en foutafhandeling                   |
 | week 8  | Authenticatie / autorisatie                    |
 | week 9  | Authenticatie / autorisatie + API documentatie |

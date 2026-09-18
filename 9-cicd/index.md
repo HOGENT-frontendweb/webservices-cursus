@@ -7,11 +7,11 @@ Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Ser
 | Sectie                                                             | Front-end Web Development | Web Services             |
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
 | [Continuous Integration/Delivery](#continuous-integrationdelivery) | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Docker](#Docker)                                                  | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Docker](#docker)                                                  | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Aanpassingen](#aanpassingen)                                      | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Back-end online zetten](#back-end-online-zetten)                  | :heavy_multiplication_x:  | :heavy_check_mark:       |
-| [Front-end online zetten](#front-end-online-zetten)                | :heavy_check_mark:        | :heavy_multiplication_x: |
-| [Online plaatsen op vichogent.be](#online-plaatsen-op-vichogentbe)                            | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Back-end online zetten](#back-end)                                | :heavy_multiplication_x:  | :heavy_check_mark:       |
+| [Front-end online zetten](#front-end)                              | :heavy_check_mark:        | :heavy_multiplication_x: |
+| [Online plaatsen op vichogent.be](#online-plaatsen-op-vichogentbe) | :heavy_check_mark:        | :heavy_check_mark:       |
 
 ## Continuous Integration/Delivery
 
@@ -384,7 +384,7 @@ CMD ["node", "dist/src/main"]
 1. Deze lijnen zijn identiek aan de `Dockerfile` van de front-end, we willen hier wederom gebruik kunnen maken van pnpm.
 2. Deze lijn zorgt ervoor dat pnpm geen release age nodig heeft voor het installeren van dependencies. Indien deze lijn er niet staat kan het zijn dat we een dag moeten wachten voor te builden. Dit is over het algemeen wel een slim idee voor security redenen, maar in onze development omgeving is dit niet nodig en enkel omslachtig.
 
-Indien dit niet lukt, controleer zeker de logs van de docker build. Hoogst waarschijnlijk is dit een probleem met de lockfile of met de approve-builds. Hiervoor kan je dan best de lockfile en node_modules eens verwijderen en opnieuw `pnpm install` doen, zodat je daarna `pnpm approve-builds` kan uitvoeren. 
+Indien dit niet lukt, controleer zeker de logs van de docker build. Hoogst waarschijnlijk is dit een probleem met de lockfile of met de approve-builds. Hiervoor kan je dan best de lockfile en node_modules eens verwijderen en opnieuw `pnpm install` doen, zodat je daarna `pnpm approve-builds` kan uitvoeren.
 
 ##### Docker Compose bestand
 
@@ -448,7 +448,7 @@ AUTH_JWT_SECRET=eensuperveiligsecretvoorinproduction
 
 1. In de `DATABASE_URL` staat na de @-teken `db`. Dit is de naam van de service in de docker compose file. Dit is omdat we hier gebruik maken van de interne DNS van docker compose.
 
-Dit geheel kan je tot slot uitvoeren met het commando `docker compose -f docker-compose-backend.yml up`. Eventueel voeg je nog optie -d uit om dit als background process te starten. 
+Dit geheel kan je tot slot uitvoeren met het commando `docker compose -f docker-compose-backend.yml up`. Eventueel voeg je nog optie -d uit om dit als background process te starten.
 
 ##### Dockerignore
 
@@ -552,21 +552,22 @@ Deze groepsnaam zal gevolgd worden voor de DNS naam die jouw VPS van het VIC zal
 Om dit niet telkens te herhalen zullen we in de cursus als naamgeving de vorm `GXX` hanteren.
 
 In het begin van de semester werden de VPS's (Virtual Private Server) aangevraagd bij vichogent.be.
-Hiervoor werd de public key van je SSH keypair doorgestuurd. 
+Hiervoor werd de public key van je SSH keypair doorgestuurd.
 Hiermee is er vanuit het VIC een virtuele server voorzien per groep, beide studenten kunnen connecteren met SSH.
 Jullie ontvingen hierover een mailing met de aan jullie toegekende poort.
 
-Hiermee wordt achterliggend via een firewall (die zorgt voor portforwarding) doorgestuurd naar de VPS die aan jullie toegekend is, dewelke afgeschermd is via SSH. 
+Hiermee wordt achterliggend via een firewall (die zorgt voor portforwarding) doorgestuurd naar de VPS die aan jullie toegekend is, dewelke afgeschermd is via SSH.
 Vanwege deze afscherming is het dus niet mogelijk te connecteren met de server die aan een andere groep toegekend is.
 
 Op iedere server zijn twee poorten geconfigureerd via een reverse proxy:
+
 - poort 80, geconfigureerd op domein `https://GXX-frontendweb.vichogent.be`
 - poort 3000, geconfigureerd op domein `https://GXX-webservices.vichogent.be`
 
 ?> Opmerking: je ziet dat er geen poort geconfigureerd staat voor de database. Dat wil zeggen dat we niet zelf aan de database kunnen en dat deze enkel bereikbaar zal zijn voor de backend via het docker compose dns systeem. Dit is een security best practice die we voldoen. Dit zal ons een probleem opleveren voor de seeding van de database, maar in een volgend deel van dit hoofdstuk zullen we dat probleem aanpakken.
 
 Het is dus belangrijk dat de applicaties draaien op de juiste poort van het toestel, anders zal het geheel niet werken.
-Denk hierbij zeker na over de werking van de portforwarding van docker compose! 
+Denk hierbij zeker na over de werking van de portforwarding van docker compose!
 Dit hebben we echter bewust op de juiste manier geconfigureerd in het eerst deel van dit hoofdstuk.
 
 ### Connecteren met de VPS
@@ -579,7 +580,7 @@ Iedere student heeft normaal toegang tot de VPS.
 Jullie hebben hiervoor een poort ontvangen.
 Connecteren doe je via het volgende commando (XXXXX vervangen door de door jullie ontvangen poort):
 
-```
+```bash
 ssh vicuser@vichogent.be -p XXXXX
 ```
 
@@ -591,7 +592,7 @@ Deze kan je wijzigen, waarbij je enkel de publieke ssh key van de andere student
 
 ### Configureren VPS
 
-Iedere groep krijgt een VPS waar alleen maar standaardinstellingen op staan. 
+Iedere groep krijgt een VPS waar alleen maar standaardinstellingen op staan.
 We zullen dus zelf docker moeten installeren.
 
 De VPS is een Ubuntu VM, voor de installatie van Docker kan je dus de officiële handleiding van [Docker](https://docs.docker.com/engine/install/ubuntu/) volgen.
@@ -599,7 +600,7 @@ Volg hierbij de stappen `Install using the api repository`.
 
 ### Binnenhalen van de projectcode
 
-Voor het binnenhalen van de projectcode zullen we gebruik maken van `git clone <url>`. 
+Voor het binnenhalen van de projectcode zullen we gebruik maken van `git clone <url>`.
 Het probleem hierbij is echter dat de repositories private zijn, dus dat de VPS hier geen toegang toe heeft.
 Om dit probleem op te lossen gaan we gebruik maken van [GitHub Deploy keys](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys).
 
@@ -616,7 +617,8 @@ De laatste stap is het opstarten van de applicatie via `docker compose`.
 Let er hier bij op dat we in het eerste deel van dit hoofdstuk een aparte docker-compose file hebben gebruikt voor front-end en back-end.
 Het is eenvoudiger om deze te combineren tot één enkele docker-compose file, hoewel dit niet strikt noodzakelijk is.
 
-Let erbij op dat je nog enkele wijzigingen moet doen: 
+Let erbij op dat je nog enkele wijzigingen moet doen:
+
 - Bij de frontend-service moet de `VITE_API_URL` ingesteld worden op `https://GXX-webservices.vichogent.be/api`.
 - Bij de backend-service moet een `.env.production` bestand toegevoegd worden. Deze is gelijkaardig aan de `.env.docker-local` die we eerder maakten, enkel de `CORS_ORIGINS` moet ingesteld worden op `["https://GXX-frontendweb.vichogent.be"]`.
 
@@ -626,16 +628,16 @@ Dit kan soms een error geven op pnpm build/install instructies, indien dit voorv
 ### Seeding
 
 De laatste stap voordat alles klaar is, is de seeding van het project.
-Zoals eerder vermeld is dat een lastig probleem, omdat we geen toegang hebben tot de database. 
+Zoals eerder vermeld is dat een lastig probleem, omdat we geen toegang hebben tot de database.
 Bovendien willen we geen `pnpm` installeren op de VPS (gezien de code binnenhalen zelf eigenlijk iets is dat beter kan).
 
 !> Zorg dat er geen docker container (of ander proces) draait op poort 3306 van je eigen toestel.
 
-Dit zullen we oplossen door via SSH een tunnel te leggen met de VPS. 
+Dit zullen we oplossen door via SSH een tunnel te leggen met de VPS.
 Hierbij zullen we poort 3306 van de VPS tunnelen naar poort 3306 van onze localhost over SSH.
 Dit doen we met het volgende commando:
 
-```
+```bash
 ssh vicuser@vichogent.be -p XXXXX -L 3306:localhost:3306
 ```
 
@@ -655,7 +657,7 @@ Moest je toch zo een automatisch systeem maken, vermeld dit zeker in je dossier 
 
 #### Via GitHub Actions (Optioneel)
 
-Je zou de docker image kunnen builden aan de hand van github actions. 
+Je zou de docker image kunnen builden aan de hand van github actions.
 Deze moet dan opgeslagen worden in een artifact repository waar docker images in kunnen staan.
 Hiervoor kan je gebruik maken van `ghcr.io`, de GitHub Container Repository.
 Deze hangt automatisch gelinkt aan je private repository.

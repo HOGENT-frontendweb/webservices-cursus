@@ -1251,10 +1251,11 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 
 ## Oefening 7 - Onderzoek naar het gevaar/risico van AI
 
-Als we nu terugblikken naar hoe onze setup van de testen gemaakt is, valt hopelijk op hoe eenvoudig dit voor ons werkt. 
-Hierbij hebben we de database via docker geautomatiseerd, hebben we hulpmethoden gemaakt voor het opspinnen van onze applicatie en het opzetten van de data voor tests. 
+Als we nu terugblikken naar hoe onze setup van de testen gemaakt is, valt hopelijk op hoe eenvoudig dit voor ons werkt.
+Hierbij hebben we de database via docker geautomatiseerd, hebben we hulpmethoden gemaakt voor het opspinnen van onze applicatie en het opzetten van de data voor tests.
 
 Nu gaan we eens uitproberen wat er zou gebeurd zijn indien we dit aan AI hadden overgelaten. We gaan dit in drie scenario's uitproberen:
+
 1. Helemaal geen context
 2. Een minimale hoeveelheid aan context
 3. Testen reeds door ons geschreven voor één endpoint
@@ -1263,20 +1264,22 @@ Het eerste dat we hiervoor gaan doen is terugkeren naar de commit waarmee deze l
 
 ### Poging 1: helemaal geen context
 
-Leg aan AI uit dat we integratietesten willen hebben voor de applicatie. 
-We willen testen hebben testen voor alle endpoints van de controllers. 
+Leg aan AI uit dat we integratietesten willen hebben voor de applicatie.
+We willen testen hebben testen voor alle endpoints van de controllers.
 
 Kijk eens wat hieruit komt en stel jezelf de vraag of de code voldoet aan de volgende criteria:
+
 - leesbaar?
 - aanpasbaar? (indien we iets willen wijzigen, kunnen we dit op één plaats doen ipv. in elke testmethode)
-- correct? 
+- correct?
 - voldoende coverage?
 
 Indien dit niet in orde is, probeer om iteratief dit te verbeteren. Vergelijk telkens met onze eindoplossing om af te toetsen of het voldoet aan kwaliteitseisen.
 
 ### Poging 2: Een minimale hoeveelheid aan context
 
-Leg aan AI uit dat we integratietesten willen hebben voor de applicatie. 
+Leg aan AI uit dat we integratietesten willen hebben voor de applicatie.
+
 - We willen testen hebben testen voor alle endpoints van de controllers.
 - We specifiëren welke technologieën te gebruiken (.env bestand, jest, testcontainers, ...)
 - We willen dat er aparte bestanden gemaakt worden voor seeding om die te gebruiken in de BeforeEach.
@@ -1290,10 +1293,10 @@ Kijk wederom of dit nu kwalitatief beter is.
 
 ### Poging 3: Testen reeds door ons geschreven voor één endpoint
 
-Tot slot gaan we zelf veel context voorzien. We gaan zorgen dat er een compleet voorbeeld is van hoe we willen dat de testen er moeten uitzien. 
-Hiervoor gaan we vertrekken vanaf het punt waar alle testen voor places gemaakt waren (commit `5f897299`). 
+Tot slot gaan we zelf veel context voorzien. We gaan zorgen dat er een compleet voorbeeld is van hoe we willen dat de testen er moeten uitzien.
+Hiervoor gaan we vertrekken vanaf het punt waar alle testen voor places gemaakt waren (commit `5f897299`).
 
-Vraag nu aan AI om testen voor de overige endpoints te maken. Geeft dit een beter resultaat dan de vorige pogingen? 
+Vraag nu aan AI om testen voor de overige endpoints te maken. Geeft dit een beter resultaat dan de vorige pogingen?
 
 ### Kritische reflectie
 

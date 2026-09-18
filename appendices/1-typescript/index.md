@@ -116,9 +116,9 @@ Clone de repository <https://github.com/HOGENT-frontendweb/webservices-ch1-exerc
 
 ### Oefening 4 - AI drills
 
-Indien je moeite hebt met een specifiek deel van Typescript, dan kan je zeer gerichte drills maken met behulp van AI-tools. 
-Hierbij kan je aan je AI-tool uitleggen met welke concepten je moeite hebt en uitleg vragen. 
-Vervolgens laat je oefeningen genereren specifiek op de concepten waar je moeite mee hebt. 
+Indien je moeite hebt met een specifiek deel van Typescript, dan kan je zeer gerichte drills maken met behulp van AI-tools.
+Hierbij kan je aan je AI-tool uitleggen met welke concepten je moeite hebt en uitleg vragen.
+Vervolgens laat je oefeningen genereren specifiek op de concepten waar je moeite mee hebt.
 
 Let erop dat je geen oplossingen laat genereren, maar dat je beter jouw oplossing kan laten verbeteren.
 

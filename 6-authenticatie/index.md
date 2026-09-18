@@ -148,7 +148,7 @@ Sta via `pnpm approve-builds` toe om `argon2` te builden.
 
 Breid vervolgens de `seed.ts` uit om `12345678` te hashen als wachtwoord voor elke gebruiker:
 
-?> Afhankelijk van hoeveel seed-data je hebt, kan het interessant zijn om de hash functie te maken, en vervolgens AI dit te toevoegen aan de userdata. 
+?> Afhankelijk van hoeveel seed-data je hebt, kan het interessant zijn om de hash functie te maken, en vervolgens AI dit te toevoegen aan de userdata.
 Een alternatief kan zijn om op te zoeken hoe je "multi-cursor" gebruikt in je IDE, zodat je dit voor alle gebruikers tegelijkertijd kan doen.
 
 ```ts

@@ -142,16 +142,17 @@ De datalaag beheert onze data. Uiteraard willen we geen hardgecodeerde data teru
 
 Creëer een nieuw bestand `src/data/mock_data.ts`, in een nieuwe `data` map. We gebruiken nog geen relaties, deze worden in een volgend hoofdstuk toegevoegd. We definiëren ook een interface `Place` die vastlegt hoe een plaats eruitziet.
 
-?> Het aanmaken van deze data is een perfecte opportuniteit voor het gebruiken van AI. 
+?> Het aanmaken van deze data is een perfecte opportuniteit voor het gebruiken van AI.
 Belangrijk is wel dat je hierbij zelf eerst de interface `Place` aanmaakt zodat de AI voldoende informatie heeft om correcte data te kunnen genereren.
 Vergeet ook niet de domeinregels van de data uit te leggen, in ons voorbeeld zou dit kunnen zijn dat het id een oplopende waarde moet zijn en dat de rating een geheel getal tussen 1 en 5 moet zijn.
 
-Een voorbeeld prompt zou de volgende kunnen zijn: 
-``` 
+Een voorbeeld prompt zou de volgende kunnen zijn:
+
+```text
 Prompt:
 
-Maak een array van places. 
-Deze array moet 10 elementen bevatten. 
+Maak een array van places.
+Deze array moet 10 elementen bevatten.
 Hierbij moet het id een oplopend geheel getal zijn en de rating een geheel getal tussen 1 en 5 zijn.
 ```
 
@@ -353,7 +354,7 @@ createPlace(@Body() body: any,  @Res() res: Response): string {
 
 Als je `@Res()` gebruikt, moet je zelf de response altijd volledig afhandelen. `Response` importeer je uit de `express` namespace. Probeer wel om zoveel mogelijk de voorziene decorators te gebruiken.
 
-Bij een geslaagde POST call is `HttpStatus.CREATED` echter default gedrag, dus dit hoef je er hier niet bij te plaatsen. 
+Bij een geslaagde POST call is `HttpStatus.CREATED` echter default gedrag, dus dit hoef je er hier niet bij te plaatsen.
 Bij een delete zal je echter wel manueel de correcte status `NO_CONTENT` moeten instellen.
 
 ### Best practice: gebruik DTO's

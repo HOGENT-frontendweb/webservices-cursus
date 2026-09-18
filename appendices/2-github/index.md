@@ -113,7 +113,7 @@ git add .
 git commit -m "Voegt loginformulier toe"
 ```
 
-Geef je commits een duidelijke beschrijving van de aangebrachte wijziging. (zie [Hoe commit ik best?](#hoe-commit-ik-best))
+Geef je commits een duidelijke beschrijving van de aangebrachte wijziging. (zie [Hoe commit ik best?](#11-hoe-commit-ik-best))
 
 ### 3. Push de branch naar GitHub
 

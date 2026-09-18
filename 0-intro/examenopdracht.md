@@ -31,7 +31,7 @@ Deze criteria zijn:
 - De applicatie start zonder problemen op a.d.h.v. de instructies in de README en gebruikt hiervoor Docker
 - De applicatie wijkt voldoende af van de voorbeeldapplicatie
 - node_modules, .env, productiecredentials... werden niet gepushed op GitHub
-- Er is een extra technologie gebruikt (zie [sectie 7](#7-voorbeelden-van-extra-s) voor voorbeelden) en beschreven in het dossier.
+- Er is een extra technologie gebruikt (zie [sectie 7](#7-voorbeelden-van-extras) voor voorbeelden) en beschreven in het dossier.
 - Er werden een aantal niet-triviale en werkende integratietesten gemaakt (naast de testen voor user), waarvan de code coverage toegevoegd is aan het dossier.
 - Het databankschema is voldoende complex en correct. Het bestaat uit minstens 3 tabellen (naast de user tabel) die verbonden zijn met elkaar en bevat minstens 1 veel-op-veel relatie. De tabellen bevatten meerdere kolommen (naast het id).
 - Er is degelijke autorisatie/authenticatie op alle routes.

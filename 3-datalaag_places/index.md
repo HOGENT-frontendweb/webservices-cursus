@@ -835,7 +835,7 @@ async function resetDatabase() {
 
 Vervolgens definiëren we een functie om places toe te voegen. We gebruiken hiervoor de [`insert` functie van Drizzle](https://orm.drizzle.team/docs/insert#sql-insert).
 
-?> Voor het invullen van de seeds is het wederom interessant om AI te gebruiken. 
+?> Voor het invullen van de seeds is het wederom interessant om AI te gebruiken.
 In het geval van de cursus hebben we echter al "moeite" gestoken in het bouwen van mock_data, dus kan het interessant zijn om voor jezelf eens te proberen de eerder aangemaakte data te gebruiken voor seeding.
 Voor consistentie doorheen de cursus gaan we echter wel verder met de onderstaande code.
 
