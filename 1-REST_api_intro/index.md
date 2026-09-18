@@ -436,12 +436,12 @@ Daarom gebruiken we [pnpm](https://pnpm.io/), een alternatieve package manager d
 
 ## NestJS
 
-Als IT'er is het belangrijk om te leren documentatie te lezen. 
-De documentatie van NestJS is zeer uitgebreid en goed geschreven. 
-We raden je aan om de documentatie grondig door te nemen, zeker als je vastloopt of iets niet begrijpt. 
+Als IT'er is het belangrijk om te leren documentatie te lezen.
+De documentatie van NestJS is zeer uitgebreid en goed geschreven.
+We raden je aan om de documentatie grondig door te nemen, zeker als je vastloopt of iets niet begrijpt.
 De documentatie is beschikbaar op <https://docs.nestjs.com/>.
 
-?> Wanneer je het minimum van NestJS kent, kan het echter efficiënter zijn om gerichte vragen te stellen aan je AI-tool over hoe je het framework gebruikt. 
+?> Wanneer je het minimum van NestJS kent, kan het echter efficiënter zijn om gerichte vragen te stellen aan je AI-tool over hoe je het framework gebruikt.
 Dit zal je een hoop zoekwerk in de documentatie kunnen besparen.
 Hierbij kan je best wel vragen naar referenties, zodat je kan controleren of je wel de nieuwste/correcte uitleg krijgt.
 
@@ -463,7 +463,7 @@ pnpm add -g @nestjs/cli
 
 Vervolgens maken we een nieuw project aan met de CLI. Dit kan je doen met het onderstaand commando. Tijdens de installatie kies je voor `pnpm` als package manager.
 
-!> **Info voor de examenopdracht:** zorg ervoor dat je onderstaand commando in de root van jouw GitHub Classroom repository uitvoert, anders zal het project niet in de juiste map aangemaakt worden. Natuurlijk kan je het nadien verplaatsen.
+!> **Info voor de examenopdracht:** zorg ervoor dat je onderstaand commando in de root van jouw GitHub repository uitvoert, anders zal het project niet in de juiste map aangemaakt worden. Natuurlijk kan je het nadien verplaatsen.
 
 ```bash
 nest new --strict webservices-budget
