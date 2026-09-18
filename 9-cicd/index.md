@@ -7,12 +7,11 @@ Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Ser
 | Sectie                                                             | Front-end Web Development | Web Services             |
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
 | [Continuous Integration/Delivery](#continuous-integrationdelivery) | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Nodige services](#nodige-services)                                | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Docker](#Docker)                                                  | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Aanpassingen](#aanpassingen)                                      | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Render account aanmaken](#render-account-aanmaken)                | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Back-end online zetten](#back-end-online-zetten)                  | :heavy_multiplication_x:  | :heavy_check_mark:       |
 | [Front-end online zetten](#front-end-online-zetten)                | :heavy_check_mark:        | :heavy_multiplication_x: |
-| [Hosting remarks](#hosting-remarks)                                | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Online plaatsen op vichogent.be](#online-plaatsen-op-vichogentbe)                            | :heavy_check_mark:        | :heavy_check_mark:       |
 
 ## Continuous Integration/Delivery
 
@@ -46,48 +45,14 @@ Nog een stap verder is het automatiseren van het proces. Dit wordt gedaan met ee
 
 Het hele concept van CI/CD valt buiten de scope van dit olod. We proberen jullie wel de essentie mee te geven.
 
-## Nodige services
-
-Om de back-end en front-end online te zetten, zijn er een aantal services nodig:
-
-- [Render](https://render.com/)
-- MySQL databank in het VIC (= Virtual IT Company van HOGENT): zie mail (ook spam) voor de inloggegevens
-- Docker
-
-?> Studenten die reeds geslaagd zijn voor het olod Web Services en een databank nodig hebben om hun back-end van vorig jaar te hergebruiken, gelieve een mail te sturen naar [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be). Houd er rekening mee dat het 1 à 2 werkdagen kan duren vooraleer je een antwoord krijgt, mail dus niet vlak voor de deadline.
-
-### Render
-
-Er bestaan heel wat software- en cloudoplossingen om CI/CD toe te passen. Vaak zijn deze oplossingen betalend want een paar virtuele machines opstarten om tests te draaien van een beetje serieuze applicaties is niet gratis natuurlijk.
-
-[Heroku](https://www.heroku.com/) had een gratis versie die eenvoudig te gebruiken was, maar die is, jammer genoeg, [verdwenen sinds 28 november 2022](https://dev.to/lukeecart/more-heroku-changes-that-will-definitely-affect-you-10o8).
-
-Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](https://render.com/). De Render omgeving is gratis (tot een bepaalde limiet uiteraard) en biedt meteen een oplossing voor zowel back-end als front-end. Het is ontzettend eenvoudig - een beetje klikken, invullen en klaar.
-
-> **Let op:** de opslag op Render is niet persistent. Als je een uploadfunctionaliteit hebt in jouw applicatie, dan zullen alle uploads verloren gaan wanneer jouw service op Render afgesloten wordt. Dit is het geval bij het gratis plan, omdat deze services afsluiten wanneer er geen activiteit is. Voor een professionele applicatie zou je dit moeten oplossen door gebruik te maken van een externe opslagservice, zoals AWS S3.
-
-### MySQL databank in het VIC
-
-Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruiken MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
-
-Er bestaan heel wat gratis MySQL services online maar eigenlijk geen enkele degelijke waar je geen kredietkaart voor nodig hebt, ofwel zien ze er sketchy uit of zijn ze vaak down.
-
-Daarom hosten we zelf een MySQL databank in het VIC (Virtual IT Company van HOGENT). Jullie krijgen (of kregen) een mail met de inloggegevens van jouw persoonlijke MySQL databank. **Let op: er wordt maar één databank per student voorzien!**
-
-**Dus je moet zelf geen MySQL databank aanmaken!** Droppen van de databank is mogelijk vanuit code, dat kunnen we helaas niet verhinderen. Wil je terug een lege databank? Drop dan simpelweg alle tabellen manueel.
-
-We zijn geen gigantisch datacenter, dus we kunnen niet garanderen dat de databank altijd online zal zijn of snel zal reageren. We doen ons best om de databank zo goed mogelijk online te houden.
-
-Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be). Houd er rekening mee dat het 1 à 2 werkdagen kan duren vooraleer je een antwoord krijgt, mail dus niet vlak voor de deadline.
-
 ### Docker
 
 Voor het online zetten van onze back-end willen we naar een mature development manier gaan.
 Daarom gaan we docker gebruiken, zodat we onafhankelijk van onze host-systemen kunnen werken.
-Gezien we met Render werken, volstaat het voor ons om een `Dockerfile` aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
+Gezien we met het VIC werken waarop we docker zullen uitvoeren, volstaat het voor ons om een `Dockerfile` aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
 
 Het opstellen van de Dockerfiles zullen we specifiek in de volgende secties bespreken.
-Ook zullen we de `docker-compose.yml` file gebruiken om onze applicatie lokaal te kunnen draaien in een identieke setup als op Render.
+Ook zullen we de `docker-compose.yml` file gebruiken om onze applicatie lokaal te kunnen draaien in een identieke setup als op het VIC.
 
 Docker levert ons zo een aantal voordelen:
 
@@ -684,21 +649,21 @@ Surf naar `https://GXX-frontendweb.vichogent.be` en controleer of alles werkt zo
 Hieronder staan wat verbeteringen op vlak van automatische pipelines. Dit is volledig optioneel en gaat buiten de scope van deze cursus.
 Moest je toch zo een automatisch systeem maken, vermeld dit zeker in je dossier zodat we hier vragen naar kunnen stellen.
 
-#### Via GitHub Actions
+#### Via GitHub Actions (Optioneel)
 
 Je zou de docker image kunnen builden aan de hand van github actions. 
 Deze moet dan opgeslagen worden in een artifact repository waar docker images in kunnen staan.
 Hiervoor kan je gebruik maken van `ghcr.io`, de GitHub Container Repository.
 Deze hangt automatisch gelinkt aan je private repository.
 
-Het enige dat je dat moet doen op de VPS is de docker compose file maken, waarbij je ipv. de context zal verwijzen naar de image op ghcr.io.
+Het enige dat je dan moet doen op de VPS is de docker compose file maken, waarbij je ipv. de context zal verwijzen naar de image op ghcr.io.
 Eén van moeilijkheden hiervan is het werken met versienummers.
-Bij een nieuwe versie moet je dan enkel naar de VPS connecteren, in de docker compose file de versie van de image aanpassen en opnieuw `docker compose up` uitvoeren.
+Bij een nieuwe versie moet je dan enkel naar de VPS connecteren, vervolgens in de docker compose file de versie van de image aanpassen en opnieuw `docker compose up` uitvoeren.
 
 Indien gewenst zou je ook een action kunnen maken die automatisch deze stappen uitvoert.
-Dan kan je zorgen dat de action zelf connecteerd met de VPS en de docker compose file aanpast en uitvoert.
+Dan kan je zorgen dat de action zelf connecteert met de VPS en de docker compose file aanpast en uitvoert.
 
-#### Zelf build pipeline maken
+#### Zelf build pipeline maken (Optioneel)
 
 Je kan ook de automatische pipeline zelf opzetten (vb via Jenkins).
 
