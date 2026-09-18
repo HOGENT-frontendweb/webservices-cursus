@@ -3,12 +3,11 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5 e27a0a6
+> git checkout -b les4 f0d2b3ef
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -25,7 +24,7 @@ In een vorig hoofdstuk hebben we de basis gelegd voor het werken met Drizzle ORM
 
 Hier zie je nogmaals het ERD waar we in dit hoofdstuk naartoe werken:
 
-![ERD](../3-REST_api_bouwen/images/budget_erd.svg)
+![ERD](../2-REST_api_bouwen/images/budget_erd.svg)
 
 In het vorige hoofdstuk hebben we de places tabel reeds aangemaakt. We gaan nu de users, transactions en user_favorite_places tabellen toevoegen, inclusief de nodige relaties.
 
@@ -36,6 +35,41 @@ Vul het schema aan met de tabellen voor transactions, users en favoriete places:
 - Definieer enkel de kolommen, laat de foreign keys nog weg.
 - Definieer voor de user tabel enkel de kolommen `id` en `name`.
 - Voor de tabel user_favorite_places definieer je een samengestelde primary key met behulp van de `primaryKey` functie: <https://orm.drizzle.team/docs/indexes-constraints#composite-primary-key>
+
+Je zou hier opnieuw AI voor kunnen gebruiken. Controleer nadien of het resultaat voldoet aan de vereisten en corrigeer indien nodig. Let er ook op dat je de juiste types gebruikt voor de kolommen, en dat je de juiste opties meegeeft (zoals `notNull` of `unsigned`).
+
+- ERD-code (voor AI) +
+
+  ```text
+  [users]
+  *id
+  name
+  email
+  password_hash
+  roles
+
+  [transactions]
+  *id
+  amount
+  date
+  +user_id
+  +place_id
+
+  [places]
+  *id
+  name
+  rating
+
+  [user_favorite_places]
+  *+user_id
+  *+place_id
+
+  transactions*--1 places
+  transactions*--1 users
+  users 1--* user_favorite_places
+  places 1--* user_favorite_places
+
+  ```
 
 <br />
 
@@ -191,19 +225,48 @@ Merk op dat we in de `userFavoritePlacesRelations` enkel de relatie naar `places
 
 Merk ook op dat de `relations` functie geïmporteerd wordt vanuit `drizzle-orm` en niet vanuit `drizzle-orm/mysql-core`. Hieraan zie je ook dat dit puur een Drizzle concept is en geen databank-concept.
 
-### Oefening - Migratie maken en uitvoeren
+### Migraties automatisch uitvoeren
 
-1. Maak een nieuwe migratie aan.
-2. Voer de migratie uit.
+Het is niet zo handig als we telkens voor de start van onze server manueel de migraties moeten uitvoeren. We kunnen dit automatiseren door de migraties automatisch te laten uitvoeren bij het starten van de server. Hiervoor passen we de `DrizzleModule` aan:
 
-- Oplossing +
+```ts
+// src/drizzle/drizzle.module.ts
+// ...
+import { Logger, OnModuleInit } from '@nestjs/common';
+import { migrate } from 'drizzle-orm/mysql2/migrator';
+import path from 'node:path';
 
-  Voer volgende commando's uit:
+export class DrizzleModule implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(DrizzleModule.name); // 👈 2
 
-  ```bash
-  pnpm db:generate
-  pnpm db:migrate
-  ```
+  // constructor en onModuleDestroy blijven ongewijzigd
+
+  // 👇 1
+  async onModuleInit() {
+    this.logger.log('⏳ Running migrations...');
+    // 👇 3
+    await migrate(this.db, {
+      migrationsFolder: path.resolve('migrations'),
+    });
+    this.logger.log('✅ Migrations completed!');
+  }
+}
+```
+
+1. We zorgen dat de DrizzleModule de `OnModuleInit` interface implementeert. Zo kunnen we een `onModuleInit` methode implementeren, waarin we de migraties laten uitvoeren bij het initialiseren van de module die de database connectie verzorgd.
+2. We gebruiken de NestJS logger, zodat we bij de opstart wat logging kunnen uitvoeren. Zo kunnen we zien of de migratie succesvol is uitgevoerd.
+3. We gebruiken de `migrate` functie van de `drizzle-orm` library. Hieraan moeten we meegeven waar deze de migraties zal kunnen terugvinden.
+
+### Migratie maken en uitvoeren
+
+Maak vervolgens een nieuwe migratie aan om de nieuwe tabellen en relaties toe te voegen aan de databank:
+
+```bash
+pnpm db:generate
+```
+
+Herstart vervolgens de server. Je zou in de logs moeten zien dat de migraties automatisch uitgevoerd worden bij het starten van de server.
+Je kan dus ook de instructies uit je README aanpassen, zodat dit niet meer manueel gedaan moet worden.
 
 ## Seeds aanvullen
 
@@ -227,6 +290,10 @@ async function resetDatabase() {
 Denk eraan om de tabellen in de juiste volgorde te verwijderen om foreign key problemen te vermijden.
 
 Vervolgens definiëren we de functies om data toe te voegen aan de nieuwe tabellen:
+
+?> Deze kan je wederom laten aanmaken door AI.
+Controleer altijd de correctheid van wat gegenereerd is.
+Dankzij typescript krijgen we sowieso al een indicatie of het programma nog steeds zal runnen, maar in het geval van seeding moeten we zel zeker zijn dat de referentieële integriteit nog steeds in orde is.
 
 ```ts
 // src/drizzle/seed.ts
@@ -376,82 +443,6 @@ Voer de seeding uit:
 pnpm db:seed
 ```
 
-## PlaceService - getById
-
-We gaan nu de services aanpassen om de relaties te gebruiken. We beginnen hiervoor met de getById methode uit de `PlaceService`. Hierbij willen we de place ophalen samen met alle bijhorende transactions en bij elke transaction ook de user en de place.
-
-Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/rqb#include-relations>.
-
-```ts
-export class PlaceService {
-  // ...
-  async getById(id: number): Promise<PlaceDetailResponseDto> {
-    const place = await this.db.query.places.findFirst({
-      where: eq(places.id, id),
-      // 👇
-      with: {
-        transactions: {
-          with: {
-            user: true,
-            place: true,
-          },
-        },
-      },
-    });
-
-    // ...
-  }
-  // ...
-}
-```
-
-Met de `with` optie halen we gerelateerde gegevens op in de ORM-like manier. In dit geval laden we alle transactions die aan deze place gekoppeld zijn. Voor elke transaction gebruiken we opnieuw `with` om de bijbehorende user- en place-informatie op te halen.
-
-Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover de documentatie t.e.m. "Full Join": <https://orm.drizzle.team/docs/joins>.
-
-### Oefening implementeer PlaceDetailResponseDto
-
-- Oplossing +
-
-  Definieer eerst een `PublicUserResponseDto` in `src/user/user.dto.ts`:
-
-  ```ts
-  // src/user/user.dto.ts
-  export class PublicUserResponseDto {
-    id: number;
-    name: string;
-  }
-  ```
-
-  Definieer ook een `TransactionResponseDto` in `src/transaction/transaction.dto.ts`:
-
-  ```ts
-  // src/transactions/transaction.dto.ts
-  import { PlaceResponseDto } from '../place/place.dto';
-  import { PublicUserResponseDto } from '../user/user.dto';
-
-  export class TransactionResponseDto {
-    id: number;
-    amount: number;
-    date: Date;
-    user: PublicUserResponseDto;
-    place: PlaceResponseDto;
-  }
-  ```
-
-  Definieer tot slot een `PlaceDetailResponseDto` in `src/place/place.dto.ts`:
-
-  ```ts
-  // src/place/place.dto.ts
-  import { TransactionResponseDto } from '../transactions/transaction.dto';
-
-  export class PlaceDetailResponseDto extends PlaceResponseDto {
-    transactions: TransactionResponseDto[];
-  }
-  ```
-
-  Pas het returnType aan in de service en controller voor het ophalen van 1 plaats, de creatie en update van een plaats
-
 ## Creatie TransactionService
 
 De volgende service die we gaan maken is de `TransactionService`. Deze service bevat de basis CRUD-methoden voor transacties. Alvorens we deze implementeren, maken we als oefening eerst de controller en de bijhorende DTO's aan.
@@ -486,7 +477,17 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
   Controleer of deze controller in de `TransactionModule` gedefinieerd werd (in de `controllers` array).
 
-  Maak vervolgens het DTO bestand aan:
+  Maak vervolgens het DTO bestand aan. Als we een transactie ophalen, halen we ook de bijhorende place en user op. Definieer eerst een `PublicUserResponseDto` in `src/user/user.dto.ts`:
+
+  ```ts
+  // src/user/user.dto.ts
+  export class PublicUserResponseDto {
+    id: number;
+    name: string;
+  }
+  ```
+
+  Definieer dan de nodige transaction dto's in `src/transaction/transaction.dto.ts`:
 
   ```ts
   // src/transactions/transaction.dto.ts
@@ -514,8 +515,6 @@ Maak ook de bijhorende DTO's aan in `src/transactions/transaction.dto.ts`.
 
   export class UpdateTransactionRequestDto extends CreateTransactionRequestDto {}
   ```
-
-  Importeer de `PublicUserResponseDto` in `src/transactions/transaction.dto.ts`.
 
   Definieer tot slot de routes in de controller:
 
@@ -635,6 +634,12 @@ Maak een `TransactionService` aan met de nodige methoden (zie vorige oefening). 
 
 In de vorige oefening hebben we de `TransactionService` aangemaakt met de nodige methoden. We gaan nu een aantal van deze methoden implementeren om te tonen hoe we de relaties in Drizzle kunnen gebruiken.
 
+Als we een transactie ophalen willen we ook de bijhorende user en place ophalen.
+
+Lees eerst de sectie "Include relations" in de Drizzle documentatie: <https://orm.drizzle.team/docs/rqb#include-relations>.
+
+Daarnaast heb je ook de mogelijk om SQL-like joins uit te voeren, lees hierover de documentatie t.e.m. "Full Join": <https://orm.drizzle.team/docs/joins>.
+
 ### getAll
 
 Als eerst voorbeeld vullen we de methode `getAll` in de `TransactionService` aan:
@@ -646,6 +651,7 @@ import {
   type DatabaseProvider,
   InjectDrizzle,
 } from '../drizzle/drizzle.provider';
+import { desc } from 'drizzle-orm';
 
 export class TransactionService {
   // 👇 1
@@ -667,6 +673,8 @@ export class TransactionService {
         place: true,
         user: true,
       },
+      // 👇 4
+      orderBy: desc(transactions.date),
     });
 
     return { items };
@@ -678,9 +686,27 @@ export class TransactionService {
 
 1. We injecteren onze Drizzle provider in de constructor.
 2. We selecteren enkel de kolommen `id`, `amount` en `date`.
-   - De kolommen `placeId` en `userId` wensen we niet in ons response. De eindgebruiker hoeft niet te weten hoe de transactions gekoppeld zijn aan de place en user.
-3. We selecteren de place en de user.
+   - De kolommen `placeId` en `userId` wensen we niet in ons response. De eindgebruiker hoeft niet te weten hoe de transactions gekoppeld zijn aan de place en user. Dit is een voorbeeld van informatie verbergen, een belangrijke best practice in API design.
+3. We selecteren de place en de user. Met de `with` optie halen we gerelateerde gegevens op in de ORM-like manier. In dit geval laden we bijbehorende user- en place-informatie.
    - Merk op dat we toch de place en de user kunnen ophalen zonder hun foreign keys in de `columns` te zetten. Drizzle gebruikt die wel in de query maar zet ze niet in de `SELECT`.
+4. Vaak is het retourneren van gesorteerde data belangrijk in een API! In dit geval willen we de transacties gesorteerd op datum teruggeven, zodat de frontend ze in de juiste volgorde kan tonen, de meest recentste eerst.
+
+Merk op dat we `with` kunnen nesten om ook relaties van relaties op te halen. Stel dat we bij wijze van voorbeeld bij het ophalen van een place ook alle transacties en van de transacties de user willen ophalen. Bovendien worden de transacties gesorteerd op datum. Dit zou er als volgt uitzien:
+
+```ts
+const place = await this.db.query.places.findFirst({
+  where: eq(places.id, id),
+  with: {
+    transactions: {
+      with: {
+        user: true,
+        place: true,
+      },
+      orderBy: desc(transactions.date),
+    },
+  },
+});
+```
 
 Importeer de `DrizzleModule` in de `TransactionModule` om de Drizzle provider te kunnen gebruiken:
 
@@ -694,7 +720,6 @@ import { DrizzleModule } from '../drizzle/drizzle.module'; // 👈
   imports: [DrizzleModule], // 👈
   controllers: [TransactionController],
   providers: [TransactionService],
-  exports: [TransactionService],
 })
 export class TransactionModule {}
 ```
@@ -754,17 +779,23 @@ Roep deze methode in de `TransactionController` aan.
   }
   ```
 
-  Roep deze methode in de `TransactionController` aan:
+Merk op dat we vaak meer data nodig hebben in de `getById` methode dan in de `getAll` methode. De `getAll` methode geeft enkel een overzicht met algemene informatie om de response licht te houden, terwijl `getById` ook details en meer gerelateerde data ophaalt.
 
-  ```ts
-  // src/transactions/transaction.controller.ts
-  @Get(':id')
-  async getTransactionById(
-    @Param('id') id: string,
-  ): Promise<TransactionResponseDto> {
-    return this.transactionService.getById(Number(id)); // 👈
-  }
-  ```
+In het geval van de transacties is dit anders: we willen ook in de lijst al de naam van de place en de gebruiker tonen, waardoor we in beide methodes vergelijkbare data ophalen. Dit is een uitzondering op de algemene regel.
+
+Ga na in jouw eigen project of je de gegevens die je ophaalt bij `getAll` kan beperken en meer details ophaalt bij de `getById` methode.
+
+Roep deze methode in de `TransactionController` aan:
+
+```ts
+// src/transactions/transaction.controller.ts
+@Get(':id')
+async getTransactionById(
+  @Param('id') id: string,
+): Promise<TransactionResponseDto> {
+  return this.transactionService.getById(Number(id)); // 👈
+}
+```
 
 ### create
 
@@ -838,6 +869,8 @@ async deleteTransaction(
 Vul de methode `updateById` in de `TransactionService` aan. Hierbij willen we een bestaande transactie bijwerken en deze bijgewerkte transactie vervolgens teruggeven.
 
 Roep deze methode in de `TransactionController` aan.
+
+?> Indien je ervan overtuigd bent dat je weet hoe dit moet, voel je dan zeker vrij om AI de eerste aanzet te laten geven, door deze code te genereren. Dan kan je nadien controleren over dit is wat je er zelf van wilde maken.
 
 - Oplossing +
 
@@ -937,7 +970,7 @@ export class UserController {
   async getFavoritePlaces(
     @Param('id') id: string,
   ): Promise<PlaceResponseDto[]> {
-    return await this.placeService.getFavoritePlacesByUserId(Number(id));
+    return this.placeService.getFavoritePlacesByUserId(Number(id));
   }
 }
 ```
@@ -947,6 +980,226 @@ export class UserController {
 3. We roepen de `getFavoritePlacesByUserId` methode van de `PlaceService` aan om de favoriete places op te halen.
 
 Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken
+
+Wanneer we dit proberen krijgen we een error te zien. We moeten nog twee stappen ondernemen om de `PlaceService` te kunnen injecteren in de `UserController`:
+
+1. Exporteer de `PlaceService` in de `PlaceModule`.
+2. Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken.
+
+## Paginatie
+
+Paginatie is een essentiële best practice voor API's om verschillende redenen:
+
+- Database load: Zonder paginatie haalt SELECT \* alle records op, wat zwaar wordt bij duizenden records
+- Netwerkbandbreedte: Grote JSON responses vertragen de data transfer
+- Memory gebruik: Server/client moet alle data in geheugen laden en serialiseren
+- Response tijd: Gebruiker wacht (te) lang op complete response
+
+We voegen de route `GET /api/transactions?page=1&pageSize=10` toe. Deze query parameters geven aan welke pagina (`page`) we willen ophalen en hoeveel items er per pagina (`pageSize`) moeten worden weergegeven. We passen de `getAllTransactions` route aan om deze query parameters te accepteren. Query parameters komen in de controller binnen als strings. We zetten deze om naar nummers en geven ze door aan de service. We voorzien ook default waarden voor deze parameters, zodat als ze niet meegegeven worden, we toch een geldige paginatie hebben.
+
+```ts
+// src/transaction/transaction.controller.ts
+import { Query} from '@nestjs/common';
+//...
+  @Get()
+  async getAllTransactions(
+    @Query('pageSize') pageSize: string = '10',
+    @Query('page') page: string = '1',
+  ): Promise<TransactionListResponseDto> {
+    return await this.transactionService.getAll(Number(page), Number(pageSize));
+  }
+  //...
+```
+
+Ook het `TransactionListResponseDto` passen we aan om de nodige paginatie informatie terug te geven:
+
+```ts
+//src/transaction/transaction.dto.ts
+export class TransactionListResponseDto {
+  items: TransactionResponseDto[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+```
+
+`total` geeft het totaal aantal transacties weer, ongeacht de paginatie. Deze informatie is belangrijk voor de frontend om te kunnen bepalen hoeveel pagina's er zijn.
+
+Nu dienen we de `getAll` methode in de `TransactionService` aan te passen om deze paginatie parameters te gebruiken en het gevraagde resultaat terug te geven:
+
+```ts
+// src/transaction/transaction.service.ts
+import { PaginationQuery } from '../common/common.dto';
+//...
+ // 👇 1
+ async getAll(
+    page: number = 1,
+    pageSize: number = 10,
+  ): Promise<TransactionListResponseDto> {
+    // 👇 4
+  const [countResults, items] = await Promise.all([
+      this.db
+        .select({ count: count() })
+        .from(transactions),// 👈2
+      this.db.query.transactions.findMany({
+        columns: {
+          id: true,
+          amount: true,
+          date: true,
+        },
+        with: {
+          place: true,
+          user: {
+            columns: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: [desc(transactions.date), asc(transactions.id)],
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      }),// 👈3
+    ]);
+
+    return { items, page, pageSize, total: countResults[0].count };
+  }
+```
+
+1. We accepteren de `pageSize` en `page` parameters in de `getAll` methode.
+2. We voeren eerst een aparte query uit om het totaal aantal transacties te tellen.
+3. We passen de `limit` en `offset` toe in de `findMany` query om enkel de transacties voor de gevraagde pagina op te halen. Bovendien sorteren we eerst op datum en dan op id. We moeten op een unieke kolom sorteren om consistente resultaten te garanderen bij paginatie: geen duplicaten of missende items bij paginatie naar een volgende/vorige pagina.
+4. We gebruiken `Promise.all` om beide queries gelijktijdig uit te voeren, wat efficiënter is dan ze na elkaar uit te voeren.
+
+Merk op: Query parameters worden ook gebruikt om te sorteren of te filteren. Bijvoorbeeld, om transacties te sorteren op datum of bedrag, kunnen we volgende query parameters toevoegen: `sortBy` en `sortOrder`. Een GET request zou er dan als volgt uitzien: `GET /transactions?page=1&pageSize=10&sortBy=date&sortOrder=desc`.
+
+Meer info over paginatie in drizzle vind je hier: <https://orm.drizzle.team/docs/guides/limit-offset-pagination>.
+
+## Search
+
+We willen ook het zoeken op plaatsnaam ondersteunen. Zoeken is een optionele query parameter van het GET all endpoint. Als de `search` parameter meegegeven wordt, filteren we de transacties op plaatsnaam. Een request ziet er dan zo uit: `GET /transactions?page=1&pageSize=10&search=HoGent`. We dienen hiervoor de drie lagen aan te passen.
+
+### DTO
+
+We breiden `PaginationQuery` uit met een optioneel `search`-veld. Dankzij `@IsOptional()` en `@IsString()` is het veld niet verplicht, maar als het meegegeven wordt, moet het een string zijn.
+
+```ts
+// src/transaction/transaction.dto.ts
+export class TransactionQueryDto extends PaginationQuery {
+  search?: string;
+}
+```
+
+### Controller
+
+De controller geeft nu het volledige `query`-object door aan de service in plaats van losse parameters. Dat is eenvoudiger en schaalt mee als we later extra query-parameters toevoegen.
+
+```ts
+// src/transaction/transaction.controller.ts
+import {
+  CreateTransactionRequestDto,
+  UpdateTransactionRequestDto,
+  TransactionResponseDto,
+  TransactionListResponseDto,
+  TransactionQueryDto,
+} from './transaction.dto';
+
+//...
+
+@Get()
+async getAllTransactions(
+  @Query() query: TransactionQueryDto,
+): Promise<TransactionListResponseDto> {
+  return await this.transactionService.getAll(query));
+}
+```
+
+### Service
+
+In de service passen we de `getAll` methode aan om de `search` parameter te gebruiken. We maken gebruik van de query builder API van Drizzle om een JOIN uit te voeren op de `places` tabel en een `WHERE`-clausule toe te voegen die filtert op de plaatsnaam.
+
+```ts
+// src/transaction/transaction.servcice.ts
+import {
+  CreateTransactionRequestDto,
+  TransactionListResponseDto,
+  TransactionQueryDto,
+  TransactionResponseDto,
+  UpdateTransactionRequestDto,
+} from './transaction.dto';
+
+async getAll(
+  { page = 1, pageSize = 10, search = '' }: TransactionQueryDto,
+): Promise<TransactionListResponseDto> {
+  const whereConditions = [];
+  // Search op place.name (via JOIN)
+  if (search) {
+    whereConditions.push(like(places.name, `%${search}%`));
+  }
+
+  const whereClause =
+    whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+  // COUNT query (met JOIN!)
+  const countQuery = this.db
+    .select({ count: count() })
+    .from(transactions)
+    .innerJoin(places, eq(transactions.placeId, places.id))
+    .where(whereClause);
+
+  // DATA query (JOIN + selectie)
+  const dataQuery = this.db
+    .select({
+      id: transactions.id,
+      amount: transactions.amount,
+      date: transactions.date,
+      place: places,
+      user: {
+        id: users.id,
+        name: users.name,
+      },
+    })
+    .from(transactions)
+    .innerJoin(places, eq(transactions.placeId, places.id))
+    .innerJoin(users, eq(transactions.userId, users.id))
+    .where(whereClause)
+    .orderBy(desc(transactions.date), asc(transactions.id))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize);
+
+  const [countResult, items] = await Promise.all([countQuery, dataQuery]);
+
+  return {
+    items,
+    page,
+    pageSize,
+    total: countResult[0]?.count ?? 0,
+  };
+}
+```
+
+De service bevat de grootste wijziging. We zijn overgestapt van de relationele API (`findMany`) naar de query builder API (`.select().from()`). Die overstap is nodig omdat we nu moeten filteren op een gejoinde tabel (`places.name`), en de relationele API ondersteunt geen `WHERE`-condities op gejoinde tabellen.
+
+De aanpak met een `whereConditions`-array maakt het eenvoudig om later extra filtercondities toe te voegen zonder de rest van de query te herschrijven. De functie `like(places.name, '%search%')` voert een gedeeltelijke tekstzoekopdracht uit op de plaatsnaam. De `%`-tekens zijn SQL-wildcards: `%HoGent%` matcht elke plaatsnaam die "HoGent" bevat.
+
+Omdat de `WHERE`-clausule verwijst naar de `places`-tabel, moet ook de COUNT-query de JOIN bevatten — anders weet de database niet welke tabel `places.name` is.
+
+## Oefening - PlaceController uitbreiden
+
+Voorzie nu ook een route in de `PlaceController` om de transacties van een place op te halen. Het endpoint moet er als volgt uitzien: `GET /places/:id/transactions`.
+Implementeer deze route en de bijhorende service methode. Voorzie ook paginatie voor deze route.
+In de service pas je de `getAll` methode aan om een optionele `placeId` parameter te accepteren. Als deze parameter meegegeven wordt, worden enkel de transacties van die place opgehaald. Zo niet, worden alle transacties opgehaald. Voorzie een interface `TransactionFilter` met een optionele `placeId` property om deze filteroptie door te geven aan de `getAll` methode. Zo kan later makkelijk extra filteropties toegevoegd worden zonder de methodesignature van `getAll` te moeten aanpassen.
+
+```ts
+// src/transaction/transaction.service.ts
+interface GetAllTransactionFilters {
+  placeId?: number;
+}
+```
+
+- Oplossing +
+
+  De oplossing vind je in onze voorbeeldapplicatie in commit `c0f36e65`.
 
 ## Oefening - UserService
 
@@ -962,19 +1215,23 @@ Maak een `UserService` aan met de nodige methoden (getAll, getById, create, upda
 
 Definieer de `UserService` en de `UserController` in de `UserModule`, exporteer enkel de service.
 
+?> Gezien REST resource based werkt, is het implementeren van de GET, POST, PUT en DELETE requests altijd heel gelijkaardig (de verschillen zijn grotendeels vanwege relaties op de resource).
+We hebben nu reeds enkele implementaties gemaakt, waardoor AI voldoende voorbeelden zou moeten hebben om te weten welke stijl we in ons project hanteren.
+Probeer eens om met AI iteratief dit probleem op te lossen.
+Zorg dat je bij de verschillende stappen vaak genoeg commit wanneer je een deel code hebt dat voldoet aan de eisen.
+
 - Oplossing +
 
-  De oplossing vind je in onze voorbeeldapplicatie in commit `d486627`.
+  De oplossing vind je in onze voorbeeldapplicatie in commit `c0f36e65`.
 
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les5-opl b1ed447
+> git checkout -b les4-opl a8930106
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm start:dev
 > ```
 >

@@ -5,12 +5,11 @@ Voor het schrijven van API documentatie bestaan verschillende tools. Swagger is 
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8 7bf0724
+> git checkout -b chapter-7 3427d585
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -123,14 +122,16 @@ In NestJS documenteren we onze API door decorators toe te voegen aan onze DTO's 
 
 ### Response DTO's
 
-Laten we de `PlaceResponseDto` documenteren. We gebruiken de `@ApiProperty` decorator om elk veld te documenteren:
+Laten we de `PlaceResponseDto` documenteren. We gebruiken de `@ApiProperty` decorator om elk veld te documenteren.
+Omdat de bestaande validatie (zie vorige hoogdstukken) niet correct is voor een reponse dto, zullen we ook de overerving corrigeren.
 
 ```ts
 // src/place/place.dto.ts
 import { ApiProperty } from '@nestjs/swagger'; // 👈 1
+import { Place } from '../types/place';
 
 // 👇 3
-export class PlaceResponseDto {
+export class PlaceResponseDto implements Place {
   @ApiProperty({ example: 1, description: 'ID of the place' }) // 👈 2
   id: number;
 
@@ -144,11 +145,11 @@ export class PlaceResponseDto {
   @ApiProperty({
     example: 4,
     description: 'Rating of the place (1 to 5)',
-    nullable: true, // 👈 5
+    optional: true, // 👈 5
     format: 'int32',
     type: 'integer',
   })
-  rating: number | null;
+  rating?: number;
 }
 ```
 
@@ -156,7 +157,7 @@ export class PlaceResponseDto {
 2. We voegen een `@ApiProperty` decorator toe aan elk veld. We geven een voorbeeld en beschrijving mee.
 3. We verwijderen de overerving van `CreatePlaceRequestDto` om duplicatie te vermijden en documenteren elk veld apart.
 4. We doen hetzelfde als het `id` voor de `name` property.
-5. Voor `rating` specificeren we dat het `nullable` is (kan `null` zijn), en dat het een integer is met format `int32` (32-bit). Swagger kan het type hier niet automatisch afleiden omdat dit een union type is (`number | null`).
+5. Voor `rating` specificeren we dat het `optional` is (kan `undefined` zijn), en dat het een integer is met format `int32` (32-bit).
 
 We passen ook de `PlaceListResponseDto` aan:
 
@@ -177,8 +178,9 @@ Voor request DTO's gebruiken we `nestjs-swagger-dto`. Deze package combineert `c
 ```ts
 // src/place/place.dto.ts
 import { IsNumber, IsString } from 'nestjs-swagger-dto'; // 👈 1
+import { Place, CreatePlace } from '../types/place';
 
-export class CreatePlaceRequestDto {
+export class CreatePlaceRequestDto implements CreatePlace {
   @IsString({ name: 'name', maxLength: 255 }) // 👈 2
   name: string;
 
@@ -243,16 +245,15 @@ export class PlaceController {
 
 ### GET /api/places
 
-Documenteer de route om alle places op te halen a.d.h.v. `@ApiResponse`:
+Documenteer de route om alle places op te halen a.d.h.v. `@ApiOkResponse`, `@ApiCreatedResponse`, `@ApiBadRequestResponse`, etc. Deze decorators zijn eigenlijk allemaal varianten van `@ApiResponse` met een specifieke status code. Je kan ook gewoon `@ApiResponse` gebruiken en de status code zelf specificeren:
 
 ```ts
 // src/place/place.controller.ts
-import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger'; // 👈 1
+import { ApiBearerAuth, ApiTags, ApiOkResponse } from '@nestjs/swagger'; // 👈 1
 
 // ...
 
-@ApiResponse({
-  status: 200, // 👈 2
+@ApiOkResponse({
   description: 'Get all places', // 👈 3
   type: PlaceListResponseDto, // 👈 4
 })
@@ -262,10 +263,28 @@ async getAllPlaces(): Promise<PlaceListResponseDto> {
 }
 ```
 
-1. Importeer `ApiResponse` van `@nestjs/swagger`.
-2. We specificeren de HTTP status code voor een succesvolle response.
-3. We geven een beschrijving van wat deze route doet.
-4. We specificeren het type van de response (het DTO).
+1. Importeer `ApiOkResponse` van `@nestjs/swagger`.
+2. We geven een beschrijving van wat deze route doet.
+3. We specificeren het type van de response (het DTO).
+
+Of
+
+```ts
+// src/place/place.controller.ts
+import { ApiBearerAuth, ApiTags, ApiResponse } from '@nestjs/swagger';
+
+// ...
+
+@ApiResponse({
+  status: 200,
+  description: 'Get all places',
+  type: PlaceListResponseDto,
+})
+@Get()
+async getAllPlaces(): Promise<PlaceListResponseDto> {
+  return await this.placeService.getAll();
+}
+```
 
 ### POST /api/places
 
@@ -273,97 +292,20 @@ Documenteer de route om een nieuwe place aan te maken:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 201,
+@ApiCreatedResponse({
   description: 'Create place',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Post()
 @Roles(Role.ADMIN)
-@HttpCode(HttpStatus.CREATED)
 async createPlace(
   @Body() createPlaceDto: CreatePlaceRequestDto,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.create(createPlaceDto);
 }
 ```
 
 NestJS herkent automatisch dat `createPlaceDto` een request body is en documenteert dit in Swagger, inclusief het schema dat we met `nestjs-swagger-dto` hebben gedefinieerd. Handig toch?
-
-### Oefening: Documenteer PlaceDetailResponseDto
-
-Momenteel worden enkel de properties van `PlaceResponseDto` gedocumenteerd in `PlaceDetailResponseDto`.Documenteer de andere properties in `PlaceDetailResponseDto` zodat de volledige response correct wordt weergegeven in Swagger UI.
-
-- Oplossing +
-
-  ```ts
-  // src/place/place.dto.ts
-  export class PlaceDetailResponseDto extends PlaceResponseDto {
-    @ApiProperty({ type: () => [TransactionResponseDto] })
-    transactions: TransactionResponseDto[];
-  }
-
-  // src/transaction/transaction.dto.ts
-  export class TransactionResponseDto {
-    @ApiProperty({ example: 1, description: 'ID of the transaction' })
-    id: number;
-
-    @ApiProperty({
-      description: 'Transaction amount',
-      minimum: 1,
-      type: 'number',
-    })
-    amount: number;
-
-    @ApiProperty({
-      description: 'Transaction date',
-      type: 'string',
-      format: 'date-time',
-    })
-    date: Date;
-
-    @ApiProperty({
-      description: 'User who made the transaction',
-      type: () => PublicUserResponseDto,
-    })
-    user: PublicUserResponseDto;
-
-    @ApiProperty({
-      description: 'Place where the transaction occurred',
-      type: () => PlaceResponseDto,
-    })
-    place: PlaceResponseDto;
-  }
-
-  // src/user/user.dto.ts
-  export class PublicUserResponseDto {
-    @ApiProperty({
-      description: 'User ID',
-      minimum: 1,
-      example: 1,
-    })
-    @Expose()
-    id: number;
-
-    @ApiProperty({
-      description: 'User name',
-      minLength: 2,
-      maxLength: 255,
-      example: 'John Doe',
-    })
-    @Expose()
-    name: string;
-
-    @ApiProperty({
-      description: 'User email address',
-      example: 'user@email.com',
-      type: 'string',
-      format: 'email',
-    })
-    @Expose()
-    email: string;
-  }
-  ```
 
 ### GET /api/places/:id
 
@@ -371,15 +313,14 @@ Documenteer de route om een specifieke place op te halen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Get place by ID',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.getById(id);
 }
 ```
@@ -392,17 +333,16 @@ Documenteer de route om een place te updaten:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Update place',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
 @Put(':id')
 @Roles(Role.ADMIN)
 async updatePlace(
   @Param('id', ParseIntPipe) id: number,
   @Body() updatePlaceDto: UpdatePlaceRequestDto,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return this.placeService.updateById(id, updatePlaceDto);
 }
 ```
@@ -413,8 +353,7 @@ Documenteer de route om een place te verwijderen:
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 204,
+@ApiNoContentResponse({
   description: 'Delete place',
 })
 @Delete(':id')
@@ -431,23 +370,17 @@ Soms wil je meerdere mogelijke responses documenteren (success, error, not found
 
 ```ts
 // src/place/place.controller.ts
-@ApiResponse({
-  status: 200,
+@ApiOkResponse({
   description: 'Get place by ID',
-  type: PlaceDetailResponseDto,
+  type: PlaceResponseDto,
 })
-@ApiResponse({
-  status: 404,
+@ApiNotFoundResponse({
   description: 'Place not found',
-})
-@ApiResponse({
-  status: 401,
-  description: 'Unauthorized - you need to be signed in',
 })
 @Get(':id')
 async getPlaceById(
   @Param('id', ParseIntPipe) id: number,
-): Promise<PlaceDetailResponseDto> {
+): Promise<PlaceResponseDto> {
   return await this.placeService.getById(id);
 }
 ```
@@ -459,8 +392,7 @@ Omdat je moet aangemeld zijn voor alle routes in places, is het handig om ook de
 ```ts
 // src/place/place.controller.ts
 @ApiBearerAuth()
-@ApiResponse({
-  status: 401,
+@ApiUnauthorizedResponse({
   description: 'Unauthorized - you need to be signed in',
 })
 @Controller('places')
@@ -475,8 +407,7 @@ export class PlaceController {...}
 
   ```ts
     // src/place/place.controller.ts
-    @ApiResponse({
-      status: 400,
+    @ApiBadRequestResponse({
       description: 'Invalid input data',
   })
 
@@ -500,24 +431,26 @@ import { AuthService } from '../auth/auth.service';
 import { LoginRequestDto, LoginResponseDto } from './session.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { AuthDelayInterceptor } from '../auth/interceptors/authDelay.interceptor';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOkResponse,
+  ApiUnauthorizedResponse,
+  ApiBadRequestResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('Sessions')
 @Controller('sessions')
 export class SessionController {
   constructor(private authService: AuthService) {}
 
-  @ApiResponse({
-    status: 200,
+  @ApiOkResponse({
     description: 'Login',
     type: LoginResponseDto,
   })
-  @ApiResponse({
-    status: 401,
+  @ApiUnauthorizedResponse({
     description: 'Invalid credentials',
   })
-  @ApiResponse({
-    status: 400,
+  @ApiBadRequestResponse({
     description: 'Invalid input data',
   })
   @Post()
@@ -603,6 +536,8 @@ Probeer de verschillende routes uit:
 3. Kopieer het antwoord van `/docs-json` naar de [Swagger Editor](https://editor.swagger.io/) en controleer of alles correct is. Rechts bovenaan zal je eventuele fouten of waarschuwingen zien.
 4. Test alle routes via de Swagger UI op `/docs`.
 
+?> Indien je voldoende begrip hebt over hoe het documenteren via swagger werkt, probeer dit dan samen met AI iteratief op te lossen.
+
 ## Oefening 2 - Eigen project
 
 Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
@@ -626,12 +561,11 @@ Voeg volledige Swagger documentatie toe aan je eigen examenopdracht:
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les8-opl 4402433
+> git checkout -b chapter-7-opl 35657cb3
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```

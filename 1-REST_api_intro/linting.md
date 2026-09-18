@@ -110,9 +110,9 @@ Indien je een foutmelding krijgt dat `typescript-eslint` jouw versie van TypeScr
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les2-opl 3acce6c
+> git checkout -b les1-opl 89add613
 > pnpm install
 > pnpm start:dev
 > ```

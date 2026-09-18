@@ -7,12 +7,11 @@ Dit hoofdstuk wordt gedeeld tussen de olods Front-end Web Development en Web Ser
 | Sectie                                                             | Front-end Web Development | Web Services             |
 | ------------------------------------------------------------------ | ------------------------- | ------------------------ |
 | [Continuous Integration/Delivery](#continuous-integrationdelivery) | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Nodige services](#nodige-services)                                | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Docker](#docker)                                                  | :heavy_check_mark:        | :heavy_check_mark:       |
 | [Aanpassingen](#aanpassingen)                                      | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Render account aanmaken](#render-account-aanmaken)                | :heavy_check_mark:        | :heavy_check_mark:       |
-| [Back-end online zetten](#back-end-online-zetten)                  | :heavy_multiplication_x:  | :heavy_check_mark:       |
-| [Front-end online zetten](#front-end-online-zetten)                | :heavy_check_mark:        | :heavy_multiplication_x: |
-| [Hosting remarks](#hosting-remarks)                                | :heavy_check_mark:        | :heavy_check_mark:       |
+| [Back-end online zetten](#back-end)                                | :heavy_multiplication_x:  | :heavy_check_mark:       |
+| [Front-end online zetten](#front-end)                              | :heavy_check_mark:        | :heavy_multiplication_x: |
+| [Online plaatsen op vichogent.be](#online-plaatsen-op-vichogentbe) | :heavy_check_mark:        | :heavy_check_mark:       |
 
 ## Continuous Integration/Delivery
 
@@ -46,46 +45,14 @@ Nog een stap verder is het automatiseren van het proces. Dit wordt gedaan met ee
 
 Het hele concept van CI/CD valt buiten de scope van dit olod. We proberen jullie wel de essentie mee te geven.
 
-## Nodige services
-
-Om de back-end en front-end online te zetten, zijn er een aantal services nodig:
-
-- [Render](https://render.com/)
-- MySQL databank in het VIC (= Virtual IT Company van HOGENT): zie mail (ook spam) voor de inloggegevens
-- Docker
-
-?> Studenten die reeds geslaagd zijn voor het olod Web Services en een databank nodig hebben om hun back-end van vorig jaar te hergebruiken, gelieve een mail te sturen naar [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be). Houd er rekening mee dat het 1 à 2 werkdagen kan duren vooraleer je een antwoord krijgt, mail dus niet vlak voor de deadline.
-
-### Render
-
-Er bestaan heel wat software- en cloudoplossingen om CI/CD toe te passen. Vaak zijn deze oplossingen betalend want een paar virtuele machines opstarten om tests te draaien van een beetje serieuze applicaties is niet gratis natuurlijk.
-
-[Heroku](https://www.heroku.com/) had een gratis versie die eenvoudig te gebruiken was, maar die is, jammer genoeg, [verdwenen sinds 28 november 2022](https://dev.to/lukeecart/more-heroku-changes-that-will-definitely-affect-you-10o8).
-
-Daarom maken we vanaf nu gebruik van een all-in-one oplossing, nl. [Render](https://render.com/). De Render omgeving is gratis (tot een bepaalde limiet uiteraard) en biedt meteen een oplossing voor zowel back-end als front-end. Het is ontzettend eenvoudig - een beetje klikken, invullen en klaar.
-
-### MySQL databank in het VIC
-
-Als we onze back-end online willen zetten, hebben we een MySQL databank nodig. Op [Render](https://render.com/) kan je gratis een PostgreSQL databank opstarten, maar wij gebruiken MySQL (naar analogie met het olod Databases I). _Feel free to switch, but you're on your own then._
-
-Er bestaan heel wat gratis MySQL services online maar eigenlijk geen enkele degelijke waar je geen kredietkaart voor nodig hebt, ofwel zien ze er sketchy uit of zijn ze vaak down.
-
-Daarom hosten we zelf een MySQL databank in het VIC (Virtual IT Company van HOGENT). Jullie krijgen (of kregen) een mail met de inloggegevens van jouw persoonlijke MySQL databank. **Let op: er wordt maar één databank per student voorzien!**
-
-**Dus je moet zelf geen MySQL databank aanmaken!** Droppen van de databank is mogelijk vanuit code, dat kunnen we helaas niet verhinderen. Wil je terug een lege databank? Drop dan simpelweg alle tabellen manueel.
-
-We zijn geen gigantisch datacenter, dus we kunnen niet garanderen dat de databank altijd online zal zijn of snel zal reageren. We doen ons best om de databank zo goed mogelijk online te houden.
-
-Bij problemen met de databank kan je altijd terecht bij [Thomas Aelbrecht](mailto:thomas.aelbrecht@hogent.be). Houd er rekening mee dat het 1 à 2 werkdagen kan duren vooraleer je een antwoord krijgt, mail dus niet vlak voor de deadline.
-
 ### Docker
 
 Voor het online zetten van onze back-end willen we naar een mature development manier gaan.
 Daarom gaan we docker gebruiken, zodat we onafhankelijk van onze host-systemen kunnen werken.
-Gezien we met Render werken, volstaat het voor ons om een `Dockerfile` aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
+Gezien we met het VIC werken waarop we docker zullen uitvoeren, volstaat het voor ons om een `Dockerfile` aan te maken, waarin vastgelegd wordt wat nodig is om onze applicatie uit te voeren.
 
 Het opstellen van de Dockerfiles zullen we specifiek in de volgende secties bespreken.
-Ook zullen we de `docker-compose.yml` file gebruiken om onze applicatie lokaal te kunnen draaien in een identieke setup als op Render.
+Ook zullen we de `docker-compose.yml` file gebruiken om onze applicatie lokaal te kunnen draaien in een identieke setup als op het VIC.
 
 Docker levert ons zo een aantal voordelen:
 
@@ -324,7 +291,7 @@ Het einde van een stage herken je eenvoudig door het `FROM` keyword dat opnieuw 
 
 ```Dockerfile
 # 👇 1
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -393,11 +360,13 @@ Indien je het olod Front-end Web Development niet volgt, lees dan zeker toch de 
 Voor het maken van onze Dockerfile voor de back-end, zullen we vertrekken van de aanzet die de [NestJS documentatie](https://docs.nestjs.com/deployment#dockerizing-your-application) ons aanbiedt:
 
 ```Dockerfile
-FROM node:22
+FROM node:24
 
 # 👇 1
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+# 👇 2
+ENV PNPM_CONFIG_MINIMUM_RELEASE_AGE=0
 RUN corepack enable
 
 WORKDIR /usr/src/app
@@ -413,6 +382,9 @@ CMD ["node", "dist/src/main"]
 ```
 
 1. Deze lijnen zijn identiek aan de `Dockerfile` van de front-end, we willen hier wederom gebruik kunnen maken van pnpm.
+2. Deze lijn zorgt ervoor dat pnpm geen release age nodig heeft voor het installeren van dependencies. Indien deze lijn er niet staat kan het zijn dat we een dag moeten wachten voor te builden. Dit is over het algemeen wel een slim idee voor security redenen, maar in onze development omgeving is dit niet nodig en enkel omslachtig.
+
+Indien dit niet lukt, controleer zeker de logs van de docker build. Hoogst waarschijnlijk is dit een probleem met de lockfile of met de approve-builds. Hiervoor kan je dan best de lockfile en node_modules eens verwijderen en opnieuw `pnpm install` doen, zodat je daarna `pnpm approve-builds` kan uitvoeren.
 
 ##### Docker Compose bestand
 
@@ -427,23 +399,56 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      # 👇 1
-    environment:
-      NODE_ENV: production
-      PORT: '3000'
-      CORS_ORIGINS: '["http://localhost:5173", "http://localhost"]' # 👈 2
-      CORS_MAX_AGE: 10800
-      DATABASE_URL: mysql://devusr:devpwd@host.docker.internal:3306/budget # 👈 3
-      AUTH_JWT_SECRET: eensuperveiligsecretvoorindevelopment
+    # 👇 1
+    env_file:
+      - .env.docker-local
     ports:
       - '3000:3000'
+    # 👇 3
+    restart: unless-stopped
+  # 👇 2
+  db:
+     image: mysql:8.0
+     ports:
+        - '3306:3306'
+     volumes:
+        - db_data_prod:/var/lib/mysql
+     environment:
+        MYSQL_ROOT_PASSWORD: root
+        MYSQL_DATABASE: budget
+        MYSQL_USER: devusr
+        MYSQL_PASSWORD: devpwd
+     healthcheck:
+        test: [ 'CMD', 'mysqladmin', 'ping', '-h', 'localhost', '--silent' ]
+        timeout: 30s
+        interval: 30s
+        retries: 5
+        start_period: 30s
+
+volumes:
+   db_data_prod:
 ```
 
-1. Bijna alles uit dit bestand is identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden als environment variables en niet als build arguments. Environment variables worden opgeslaan in de image en zijn at runtime beschikbaar voor de applicatie. Build arguments zijn enkel beschikbaar tijdens het bouwen van de image.
-2. Opgelet bij de `CORS_ORIGINS` variabele, hier is een vreemde syntax nodig, omdat dit een array is, maar tegelijkertijd ook correcte json in een configuratie bestand moet zijn. Hierbij zijn twee hosts toegevoegd, zodat we zowel op de normale manier de frontend kunnen starten, als wanneer we deze in docker draaien.
-3. Opgelet bij de `DATABASE_URL` variabele, hier wordt de host van de database gezet op `host.docker.internal`, wat betekent dat we de database zoeken op de host machine. Dit is nodig omdat de database niet in dezelfde docker compose staat, waardoor we geen gebruik kunnen maken van de DNS voorzien door Docker Compose. Wanneer we de database van VIC gebruiken zal dit eenvoudiger zijn.
+1. Het eerste deel uit dit bestand is bijna identiek aan het Docker Compose bestand uit de front-end. Dit wordt niet opnieuw herhaald. Let erop dat alle nodige environment variables doorgegeven worden via een env_file en niet als build arguments. Environment variables worden opgeslaan in de image en zijn at runtime beschikbaar voor de applicatie. Build arguments zijn enkel beschikbaar tijdens het bouwen van de image.
+2. Dit is een copy-paste van onze database docker compose. Enkel de naam van het volume is aangepast (opgelet: op twee plaatsen).
+3. De restart is noodzakelijk omdat we in één docker compose bestand twee services (containers) opstarten. Zowel de backend als de database. We weten echter niet zeker dat de database opgestart zal zijn voordat de backend opgestart is. Indien dit niet zo is zal de backend crashen. Om dit tegen te gaan laten we deze gewoon eenvoudigweg opnieuw opstarten.
 
-Dit bestand kan je tot slot uitvoeren met het commando `docker compose -f docker-compose-backend.yml up`.
+De .env.docker-local ziet er als volgt uit:
+
+```dotenv
+NODE_ENV=production
+PORT=3000
+CORS_ORIGINS=["http://localhost:5173"]
+CORS_MAX_AGE=10800
+DATABASE_URL=mysql://devusr:devpwd@db:3306/budget 👈 1
+LOG_LEVELS=["log","error","warn"]
+LOG_DISABLED=false
+AUTH_JWT_SECRET=eensuperveiligsecretvoorinproduction
+```
+
+1. In de `DATABASE_URL` staat na de @-teken `db`. Dit is de naam van de service in de docker compose file. Dit is omdat we hier gebruik maken van de interne DNS van docker compose.
+
+Dit geheel kan je tot slot uitvoeren met het commando `docker compose -f docker-compose-backend.yml up`. Eventueel voeg je nog optie -d uit om dit als background process te starten.
 
 ##### Dockerignore
 
@@ -474,10 +479,11 @@ De aanpassingen die nodig zijn zullen zich enkel in de `Dockerfile` bevinden:
 
 ```Dockerfile
 # 👇 1
-FROM node:22-alpine AS base
+FROM node:24-alpine AS base
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV PNPM_CONFIG_MINIMUM_RELEASE_AGE=0
 RUN corepack enable
 # 👇 1.1
 RUN apk add --no-cache libc6-compat
@@ -525,7 +531,7 @@ EXPOSE 3000
 CMD ["node", "dist/src/main"]
 ```
 
-1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:22-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
+1. Ditmaal zijn we de multi-stage build aan het opstellen volgens de regels van de kunst. Alles draait over dezelfde base-layer, zodat we overal node:24-alpine kunnen gebruiken. Vervolgens hebben we een stage om de dependencies te installeren, eentje om de productie build te maken en een laatste om de productie server te draaien.
    1. Opgelet, hier wordt de base-layer nu opgebouwd vanuit een alpine image, hierdoor moeten we ook de libc6-compat library installeren. Dit is een library die packages die native C code nodig hebben zal helpen (voorbeelden hiervan zijn argon2 en swc).
 2. Deze lijnen doen, net zoals bij de front-end, geoptimaliseerde installaties van de dependencies. Let hierbij op een speciaal geval, we hebben een stage dev-deps en een stage prod-deps. Dit is omdat het build-commando een aantal devDependencies nodig heeft, maar onze effectief productie code heeft enkel de echte dependencies nodig. We willen uiteraard de devDependencies dus niet mee in onze uiteindelijke image.
 3. Let hier op de `--prod`, dit zorgt ervoor dat alle devDependencies verwijderd worden.
@@ -537,187 +543,146 @@ CMD ["node", "dist/src/main"]
 Bij de finale poging zien we nu dat de image van onze back-end drastisch kleiner geworden is, deze is nu ongeveer 220 MB.
 We hebben bovendien een mooie scheiding van verantwoordelijkheden.
 
-#### Migraties
+## Online plaatsen op vichogent.be
 
-Het enige wat we nog kunnen verbeteren is het automatisch uitvoeren van migraties bij het starten van de back-end.
-Om dit op te lossen moeten we wat code toevoegen aan onze DrizzleModule
-(Opmerking: Dit kan ook de AppModule zijn, maar gezien het over de database migraties gaat, voelt DrizzleModule correct aan):
+### Algemene info
 
-```ts
-import { Logger, Module, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import {
-  type DatabaseProvider,
-  DrizzleAsyncProvider,
-  drizzleProvider,
-  InjectDrizzle,
-} from './drizzle.provider';
-import path from 'node:path';
-import { migrate } from 'drizzle-orm/mysql2/migrator';
+Afhankelijk van of je groep ingeschreven is in de cursus `Web Services` of `Front-end Web Development` zal je groepsnummer er respectievelijk als `WSXX` of `FWDXX` uitzien, waarbij `XX` het nummer zal zijn.
+Deze groepsnaam zal gevolgd worden voor de DNS naam die jouw VPS van het VIC zal krijgen.
+Om dit niet telkens te herhalen zullen we in de cursus als naamgeving de vorm `GXX` hanteren.
 
-@Module({
-  providers: [...drizzleProvider],
-  exports: [DrizzleAsyncProvider],
-})
-// 👇 1
-export class DrizzleModule implements OnModuleDestroy, OnModuleInit {
-  private readonly logger = new Logger(DrizzleModule.name); // 👈 2
+In het begin van de semester werden de VPS's (Virtual Private Server) aangevraagd bij vichogent.be.
+Hiervoor werd de public key van je SSH keypair doorgestuurd.
+Hiermee is er vanuit het VIC een virtuele server voorzien per groep, beide studenten kunnen connecteren met SSH.
+Jullie ontvingen hierover een mailing met de aan jullie toegekende poort.
 
-  constructor(@InjectDrizzle() private readonly db: DatabaseProvider) {}
+Hiermee wordt achterliggend via een firewall (die zorgt voor portforwarding) doorgestuurd naar de VPS die aan jullie toegekend is, dewelke afgeschermd is via SSH.
+Vanwege deze afscherming is het dus niet mogelijk te connecteren met de server die aan een andere groep toegekend is.
 
-  // 👇 1
-  async onModuleInit() {
-    this.logger.log('⏳ Running migrations...');
-    // 👇 3
-    await migrate(this.db, {
-      migrationsFolder: path.resolve('migrations'),
-    });
-    this.logger.log('✅ Migrations completed!');
-  }
+Op iedere server zijn twee poorten geconfigureerd via een reverse proxy:
 
-  async onModuleDestroy() {
-    await this.db.$client.end();
-  }
-}
+- poort 80, geconfigureerd op domein `https://GXX-frontendweb.vichogent.be`
+- poort 3000, geconfigureerd op domein `https://GXX-webservices.vichogent.be`
+
+?> Opmerking: je ziet dat er geen poort geconfigureerd staat voor de database. Dat wil zeggen dat we niet zelf aan de database kunnen en dat deze enkel bereikbaar zal zijn voor de backend via het docker compose dns systeem. Dit is een security best practice die we voldoen. Dit zal ons een probleem opleveren voor de seeding van de database, maar in een volgend deel van dit hoofdstuk zullen we dat probleem aanpakken.
+
+Het is dus belangrijk dat de applicaties draaien op de juiste poort van het toestel, anders zal het geheel niet werken.
+Denk hierbij zeker na over de werking van de portforwarding van docker compose!
+Dit hebben we echter bewust op de juiste manier geconfigureerd in het eerst deel van dit hoofdstuk.
+
+### Connecteren met de VPS
+
+!> Opgelet: denk verantwoord na over wat je met de server doet. Dit is een toestel dat gemonitord wordt, het is niet toegestaan illegaal gebruik via deze server uit te voeren. Cryptomining is alsook niet toegestaan.
+
+!> Opgelet: je mag nooit de VPS afsluiten. Gezien dit geen fysiek toestel is, zou je deze niet meer opgestart krijgen.
+
+Iedere student heeft normaal toegang tot de VPS.
+Jullie hebben hiervoor een poort ontvangen.
+Connecteren doe je via het volgende commando (XXXXX vervangen door de door jullie ontvangen poort):
+
+```bash
+ssh vicuser@vichogent.be -p XXXXX
 ```
 
-1. We zorgen dat de DrizzleModule de `OnModuleInit` interface implementeert. Zo kunnen we een `onModuleInit` methode implementeren, waarin we de migraties laten uitvoeren bij het initialiseren van de module die de database connectie verzorgd.
-2. We gebruiken onze geconfigureerde logger, zodat we bij de opstart wat logging kunnen uitvoeren. Zo kunnen we zien of de migratie succesvol is uitgevoerd.
-3. We gebruiken de `migrate` functie van de `drizzle-orm` library. Hieraan moeten we meegeven waar deze de migraties zal kunnen terugvinden.
+Indien dit niet werkt, bij één student en bij de andere wel, dan is dit een probleen in ssh configuratie die jullie zelf kunnen oplossen.
+In de map `.ssh` zal je een bestand genaamd `authorized_keys` zien.
+Deze kan je wijzigen, waarbij je enkel de publieke ssh key van de andere student hoeft toe te voegen.
 
-## Render account aanmaken
+!> Opgelet: verwijder geen andere SSH keys, zo kan je ervoor zorgen dat anderen niet meer in je server kunnen. Dan kunnen wij je niet meer (gemakkelijk) helpen.
 
-De volgende stap is het aanmaken van een Render account. Ga naar [Render](https://render.com/) en klik op "Sign In" rechtsboven.
+### Configureren VPS
 
-![Render account aanmaken](./images/10_2_render_homepage.png ':size=80%')
+Iedere groep krijgt een VPS waar alleen maar standaardinstellingen op staan.
+We zullen dus zelf docker moeten installeren.
 
-Kies voor "GitHub" als authenticatiemethode en volg de stappen van de wizard. Als je niet voor GitHub kiest, heb je geen toegang tot jouw repositories in onze classroom. Na het aanmaken van je account krijg je een verificatiemail, klik op de link.
+De VPS is een Ubuntu VM, voor de installatie van Docker kan je dus de officiële handleiding van [Docker](https://docs.docker.com/engine/install/ubuntu/) volgen.
+Volg hierbij de stappen `Install using the api repository`.
 
-![Render aanmelden met GitHub](./images/10_3_sign_in_with_github.png ':size=80%')
+### Binnenhalen van de projectcode
 
-Na verificatie van je account kom je terecht op je dashboard.
+Voor het binnenhalen van de projectcode zullen we gebruik maken van `git clone <url>`.
+Het probleem hierbij is echter dat de repositories private zijn, dus dat de VPS hier geen toegang toe heeft.
+Om dit probleem op te lossen gaan we gebruik maken van [GitHub Deploy keys](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/managing-deploy-keys#deploy-keys).
 
-![Render dashboard](./images/10_4_render_dashboard.png ':size=80%')
+In essentie moet je eerst een SSH public-private-keypair maken (herinner `ssh-keygen`) op de VPS.
+Vervolgens zal je de public key moeten toevoegen aan de private repository op GitHub onder `Settings > Security and quality > Deploy keys`.
+Zo geef je de VPS toegang enkel en alleen tot de repository.
 
-## Back-end online zetten
+Tot slot kan je de code binnenhalen via `git clone <url>`.
 
-?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Front-end Web Development.
+### Opstarten applicatie
 
-We zetten eerst de back-end online, klik op "New Web Service".
+De laatste stap is het opstarten van de applicatie via `docker compose`.
 
-![Render new web service](./images/10_5_new_web_service.png ':size=80%')
+Let er hier bij op dat we in het eerste deel van dit hoofdstuk een aparte docker-compose file hebben gebruikt voor front-end en back-end.
+Het is eenvoudiger om deze te combineren tot één enkele docker-compose file, hoewel dit niet strikt noodzakelijk is.
 
-Zoek jouw **eigen** back-end repository op, selecteer deze en klik op "Connect".
+Let erbij op dat je nog enkele wijzigingen moet doen:
 
-![Search backend repo](./images/10_6_search_backend_repo.png ':size=80%')
+- Bij de frontend-service moet de `VITE_API_URL` ingesteld worden op `https://GXX-webservices.vichogent.be/api`.
+- Bij de backend-service moet een `.env.production` bestand toegevoegd worden. Deze is gelijkaardig aan de `.env.docker-local` die we eerder maakten, enkel de `CORS_ORIGINS` moet ingesteld worden op `["https://GXX-frontendweb.vichogent.be"]`.
 
-Vul vervolgens alle nodige settings in:
-
-- Kies een unieke naam voor je service (hint: je repository-naam is uniek).
-- Maak eventueel een project aan zodat alle resources van je applicatie gegroepeerd zijn.
-- Kies als language voor `Docker`.
-- Kies als branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
-- Kies "Frankfurt (EU Central)" als regio.
-- Vul bij "Root Directory" de naam van de map in waar jouw back-end-code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
-- Laat het Dockerfile path leeg, tenzij je zou afwijken van de standaardwaarde.
-- Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de back-end online is.
-
-De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw situatie**.
-
-![Render back-end settings part 1](./images/10_7_backend_settings.png ':size=80%')
-
-Vul onder de instance types de nodige environment variabelen in. Check je mail voor de nodige credentials voor jouw persoonlijke databank. Als je authenticatie en autorisatie hebt, moet je deze environment variabelen ook nog toevoegen.
-
-> Hint: voor de variabele `AUTH_JWT_SECRET` kan je een random string gebruiken. Klik op "Generate" om een random string te laten genereren door Render.
-
-![Render back-end settings part 3](./images/10_9_backend_settings_part_3.png ':size=80%')
-
-Optioneel kan je onder "Advanced" een "Health Check Path" invullen. Dit is een URL die je kan gebruiken om te controleren of je service nog online is, bij ons is dit `/api/health/ping`.
-
-![Render back-end settings part 4](./images/10_10_backend_settings_part_4.png ':size=80%')
-
-Klik vervolgens op "Deploy Web Service" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende back-end moeten hebben. De URL van jouw back-end vind je linksboven.
-
-![Back-end is online](./images/10_11_backend_online.png ':size=80%')
-
-**Lees eerst de logs alvorens de lectoren te contacteren!** Krijg je het niet werkende? Maak een issue op jouw repository en tag jouw lector. Voeg een kopie van je logs en je settings (zonder secrets) toe, anders kunnen we niet helpen.
-
-![Read the logs](https://imgs.xkcd.com/comics/rtfm.png ':size=30%')
+Eenmaal dit klaargezet is kan je de applicatie opstarten met `docker compose up -d` (indien je file anders heet dan `docker-compose.yml` mag je de -f optie niet vergeten).
+Dit kan soms een error geven op pnpm build/install instructies, indien dit voorvalt probeer je best gewoon eens opnieuw. Dit komt vermoedelijk door een timing probleem in de docker build, maar vanwege de caching in docker zal hij alle voorgaande layers niet opnieuw moeten uitvoeren.
 
 ### Seeding
 
-Voor de seeding van de VIC-database zullen we dit manueel moeten oplossen.
-Hiervoor kan je tijdelijk je `.env` aanpassen, zodat de `DATABASE_URL` verwijst naar je online database.
-Hierna kan je het `pnpm db:seed` commando uitvoeren om de seeding uit te voeren.
+De laatste stap voordat alles klaar is, is de seeding van het project.
+Zoals eerder vermeld is dat een lastig probleem, omdat we geen toegang hebben tot de database.
+Bovendien willen we geen `pnpm` installeren op de VPS (gezien de code binnenhalen zelf eigenlijk iets is dat beter kan).
 
-## Front-end online zetten
+!> Zorg dat er geen docker container (of ander proces) draait op poort 3306 van je eigen toestel.
 
-?> **Let op!** Deze sectie is **niet** van toepassing voor het olod Web Services.
+Dit zullen we oplossen door via SSH een tunnel te leggen met de VPS.
+Hierbij zullen we poort 3306 van de VPS tunnelen naar poort 3306 van onze localhost over SSH.
+Dit doen we met het volgende commando:
 
-Het is tijd om onze front-end online te zetten. Onze front-end draait ook op docker, dus kan je dezelfde stappen volgen als bij de back-end.
+```bash
+ssh vicuser@vichogent.be -p XXXXX -L 3306:localhost:3306
+```
 
-Open het Render dashboard en klik rechtsboven op "+ New" en "Web service" (of klik op "New Web service" indien je geen back-end hebt).
+Dit zal in terminal tonen dat je aangemeld bent op de VPS, sluit deze zeker niet af (anders beëindig je de tunnel).
+Dit heeft als resultaat dat je de seeding van je project kan uitvoeren op je localhost op poort 3306 (zoals we altijd deden met `pnpm db:seed` voor local development).
+De data zal echter in de database op de VPN terecht komen.
 
-![Render new web service](./images/10_12_new_static_site.png ':size=80%')
+### Controle resultaat
 
-Zoek nu jouw **eigen** front-end repository op en klik op "Connect"
+Vergeet niet te controleren of het uiteindelijke resultaat correct is.
+Surf naar `https://GXX-frontendweb.vichogent.be` en controleer of alles werkt zoals gewenst.
 
-![Render search front-end repo](./images/10_13_search_frontend_repo.png ':size=80%')
+### Mogelijke verbeteringen (Optioneel)
 
-Vul vervolgens alle nodige settings in:
+Hieronder staan wat verbeteringen op vlak van automatische pipelines. Dit is volledig optioneel en gaat buiten de scope van deze cursus.
+Moest je toch zo een automatisch systeem maken, vermeld dit zeker in je dossier zodat we hier vragen naar kunnen stellen.
 
-- Kies een unieke naam voor je statische website (hint: je repository-naam is uniek).
-- Selecteer eventueel een project.
-- Kies als language voor `Docker`.
-- Kies als branch de `main` branch. Moest je een andere branch gebruiken, kies deze dan.
-- Kies "Frankfurt (EU Central)" als regio.
-- Vul bij "Root Directory" de naam van de map in waar je front-end-code staat. Dit is de map waarin je `package.json` staat. Indien alles in de root staat, laat je dit veld leeg.
-- Laat het Dockerfile path leeg, tenzij je zou afwijken van de standaardwaarde.
-- Kies tenslotte voor "Free" als plan. Dit is het gratis plan van Render. Dit is voldoende voor onze applicatie. Hierdoor wordt jouw applicatie wel afgesloten indien er geen activiteit is, dus het kan even duren vooraleer de front-end online is.
+#### Via GitHub Actions (Optioneel)
 
-De rest zou normaal correct ingevuld moeten zijn. **Controleer dit voor jouw situatie**.
+Je zou de docker image kunnen builden aan de hand van github actions.
+Deze moet dan opgeslagen worden in een artifact repository waar docker images in kunnen staan.
+Hiervoor kan je gebruik maken van `ghcr.io`, de GitHub Container Repository.
+Deze hangt automatisch gelinkt aan je private repository.
 
-![Render front-end settings part 1](./images/10_14_frontend_settings_part_1.png ':size=80%')
+Het enige dat je dan moet doen op de VPS is de docker compose file maken, waarbij je ipv. de context zal verwijzen naar de image op ghcr.io.
+Eén van moeilijkheden hiervan is het werken met versienummers.
+Bij een nieuwe versie moet je dan enkel naar de VPS connecteren, vervolgens in de docker compose file de versie van de image aanpassen en opnieuw `docker compose up` uitvoeren.
 
-We moeten onze front-end nog vertellen waar onze back-end draait. Dit doen we door een environment variabele in te stellen. Kopieer de URL van jouw back-end van het Render dashboard naar een environment variabele met naam `VITE_API_URL`. Vergeet niet `/api` toe te voegen aan het einde van de URL, tenzij je dit anders aangepakt hebt in jouw applicatie.
+Indien gewenst zou je ook een action kunnen maken die automatisch deze stappen uitvoert.
+Dan kan je zorgen dat de action zelf connecteert met de VPS en de docker compose file aanpast en uitvoert.
 
-![Render front-end settings part 2](./images/10_15_frontend_settings_part_2.png ':size=80%')
+#### Zelf build pipeline maken (Optioneel)
 
-Klik vervolgens op "Deploy" en wacht geduldig af (het gratis plan kan trager zijn). Als alles goed is gegaan, zou je nu een werkende front-end moeten hebben. De URL van jouw front-end vind je linksboven.
+Je kan ook de automatische pipeline zelf opzetten (vb via Jenkins).
 
-![Front-end is online](./images/10_16_frontend_online.png ':size=80%')
-
-### CORS probleem
-
-Je kan nu alvast naar jouw front-end gaan maar je zal merken dat er nog een probleem is. Probeer bijvoorbeeld een gebruiker te registreren (of een ander request uit te voeren) en bekijk de console. Je krijgt een CORS error, dit moeten we gaan fixen in de back-end!
-
-![CORS error](./images/10_17_frontend_cors.png ':size=80%')
-
-CORS kan je enkel oplossen door in de back-end de juiste headers te zetten. Gezien we dit in onze environment geconfigureerd hebben, moeten we alleen de URL van onze front-end toevoegen aan de CORS origins op Render.
-
-> Merk dus op dat je een CORS-probleem niet kan oplossen in de front-end of als je geen toegang hebt tot de back-end!
-
-![CORS fix](./images/10_17.2_frontend_cors.png ':size=80%')
-
-## Hosting remarks
-
-Dit was maar een (eenvoudig) voorbeeld om je applicatie online te zetten. Onze hoofdbekommernis was bovendien om alles 100% gratis te kunnen regelen, wat niet altijd het eenvoudigst of handigst is.
-
-Hier linten of testen we onze applicatie ook niet voor we deze online zetten. We merken het dus niet op als onze applicatie een bug heeft die door de testen opgevangen zou worden.
-
-> Tip: GitHub heeft een vrij grote free tier (2000 minuten aan computation time) op vlak van CI/CD. Dit heet GitHub Actions, waarbij je bij het pushen van code automatisch je testen kan laten uitvoeren en zoveel meer.
-
-Als je ooit echte applicaties online wil zetten, kijk dan eerst eens rond. Er zijn veel opties, en vaak helemaal niet duur meer maar zelden helemaal gratis. Vaak zal de CI/CD pipeline veel meer omvatten dan louter builden en online plaatsen.
-
-Op Render wordt ook de complexiteit van de CI/CD pipeline niet getoond. Je moet slechts een paar veldjes invullen en Render doet alle magie voor jou. Dit is natuurlijk niet realistisch. Als je ooit een echte applicatie online zet, zal je zelf een CI/CD pipeline moeten opzetten. Dit is een hele klus en je zal er veel tijd in moeten steken. Het is echter wel de moeite waard, want het zal je veel tijd besparen in de toekomst.
-
-Denk bij het online zetten van een applicatie ook altijd na over reproduceerbaarheid. Als je een applicatie online zet, moet je ervoor zorgen dat je dit opnieuw kan doen. Dit betekent dat je alles moet documenteren en automatiseren. Als je dit niet doet, zal je in de toekomst veel tijd verliezen. In dit hoofdstuk hebben we alles manueel gedaan, maar in een realistisch project zal je dit automatiseren met bv. [Terraform](https://developer.hashicorp.com/terraform), [Ansible](https://www.ansible.com/) of een andere tool. Zo kan je met één commando de hele infrastructuur opzetten.
+Indien je iets interessant wil proberen en hiervoor meer rekenkracht nodig hebt, stuur ons zeker een mailtje met wat uitleg over wat je wil proberen en welke resources je denkt nodig te hebben. (ander voorbeeld zou kunnen zijn om zelf een github action runner te hosten voor het maken van de pipeline).
 
 ## Oefening 1 - README
 
 Pas vervolgens jouw README aan met de nodige commando's... om de applicatie in productie op te starten. Je kan inspiratie opdoen in de README's van de voorbeeldapplicaties.
 
+Wanneer je in je README of cursusnotities naar branches verwijst, gebruik dan dezelfde `chapter-X` naamgeving als elders in de cursus.
+
 > **Eindpunt voorbeeldapplicatie**
 >
-> De `main` branch bevat de finale versie van de voorbeeldapplicatie voor beide olods.
+> Voor dit hoofdstuk kan je verder bouwen op een lokale branch zoals `chapter-9`. De `main` branch bevat de finale versie van de voorbeeldapplicatie voor beide olods.
 
 <iframe src="https://giphy.com/embed/3otPoS81loriI9sO8o" width="480" height="269" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>

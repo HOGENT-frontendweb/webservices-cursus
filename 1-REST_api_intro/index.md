@@ -8,9 +8,15 @@
 - Je kent de basisprincipes van Node.js.
 - Je kan een eenvoudige REST API server opzetten met NestJS.
 
+## TypeScript
+
+Binnen Web Services zullen we werken met TypeScript. TypeScript is een superset van JavaScript die statische types toevoegt aan de taal. Dit betekent dat je variabelen, functies en objecten kunt annoteren met types, waardoor je fouten kunt opsporen tijdens het ontwikkelen in plaats van tijdens runtime. TypeScript biedt ook geavanceerde functies zoals interfaces, generics en decorateurs, die helpen bij het schrijven van robuuste en onderhoudbare code. TypeScript wordt vaak gebruikt in combinatie met Node.js en frameworks zoals NestJS, omdat het de ontwikkelaar een betere tooling en foutopsporing biedt.
+
+In deze cursus zullen we geleidelijk aan TypeScript features introduceren, maar het is aan te raden om zelf ook wat tijd te investeren in het leren van TypeScript. Er zijn veel online bronnen beschikbaar, zoals de officiële [TypeScript-documentatie](https://www.typescriptlang.org/docs/) en interactieve tutorials zoals [TypeScript for Beginners](https://www.typescriptlang.org/docs/handbook/typescript-in-5-minutes.html). Daarnaast hebben we ook een [appendix over TypeScript](../appendices/1-typescript/index.md) in deze cursus, waar je het absolute minimum aan TypeScript-kennis kan terugvinden die je nodig hebt voor deze cursus.
+
 ## Wat is een API?
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/s7wmiS2mSXY?si=7u14hhoBHVRS5Rqk" frameborder="0" referrerpolicy="no-referrer" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/s7wmiS2mSXY?si=71jKO3ESmuAMyDTl" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 Een **API (Application Programming Interface)** is een software-interface die het mogelijk maakt dat twee applicaties met elkaar kunnen communiceren. Dit in tegenstelling tot een User Interface, die mensen met software laat werken. Ze maken de overdracht van gegevens van systeem naar systeem mogelijk. API’s bieden een gestandaardiseerde toegang tot de applicatiegegevens.
 
@@ -430,7 +436,14 @@ Daarom gebruiken we [pnpm](https://pnpm.io/), een alternatieve package manager d
 
 ## NestJS
 
-Als IT'er is het belangrijk om te leren documentatie te lezen. De documentatie van NestJS is zeer uitgebreid en goed geschreven. We raden je aan om de documentatie grondig door te nemen, zeker als je vastloopt of iets niet begrijpt. De documentatie is beschikbaar op <https://docs.nestjs.com/>.
+Als IT'er is het belangrijk om te leren documentatie te lezen.
+De documentatie van NestJS is zeer uitgebreid en goed geschreven.
+We raden je aan om de documentatie grondig door te nemen, zeker als je vastloopt of iets niet begrijpt.
+De documentatie is beschikbaar op <https://docs.nestjs.com/>.
+
+?> Wanneer je het minimum van NestJS kent, kan het echter efficiënter zijn om gerichte vragen te stellen aan je AI-tool over hoe je het framework gebruikt.
+Dit zal je een hoop zoekwerk in de documentatie kunnen besparen.
+Hierbij kan je best wel vragen naar referenties, zodat je kan controleren of je wel de nieuwste/correcte uitleg krijgt.
 
 Om deze trend goed in te zetten, beginnen we met het lezen van de ["Introduction" sectie](https://docs.nestjs.com/) van de NestJS documentatie. Deze sectie geeft een beknopt overzicht van wat NestJS is, wat het doet, waarom je het zou gebruiken en hoe je een project opzet.
 
@@ -450,7 +463,7 @@ pnpm add -g @nestjs/cli
 
 Vervolgens maken we een nieuw project aan met de CLI. Dit kan je doen met het onderstaand commando. Tijdens de installatie kies je voor `pnpm` als package manager.
 
-!> **Info voor de examenopdracht:** zorg ervoor dat je onderstaand commando in de root van jouw GitHub Classroom repository uitvoert, anders zal het project niet in de juiste map aangemaakt worden. Natuurlijk kan je het nadien verplaatsen.
+!> **Info voor de examenopdracht:** zorg ervoor dat je onderstaand commando in de root van jouw GitHub repository uitvoert, anders zal het project niet in de juiste map aangemaakt worden. Natuurlijk kan je het nadien verplaatsen.
 
 ```bash
 nest new --strict webservices-budget
@@ -763,9 +776,9 @@ Voeg de `HealthController` toe aan je project zoals eerder beschreven. Test of a
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les2-opl a2cbdcd
+> git checkout -b les1-opl 89add613
 > pnpm install
 > pnpm start:dev
 > ```

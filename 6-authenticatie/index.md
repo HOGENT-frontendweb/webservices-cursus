@@ -3,12 +3,11 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7 bd9ccc9
+> git checkout -b les6 03ffd290
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -102,6 +101,8 @@ Voor we aan de slag gaan, breiden we onze `users` tabel uit met een paar extra k
 - `password_hash`: de hash van het wachtwoord van de gebruiker
 - `roles`: JSON-kolom met een lijst van rollen die de gebruiker heeft, bv. `user`, `admin`, ...
 
+?> Wanneer je bovenstaande uitleg aan AI geeft, zou deze in staat moeten zijn de wijzigingen voor het schema te genereren. Vergelijk dit met onderstaande code.
+
 ```ts
 // src/drizzle/schema.ts
 export const users = mysqlTable(
@@ -109,11 +110,10 @@ export const users = mysqlTable(
   {
     id: int('id', { unsigned: true }).primaryKey().autoincrement(),
     name: varchar('name', { length: 255 }).notNull(),
-    email: varchar('email', { length: 255 }).notNull(), // 👈
+    email: varchar('email', { length: 255 }).notNull().unique('idx_user_email_unique'), // 👈
     passwordHash: varchar('password_hash', { length: 255 }).notNull(), // 👈
     roles: json('roles').notNull(), // 👈
   },
-  (table) => [uniqueIndex('idx_user_email_unique').on(table.email)], // 👈
 );
 ```
 
@@ -147,6 +147,9 @@ pnpm install argon2
 Sta via `pnpm approve-builds` toe om `argon2` te builden.
 
 Breid vervolgens de `seed.ts` uit om `12345678` te hashen als wachtwoord voor elke gebruiker:
+
+?> Afhankelijk van hoeveel seed-data je hebt, kan het interessant zijn om de hash functie te maken, en vervolgens AI dit te toevoegen aan de userdata.
+Een alternatief kan zijn om op te zoeken hoe je "multi-cursor" gebruikt in je IDE, zodat je dit voor alle gebruikers tegelijkertijd kan doen.
 
 ```ts
 // src/drizzle/seed.ts
@@ -248,13 +251,16 @@ We willen niet dat gevoelige informatie zoals `passwordHash` en `roles` naar de 
 
 ### PublicUserResponseDto
 
-We passen onze `PublicUserResponseDto` aan zodat die enkel de publieke velden van een gebruiker bevat:
+We hernoemen onze `UserResponseDto` naar `PublicUserResponseDto` en passen die aan zodat die enkel de publieke velden van een gebruiker bevat:
 
 ```ts
 // src/user/user.dto.ts
 import { Expose } from 'class-transformer'; // 👈 1
 
-export class PublicUserResponseDto {
+export class PublicUserResponseDto implements Omit<
+  User,
+  'passwordHash' | 'roles'
+> {
   @Expose() // 👈 2
   id: number;
 
@@ -361,7 +367,7 @@ We voegen de instellingen voor authenticatie, nl. het hashen van het password en
 
 ```ts
 // src/config/configuration.ts
-export default () => ({
+export default (): ServerConfig => ({
   // ... andere configuratie
   auth: {
     hashLength: parseInt(process.env.AUTH_HASH_LENGTH || '32'), // 👈 1
@@ -428,7 +434,7 @@ Vul de README van je eigen project aan met de nodige documentatie over de enviro
 We definiëren alle rollen in onze applicatie in een enum. Zo is het eenvoudig om ze te wijzigen indien nodig:
 
 ```ts
-// src/auth/roles.ts
+// src/types/auth.ts
 export enum Role {
   USER = 'user',
   ADMIN = 'admin',
@@ -538,7 +544,7 @@ Importeer de `DrizzleModule` en de `JwtModule`, en exporteer de `AuthService` in
 import { Module } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { DrizzleModule } from '../drizzle/drizzle.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { ServerConfig, AuthConfig } from '../config/configuration';
 
@@ -556,6 +562,10 @@ import { ServerConfig, AuthConfig } from '../config/configuration';
           secret: authConfig.jwt.secret,
           signOptions: {
             expiresIn: `${authConfig.jwt.expirationInterval}s`,
+            audience: authConfig.jwt.audience,
+            issuer: authConfig.jwt.issuer,
+          },
+          verifyOptions: {
             audience: authConfig.jwt.audience,
             issuer: authConfig.jwt.issuer,
           },
@@ -577,6 +587,7 @@ export class AuthModule {}
 5. We geven de nodige opties mee aan de `JwtModule`, opgehaald uit onze configuratie:
    - `secret`: het geheim waarmee de JWT ondertekend wordt
    - `signOptions`: opties voor het ondertekenen van de JWT, zoals vervaldatum, audience en issuer
+   - `verifyOptions`: opties voor het verifiëren van de JWT, zoals audience en issuer
 
 ### Wachtwoord hashen
 
@@ -645,8 +656,8 @@ import { User } from '../types/user';
 export class AuthService {
   // ... andere functies
 
-  private signJwt(user: User): string {
-    return this.jwtService.sign({
+  private async signJwt(user: User): Promise<string> {
+    return this.jwtService.signAsync({
       sub: user.id,
       email: user.email,
       roles: user.roles,
@@ -696,7 +707,7 @@ export class AuthService {
 }
 ```
 
-Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
+Deze functie verifieert de JWT en geeft de payload terug. De nodige configuratie-opties (= audience en issuer) zodat gecontroleerd wordt of deze JWT wel bedoeld is voor onze server, werden reeds meegegeven bij de registratie van de `JwtModule`. Je kan nl. een JWT maken voor een andere server met een andere audience of issuer (eventueel hetzelfde secret).
 
 Als de JWT ongeldig is, wordt een `UnauthorizedException` gegooid.
 
@@ -820,8 +831,12 @@ Registreren van een nieuwe gebruiker zal gebeuren via een `POST /api/users` endp
 ```ts
 // src/user/user.dto.ts
 import { IsString, IsEmail, MinLength, MaxLength } from 'class-validator';
+import { CreateUser } from '../types/user';
 
-export class RegisterUserRequestDto {
+export class RegisterUserRequestDto implements Pick<
+  CreateUser,
+  'name' | 'email'
+> {
   @IsString()
   @MinLength(2)
   @MaxLength(255)
@@ -843,7 +858,10 @@ Verwijder de bestaande `CreateUserRequestDto` uit de `user.dto.ts`, deze wordt n
 ```ts
 // src/user/user.dto.ts
 
-export class UpdateUserRequestDto {
+export class UpdateUserRequestDto implements Pick<
+  CreateUser,
+  'name' | 'email'
+> {
   @IsString()
   @MinLength(2)
   @MaxLength(255)
@@ -1243,7 +1261,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Role } from '../roles';
+import { Role } from '../../types/auth';
 
 @Injectable()
 export class CheckUserAccessGuard implements CanActivate {
@@ -1340,7 +1358,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CheckUserAccessGuard } from '../auth/guards/userAccess.guard';
-import { type Session } from '../types/auth';
+import { Role, type Session } from '../types/auth';
 
 @Controller('users')
 export class UserController {
@@ -1442,19 +1460,27 @@ import {
   CallHandler,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { delay } from 'rxjs/operators';
+import { catchError, delay, switchMap } from 'rxjs/operators';
+import { throwError, timer } from 'rxjs';
 
 @Injectable()
 export class AuthDelayInterceptor implements NestInterceptor {
   constructor(private configService: ConfigService) {}
 
   intercept(_: ExecutionContext, next: CallHandler) {
-    const maxDelay = this.configService.get<number>('auth.maxDelay')!;
+    const maxDelay = this.configService.get<number>('auth.maxDelay', 5000);
     const randomDelay = Math.round(Math.random() * maxDelay);
-    return next.handle().pipe(delay(randomDelay));
+    return next.handle().pipe(
+      delay(randomDelay),
+      catchError((err) =>
+        timer(randomDelay).pipe(switchMap(() => throwError(() => err))),
+      ),
+    );
   }
 }
 ```
+
+In de interceptor genereren we een willekeurige vertraging tussen 0 en `auth.maxDelay` milliseconden. We gebruiken de `delay` operator van RxJS om deze vertraging toe te passen op het response. We zorgen er ook voor dat eventuele fouten dezelfde vertraging ondergaan, zodat een aanvaller niet kan achterhalen of een fout sneller optreedt dan een succesvolle authenticatie.
 
 Je kan deze interceptor toevoegen aan de login en register routes, bijvoorbeeld:
 
@@ -1502,7 +1528,7 @@ Pas de routes en service van transactions aan:
 
 1. `GET /api/transactions` retourneert enkel de transacties van de aangemelde gebruiker.
    - Een admin mag wel alle transacties ophalen.
-   - **Tip**: Pas de service aan zodat je het `userId` en de `roles` kan meegeven als parameter.
+   - **Tip**: Pas de service aan zodat je het `userId` en de `roles` kan meegeven als parameter. Daar je nu meerdere whereConditions hebt in de `getAll` methode (namelijk `userId` en `roles` en `placeId`), is het handig om de condities in de service op te bouwen via een array van `where` clausules. Je kan deze clausules dan combineren met `and` en `or` zoals nodig.
    - Controleer of de user niet meer informatie bevat dan het id, de naam en het e-mailadres.
 2. `GET /api/transactions/:id` retourneert de transactie met opgegeven id, maar dit mag enkel indien de transactie behoort tot de aangemelde gebruiker.
    - Een admin mag wel alle transacties ophalen.
@@ -1561,12 +1587,11 @@ Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 ## Oplossing voorbeeldapplicatie
 
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les7-opl 7bf0724
+> git checkout -b les6-opl 3427d585
 > pnpm install
 > docker compose up -d
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -1577,6 +1602,7 @@ Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 
 - Gebruik [Passport.js](https://www.passportjs.org/) voor authenticatie en integreer met bv. aanmelden via Facebook, Google...
   - NestJS heeft uitstekende ondersteuning voor Passport.js, zie de [NestJS documentatie](https://docs.nestjs.com/security/authentication#implementing-passport-strategies).
+  - Let op: als je Passport gebruikt, dan laat je alle authenticatielogica over aan Passport en de beschikbare strategieën. Je zal dus minimaal een strategie moeten gebruiken voor username/password authenticatie en een strategie voor JWT authenticatie.
 - Gebruik van een externe authenticatieprovider (bv. [better-auth](https://www.better-auth.com/), [Auth0](https://auth0.com/), [Userfront](https://userfront.com/)...)
 - Schrijf een custom validator om de sterkte van een wachtwoord te controleren, gebruik bv. [zxcvbn](https://www.npmjs.com/package/zxcvbn)
   - Dit is een vrij kleine extra, dus zorg ervoor dat je nog een andere extra toevoegt.

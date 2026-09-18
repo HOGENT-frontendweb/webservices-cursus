@@ -3,12 +3,11 @@
 > **Startpunt voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9 4402433
+> git checkout -b les8 35657cb3
 > docker compose up -d
 > pnpm install
-> pnpm db:migrate
 > pnpm db:seed
 > pnpm start:dev
 > ```
@@ -114,7 +113,7 @@ CORS_ORIGINS=["http://localhost:5173"]
 CORS_MAX_AGE=10800
 
 # Database configuration
-DATABASE_URL=mysql://devusr:devpwd@localhost:3310/budget_test # 👈 1
+DATABASE_URL=mysql://devusr:devpwd@localhost:3306/budget_test # 👈 1
 
 # Auth configuration
 AUTH_JWT_SECRET=eenveeltemoeilijksecretdatniemandooitzalradenandersisdesitegehacked
@@ -184,7 +183,7 @@ Om de logging van API calls uit te schakelen in de testomgeving hebben we reeds 
 
 ```typescript
 // src/config/configuration.ts
-export default () => ({
+export default (): ServerConfig => ({
   env: process.env.NODE_ENV,
   port: parseInt(process.env.PORT || '9000'),
   log: {
@@ -249,7 +248,7 @@ Jest voorziet een aantal globale functies die je kunt gebruiken in je testen. De
 
 ### GET api/health
 
-Maak de map `test` een bestand `health.e2e-spec.ts` aan. Alvorens we dit endpoint kunnen testen, dienen we een instantie van de applicatie op te starten in de test runner.
+Maak in de map `test` een bestand `health.e2e-spec.ts` aan. Alvorens we dit endpoint kunnen testen, dienen we een instantie van de applicatie op te starten in de test runner.
 
 #### De setup van een test
 
@@ -288,7 +287,7 @@ describe('Health', () => {
    - **Test**: Dit is de startpunt voor het maken van testomgevingen in NestJS. Het is een klasse met één belangrijke methode: `createTestingModule()`. Deze methode laat je een testversie van je applicatie opbouwen door aan te geven welke modules, controllers en services je wil laden.
    - **TestingModule**: Dit is het resultaat van `Test.createTestingModule().compile()`. Het is vergelijkbaar met een echte NestJS module, maar dan speciaal voor testen. Het bevat alle services en controllers die je wil testen, en je kan er instanties van ophalen met de `.get()` methode. Het is een geïsoleerde instantie van de NestJS applicatie speciaal voor testing.
    - **INestApplication**: Dit is een volledig werkende NestJS applicatie die je kan gebruiken in je testen. Het heeft een HTTP server die supertest kan gebruiken om requests naar te sturen. In plaats van je applicatie op bijvoorbeeld poort 3000 te laten draaien, maakt `INestApplication` een tijdelijke server die alleen bestaat tijdens het testen.
-   - [**supertest**](https://github.com/forwardemail/supertest): Dit is een tool die HTTP requests kan simuleren naar je applicatie. Het werkt samen met `INestApplication` om GET, POST, PUT, DELETE requests te versturen en de responses te controleren (status codes, body inhoud, headers). Het voordeel is dat je geen echte server hoeft op te starten - supertest communiceert rechtstreeks met de `INestApplication` instantie.
+   - [**supertest**](https://github.com/forwardemail/supertest): Dit is een tool die HTTP requests kan simuleren naar je applicatie. Het werkt samen met `INestApplication` om GET, POST, PUT, DELETE requests te versturen en de responses te controleren (status codes, body inhoud, headers). Het voordeel is dat je geen echte server hoeft op te starten - supertest communiceert rechtstreeks met de `INestApplication` instantie. Deze zullen we gebruiken bij het eerst volgende deel in de cursus.
 2. Groepeer de testen voor de health in een test suite met naam "Health".
 3. Definieer de variabele `app` die een instantie van onze app zal bevatten
 4. Gebruik `Test.createTestingModule()` om een complete NestJS applicatie in testmodus op te zetten. Importeer `AppModule`.
@@ -325,7 +324,7 @@ describe('Health', () => {
 2. Gebruik `supertest` om een GET request naar `/api/health/ping` te sturen. We maken gebruik van de async/await syntax.
 3. We verwachten status code 200 en de response body met `{ pong: true }`. We gebruiken de ingebouwde `expect` functie van Jest om de resultaten te controleren: <https://jestjs.io/docs/expect>.
 
-Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt. Hij zou moeten falen aangezien we een ander response verwachten. Ga naar de `HealthController` en pas de response aan naar `{ pong: true }`:
+Voer de test uit met `pnpm test:e2e --watch` en controleer of de test slaagt. Hierbij zou je moeten zien dat we een `200` verwachten, maar een `401` krijgen. Maar de methode public en probeer opnieuw. Nu zou hij nog steeds moeten falen aangezien we een ander response verwachten. Ga naar de `HealthController` en pas de response aan naar `{ pong: true }`:
 
 ```typescript
 ping(): { pong: boolean } {
@@ -564,7 +563,7 @@ import { INestApplication } from '@nestjs/common';
 import { AuthService } from '../../src/auth/auth.service';
 import { DatabaseProvider } from '../../src/drizzle/drizzle.provider';
 import { users } from '../../src/drizzle/schema';
-import { Role } from '../../src/auth/roles';
+import { Role } from '../../src/types/auth';
 
 export async function seedUsers(
   app: INestApplication,
@@ -1137,9 +1136,9 @@ Schrijf de testen voor het endpoint `DELETE /api/places/:id`:
 
 ### Oefening 4 - Coverage
 
-Vraag de coverage op van je testen met `pnpm test:e2e:cov`. Bekijk de gegenereerde HTML pagina in het bestand `test/coverage/lcov-report/index.html`. Wat merk je op?
+Vraag de coverage op van je testen met `pnpm test:e2e:cov`. Bekijk de gegenereerde HTML pagina in het bestand `coverage/lcov-report/index.html`. Wat merk je op?
 
-Voeg ook de `coverage/` map toe aan de `.gitignore` zodat deze niet per ongeluk mee gecommit wordt.
+Controleer zeker ook dat de `coverage/` map toegevoegd is aan de `.gitignore` zodat deze niet per ongeluk mee gecommit wordt.
 
 - Oplossing +
 
@@ -1241,14 +1240,67 @@ Vervolledig je `README.md` met de nodige informatie over het testen van je appli
 > **Oplossing voorbeeldapplicatie**
 >
 > ```bash
-> git clone https://github.com/HOGENT-frontendweb/webservices-budget.git
+> git clone git@github.com:HOGENT-frontendweb/webservices-budget.git
 > cd webservices-budget
-> git checkout -b les9-opl 8f55ab5
+> git checkout -b les8-opl fa04b3b4
 > pnpm install
 > pnpm start:dev
 > ```
 >
 > Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
+
+## Oefening 7 - Onderzoek naar het gevaar/risico van AI
+
+Als we nu terugblikken naar hoe onze setup van de testen gemaakt is, valt hopelijk op hoe eenvoudig dit voor ons werkt.
+Hierbij hebben we de database via docker geautomatiseerd, hebben we hulpmethoden gemaakt voor het opspinnen van onze applicatie en het opzetten van de data voor tests.
+
+Nu gaan we eens uitproberen wat er zou gebeurd zijn indien we dit aan AI hadden overgelaten. We gaan dit in drie scenario's uitproberen:
+
+1. Helemaal geen context
+2. Een minimale hoeveelheid aan context
+3. Testen reeds door ons geschreven voor één endpoint
+
+Het eerste dat we hiervoor gaan doen is terugkeren naar de commit waarmee deze les begonnen is. Dit gaan we voor beide pogingen doen.
+
+### Poging 1: helemaal geen context
+
+Leg aan AI uit dat we integratietesten willen hebben voor de applicatie.
+We willen testen hebben testen voor alle endpoints van de controllers.
+
+Kijk eens wat hieruit komt en stel jezelf de vraag of de code voldoet aan de volgende criteria:
+
+- leesbaar?
+- aanpasbaar? (indien we iets willen wijzigen, kunnen we dit op één plaats doen ipv. in elke testmethode)
+- correct?
+- voldoende coverage?
+
+Indien dit niet in orde is, probeer om iteratief dit te verbeteren. Vergelijk telkens met onze eindoplossing om af te toetsen of het voldoet aan kwaliteitseisen.
+
+### Poging 2: Een minimale hoeveelheid aan context
+
+Leg aan AI uit dat we integratietesten willen hebben voor de applicatie.
+
+- We willen testen hebben testen voor alle endpoints van de controllers.
+- We specifiëren welke technologieën te gebruiken (.env bestand, jest, testcontainers, ...)
+- We willen dat er aparte bestanden gemaakt worden voor seeding om die te gebruiken in de BeforeEach.
+- We willen een hulpmethode hebben voor het opstarten van de applicatie.
+- We willen testen hebben testen voor alle endpoints van de controllers.
+  - Happy flow
+  - Authorisatie
+  - Validatie
+
+Kijk wederom of dit nu kwalitatief beter is.
+
+### Poging 3: Testen reeds door ons geschreven voor één endpoint
+
+Tot slot gaan we zelf veel context voorzien. We gaan zorgen dat er een compleet voorbeeld is van hoe we willen dat de testen er moeten uitzien.
+Hiervoor gaan we vertrekken vanaf het punt waar alle testen voor places gemaakt waren (commit `5f897299`).
+
+Vraag nu aan AI om testen voor de overige endpoints te maken. Geeft dit een beter resultaat dan de vorige pogingen?
+
+### Kritische reflectie
+
+Denk nu eens aan de drie pogingen die we ondernomen hebben. Op welke manier denk je een kwalitatief eindresultaat te hebben met zoveel mogelijk tijdswinst?
 
 ## Extra's voor de examenopdracht
 
