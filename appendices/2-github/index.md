@@ -125,7 +125,18 @@ git push -u origin feature/login
 
 Zo kan je teamlid je werk bekijken en opvolgen.
 
-### 4. Maak een Pull Request
+### 4. Synchroniseer met main
+
+Werk je feature branch bij met de laatste wijzigingen uit main. Doe dit regelmatig, zeker voordat je een Pull Request maakt. Zo voorkom je dat er conflicten ontstaan bij het mergen.
+
+```bash
+git checkout main
+git pull origin main
+git checkout feature/login
+git merge main
+```
+
+### 5. Maak een Pull Request
 
 Wanneer de functionaliteit klaar is, maak je op GitHub een **Pull Request (PR)** van je feature branch naar `main`. Een Pull Request is een verzoek om jouw wijzigingen toe te voegen aan de hoofdversie van het project. Je zegt eigenlijk tegen je team:
 "Ik ben klaar met mijn werk. Kunnen jullie mijn code nakijken en goedkeuren voordat ze in main terechtkomt?"
@@ -139,7 +150,7 @@ In de Pull Request beschrijf je:
 
 Zie  <https://docs.github.com/en/pull-requests/reference/pull-requests> voor meer info over Pull Requests.
 
-### 5. Voer een code review uit
+### 6. Voer een code review uit
 
 Voordat de wijzigingen worden samengevoegd, bekijkt het andere teamlid de code.
 
@@ -152,7 +163,7 @@ Tijdens een code review controleer je onder andere:
 
 Indien nodig worden eerst verbeteringen aangebracht voordat de Pull Request wordt goedgekeurd. Zie [Code Review](#code-review) voor meer info over hoe je een code review uitvoert.
 
-### 6. Merge naar main
+### 7. Merge naar main
 
 Na goedkeuring kan de Pull Request worden gemerged.
 
@@ -163,7 +174,10 @@ Controleer daarna steeds of je lokale versie van `main` up-to-date is:
 ```bash
 git checkout main
 git pull origin main
+git merge feature/login
 ```
+
+Een andere optie is een rebase te doen van je feature branch op main. In dit geval worden de commits van je feature branch herschikt op de laatste commit van main. Dit kan handig zijn om een lineaire geschiedenis te behouden.
 
 ### 7. Verwijder de feature branches niet!
 
