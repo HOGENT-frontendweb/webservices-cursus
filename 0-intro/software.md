@@ -79,7 +79,7 @@ v22.17.0
 Installeer `pnpm` als alternatieve package manager voor `npm`:
 
 ```bash
-npm install -g pnpm@latest-10
+npm install -g pnpm
 ```
 
 Laat `pnpm` vervolgens de nodige zaken instellen:
