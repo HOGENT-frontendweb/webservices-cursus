@@ -468,7 +468,10 @@ Vervolgens maken we een nieuw project aan met de CLI. Dit kan je doen met het on
 ```bash
 nest new --strict webservices-budget
 
-# Kies voor pnpm als package manager
+#Beantwoord de vragen van de CLI als volgt:
+# Package manager: pnpm
+# setup @nestjs/observer: No
+# module system: CommonJS (with jest)
 ```
 
 Hiermee maken we een nieuw NestJS project aan in de map `webservices-budget`. De `--strict` optie zorgt ervoor dat TypeScript strict is ingesteld, wat we aanraden om bugs te voorkomen. Dit is een goede gewoonte, zeker als je met TypeScript werkt. Het project wordt aangemaakt met de standaard mappenstructuur en een aantal voorbeeldbestanden.
@@ -505,6 +508,18 @@ Voor de volledigheid kan je ook de volgende properties voorzien:
 - `repository`: informatie over de repository van de applicatie
 
 Met een simpele `pnpm install` installeren we meteen een identieke omgeving (met zowel `dependencies` als `devDependencies`) en dat maakt het handiger om in een team te werken (`pnpm install --prod` installeert enkel de `dependencies`).
+
+```bash
+pnpm install
+
+# je krijgt nog een error ERR_PNPM_IGNORED_BUILDS. Dit los je op met:
+
+pnpm approve-builds
+
+# press enter om de build (@parcel/watcher en unrs-resolver) te accepteren
+```
+
+Sinds pnpm 10 worden installatiescripts van dependencies niet zomaar uitgevoerd. Met `pnpm approve-builds` kun je vertrouwde pakketten goedkeuren; pnpm slaat die keuze op in de workspaceconfiguratie. Zo voorkom je dat elke dependency automatisch code uitvoert.
 
 Het verschil tussen `dependencies` en `devDependencies` is het moment wanneer ze gebruikt worden. De `dependencies` zijn nodig in productie, m.a.w. de applicatie kan niet werken zonder deze packages. De `devDependencies` zijn enkel nodig om bv. het leven van de developer makkelijker te maken (types in TypeScript, linting, etc.) of bevatten packages die enkel gebruikt worden _at build time_, of dus wanneer de applicatie omgevormd wordt tot iets wat browsers of JavaScript runtimes begrijpen.
 
@@ -560,11 +575,13 @@ NestJS gebruikt TypeScript, een superset van JavaScript die statische types toev
   - `outDir`: de map waar de gegenereerde JavaScript bestanden worden geplaatst (`dist` is standaard)
   - Alle andere opties zijn te vinden op <https://www.typescriptlang.org/tsconfig>
 
-Normaal gesproken hoef je aan dit bestand niets te wijzigen, tenzij je specifieke wensen hebt. Voor ons project gaan we **de `baseUrl` optie verwijderen** uit `compilerOptions`. Het is niet aan te raden deze optie te gebruiken, omdat dit kan zorgen voor problemen en verwarring bij imports.
+Normaal gesproken hoef je aan dit bestand niets te wijzigen, tenzij je specifieke wensen hebt. Als je niet de meest recentste versie van nestjs gebruikt, dien je voor ons project **de `baseUrl` optie te verwijderen** uit `compilerOptions`. Het is niet aan te raden deze optie te gebruiken, omdat dit kan zorgen voor problemen en verwarring bij imports.
 
-### eslint.config.js
+### .oxlintrc.json (nestJS v12) of eslint.config.js (oudere nestJS versies)
 
-NestJS gebruikt ESLint om de code te linten. Linten is het controleren van de code op stijl- en programmeerfouten. Het bestand `eslint.config.js` bevat de configuratie voor ESLint. Open het bestand en bekijk de inhoud. Ook hier hoef je normaal niets aan te wijzigen, tenzij je specifieke wensen hebt. Meer info over ESLint vind je op <https://eslint.org/docs/latest/user-guide/configuring>.
+NestJS gebruikt `OxLint`(een ESLint-compatible linter) of `ESLint` om de code te linten. Linten is het controleren van de code op stijl- en programmeerfouten. Het bestand `oxlintrc.json` (of `eslint.config.js`) bevat de configuratie voor de linter. Open het bestand en bekijk de inhoud. Ook hier hoef je normaal niets aan te wijzigen, tenzij je specifieke wensen hebt dan kan je de rules verder aanpassen. De property `env` schakelt de Node.js omgeving in.
+
+Meer info over OxLint vind je op <https://oxc.rs/docs/guide/usage/linter.html> en over ESLint op <https://eslint.org/docs/latest/user-guide/configuring>.
 
 Indien je de foutmelding ''Delete CR (eslint - prettier/prettier)' krijgt bij het openen van `app.module.ts`, voeg dan volgende regel toe aan `.prettierrc`:
 
