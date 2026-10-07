@@ -23,10 +23,6 @@
   - Je begrijpt het concept van dependency injection en de voordelen ervan
 - Je kan gebruik maken van DTO's
 - Je krijgt inzicht in de werking van modules in NestJS
-- Je krijgt inzicht in configuratiebeheer
-  - Je weet hoe je environment variables gebruikt
-  - Je weet hoe je `ConfigModule` en `ConfigService` implementeert
-  - Je begrijpt hoe je configuratie per omgeving beheert
 
 ## De budget app
 
@@ -88,7 +84,6 @@ De laatste pagina laat toe om een plaats te bekijken samen met de transacties va
   De endpoints die we moeten voorzien zijn:
 
   #### Transactions
-
   - `GET /api/transactions`: alle transacties opvragen
   - `GET /api/transactions/:id`: een specifieke transactie opvragen
   - `POST /api/transactions`: een nieuwe transactie aanmaken
@@ -96,7 +91,6 @@ De laatste pagina laat toe om een plaats te bekijken samen met de transacties va
   - `DELETE /api/transactions/:id`: een transactie verwijderen
 
   #### Places
-
   - `GET /api/places`: alle plaatsen opvragen
   - `GET /api/places/:id`: een specifieke plaats opvragen
   - `POST /api/places`: een nieuwe plaats aanmaken
@@ -105,7 +99,6 @@ De laatste pagina laat toe om een plaats te bekijken samen met de transacties va
   - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
 
   #### Users
-
   - `GET /api/users`: alle gebruikers opvragen
   - `GET /api/users/:id`: een specifieke gebruiker opvragen
   - `POST /api/users`: een nieuwe gebruiker aanmaken
