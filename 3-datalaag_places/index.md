@@ -698,7 +698,7 @@ import {
 } from './drizzle.provider';
 
 @Module({
-  providers: [...drizzleProvider],
+  providers: [drizzleProvider],
   exports: [DrizzleAsyncProvider],
 })
 // 👇 1
@@ -1037,6 +1037,8 @@ export class PlaceController {
   // ...
 }
 ```
+
+Opmerking: in de class `CreatePlaceRequestDto`  moet de `rating: number | null;` zijn. Indien je een TS fout krijgt (Property 'rating' has no initializer...) pas dan `tsconfig.json` aan en voeg de rule     `"strictPropertyInitialization": false` toe.
 
 Daarna passen we de `getById` aan:
 
