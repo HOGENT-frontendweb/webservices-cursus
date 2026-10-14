@@ -151,13 +151,27 @@ Dit bestand definieert een MySQL container met:
   - deze heeft toegang tot de databank `budget`
 - een healthcheck om te controleren of de databank al klaar is
 
-Open een terminal in de root van je project en start de databank container
+Open een terminal in de root van je project en start de databank container (zorg ervoor dat Docker Desktop draait):
 
 ```bash
 docker compose up -d
 ```
 
 ?> Voor de veiligheid kan je de eerste keer zonder de `-d` optie uitvoeren zodat je in de logs kan checken of de container goed opgestart wordt.
+
+Om de container te stoppen, kan je het volgende commando uitvoeren:
+
+```bash
+docker compose stop
+```
+
+`docker compose start`om te herstarten.
+
+Wens je de container te verwijderen en de bijhorende volumes te verwijderen (optie `-v`). De image blijft wel op je systeem staan, je kan de container later opnieuw aanmaken met `docker compose up -d` en dan moet de mysql image niet meer gedownload worden:
+
+```bash
+docker compose down -v
+```
 
 ## Configuratie
 
