@@ -11,6 +11,8 @@
 > pnpm db:seed
 > pnpm start:dev
 > ```
+>
+> Vergeet geen `.env` aan te maken! Bekijk de [README](https://github.com/HOGENT-frontendweb/webservices-budget?tab=readme-ov-file#webservices-budget) voor meer informatie.
 
 ## Leerdoelen
 
@@ -986,7 +988,84 @@ Wanneer we dit proberen krijgen we een error te zien. We moeten nog twee stappen
 1. Exporteer de `PlaceService` in de `PlaceModule`.
 2. Importeer de `PlaceModule` in de `UserModule` om de `PlaceService` te kunnen gebruiken.
 
-## Paginatie
+## Search
+
+We willen ook het zoeken op plaatsnaam ondersteunen. Zoeken is een optionele query parameter van het GET all endpoint. Als de `search` parameter meegegeven wordt, filteren we de transacties op plaatsnaam. Een request ziet er dan zo uit: `GET /transactions?search=HoGent`. We dienen hiervoor de drie lagen aan te passen.
+
+### DTO
+
+Maak `TransactionQueryDto` aan voor de query parameters:
+
+```ts
+// src/transaction/transaction.dto.ts
+export class TransactionQueryDto{
+  search?: string;
+}
+```
+
+### Controller
+
+De controller geeft nu het `query`-object door aan de service.
+
+```ts
+// src/transaction/transaction.controller.ts
+import {
+  CreateTransactionRequestDto,
+  UpdateTransactionRequestDto,
+  TransactionResponseDto,
+  TransactionListResponseDto,
+  TransactionQueryDto,
+} from './transaction.dto';
+
+//...
+
+@Get()
+async getAllTransactions(
+  @Query() query: TransactionQueryDto,
+): Promise<TransactionListResponseDto> {
+  return await this.transactionService.getAll(query));
+}
+```
+
+### Service
+
+In de service passen we de `getAll` methode aan om de `search` parameter te gebruiken. De relationele API ondersteunt geen `WHERE`-condities op gejoinde tabellen (Wel in Drizzle V1 maar nog RC). We moeten daarom gebruik maken van een subQuery.
+
+```ts
+// src/transaction/transaction.servcice.ts
+import {
+  CreateTransactionRequestDto,
+  TransactionListResponseDto,
+  TransactionQueryDto,
+  TransactionResponseDto,
+  UpdateTransactionRequestDto,
+} from './transaction.dto';
+import { and, desc, eq, inArray, like } from 'drizzle-orm';
+import { places, transactions } from '../drizzle/schema';
+//...
+
+async getAll(
+  { search = '' }: TransactionQueryDto,
+): Promise<TransactionListResponseDto> {
+  const items = await this.db.query.transactions.findMany({
+    columns: { id: true, amount: true, date: true },
+    with: { place: true, user: true },
+    orderBy: desc(transactions.date),
+    where: inArray(
+      transactions.placeId,
+      this.db
+        .select({ id: places.id })
+        .from(places)
+        .where(like(places.name, `%${search}%`)),
+    ),
+  });
+  return { items };
+}
+```
+
+We maken gebruik van de `inArray`-functie om te filteren op transacties waarvan de `placeId` voorkomt in de resultaten van een subquery die de `places` tabel doorzoekt op plaatsnaam. De functie `like(places.name, '%search%')` voert een gedeeltelijke tekstzoekopdracht uit op de plaatsnaam. De `%`-tekens zijn SQL-wildcards: `%HoGent%` matcht elke plaatsnaam die "HoGent" bevat. Is search leeg, dan wordt het patroon `%%` en krijg je gewoon alle plaatsen terug. Opmerking: Door het `%` vooraan kan MySQL de index op places.name niet gebruiken, dus de places-tabel wordt hoe dan ook volledig gescand. Met een kleine tabel is dat geen probleem.
+
+## Appendix: Paginatie
 
 Paginatie is een essentiële best practice voor API's om verschillende redenen:
 
@@ -994,6 +1073,10 @@ Paginatie is een essentiële best practice voor API's om verschillende redenen:
 - Netwerkbandbreedte: Grote JSON responses vertragen de data transfer
 - Memory gebruik: Server/client moet alle data in geheugen laden en serialiseren
 - Response tijd: Gebruiker wacht (te) lang op complete response
+
+We zullen dit in 2 stappen implementeren. Voor het tellen van het aantal rijen stappen we over naar de query builder API (`db.select().from()...`) . In combinatie met de search moeten we ook filteren op een gejoinde tabel. In Stap 2 zullen we voor het ophalen van de rijen ook gebruik maken van de query builder API. Zo herbruiken we de filter dan ook in het ophalen van de rijen.
+
+### 1. Zonder de search parameter
 
 We voegen de route `GET /api/transactions?page=1&pageSize=10` toe. Deze query parameters geven aan welke pagina (`page`) we willen ophalen en hoeveel items er per pagina (`pageSize`) moeten worden weergegeven. We passen de `getAllTransactions` route aan om deze query parameters te accepteren. Query parameters komen in de controller binnen als strings. We zetten deze om naar nummers en geven ze door aan de service. We voorzien ook default waarden voor deze parameters, zodat als ze niet meegegeven worden, we toch een geldige paginatie hebben.
 
@@ -1029,7 +1112,6 @@ Nu dienen we de `getAll` methode in de `TransactionService` aan te passen om dez
 
 ```ts
 // src/transaction/transaction.service.ts
-import { PaginationQuery } from '../common/common.dto';
 //...
  // 👇 1
  async getAll(
@@ -1075,22 +1157,34 @@ Merk op: Query parameters worden ook gebruikt om te sorteren of te filteren. Bij
 
 Meer info over paginatie in drizzle vind je hier: <https://orm.drizzle.team/docs/guides/limit-offset-pagination>.
 
-## Search
+### 2. Met de search parameter
 
-We willen ook het zoeken op plaatsnaam ondersteunen. Zoeken is een optionele query parameter van het GET all endpoint. Als de `search` parameter meegegeven wordt, filteren we de transacties op plaatsnaam. Een request ziet er dan zo uit: `GET /transactions?page=1&pageSize=10&search=HoGent`. We dienen hiervoor de drie lagen aan te passen.
+We willen ook het zoeken op plaatsnaam ondersteunen a.d.h.v. de (optionele) `search` parameter. Een request ziet er dan zo uit: `GET /transactions?page=1&pageSize=10&search=HoGent`. We dienen hiervoor de drie lagen aan te passen.
 
-### DTO
+#### DTO
 
-We breiden `PaginationQuery` uit met een optioneel `search`-veld. Dankzij `@IsOptional()` en `@IsString()` is het veld niet verplicht, maar als het meegegeven wordt, moet het een string zijn.
+We passen TransactionQuerydDto aan en breiden `PaginationQuery` uit met een optioneel `search`-veld.
 
 ```ts
 // src/transaction/transaction.dto.ts
+import { PaginationQuery } from '../common/common.dto';
+
 export class TransactionQueryDto extends PaginationQuery {
   search?: string;
 }
 ```
 
-### Controller
+Met de PaginationQuery
+
+```ts
+// src/common/common.dto.ts
+export class PaginationQuery {
+  page = 1;
+  pageSize = 10;
+}
+```
+
+#### Controller
 
 De controller geeft nu het volledige `query`-object door aan de service in plaats van losse parameters. Dat is eenvoudiger en schaalt mee als we later extra query-parameters toevoegen.
 
@@ -1110,13 +1204,13 @@ import {
 async getAllTransactions(
   @Query() query: TransactionQueryDto,
 ): Promise<TransactionListResponseDto> {
-  return await this.transactionService.getAll(query));
+  return this.transactionService.getAll(query);
 }
 ```
 
-### Service
+#### Service
 
-In de service passen we de `getAll` methode aan om de `search` parameter te gebruiken. We maken gebruik van de query builder API van Drizzle om een JOIN uit te voeren op de `places` tabel en een `WHERE`-clausule toe te voegen die filtert op de plaatsnaam.
+In de service passen we de `getAll` methode aan om de `search` parameter te gebruiken. We maken gebruik van de query builder API van Drizzle om een JOIN uit te voeren op de `places` tabel en een `WHERE`-clausule toe te voegen die filtert op de plaatsnaam. Zie [where clause samenstellen](https://orm.drizzle.team/docs/data-querying#compose-a-where-statement-and-then-use-it-in-a-query) voor meer info.
 
 ```ts
 // src/transaction/transaction.servcice.ts
@@ -1132,7 +1226,6 @@ async getAll(
   { page = 1, pageSize = 10, search = '' }: TransactionQueryDto,
 ): Promise<TransactionListResponseDto> {
   const whereConditions = [];
-  // Search op place.name (via JOIN)
   if (search) {
     whereConditions.push(like(places.name, `%${search}%`));
   }
@@ -1178,9 +1271,9 @@ async getAll(
 }
 ```
 
-De service bevat de grootste wijziging. We zijn overgestapt van de relationele API (`findMany`) naar de query builder API (`.select().from()`). Die overstap is nodig omdat we nu moeten filteren op een gejoinde tabel (`places.name`), en de relationele API ondersteunt geen `WHERE`-condities op gejoinde tabellen.
+De service bevat de grootste wijziging. We zijn overgestapt van de relationele API (`findMany`) naar de query builder API (`.select().from()`). Die overstap is nodig omdat we bij de `count` moeten filteren op een gejoinde tabel (`places.name`).
 
-De aanpak met een `whereConditions`-array maakt het eenvoudig om later extra filtercondities toe te voegen zonder de rest van de query te herschrijven. De functie `like(places.name, '%search%')` voert een gedeeltelijke tekstzoekopdracht uit op de plaatsnaam. De `%`-tekens zijn SQL-wildcards: `%HoGent%` matcht elke plaatsnaam die "HoGent" bevat.
+De aanpak met een `whereConditions`-array maakt het eenvoudig om later extra filtercondities toe te voegen zonder de rest van de query te herschrijven.
 
 Omdat de `WHERE`-clausule verwijst naar de `places`-tabel, moet ook de COUNT-query de JOIN bevatten — anders weet de database niet welke tabel `places.name` is.
 
