@@ -84,6 +84,7 @@ De laatste pagina laat toe om een plaats te bekijken samen met de transacties va
   De endpoints die we moeten voorzien zijn:
 
   #### Transactions
+
   - `GET /api/transactions`: alle transacties opvragen
   - `GET /api/transactions/:id`: een specifieke transactie opvragen
   - `POST /api/transactions`: een nieuwe transactie aanmaken
@@ -91,6 +92,7 @@ De laatste pagina laat toe om een plaats te bekijken samen met de transacties va
   - `DELETE /api/transactions/:id`: een transactie verwijderen
 
   #### Places
+
   - `GET /api/places`: alle plaatsen opvragen
   - `GET /api/places/:id`: een specifieke plaats opvragen
   - `POST /api/places`: een nieuwe plaats aanmaken
@@ -99,6 +101,7 @@ De laatste pagina laat toe om een plaats te bekijken samen met de transacties va
   - `GET /api/places/:id/transactions`: transacties van een specifieke plaats opvragen
 
   #### Users
+
   - `GET /api/users`: alle gebruikers opvragen
   - `GET /api/users/:id`: een specifieke gebruiker opvragen
   - `POST /api/users`: een nieuwe gebruiker aanmaken
