@@ -759,7 +759,7 @@ Open de migratie en kijk wat Drizzle gegenereerd heeft.
 
 Alvorens we de migratie kunnen uitvoeren, moeten we zeker zijn dat onze `budget` databank bestaat. Drizzle doet dit helaas niet voor ons. Je zou dit kunnen forceren via een migratie maar in productie bestaat de databank altijd als je die via een managed service (op AWS, Azure...) aanmaakt.
 
-Open dus MySQL Workbench en controleer of de `budget` databank bestaat. Mocht je gebruik maken van [Docker Compose](#mysql-in-docker), dan bestaat deze databank reeds. Als je geen Docker gebruikt, moet je een nieuwe databank aanmaken. Uiteraard pas je de naam van de databank aan naar de naam die je gekozen hebt in de `DATABASE_URL` variabele in `.env`.
+Open dus MySQL Workbench en controleer of de `budget` databank bestaat. Maak hiervoor op het Home scherm een nieuwe MySQL connection aan. Mocht je gebruik maken van [Docker Compose](#mysql-in-docker), dan bestaat deze databank reeds. Als je geen Docker gebruikt, moet je een nieuwe databank aanmaken. Uiteraard pas je de naam van de databank aan naar de naam die je gekozen hebt in de `DATABASE_URL` variabele in `.env`.
 
 Deze migratie kan je uitvoeren met het volgende commando:
 
@@ -1140,7 +1140,7 @@ Maak uiteindelijk de bijhorende methode in de `PlaceController` async.
       id: number,
       place: UpdatePlaceRequestDto,
     ): Promise<PlaceResponseDto> {
-      await this.db.update(places).set(changes).where(eq(places.id, id));
+      await this.db.update(places).set(place).where(eq(places.id, id));
 
       return this.getById(id);
     }

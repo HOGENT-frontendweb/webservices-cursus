@@ -373,6 +373,8 @@ export class CreatePlaceRequestDto {
 }
 ```
 
+Plaats eventueel `strictPropertyInitialization` in de `tsconfig.json` op `false` zodat je geen foutmelding krijgt dat de properties niet geïnitialiseerd zijn.
+
 Importeer deze klasse in de `PlaceController` en pas de code voor de `CreatePlace` aan.
 
 ```ts

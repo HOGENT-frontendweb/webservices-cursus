@@ -445,6 +445,13 @@ Voer de seeding uit:
 pnpm db:seed
 ```
 
+## Oefening eigen project
+
+- Vul het schema van je eigen project aan met de nodige tabellen en relaties.
+- Voeg de drizzle relaties toe in de relatie-definities.
+- Maak de nodige migraties aan en voer deze uit. Zorg dat de migraties automatisch uitgevoerd worden bij het starten van de server.
+- Vul de seed data aan en voer deze uit.
+
 ## Creatie TransactionService
 
 De volgende service die we gaan maken is de `TransactionService`. Deze service bevat de basis CRUD-methoden voor transacties. Alvorens we deze implementeren, maken we als oefening eerst de controller en de bijhorende DTO's aan.
