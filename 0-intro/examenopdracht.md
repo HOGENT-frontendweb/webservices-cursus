@@ -173,10 +173,9 @@ Hierover zullen dan verdere vragen volgen.
 
 ### Demo vereisten
 
-Tijdens het mondeling examen dien je te starten met een demo van jouw applicatie. Jullie verdelen zelf wie wat demonstreert, maar zorg ervoor dat beide personen evenveel aan bod komen. Deze demo moet voldoen aan de volgende vereisten:
+Tijdens het mondeling examen, die on-campus doorgaat, dien je te starten met een demo van jouw applicatie. Jullie verdelen zelf wie wat demonstreert, maar zorg ervoor dat beide personen evenveel aan bod komen. Deze demo moet voldoen aan de volgende vereisten:
 
 - De demo mag maximaal 15 minuten duren (inclusief Front-end Web Development, indien van toepassing)
-- De webcam moet aanstaan tijdens de demo zodat je gezicht zichtbaar is
 - De demo moet minstens de volgende onderdelen bevatten/tonen:
   - **Context van de applicatie**: leg uit wat de applicatie doet, wat het doel is en waarom je dit onderwerp gekozen hebt
   - **Projectstructuur overlopen (optioneel)**:
