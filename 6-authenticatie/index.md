@@ -1003,6 +1003,8 @@ export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 ```
 
+`SetMetadata` is een ingebouwde NestJS-functie die metadata koppelt aan een class of methode.
+
 Voeg de `@Public()` decorator toe aan login en register routes, bijvoorbeeld:
 
 ```ts
@@ -1021,6 +1023,10 @@ export class SessionController {
   }
 }
 ```
+
+De decorator registreert alleen metadata! Deze metadata wordt later uitgelezen door een guard (zie verder) die bepaalt of de route publiek is of niet. Zonder guard heeft deze decorator dus geen effect.
+
+Je kan ook gebruik maken van de `createDecorator` method van de `Reflector` class. [Meer op](https://docs.nestjs.com/fundamentals/execution-context#reflection-and-metadata). Het verschil is dat je met `SetMetadata` meer controle hebt over de metadatasleutel en -waarde, en je decorators kunt maken die meer dan één argument accepteren.
 
 ### @Roles()
 
@@ -1059,7 +1065,7 @@ Als laatste stap implementeren het afdwingen van authenticatie en autorisatie op
 
 Lees eerst de documentatie over [Guards](https://docs.nestjs.com/guards) (t.e.m. "Authorization guard").
 
-In NestJS gebruiken we **guards** om authenticatie en autorisatie af te dwingen. Guards zijn klassen die bepalen of een request mag doorgaan of niet. Ze geven simpelweg `true` of `false` terug, of gooien een foutmelding.
+In NestJS gebruiken we **guards** om authenticatie en autorisatie af te dwingen. Guards zijn klassen die bepalen of een request mag doorgaan of niet. Ze kunnen hiervoor de metadata lezen die werd toegevoegd door de decorators. Ze geven simpelweg `true` of `false` terug, of gooien een foutmelding.
 
 ### AuthGuard
 
@@ -1094,7 +1100,6 @@ export class AuthGuard implements CanActivate {
     if (isPublic) {
       return true;
     }
-
     // 👇 3
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
@@ -1133,9 +1138,11 @@ export class AuthGuard implements CanActivate {
 
 1. We injecteren de `Reflector` om metadata van decorators te kunnen lezen.
    - Zie <https://docs.nestjs.com/fundamentals/execution-context#executioncontext-class>
-   - `context.getHandler()` geeft de methode van de controller terug.
-   - `context.getClass()` geeft de controller klasse terug.
-2. We controleren of de route publiek is (via de `@Public()` decorator). Als dat zo is, laten we het request door.
+2. We lezen de metadata van de route om te controleren of deze publiek is. We gebruiken hiervoor `getAllAndOverride` zodat we zowel de metadata van de methode als van de class kunnen lezen. Als de route publiek is, laten we het request door.
+   - `context.getHandler()` verwijst naar de huidige methode in de controller
+   - `context.getClass()` verwijst naar de controllerclass zelf.
+   - `Reflector` zoekt naar de metadata met de key `isPublic`.
+   - `getAllAndOverride` geeft de eerste gevonden waarde terug. De methode heeft hierbij voorrang op de class.
 3. We halen de JWT uit de `Authorization` header en controleren of deze bestaat. Als er geen token is, gooien we een `UnauthorizedException`.
    - We gebruiken hiervoor de helper functie `extractTokenFromHeader`. Deze haalt de token uit de header en controleert of de prefix `Bearer` is.
 4. We verifiëren de JWT en krijgen de payload terug.
@@ -1295,6 +1302,7 @@ export class CheckUserAccessGuard implements CanActivate {
 
 ### @CurrentUser()
 
+Een [ParamDecorator](https://docs.nestjs.com/custom-decorators#param-decorators) in NestJS is een decorator waarmee je zelf kunt bepalen welke informatie je uit een HTTP-request haalt en beschikbaar maakt als parameter in een controller-methode.
 Om de huidige gebruiker eenvoudig op te halen in onze route handlers, maken we een `@CurrentUser()` decorator. Deze decorator haalt de gebruiker op uit het request object dat we in de `AuthGuard` gezet hebben.
 
 ```ts
@@ -1308,6 +1316,11 @@ export const CurrentUser = createParamDecorator(
   },
 );
 ```
+
+De callback methode bepaalt welke waarde de decorator moet retourneren:
+
+- `_`: optionele data die je bij het gebruik van de decorator kunt meegeven. De underscore is een conventie om aan te geven dat een parameter bewust ongebruikt blijft.
+- `ctx`: de executionContext van het huidige request
 
 We voegen ook nog een type toe voor de gebruikerssessie:
 
