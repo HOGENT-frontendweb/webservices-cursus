@@ -142,14 +142,14 @@ export class PlaceResponseDto implements Place {
   })
   name: string;
 
-  @ApiProperty({
+    @ApiProperty({
     example: 4,
     description: 'Rating of the place (1 to 5)',
-    optional: true, // 👈 5
+    nullable: true,
     format: 'int32',
     type: 'integer',
-  })
-  rating?: number;
+  })// 👈 5
+  rating: number | null;
 }
 ```
 
@@ -157,7 +157,7 @@ export class PlaceResponseDto implements Place {
 2. We voegen een `@ApiProperty` decorator toe aan elk veld. We geven een voorbeeld en beschrijving mee.
 3. We verwijderen de overerving van `CreatePlaceRequestDto` om duplicatie te vermijden en documenteren elk veld apart.
 4. We doen hetzelfde als het `id` voor de `name` property.
-5. Voor `rating` specificeren we dat het `optional` is (kan `undefined` zijn), en dat het een integer is met format `int32` (32-bit).
+5. Voor `rating` specificeren we dat het `nullable` is (kan `null` zijn), en dat het een `integer` is met format `int32` (32-bit).
 
 We passen ook de `PlaceListResponseDto` aan:
 
@@ -189,6 +189,7 @@ export class CreatePlaceRequestDto implements CreatePlace {
     name: 'rating',
     min: 1,
     max: 5,
+    optional: true,
     format: 'int32',
     type: 'integer',
   })
@@ -199,7 +200,7 @@ export class CreatePlaceRequestDto implements CreatePlace {
 1. We importeren de decorators van `nestjs-swagger-dto` (niet van `class-validator`!).
 2. `@IsString` valideert dat de waarde een string is en documenteert dit automatisch in Swagger. We geven ook de naam en maximale lengte mee. Standaard moet een string ingevuld zijn en kan die niet leeg zijn.
 3. Voor `@IsNumber` specificeren we minimum en maximum waarden en het type/format.
-   - Als een veld optioneel is (zoals `rating`), voeg je een `?` toe aan de property naam en 'optional: true' in de Swagger decorator.
+   - Als een veld optioneel is (zoals `rating`), voeg je een `?` toe aan de property naam en `optional: true` in de Swagger decorator.
 
 De `nestjs-swagger-dto` decorators zorgen automatisch voor:
 
