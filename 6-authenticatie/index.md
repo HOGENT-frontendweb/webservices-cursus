@@ -1597,6 +1597,10 @@ Met deze configuratie worden automatisch verschillende beveiligingsheaders aan a
 
 Voeg Helmet toe aan je eigen project volgens bovenstaande stappen.
 
+## Request Lifecycle
+
+Het is heel belangrijk om te begrijpen hoe een request door NestJS verwerkt wordt. Dit helpt je bij het debuggen van problemen en bij het schrijven van guards, interceptors, pipes en exception filters. De request lifecycle in NestJS is als volgt:[https://docs.nestjs.com/faq/request-lifecycle#summary](https://docs.nestjs.com/faq/request-lifecycle#summary).
+
 ## Oplossing voorbeeldapplicatie
 
 > ```bash
